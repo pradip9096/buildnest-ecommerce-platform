@@ -312,10 +312,7 @@ jobs:
             BUILD_DATE=${{ github.event.head_commit.timestamp }}
       
       - name: Image summary
-        run: |
-          echo "✅ Docker image built and pushed successfully"
-          echo "Tags: ${{ steps.meta.outputs.tags }}"
-          echo "Digest: ${{ steps.docker_build.outputs.digest }}"
+        run: echo "✅ Docker image built and pushed successfully" && echo "Tags ${{ steps.meta.outputs.tags }}" && echo "Digest ${{ steps.docker_build.outputs.digest }}"
 
   # Job 9: Performance Report Summary
   report-summary:
