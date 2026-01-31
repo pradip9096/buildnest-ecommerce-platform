@@ -534,6 +534,54 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- Maven Javadoc Plugin (HIGH #8 - Enforce 100% Javadoc Coverage) -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.6.3</version>
+				<configuration>
+					<failOnError>true</failOnError>
+					<failOnWarnings>true</failOnWarnings>
+					<show>private</show>
+					<doclint>all</doclint>
+					<quiet>false</quiet>
+					<additionalOptions>
+						<additionalOption>-Xdoclint:all</additionalOption>
+						<additionalOption>-Xdoclint:-missing</additionalOption>
+					</additionalOptions>
+					<excludePackageNames>
+						com.example.buildnest_ecommerce.model.dto,
+						com.example.buildnest_ecommerce.model.payload
+					</excludePackageNames>
+					<tags>
+						<tag>
+							<name>author</name>
+							<placement>a</placement>
+							<head>Author:</head>
+						</tag>
+						<tag>
+							<name>since</name>
+							<placement>a</placement>
+							<head>Since:</head>
+						</tag>
+					</tags>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>generate-javadoc-report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>javadoc</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<!-- PIT Mutation Testing Plugin (Section 3.1 - EXHAUSTIVE_RECOMMENDATION_REPORT) -->
 			<plugin>
 				<groupId>org.pitest</groupId>
@@ -588,5 +636,31 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<!-- Reporting Section (HIGH #8 - Javadoc Coverage Reporting) -->
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.6.3</version>
+				<reportSets>
+					<reportSet>
+						<id>default</id>
+						<reports>
+							<report>javadoc</report>
+						</reports>
+					</reportSet>
+					<reportSet>
+						<id>aggregate</id>
+						<inherited>false</inherited>
+						<reports>
+							<report>aggregate</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+		</plugins>
+	</reporting>
 
 </project>

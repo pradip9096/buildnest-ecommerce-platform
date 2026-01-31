@@ -1,0 +1,604 @@
+---
+# Prometheus Alert Rules for BuildNest E-Commerce Platform
+# Defines critical production alerts for Kubernetes monitoring
+# Version: 1.0.0
+# Last Updated: 2025-01-28
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: buildnest-alerts
+  namespace: monitoring
+  labels:
+    app: buildnest-ecommerce
+    role: alert-rules
+    prometheus: kube-prometheus
+spec:
+  groups:
+    
+    # ==========================
+    # APPLICATION HEALTH ALERTS
+    # ==========================
+    - name: buildnest.application.health
+      interval: 30s
+      rules:
+        
+        # Alert when application pods are not ready
+        - alert: BuildNestPodsNotReady
+          expr: |
+            kube_pod_status_ready{
+              namespace="production",
+              pod=~"buildnest-.*",
+              condition="true"
+            } == 0
+          for: 2m
+          labels:
+            severity: critical
+            component: kubernetes
+            alert_type: availability
+          annotations:
+            summary: "BuildNest pods not ready in namespace {{ $labels.namespace }}"
+            description: |
+              Pod {{ $labels.pod }} has been in a not-ready state for more than 2 minutes.
+              Current status: {{ $value }}
+              Namespace: {{ $labels.namespace }}
+              Node: {{ $labels.node }}
+              
+              IMMEDIATE ACTIONS:
+              1. Check pod logs: kubectl logs -n {{ $labels.namespace }} {{ $labels.pod }}
+              2. Describe pod: kubectl describe pod -n {{ $labels.namespace }} {{ $labels.pod }}
+              3. Check events: kubectl get events -n {{ $labels.namespace }} --field-selector involvedObject.name={{ $labels.pod }}
+              4. Verify readiness probe: Check /actuator/health/readiness endpoint
+              5. Check database/Redis connectivity
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/docs/runbooks/pod-not-ready.md"
+            dashboard_url: "https://grafana.buildnest.com/d/kubernetes-pods"
+        
+        # Alert when application replicas are below desired count
+        - alert: BuildNestInsufficientReplicas
+          expr: |
+            (
+              kube_deployment_status_replicas_available{
+                namespace="production",
+                deployment=~"buildnest-.*"
+              }
+              /
+              kube_deployment_spec_replicas{
+                namespace="production",
+                deployment=~"buildnest-.*"
+              }
+            ) < 0.75
+          for: 5m
+          labels:
+            severity: warning
+            component: kubernetes
+            alert_type: availability
+          annotations:
+            summary: "BuildNest deployment {{ $labels.deployment }} has insufficient replicas"
+            description: |
+              Deployment {{ $labels.deployment }} is running at {{ $value | humanizePercentage }} capacity.
+              Available replicas are less than 75% of desired replicas.
+              
+              Current State:
+              - Available: {{ query "kube_deployment_status_replicas_available{namespace='production',deployment='{{ $labels.deployment }}'}" | first | value }}
+              - Desired: {{ query "kube_deployment_spec_replicas{namespace='production',deployment='{{ $labels.deployment }}'}" | first | value }}
+              
+              ACTIONS:
+              1. Check if HPA is scaling down: kubectl get hpa -n production
+              2. Check node resources: kubectl top nodes
+              3. Check for pod evictions: kubectl get events -n production | grep Evicted
+              4. Review deployment status: kubectl describe deployment -n production {{ $labels.deployment }}
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/docs/runbooks/insufficient-replicas.md"
+    
+    # ==========================
+    # PERFORMANCE ALERTS
+    # ==========================
+    - name: buildnest.application.performance
+      interval: 30s
+      rules:
+        
+        # Alert when request latency is high
+        - alert: BuildNestHighRequestLatency
+          expr: |
+            histogram_quantile(0.95,
+              rate(http_server_requests_seconds_bucket{
+                namespace="production",
+                app="buildnest-ecommerce",
+                uri!~"/actuator.*"
+              }[5m])
+            ) > 1.0
+          for: 5m
+          labels:
+            severity: warning
+            component: application
+            alert_type: performance
+          annotations:
+            summary: "High request latency detected for BuildNest (p95 > 1s)"
+            description: |
+              The 95th percentile request latency for URI {{ $labels.uri }} is {{ $value | humanizeDuration }}.
+              This exceeds the 1-second SLA threshold.
+              
+              Method: {{ $labels.method }}
+              Status: {{ $labels.status }}
+              Current p95: {{ $value | humanizeDuration }}
+              
+              INVESTIGATION STEPS:
+              1. Check database query performance: SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE TIME > 5;
+              2. Review application logs for slow operations
+              3. Check Redis latency: redis-cli --latency
+              4. Verify Elasticsearch cluster health: curl -X GET "localhost:9200/_cluster/health"
+              5. Review recent deployments for performance regressions
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/docs/runbooks/high-latency.md"
+            dashboard_url: "https://grafana.buildnest.com/d/http-requests"
+        
+        # Alert when error rate is high
+        - alert: BuildNestHighErrorRate
+          expr: |
+            (
+              sum(rate(http_server_requests_seconds_count{
+                namespace="production",
+                app="buildnest-ecommerce",
+                status=~"5..",
+                uri!~"/actuator.*"
+              }[5m]))
+              /
+              sum(rate(http_server_requests_seconds_count{
+                namespace="production",
+                app="buildnest-ecommerce",
+                uri!~"/actuator.*"
+              }[5m]))
+            ) * 100 > 1.0
+          for: 3m
+          labels:
+            severity: critical
+            component: application
+            alert_type: errors
+          annotations:
+            summary: "High error rate detected for BuildNest ({{ $value | humanizePercentage }} errors)"
+            description: |
+              The application is returning 5xx errors at a rate of {{ $value | humanizePercentage }}.
+              This exceeds the 1% error rate threshold.
+              
+              URI: {{ $labels.uri }}
+              Method: {{ $labels.method }}
+              
+              IMMEDIATE ACTIONS:
+              1. Check application logs: kubectl logs -n production -l app=buildnest-ecommerce --tail=100
+              2. Verify database connectivity: kubectl exec -n production deploy/buildnest-ecommerce -- curl localhost:8080/actuator/health
+              3. Check for OOMKilled pods: kubectl get pods -n production | grep OOMKilled
+              4. Review recent code deployments
+              5. Check exception stack traces in application logs
+              6. Consider rolling back to previous stable version if errors persist
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/docs/runbooks/high-error-rate.md"
+            dashboard_url: "https://grafana.buildnest.com/d/error-rates"
+        
+        # Alert when thread pool is saturated
+        - alert: BuildNestThreadPoolSaturation
+          expr: |
+            (
+              tomcat_threads_busy_threads{
+                namespace="production",
+                app="buildnest-ecommerce"
+              }
+              /
+              tomcat_threads_config_max_threads{
+                namespace="production",
+                app="buildnest-ecommerce"
+              }
+            ) * 100 > 80
+          for: 5m
+          labels:
+            severity: warning
+            component: application
+            alert_type: performance
+          annotations:
+            summary: "Tomcat thread pool saturation detected ({{ $value | humanizePercentage }} busy)"
+            description: |
+              The Tomcat thread pool is {{ $value | humanizePercentage }} saturated.
+              Busy threads: {{ query "tomcat_threads_busy_threads{namespace='production',app='buildnest-ecommerce'}" | first | value }}
+              Max threads: {{ query "tomcat_threads_config_max_threads{namespace='production',app='buildnest-ecommerce'}" | first | value }}
+              
+              This may lead to request queueing and increased latency.
+              
+              ACTIONS:
+              1. Check for slow database queries causing thread blocking
+              2. Review external API call timeouts
+              3. Consider increasing server.tomcat.threads.max in application.properties
+              4. Scale up replicas: kubectl scale deployment buildnest-ecommerce -n production --replicas=N
+              5. Check for deadlocks: kubectl exec -n production deploy/buildnest-ecommerce -- jstack 1
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/docs/runbooks/thread-pool-saturation.md"
+    
+    # ==========================
+    # RESOURCE ALERTS
+    # ==========================
+    - name: buildnest.resources
+      interval: 30s
+      rules:
+        
+        # Alert when CPU usage is high
+        - alert: BuildNestHighCPUUsage
+          expr: |
+            (
+              sum(rate(container_cpu_usage_seconds_total{
+                namespace="production",
+                pod=~"buildnest-.*"
+              }[5m])) by (pod)
+              /
+              sum(container_spec_cpu_quota{
+                namespace="production",
+                pod=~"buildnest-.*"
+              }[5m]) by (pod) * 100000
+            ) * 100 > 80
+          for: 10m
+          labels:
+            severity: warning
+            component: resources
+            alert_type: cpu
+          annotations:
+            summary: "High CPU usage detected for pod {{ $labels.pod }}"
+            description: |
+              Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its CPU limit.
+              Sustained high CPU usage may indicate:
+              - Inefficient algorithms or loops
+              - Lack of caching
+              - Need for horizontal scaling
+              
+              ACTIONS:
+              1. Check CPU-intensive operations in logs
+              2. Review recent code changes for performance issues
+              3. Consider profiling the application: kubectl exec -n production {{ $labels.pod }} -- jcmd 1 JFR.start
+              4. Scale up if legitimate traffic increase: kubectl scale deployment buildnest-ecommerce -n production --replicas=N
+              5. Increase CPU limits if consistently under-provisioned
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/docs/runbooks/high-cpu.md"
+        
+        # Alert when memory usage is high
+        - alert: BuildNestHighMemoryUsage
+          expr: |
+            (
+              container_memory_working_set_bytes{
+                namespace="production",
+                pod=~"buildnest-.*"
+              }
+              /
+              container_spec_memory_limit_bytes{
+                namespace="production",
+                pod=~"buildnest-.*"
+              }
+            ) * 100 > 85
+          for: 5m
+          labels:
+            severity: critical
+            component: resources
+            alert_type: memory
+          annotations:
+            summary: "High memory usage detected for pod {{ $labels.pod }} ({{ $value | humanizePercentage }})"
+            description: |
+              Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit.
+              Current: {{ query "container_memory_working_set_bytes{namespace='production',pod='{{ $labels.pod }}'}" | first | value | humanize }}B
+              Limit: {{ query "container_spec_memory_limit_bytes{namespace='production',pod='{{ $labels.pod }}'}" | first | value | humanize }}B
+              
+              Risk: Pod may be OOMKilled if memory continues to grow.
+              
+              IMMEDIATE ACTIONS:
+              1. Check for memory leaks in application logs
+              2. Review heap dump if available: kubectl exec -n production {{ $labels.pod }} -- jmap -heap 1
+              3. Check for large object retention: kubectl exec -n production {{ $labels.pod }} -- jcmd 1 GC.heap_info
+              4. Increase memory limits if legitimate growth: Update deployment YAML
+              5. Consider adding memory leak detection in CI/CD
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/docs/runbooks/high-memory.md"
+    
+    # ==========================
+    # DATABASE ALERTS
+    # ==========================
+    - name: buildnest.database
+      interval: 30s
+      rules:
+        
+        # Alert when database connection pool is exhausted
+        - alert: BuildNestDatabaseConnectionPoolExhaustion
+          expr: |
+            (
+              hikaricp_connections_active{
+                namespace="production",
+                app="buildnest-ecommerce"
+              }
+              /
+              hikaricp_connections_max{
+                namespace="production",
+                app="buildnest-ecommerce"
+              }
+            ) * 100 > 90
+          for: 3m
+          labels:
+            severity: critical
+            component: database
+            alert_type: connections
+          annotations:
+            summary: "Database connection pool near exhaustion ({{ $value | humanizePercentage }} used)"
+            description: |
+              HikariCP connection pool is {{ $value | humanizePercentage }} utilized.
+              Active: {{ query "hikaricp_connections_active{namespace='production',app='buildnest-ecommerce'}" | first | value }}
+              Max: {{ query "hikaricp_connections_max{namespace='production',app='buildnest-ecommerce'}" | first | value }}
+              
+              This will cause connection timeouts and application errors.
+              
+              IMMEDIATE ACTIONS:
+              1. Check for long-running transactions: SHOW FULL PROCESSLIST;
+              2. Kill problematic queries: KILL QUERY <id>;
+              3. Verify connection leaks in application code
+              4. Increase pool size temporarily: spring.datasource.hikari.maximum-pool-size
+              5. Check database server load: SHOW STATUS LIKE 'Threads_connected';
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/docs/runbooks/db-connection-pool.md"
+        
+        # Alert when database query latency is high
+        - alert: BuildNestDatabaseSlowQueries
+          expr: |
+            histogram_quantile(0.95,
+              rate(spring_data_repository_invocations_seconds_bucket{
+                namespace="production",
+                app="buildnest-ecommerce"
+              }[5m])
+            ) > 0.5
+          for: 5m
+          labels:
+            severity: warning
+            component: database
+            alert_type: performance
+          annotations:
+            summary: "Slow database queries detected (p95 > 500ms)"
+            description: |
+              The 95th percentile database query time is {{ $value | humanizeDuration }}.
+              Repository: {{ $labels.repository }}
+              Method: {{ $labels.method }}
+              
+              INVESTIGATION STEPS:
+              1. Check slow query log: SELECT * FROM mysql.slow_log ORDER BY query_time DESC LIMIT 10;
+              2. Analyze query execution plan: EXPLAIN <slow_query>;
+              3. Check for missing indexes: SHOW INDEX FROM <table>;
+              4. Review database server metrics: CPU, disk I/O, memory
+              5. Consider query optimization or adding indexes
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/docs/runbooks/slow-queries.md"
+    
+    # ==========================
+    # CACHE ALERTS
+    # ==========================
+    - name: buildnest.cache
+      interval: 30s
+      rules:
+        
+        # Alert when Redis is unavailable
+        - alert: BuildNestRedisDown
+          expr: |
+            up{
+              job="redis",
+              namespace="production"
+            } == 0
+          for: 1m
+          labels:
+            severity: critical
+            component: cache
+            alert_type: availability
+          annotations:
+            summary: "Redis is DOWN - cache and rate limiting unavailable"
+            description: |
+              Redis instance {{ $labels.instance }} is not responding.
+              
+              IMPACT:
+              - Cache misses will increase database load
+              - Rate limiting will fail open (allowing all requests)
+              - Session management may be affected
+              
+              IMMEDIATE ACTIONS:
+              1. Check Redis pod status: kubectl get pods -n production -l app=redis
+              2. Check logs: kubectl logs -n production -l app=redis --tail=100
+              3. Verify Redis service: kubectl get svc -n production redis
+              4. Check Redis master status: redis-cli -h <redis-host> INFO replication
+              5. Consider failing over to standby Redis instance
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/DISASTER_RECOVERY_RUNBOOK.md#scenario-3-redis-cache-failure"
+        
+        # Alert when cache hit rate is low
+        - alert: BuildNestLowCacheHitRate
+          expr: |
+            (
+              sum(rate(cache_gets{
+                namespace="production",
+                app="buildnest-ecommerce",
+                result="hit"
+              }[5m]))
+              /
+              sum(rate(cache_gets{
+                namespace="production",
+                app="buildnest-ecommerce"
+              }[5m]))
+            ) * 100 < 70
+          for: 10m
+          labels:
+            severity: warning
+            component: cache
+            alert_type: performance
+          annotations:
+            summary: "Low cache hit rate detected ({{ $value | humanizePercentage }})"
+            description: |
+              The cache hit rate for {{ $labels.cache }} is only {{ $value | humanizePercentage }}.
+              This may increase database load and latency.
+              
+              INVESTIGATION:
+              1. Check if cache TTL is too short
+              2. Verify cache size is adequate: redis-cli INFO memory
+              3. Check for cache evictions: redis-cli INFO stats | grep evicted_keys
+              4. Review caching strategy for frequently accessed data
+              5. Consider increasing Redis memory if evictions are high
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/docs/runbooks/low-cache-hit-rate.md"
+    
+    # ==========================
+    # SECURITY ALERTS
+    # ==========================
+    - name: buildnest.security
+      interval: 30s
+      rules:
+        
+        # Alert when rate limiting is blocking many requests
+        - alert: BuildNestHighRateLimitBlocking
+          expr: |
+            (
+              sum(rate(bucket4j_bucket_rejected_total{
+                namespace="production",
+                app="buildnest-ecommerce"
+              }[5m]))
+              /
+              sum(rate(bucket4j_bucket_consumed_total{
+                namespace="production",
+                app="buildnest-ecommerce"
+              }[5m]))
+            ) * 100 > 10
+          for: 5m
+          labels:
+            severity: warning
+            component: security
+            alert_type: rate-limiting
+          annotations:
+            summary: "High rate of requests being blocked ({{ $value | humanizePercentage }})"
+            description: |
+              {{ $value | humanizePercentage }} of requests are being rate-limited.
+              Bucket: {{ $labels.bucket }}
+              
+              This may indicate:
+              - Legitimate traffic spike requiring limit adjustment
+              - DDoS attack or bot activity
+              - Misconfigured rate limits
+              
+              ACTIONS:
+              1. Check access logs for suspicious patterns
+              2. Identify top source IPs: kubectl logs -n production -l app=buildnest-ecommerce | grep "429 Too Many Requests" | awk '{print $1}' | sort | uniq -c | sort -rn | head -20
+              3. Review rate limit configuration in application.properties
+              4. Consider temporary increase if legitimate traffic
+              5. Implement IP blocking if attack detected
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/docs/runbooks/rate-limit-blocking.md"
+        
+        # Alert for authentication failures
+        - alert: BuildNestHighAuthenticationFailures
+          expr: |
+            sum(rate(authentication_failures_total{
+              namespace="production",
+              app="buildnest-ecommerce"
+            }[5m])) > 10
+          for: 5m
+          labels:
+            severity: warning
+            component: security
+            alert_type: authentication
+          annotations:
+            summary: "High rate of authentication failures detected"
+            description: |
+              There are {{ $value }} authentication failures per second.
+              
+              This may indicate:
+              - Brute force attack
+              - Credential stuffing attempt
+              - Users forgetting passwords
+              
+              ACTIONS:
+              1. Check logs for failed login attempts by IP
+              2. Implement temporary IP blocking for repeat offenders
+              3. Consider enforcing CAPTCHA after N failed attempts
+              4. Send security alert to admin team
+              5. Review account lockout policies
+            runbook_url: "https://github.com/pradip9096/buildnest-ecommerce-platform/blob/master/docs/runbooks/auth-failures.md"
+
+---
+# PagerDuty Integration for Critical Alerts
+# Sends alerts to on-call engineers via PagerDuty
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-pagerduty
+  namespace: monitoring
+type: Opaque
+stringData:
+  pagerduty-service-key: "REPLACE_WITH_PAGERDUTY_SERVICE_KEY"
+
+---
+# AlertManager Configuration
+# Routes alerts to appropriate channels (PagerDuty, Slack, Email)
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+      pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+      slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      receiver: 'default'
+      routes:
+        # Critical alerts go to PagerDuty immediately
+        - match:
+            severity: critical
+          receiver: 'pagerduty-critical'
+          continue: true
+        
+        # Critical alerts also go to Slack
+        - match:
+            severity: critical
+          receiver: 'slack-critical'
+        
+        # Warning alerts only go to Slack
+        - match:
+            severity: warning
+          receiver: 'slack-warnings'
+    
+    receivers:
+      - name: 'default'
+        slack_configs:
+          - channel: '#buildnest-alerts'
+            title: '{{ .GroupLabels.alertname }}'
+            text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+      
+      - name: 'pagerduty-critical'
+        pagerduty_configs:
+          - service_key_file: /etc/alertmanager/secrets/pagerduty-service-key
+            description: '{{ .GroupLabels.alertname }} - {{ .CommonAnnotations.summary }}'
+            severity: 'critical'
+            details:
+              firing: '{{ .Alerts.Firing | len }}'
+              resolved: '{{ .Alerts.Resolved | len }}'
+              num_alerts: '{{ .Alerts | len }}'
+      
+      - name: 'slack-critical'
+        slack_configs:
+          - channel: '#buildnest-critical'
+            color: 'danger'
+            title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+            text: |
+              *Summary:* {{ .CommonAnnotations.summary }}
+              *Description:* {{ .CommonAnnotations.description }}
+              *Runbook:* {{ .CommonAnnotations.runbook_url }}
+              *Dashboard:* {{ .CommonAnnotations.dashboard_url }}
+            send_resolved: true
+      
+      - name: 'slack-warnings'
+        slack_configs:
+          - channel: '#buildnest-alerts'
+            color: 'warning'
+            title: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+            text: |
+              *Summary:* {{ .CommonAnnotations.summary }}
+              *Description:* {{ .CommonAnnotations.description }}
+            send_resolved: true
+
+    inhibit_rules:
+      # Inhibit warning alerts if critical alert for same resource is firing
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'pod']
