@@ -35,13 +35,13 @@ class RateLimiterServiceTest {
     @BeforeEach
     void setUp() {
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        
+
         // Circuit breaker setup: make it execute the supplier normally (pass-through)
         lenient().when(redisCircuitBreaker.executeSupplier(any())).thenAnswer(invocation -> {
             var supplier = invocation.getArgument(0, java.util.function.Supplier.class);
             return supplier.get();
         });
-        
+
         rateLimiterService = new RateLimiterService(redisTemplate, redisCircuitBreaker);
     }
 
@@ -52,7 +52,7 @@ class RateLimiterServiceTest {
         String key = "user:123";
         int limit = 100;
         Duration window = Duration.ofMinutes(1);
-        
+
         when(valueOperations.increment(anyString())).thenReturn(50L);
 
         // Act
@@ -69,7 +69,7 @@ class RateLimiterServiceTest {
         String key = "user:123";
         int limit = 100;
         Duration window = Duration.ofMinutes(1);
-        
+
         when(valueOperations.increment(anyString())).thenReturn(101L);
 
         // Act
@@ -86,7 +86,7 @@ class RateLimiterServiceTest {
         String key = "user:123";
         int limit = 100;
         Duration window = Duration.ofMinutes(1);
-        
+
         when(valueOperations.increment(anyString())).thenReturn(100L);
 
         // Act
@@ -103,7 +103,7 @@ class RateLimiterServiceTest {
         String key = "user:123";
         int limit = 100;
         Duration window = Duration.ofMinutes(1);
-        
+
         when(valueOperations.increment(anyString())).thenReturn(1L);
         when(redisTemplate.expire(anyString(), anyLong(), any(TimeUnit.class))).thenReturn(true);
 
@@ -194,7 +194,7 @@ class RateLimiterServiceTest {
         String key = "user:123";
         int limit = 100;
         Duration window = Duration.ofMinutes(1);
-        
+
         when(valueOperations.increment(anyString())).thenThrow(new RuntimeException("Redis connection failed"));
 
         // Act & Assert - should not throw, graceful degradation
@@ -209,7 +209,7 @@ class RateLimiterServiceTest {
         String key2 = "user:456";
         int limit = 100;
         Duration window = Duration.ofMinutes(1);
-        
+
         when(valueOperations.increment(contains("123"))).thenReturn(1L);
         when(valueOperations.increment(contains("456"))).thenReturn(1L);
 
