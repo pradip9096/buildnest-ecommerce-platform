@@ -1,0 +1,64 @@
+﻿2026-01-31T13:28:00.6528469Z ##[debug]Evaluating condition for step: 'Post Checkout'
+2026-01-31T13:28:00.6530049Z ##[debug]Evaluating: always()
+2026-01-31T13:28:00.6530440Z ##[debug]Evaluating always:
+2026-01-31T13:28:00.6530815Z ##[debug]=> true
+2026-01-31T13:28:00.6531171Z ##[debug]Result: true
+2026-01-31T13:28:00.6532279Z ##[debug]Starting: Post Checkout
+2026-01-31T13:28:00.6565227Z ##[debug]Loading inputs
+2026-01-31T13:28:00.6566536Z ##[debug]Evaluating: github.repository
+2026-01-31T13:28:00.6566870Z ##[debug]Evaluating Index:
+2026-01-31T13:28:00.6567137Z ##[debug]..Evaluating github:
+2026-01-31T13:28:00.6567429Z ##[debug]..=> Object
+2026-01-31T13:28:00.6567683Z ##[debug]..Evaluating String:
+2026-01-31T13:28:00.6567955Z ##[debug]..=> 'repository'
+2026-01-31T13:28:00.6568354Z ##[debug]=> 'pradip9096/buildnest-ecommerce-platform'
+2026-01-31T13:28:00.6568780Z ##[debug]Result: 'pradip9096/buildnest-ecommerce-platform'
+2026-01-31T13:28:00.6570640Z ##[debug]Evaluating: github.token
+2026-01-31T13:28:00.6570947Z ##[debug]Evaluating Index:
+2026-01-31T13:28:00.6571237Z ##[debug]..Evaluating github:
+2026-01-31T13:28:00.6571551Z ##[debug]..=> Object
+2026-01-31T13:28:00.6571795Z ##[debug]..Evaluating String:
+2026-01-31T13:28:00.6572071Z ##[debug]..=> 'token'
+2026-01-31T13:28:00.6572591Z ##[debug]=> '***'
+2026-01-31T13:28:00.6572941Z ##[debug]Result: '***'
+2026-01-31T13:28:00.6583196Z ##[debug]Loading env
+2026-01-31T13:28:00.6587438Z Post job cleanup.
+2026-01-31T13:28:00.7519889Z ##[debug]Getting git version
+2026-01-31T13:28:00.7534664Z [command]/usr/bin/git version
+2026-01-31T13:28:00.7572322Z git version 2.52.0
+2026-01-31T13:28:00.7595132Z ##[debug]0
+2026-01-31T13:28:00.7595851Z ##[debug]git version 2.52.0
+2026-01-31T13:28:00.7596307Z ##[debug]
+2026-01-31T13:28:00.7597199Z ##[debug]Set git useragent to: git/2.52.0 (github-actions-checkout)
+2026-01-31T13:28:00.7600917Z ::add-mask::***
+2026-01-31T13:28:00.7617591Z Temporarily overriding HOME='/home/runner/work/_temp/b164fd43-747a-47e9-8182-81dc6c1010d8' before making global git config changes
+2026-01-31T13:28:00.7618994Z Adding repository directory to the temporary git global config as a safe directory
+2026-01-31T13:28:00.7624572Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform
+2026-01-31T13:28:00.7657412Z ##[debug]0
+2026-01-31T13:28:00.7657823Z ##[debug]
+2026-01-31T13:28:00.7665739Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-01-31T13:28:00.7692197Z ##[debug]1
+2026-01-31T13:28:00.7692863Z ##[debug]
+2026-01-31T13:28:00.7698873Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-01-31T13:28:00.7916809Z ##[debug]0
+2026-01-31T13:28:00.7917542Z ##[debug]
+2026-01-31T13:28:00.7924932Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-01-31T13:28:00.7945517Z http.https://github.com/.extraheader
+2026-01-31T13:28:00.7952038Z ##[debug]0
+2026-01-31T13:28:00.7953034Z ##[debug]http.https://github.com/.extraheader
+2026-01-31T13:28:00.7953600Z ##[debug]
+2026-01-31T13:28:00.7958746Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-01-31T13:28:00.7983296Z ##[debug]0
+2026-01-31T13:28:00.7983968Z ##[debug]
+2026-01-31T13:28:00.7989374Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-01-31T13:28:00.8220560Z ##[debug]0
+2026-01-31T13:28:00.8221251Z ##[debug]
+2026-01-31T13:28:00.8227525Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-01-31T13:28:00.8253267Z ##[debug]1
+2026-01-31T13:28:00.8253928Z ##[debug]
+2026-01-31T13:28:00.8259772Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-01-31T13:28:00.8472605Z ##[debug]0
+2026-01-31T13:28:00.8473279Z ##[debug]
+2026-01-31T13:28:00.8474680Z ##[debug]Unsetting HOME override
+2026-01-31T13:28:00.8557696Z ##[debug]Node Action run completed with exit code 0
+2026-01-31T13:28:00.8560161Z ##[debug]Finishing: Post Checkout

@@ -1,0 +1,84 @@
+﻿2026-01-31T13:27:59.7622180Z ##[debug]Evaluating condition for step: 'Upload test performance summary'
+2026-01-31T13:27:59.7625047Z ##[debug]Evaluating: always()
+2026-01-31T13:27:59.7625733Z ##[debug]Evaluating always:
+2026-01-31T13:27:59.7626383Z ##[debug]=> true
+2026-01-31T13:27:59.7627015Z ##[debug]Result: true
+2026-01-31T13:27:59.7628791Z ##[debug]Starting: Upload test performance summary
+2026-01-31T13:27:59.7663211Z ##[debug]Loading inputs
+2026-01-31T13:27:59.7670289Z ##[debug]Loading env
+2026-01-31T13:27:59.7677616Z ##[group]Run actions/upload-artifact@v4
+2026-01-31T13:27:59.7678099Z with:
+2026-01-31T13:27:59.7678431Z   name: test-performance
+2026-01-31T13:27:59.7678884Z   path: target/test-performance/summary.txt
+2026-01-31T13:27:59.7679402Z   if-no-files-found: warn
+2026-01-31T13:27:59.7679828Z   compression-level: 6
+2026-01-31T13:27:59.7680236Z   overwrite: false
+2026-01-31T13:27:59.7680631Z   include-hidden-files: false
+2026-01-31T13:27:59.7681244Z env:
+2026-01-31T13:27:59.7681771Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:27:59.7682676Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:27:59.7683333Z ##[endgroup]
+2026-01-31T13:27:59.9831379Z ##[debug]followSymbolicLinks 'true'
+2026-01-31T13:27:59.9832314Z ##[debug]implicitDescendants 'true'
+2026-01-31T13:27:59.9832990Z ##[debug]omitBrokenSymbolicLinks 'true'
+2026-01-31T13:27:59.9833465Z ##[debug]excludeHiddenFiles 'true'
+2026-01-31T13:27:59.9857382Z ##[debug]followSymbolicLinks 'true'
+2026-01-31T13:27:59.9858145Z ##[debug]implicitDescendants 'true'
+2026-01-31T13:27:59.9858712Z ##[debug]matchDirectories 'true'
+2026-01-31T13:27:59.9859171Z ##[debug]omitBrokenSymbolicLinks 'true'
+2026-01-31T13:27:59.9859640Z ##[debug]excludeHiddenFiles 'true'
+2026-01-31T13:27:59.9864698Z ##[debug]Search path '/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/test-performance/summary.txt'
+2026-01-31T13:27:59.9892175Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/test-performance/summary.txt was found using the provided searchPath
+2026-01-31T13:27:59.9893185Z With the provided path, there will be 1 file uploaded
+2026-01-31T13:27:59.9894029Z ##[debug]Root artifact directory is /home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/test-performance
+2026-01-31T13:27:59.9898525Z Artifact name is valid!
+2026-01-31T13:27:59.9899742Z Root directory input is valid!
+2026-01-31T13:27:59.9913167Z ##[debug]Workflow Run Backend ID: 1b5e1612-cca9-4427-9b69-ca3da21ebc56
+2026-01-31T13:27:59.9914397Z ##[debug]Workflow Job Run Backend ID: b1f10207-58fe-5404-be9a-c082ac62f9fd
+2026-01-31T13:27:59.9923345Z ##[debug][Request] CreateArtifact https://results-receiver.actions.githubusercontent.com/twirp/github.actions.results.api.v1.ArtifactService/CreateArtifact
+2026-01-31T13:28:00.1241432Z ##[debug][Response] - 200
+2026-01-31T13:28:00.1242258Z ##[debug]Headers: {
+2026-01-31T13:28:00.1242673Z ##[debug]  "content-length": "579",
+2026-01-31T13:28:00.1243219Z ##[debug]  "content-type": "application/json",
+2026-01-31T13:28:00.1243796Z ##[debug]  "date": "Sat, 31 Jan 2026 13:28:00 GMT",
+2026-01-31T13:28:00.1245123Z ##[debug]  "x-github-backend": "Kubernetes",
+2026-01-31T13:28:00.1245849Z ##[debug]  "x-github-request-id": "8405:39B18:32BF9E:43B231:697E0360"
+2026-01-31T13:28:00.1246272Z ##[debug]}
+2026-01-31T13:28:00.1246934Z ::add-mask::***
+2026-01-31T13:28:00.1248533Z ::add-mask::***
+2026-01-31T13:28:00.1249457Z ##[debug]Body: {
+2026-01-31T13:28:00.1249712Z ##[debug]  "ok": true,
+2026-01-31T13:28:00.1252337Z ##[debug]  "signed_upload_url": "https://productionresultssa5.blob.core.windows.net/actions-results/1b5e1612-cca9-4427-9b69-ca3da21ebc56/workflow-job-run-b1f10207-58fe-5404-be9a-c082ac62f9fd/artifacts/10969c878ea5e4f8bbc41b8aef45e526d2f09296b1cae33195f44de28e8de2b6.zip?se=2026-01-31T14%3A28%3A00Z&sig=***&ske=2026-01-31T15%3A45%3A58Z&skoid=ca7593d4-ee42-46cd-af88-8b886a2f84eb&sks=b&skt=2026-01-31T11%3A45%3A58Z&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skv=2025-11-05&sp=cw&spr=https&sr=b&st=2026-01-31T13%3A27%3A55Z&sv=2025-11-05"
+2026-01-31T13:28:00.1255117Z ##[debug]}
+2026-01-31T13:28:00.1258729Z ##[debug]Creating Artifact archive with compressionLevel: 6
+2026-01-31T13:28:00.1293088Z ##[debug]Zip write high watermark value 8388608
+2026-01-31T13:28:00.1294152Z ##[debug]Zip read high watermark value 8388608
+2026-01-31T13:28:00.1346442Z ##[debug]Uploading artifact zip to blob storage with maxConcurrency: 5, bufferSize: 8388608
+2026-01-31T13:28:00.1356367Z Beginning upload of artifact content to blob storage
+2026-01-31T13:28:00.1482459Z ##[debug]Zip stream for upload has ended.
+2026-01-31T13:28:00.1485224Z ##[debug]Zip stream for upload has finished.
+2026-01-31T13:28:00.3106116Z Uploaded bytes 300
+2026-01-31T13:28:00.3586251Z Finished uploading artifact content to blob storage!
+2026-01-31T13:28:00.3589164Z SHA256 digest of uploaded artifact zip is cfd861a8756b40456b4261070de07874e36e331f646e7699c767b6324a8e6acd
+2026-01-31T13:28:00.3591220Z Finalizing artifact upload
+2026-01-31T13:28:00.3595609Z ##[debug][Request] FinalizeArtifact https://results-receiver.actions.githubusercontent.com/twirp/github.actions.results.api.v1.ArtifactService/FinalizeArtifact
+2026-01-31T13:28:00.4603588Z ##[debug][Response] - 200
+2026-01-31T13:28:00.4604160Z ##[debug]Headers: {
+2026-01-31T13:28:00.4604706Z ##[debug]  "content-length": "38",
+2026-01-31T13:28:00.4605086Z ##[debug]  "content-type": "application/json",
+2026-01-31T13:28:00.4605485Z ##[debug]  "date": "Sat, 31 Jan 2026 13:28:00 GMT",
+2026-01-31T13:28:00.4605991Z ##[debug]  "x-github-backend": "Kubernetes",
+2026-01-31T13:28:00.4606579Z ##[debug]  "x-github-request-id": "8405:39B18:32C00D:43B2D3:697E0360"
+2026-01-31T13:28:00.4607118Z ##[debug]}
+2026-01-31T13:28:00.4607552Z ##[debug]Body: {
+2026-01-31T13:28:00.4607803Z ##[debug]  "ok": true,
+2026-01-31T13:28:00.4608076Z ##[debug]  "artifact_id": "5328850031"
+2026-01-31T13:28:00.4608398Z ##[debug]}
+2026-01-31T13:28:00.4608815Z Artifact test-performance.zip successfully finalized. Artifact ID 5328850031
+2026-01-31T13:28:00.4609611Z Artifact test-performance has been successfully uploaded! Final size is 300 bytes. Artifact ID is 5328850031
+2026-01-31T13:28:00.4613960Z Artifact download URL: https://github.com/pradip9096/buildnest-ecommerce-platform/actions/runs/21544708180/artifacts/5328850031
+2026-01-31T13:28:00.4690485Z ##[debug]Node Action run completed with exit code 0
+2026-01-31T13:28:00.4693295Z ##[debug]Set output artifact-id = 5328850031
+2026-01-31T13:28:00.4694182Z ##[debug]Set output artifact-digest = cfd861a8756b40456b4261070de07874e36e331f646e7699c767b6324a8e6acd
+2026-01-31T13:28:00.4695877Z ##[debug]Set output artifact-url = https://github.com/pradip9096/buildnest-ecommerce-platform/actions/runs/21544708180/artifacts/5328850031
+2026-01-31T13:28:00.4697453Z ##[debug]Finishing: Upload test performance summary

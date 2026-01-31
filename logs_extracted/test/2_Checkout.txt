@@ -1,0 +1,184 @@
+﻿2026-01-31T13:26:09.2813668Z ##[debug]Evaluating condition for step: 'Checkout'
+2026-01-31T13:26:09.2852767Z ##[debug]Evaluating: success()
+2026-01-31T13:26:09.2858399Z ##[debug]Evaluating success:
+2026-01-31T13:26:09.2874864Z ##[debug]=> true
+2026-01-31T13:26:09.2881945Z ##[debug]Result: true
+2026-01-31T13:26:09.2906118Z ##[debug]Starting: Checkout
+2026-01-31T13:26:09.3009836Z ##[debug]Register post job cleanup for action: actions/checkout@v4
+2026-01-31T13:26:09.3096900Z ##[debug]Loading inputs
+2026-01-31T13:26:09.3110704Z ##[debug]Evaluating: github.repository
+2026-01-31T13:26:09.3112492Z ##[debug]Evaluating Index:
+2026-01-31T13:26:09.3115271Z ##[debug]..Evaluating github:
+2026-01-31T13:26:09.3117265Z ##[debug]..=> Object
+2026-01-31T13:26:09.3123809Z ##[debug]..Evaluating String:
+2026-01-31T13:26:09.3125386Z ##[debug]..=> 'repository'
+2026-01-31T13:26:09.3130107Z ##[debug]=> 'pradip9096/buildnest-ecommerce-platform'
+2026-01-31T13:26:09.3132592Z ##[debug]Result: 'pradip9096/buildnest-ecommerce-platform'
+2026-01-31T13:26:09.3139521Z ##[debug]Evaluating: github.token
+2026-01-31T13:26:09.3140755Z ##[debug]Evaluating Index:
+2026-01-31T13:26:09.3141674Z ##[debug]..Evaluating github:
+2026-01-31T13:26:09.3142684Z ##[debug]..=> Object
+2026-01-31T13:26:09.3143645Z ##[debug]..Evaluating String:
+2026-01-31T13:26:09.3144741Z ##[debug]..=> 'token'
+2026-01-31T13:26:09.3146414Z ##[debug]=> '***'
+2026-01-31T13:26:09.3147759Z ##[debug]Result: '***'
+2026-01-31T13:26:09.3185920Z ##[debug]Loading env
+2026-01-31T13:26:09.3270487Z ##[group]Run actions/checkout@v4
+2026-01-31T13:26:09.3271806Z with:
+2026-01-31T13:26:09.3272774Z   repository: pradip9096/buildnest-ecommerce-platform
+2026-01-31T13:26:09.3274430Z   token: ***
+2026-01-31T13:26:09.3275302Z   ssh-strict: true
+2026-01-31T13:26:09.3276136Z   ssh-user: git
+2026-01-31T13:26:09.3276998Z   persist-credentials: true
+2026-01-31T13:26:09.3277868Z   clean: true
+2026-01-31T13:26:09.3278770Z   sparse-checkout-cone-mode: true
+2026-01-31T13:26:09.3279735Z   fetch-depth: 1
+2026-01-31T13:26:09.3280536Z   fetch-tags: false
+2026-01-31T13:26:09.3281414Z   show-progress: true
+2026-01-31T13:26:09.3282295Z   lfs: false
+2026-01-31T13:26:09.3283051Z   submodules: false
+2026-01-31T13:26:09.3283933Z   set-safe-directory: true
+2026-01-31T13:26:09.3285295Z ##[endgroup]
+2026-01-31T13:26:09.4301598Z ##[debug]GITHUB_WORKSPACE = '/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform'
+2026-01-31T13:26:09.4307437Z ##[debug]qualified repository = 'pradip9096/buildnest-ecommerce-platform'
+2026-01-31T13:26:09.4311031Z ##[debug]ref = 'refs/heads/master'
+2026-01-31T13:26:09.4314547Z ##[debug]commit = 'bf61def2cef4c11dccd062be46653adc7e20b5fe'
+2026-01-31T13:26:09.4317734Z ##[debug]clean = true
+2026-01-31T13:26:09.4320389Z ##[debug]filter = undefined
+2026-01-31T13:26:09.4323130Z ##[debug]fetch depth = 1
+2026-01-31T13:26:09.4325991Z ##[debug]fetch tags = false
+2026-01-31T13:26:09.4328719Z ##[debug]show progress = true
+2026-01-31T13:26:09.4331542Z ##[debug]lfs = false
+2026-01-31T13:26:09.4333960Z ##[debug]submodules = false
+2026-01-31T13:26:09.4336961Z ##[debug]recursive submodules = false
+2026-01-31T13:26:09.4339872Z ##[debug]GitHub Host URL = 
+2026-01-31T13:26:09.4343854Z ::add-matcher::/home/runner/work/_actions/actions/checkout/v4/dist/problem-matcher.json
+2026-01-31T13:26:09.4464435Z ##[debug]Added matchers: 'checkout-git'. Problem matchers scan action output for known warning or error strings and report these inline.
+2026-01-31T13:26:09.4473712Z Syncing repository: pradip9096/buildnest-ecommerce-platform
+2026-01-31T13:26:09.4477550Z ::group::Getting Git version info
+2026-01-31T13:26:09.4480731Z ##[group]Getting Git version info
+2026-01-31T13:26:09.4483932Z Working directory is '/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform'
+2026-01-31T13:26:09.4488689Z ##[debug]Getting git version
+2026-01-31T13:26:09.4490464Z [command]/usr/bin/git version
+2026-01-31T13:26:09.4492190Z git version 2.52.0
+2026-01-31T13:26:09.4495098Z ##[debug]0
+2026-01-31T13:26:09.4497421Z ##[debug]git version 2.52.0
+2026-01-31T13:26:09.4499484Z ##[debug]
+2026-01-31T13:26:09.4502297Z ##[debug]Set git useragent to: git/2.52.0 (github-actions-checkout)
+2026-01-31T13:26:09.4505844Z ::endgroup::
+2026-01-31T13:26:09.4507337Z ##[endgroup]
+2026-01-31T13:26:09.4512965Z ::add-mask::***
+2026-01-31T13:26:09.4517954Z Temporarily overriding HOME='/home/runner/work/_temp/a1d00af9-cce8-4c06-be93-33acafef4a2e' before making global git config changes
+2026-01-31T13:26:09.4522735Z Adding repository directory to the temporary git global config as a safe directory
+2026-01-31T13:26:09.4527847Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform
+2026-01-31T13:26:09.4560848Z ##[debug]0
+2026-01-31T13:26:09.4564750Z ##[debug]
+2026-01-31T13:26:09.4568568Z Deleting the contents of '/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform'
+2026-01-31T13:26:09.4643601Z ::group::Initializing the repository
+2026-01-31T13:26:09.4645567Z ##[group]Initializing the repository
+2026-01-31T13:26:09.4648485Z [command]/usr/bin/git init /home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform
+2026-01-31T13:26:09.4716412Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-01-31T13:26:09.4720170Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-01-31T13:26:09.4723443Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-01-31T13:26:09.4725938Z hint: call:
+2026-01-31T13:26:09.4727054Z hint:
+2026-01-31T13:26:09.4728461Z hint: 	git config --global init.defaultBranch <name>
+2026-01-31T13:26:09.4730170Z hint:
+2026-01-31T13:26:09.4731908Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-01-31T13:26:09.4735137Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-01-31T13:26:09.4737371Z hint:
+2026-01-31T13:26:09.4738455Z hint: 	git branch -m <name>
+2026-01-31T13:26:09.4739711Z hint:
+2026-01-31T13:26:09.4741316Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-01-31T13:26:09.4743708Z Initialized empty Git repository in /home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/.git/
+2026-01-31T13:26:09.4746612Z ##[debug]0
+2026-01-31T13:26:09.4750462Z ##[debug]Initialized empty Git repository in /home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/.git/
+2026-01-31T13:26:09.4752788Z ##[debug]
+2026-01-31T13:26:09.4754173Z [command]/usr/bin/git remote add origin https://github.com/pradip9096/buildnest-ecommerce-platform
+2026-01-31T13:26:09.4773719Z ##[debug]0
+2026-01-31T13:26:09.4775952Z ##[debug]
+2026-01-31T13:26:09.4778033Z ::endgroup::
+2026-01-31T13:26:09.4780652Z ##[endgroup]
+2026-01-31T13:26:09.4783922Z ::group::Disabling automatic garbage collection
+2026-01-31T13:26:09.4786057Z ##[group]Disabling automatic garbage collection
+2026-01-31T13:26:09.4787977Z [command]/usr/bin/git config --local gc.auto 0
+2026-01-31T13:26:09.4816414Z ##[debug]0
+2026-01-31T13:26:09.4821994Z ##[debug]
+2026-01-31T13:26:09.4824609Z ::endgroup::
+2026-01-31T13:26:09.4825834Z ##[endgroup]
+2026-01-31T13:26:09.4827903Z ::group::Setting up auth
+2026-01-31T13:26:09.4830086Z ##[group]Setting up auth
+2026-01-31T13:26:09.4833048Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-01-31T13:26:09.4858822Z ##[debug]1
+2026-01-31T13:26:09.4860822Z ##[debug]
+2026-01-31T13:26:09.4867321Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-01-31T13:26:09.5209061Z ##[debug]0
+2026-01-31T13:26:09.5211195Z ##[debug]
+2026-01-31T13:26:09.5217133Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-01-31T13:26:09.5259094Z ##[debug]1
+2026-01-31T13:26:09.5261079Z ##[debug]
+2026-01-31T13:26:09.5267943Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-01-31T13:26:09.5489473Z ##[debug]0
+2026-01-31T13:26:09.5491431Z ##[debug]
+2026-01-31T13:26:09.5496277Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-01-31T13:26:09.5522685Z ##[debug]1
+2026-01-31T13:26:09.5524866Z ##[debug]
+2026-01-31T13:26:09.5528931Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-01-31T13:26:09.5756419Z ##[debug]0
+2026-01-31T13:26:09.5757612Z ##[debug]
+2026-01-31T13:26:09.5764441Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-01-31T13:26:09.5792590Z ##[debug]0
+2026-01-31T13:26:09.5795899Z ##[debug]
+2026-01-31T13:26:09.5803659Z ::endgroup::
+2026-01-31T13:26:09.5804664Z ##[endgroup]
+2026-01-31T13:26:09.5805918Z ::group::Fetching the repository
+2026-01-31T13:26:09.5806864Z ##[group]Fetching the repository
+2026-01-31T13:26:09.5812536Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +bf61def2cef4c11dccd062be46653adc7e20b5fe:refs/remotes/origin/master
+2026-01-31T13:26:09.9790028Z From https://github.com/pradip9096/buildnest-ecommerce-platform
+2026-01-31T13:26:09.9794041Z  * [new ref]         bf61def2cef4c11dccd062be46653adc7e20b5fe -> origin/master
+2026-01-31T13:26:09.9820931Z ##[debug]0
+2026-01-31T13:26:09.9822764Z ##[debug]
+2026-01-31T13:26:09.9824092Z ::endgroup::
+2026-01-31T13:26:09.9825425Z ##[endgroup]
+2026-01-31T13:26:09.9827326Z ::group::Determining the checkout info
+2026-01-31T13:26:09.9828507Z ##[group]Determining the checkout info
+2026-01-31T13:26:09.9830675Z ::endgroup::
+2026-01-31T13:26:09.9831753Z ##[endgroup]
+2026-01-31T13:26:09.9832845Z [command]/usr/bin/git sparse-checkout disable
+2026-01-31T13:26:09.9866758Z ##[debug]0
+2026-01-31T13:26:09.9868714Z ##[debug]
+2026-01-31T13:26:09.9870390Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-01-31T13:26:09.9895446Z ##[debug]0
+2026-01-31T13:26:09.9897352Z ##[debug]
+2026-01-31T13:26:09.9898882Z ::group::Checking out the ref
+2026-01-31T13:26:09.9900314Z ##[group]Checking out the ref
+2026-01-31T13:26:09.9902278Z [command]/usr/bin/git checkout --progress --force -B master refs/remotes/origin/master
+2026-01-31T13:26:10.0198467Z Reset branch 'master'
+2026-01-31T13:26:10.0200537Z branch 'master' set up to track 'origin/master'.
+2026-01-31T13:26:10.0208144Z ##[debug]0
+2026-01-31T13:26:10.0209705Z ##[debug]branch 'master' set up to track 'origin/master'.
+2026-01-31T13:26:10.0210857Z ##[debug]
+2026-01-31T13:26:10.0212066Z ::endgroup::
+2026-01-31T13:26:10.0212823Z ##[endgroup]
+2026-01-31T13:26:10.0241639Z ##[debug]0
+2026-01-31T13:26:10.0243126Z ##[debug]commit bf61def2cef4c11dccd062be46653adc7e20b5fe
+2026-01-31T13:26:10.0245111Z ##[debug]Author: Project User <user@civil-ecommerce.local>
+2026-01-31T13:26:10.0246681Z ##[debug]Date:   Sat Jan 31 18:17:36 2026 +0530
+2026-01-31T13:26:10.0247734Z ##[debug]
+2026-01-31T13:26:10.0248915Z ##[debug]    Update CI/CD workflow to run on master branch - enable Docker build and load tests
+2026-01-31T13:26:10.0250361Z ##[debug]
+2026-01-31T13:26:10.0251164Z [command]/usr/bin/git log -1 --format=%H
+2026-01-31T13:26:10.0269422Z bf61def2cef4c11dccd062be46653adc7e20b5fe
+2026-01-31T13:26:10.0273344Z ##[debug]0
+2026-01-31T13:26:10.0274893Z ##[debug]bf61def2cef4c11dccd062be46653adc7e20b5fe
+2026-01-31T13:26:10.0275927Z ##[debug]
+2026-01-31T13:26:10.0278770Z ##[debug]Unsetting HOME override
+2026-01-31T13:26:10.0292341Z ::remove-matcher owner=checkout-git::
+2026-01-31T13:26:10.0304116Z ##[debug]Removed matchers: 'checkout-git'
+2026-01-31T13:26:10.0355025Z ##[debug]Node Action run completed with exit code 0
+2026-01-31T13:26:10.0389957Z ##[debug]Save intra-action state isPost = true
+2026-01-31T13:26:10.0391330Z ##[debug]Save intra-action state setSafeDirectory = true
+2026-01-31T13:26:10.0393549Z ##[debug]Save intra-action state repositoryPath = /home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform
+2026-01-31T13:26:10.0399442Z ##[debug]Set output commit = bf61def2cef4c11dccd062be46653adc7e20b5fe
+2026-01-31T13:26:10.0401277Z ##[debug]Set output ref = refs/heads/master
+2026-01-31T13:26:10.0407701Z ##[debug]Finishing: Checkout

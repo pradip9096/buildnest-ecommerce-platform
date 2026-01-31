@@ -1,0 +1,17 @@
+﻿2026-01-31T13:26:13.0662103Z ##[debug]Evaluating condition for step: 'Validate Maven Wrapper'
+2026-01-31T13:26:13.0665859Z ##[debug]Evaluating: success()
+2026-01-31T13:26:13.0666460Z ##[debug]Evaluating success:
+2026-01-31T13:26:13.0667116Z ##[debug]=> true
+2026-01-31T13:26:13.0667682Z ##[debug]Result: true
+2026-01-31T13:26:13.0668788Z ##[debug]Starting: Validate Maven Wrapper
+2026-01-31T13:26:13.0681199Z ##[debug]Loading inputs
+2026-01-31T13:26:13.0682522Z ##[debug]Loading env
+2026-01-31T13:26:13.0699322Z ##[group]Run chmod +x mvnw
+2026-01-31T13:26:13.0699626Z [36;1mchmod +x mvnw[0m
+2026-01-31T13:26:13.0740923Z shell: /usr/bin/bash -e {0}
+2026-01-31T13:26:13.0741232Z env:
+2026-01-31T13:26:13.0741558Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:26:13.0742052Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:26:13.0742435Z ##[endgroup]
+2026-01-31T13:26:13.0806804Z ##[debug]/usr/bin/bash -e /home/runner/work/_temp/80f5f001-bc33-4ac6-b045-e5bf48214455.sh
+2026-01-31T13:26:13.0848451Z ##[debug]Finishing: Validate Maven Wrapper

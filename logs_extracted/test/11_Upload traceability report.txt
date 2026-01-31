@@ -1,0 +1,84 @@
+﻿2026-01-31T13:27:59.0916027Z ##[debug]Evaluating condition for step: 'Upload traceability report'
+2026-01-31T13:27:59.0918483Z ##[debug]Evaluating: always()
+2026-01-31T13:27:59.0919126Z ##[debug]Evaluating always:
+2026-01-31T13:27:59.0919739Z ##[debug]=> true
+2026-01-31T13:27:59.0920331Z ##[debug]Result: true
+2026-01-31T13:27:59.0921950Z ##[debug]Starting: Upload traceability report
+2026-01-31T13:27:59.0943133Z ##[debug]Loading inputs
+2026-01-31T13:27:59.0947616Z ##[debug]Loading env
+2026-01-31T13:27:59.0951641Z ##[group]Run actions/upload-artifact@v4
+2026-01-31T13:27:59.0951915Z with:
+2026-01-31T13:27:59.0952111Z   name: traceability-report
+2026-01-31T13:27:59.0952391Z   path: target/traceability/traceability_report.txt
+2026-01-31T13:27:59.0952698Z   if-no-files-found: warn
+2026-01-31T13:27:59.0952925Z   compression-level: 6
+2026-01-31T13:27:59.0953146Z   overwrite: false
+2026-01-31T13:27:59.0953359Z   include-hidden-files: false
+2026-01-31T13:27:59.0953588Z env:
+2026-01-31T13:27:59.0953870Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:27:59.0954634Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:27:59.0955031Z ##[endgroup]
+2026-01-31T13:27:59.3072464Z ##[debug]followSymbolicLinks 'true'
+2026-01-31T13:27:59.3074179Z ##[debug]implicitDescendants 'true'
+2026-01-31T13:27:59.3074870Z ##[debug]omitBrokenSymbolicLinks 'true'
+2026-01-31T13:27:59.3075329Z ##[debug]excludeHiddenFiles 'true'
+2026-01-31T13:27:59.3100022Z ##[debug]followSymbolicLinks 'true'
+2026-01-31T13:27:59.3100850Z ##[debug]implicitDescendants 'true'
+2026-01-31T13:27:59.3101615Z ##[debug]matchDirectories 'true'
+2026-01-31T13:27:59.3102389Z ##[debug]omitBrokenSymbolicLinks 'true'
+2026-01-31T13:27:59.3103158Z ##[debug]excludeHiddenFiles 'true'
+2026-01-31T13:27:59.3107382Z ##[debug]Search path '/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/traceability/traceability_report.txt'
+2026-01-31T13:27:59.3139173Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/traceability/traceability_report.txt was found using the provided searchPath
+2026-01-31T13:27:59.3141033Z With the provided path, there will be 1 file uploaded
+2026-01-31T13:27:59.3142495Z ##[debug]Root artifact directory is /home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/traceability
+2026-01-31T13:27:59.3145372Z Artifact name is valid!
+2026-01-31T13:27:59.3146777Z Root directory input is valid!
+2026-01-31T13:27:59.3160342Z ##[debug]Workflow Run Backend ID: 1b5e1612-cca9-4427-9b69-ca3da21ebc56
+2026-01-31T13:27:59.3161438Z ##[debug]Workflow Job Run Backend ID: b1f10207-58fe-5404-be9a-c082ac62f9fd
+2026-01-31T13:27:59.3174598Z ##[debug][Request] CreateArtifact https://results-receiver.actions.githubusercontent.com/twirp/github.actions.results.api.v1.ArtifactService/CreateArtifact
+2026-01-31T13:27:59.4405771Z ##[debug][Response] - 200
+2026-01-31T13:27:59.4406273Z ##[debug]Headers: {
+2026-01-31T13:27:59.4406502Z ##[debug]  "content-length": "579",
+2026-01-31T13:27:59.4406822Z ##[debug]  "content-type": "application/json",
+2026-01-31T13:27:59.4407150Z ##[debug]  "date": "Sat, 31 Jan 2026 13:27:59 GMT",
+2026-01-31T13:27:59.4407467Z ##[debug]  "x-github-backend": "Kubernetes",
+2026-01-31T13:27:59.4407838Z ##[debug]  "x-github-request-id": "8404:1ABD1:32F751:43ED3D:697E035F"
+2026-01-31T13:27:59.4408181Z ##[debug]}
+2026-01-31T13:27:59.4411099Z ::add-mask::***
+2026-01-31T13:27:59.4412596Z ::add-mask::***
+2026-01-31T13:27:59.4413940Z ##[debug]Body: {
+2026-01-31T13:27:59.4414649Z ##[debug]  "ok": true,
+2026-01-31T13:27:59.4418918Z ##[debug]  "signed_upload_url": "https://productionresultssa5.blob.core.windows.net/actions-results/1b5e1612-cca9-4427-9b69-ca3da21ebc56/workflow-job-run-b1f10207-58fe-5404-be9a-c082ac62f9fd/artifacts/74838c89579aabf59ae73cca94fac95bc600cf205254f4fed56028b1e66fc93c.zip?se=2026-01-31T14%3A27%3A59Z&sig=***&ske=2026-01-31T15%3A45%3A52Z&skoid=ca7593d4-ee42-46cd-af88-8b886a2f84eb&sks=b&skt=2026-01-31T11%3A45%3A52Z&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skv=2025-11-05&sp=cw&spr=https&sr=b&st=2026-01-31T13%3A27%3A54Z&sv=2025-11-05"
+2026-01-31T13:27:59.4423237Z ##[debug]}
+2026-01-31T13:27:59.4424048Z ##[debug]Creating Artifact archive with compressionLevel: 6
+2026-01-31T13:27:59.4442888Z ##[debug]Zip write high watermark value 8388608
+2026-01-31T13:27:59.4443627Z ##[debug]Zip read high watermark value 8388608
+2026-01-31T13:27:59.4490592Z ##[debug]Uploading artifact zip to blob storage with maxConcurrency: 5, bufferSize: 8388608
+2026-01-31T13:27:59.4501768Z Beginning upload of artifact content to blob storage
+2026-01-31T13:27:59.4627140Z ##[debug]Zip stream for upload has ended.
+2026-01-31T13:27:59.4630249Z ##[debug]Zip stream for upload has finished.
+2026-01-31T13:27:59.6101623Z Uploaded bytes 292
+2026-01-31T13:27:59.6552959Z Finished uploading artifact content to blob storage!
+2026-01-31T13:27:59.6556235Z SHA256 digest of uploaded artifact zip is 018a88adc90c1ff08c1ade4dfbce4b42f1197b70d747f727ab92c46d7584ea66
+2026-01-31T13:27:59.6558148Z Finalizing artifact upload
+2026-01-31T13:27:59.6563129Z ##[debug][Request] FinalizeArtifact https://results-receiver.actions.githubusercontent.com/twirp/github.actions.results.api.v1.ArtifactService/FinalizeArtifact
+2026-01-31T13:27:59.7516159Z ##[debug][Response] - 200
+2026-01-31T13:27:59.7517200Z ##[debug]Headers: {
+2026-01-31T13:27:59.7517644Z ##[debug]  "content-length": "38",
+2026-01-31T13:27:59.7518172Z ##[debug]  "content-type": "application/json",
+2026-01-31T13:27:59.7518754Z ##[debug]  "date": "Sat, 31 Jan 2026 13:27:59 GMT",
+2026-01-31T13:27:59.7519314Z ##[debug]  "x-github-backend": "Kubernetes",
+2026-01-31T13:27:59.7530548Z ##[debug]  "x-github-request-id": "8404:1ABD1:32F7AE:43EDBE:697E035F"
+2026-01-31T13:27:59.7531153Z ##[debug]}
+2026-01-31T13:27:59.7531716Z ##[debug]Body: {
+2026-01-31T13:27:59.7532065Z ##[debug]  "ok": true,
+2026-01-31T13:27:59.7532436Z ##[debug]  "artifact_id": "5328849998"
+2026-01-31T13:27:59.7532826Z ##[debug]}
+2026-01-31T13:27:59.7533403Z Artifact traceability-report.zip successfully finalized. Artifact ID 5328849998
+2026-01-31T13:27:59.7534889Z Artifact traceability-report has been successfully uploaded! Final size is 292 bytes. Artifact ID is 5328849998
+2026-01-31T13:27:59.7536256Z Artifact download URL: https://github.com/pradip9096/buildnest-ecommerce-platform/actions/runs/21544708180/artifacts/5328849998
+2026-01-31T13:27:59.7602448Z ##[debug]Node Action run completed with exit code 0
+2026-01-31T13:27:59.7605624Z ##[debug]Set output artifact-id = 5328849998
+2026-01-31T13:27:59.7606487Z ##[debug]Set output artifact-digest = 018a88adc90c1ff08c1ade4dfbce4b42f1197b70d747f727ab92c46d7584ea66
+2026-01-31T13:27:59.7607935Z ##[debug]Set output artifact-url = https://github.com/pradip9096/buildnest-ecommerce-platform/actions/runs/21544708180/artifacts/5328849998
+2026-01-31T13:27:59.7609435Z ##[debug]Finishing: Upload traceability report

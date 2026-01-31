@@ -1,0 +1,18 @@
+﻿2026-01-31T13:27:56.5916154Z ##[debug]Evaluating condition for step: 'Verify traceability'
+2026-01-31T13:27:56.5918047Z ##[debug]Evaluating: success()
+2026-01-31T13:27:56.5918415Z ##[debug]Evaluating success:
+2026-01-31T13:27:56.5918936Z ##[debug]=> true
+2026-01-31T13:27:56.5919259Z ##[debug]Result: true
+2026-01-31T13:27:56.5919836Z ##[debug]Starting: Verify traceability
+2026-01-31T13:27:56.5926890Z ##[debug]Loading inputs
+2026-01-31T13:27:56.5927937Z ##[debug]Loading env
+2026-01-31T13:27:56.5931624Z ##[group]Run python scripts/traceability_check.py
+2026-01-31T13:27:56.5931967Z [36;1mpython scripts/traceability_check.py[0m
+2026-01-31T13:27:56.5963453Z shell: /usr/bin/bash -e {0}
+2026-01-31T13:27:56.5963700Z env:
+2026-01-31T13:27:56.5963995Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:27:56.5964683Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:27:56.5965056Z ##[endgroup]
+2026-01-31T13:27:56.5996219Z ##[debug]/usr/bin/bash -e /home/runner/work/_temp/f6c017c9-c5c6-4044-bad2-122e69b10c5d.sh
+2026-01-31T13:27:56.6343114Z Traceability check completed. Missing risks: 0; Missing test cases: 0.
+2026-01-31T13:27:56.6390227Z ##[debug]Finishing: Verify traceability

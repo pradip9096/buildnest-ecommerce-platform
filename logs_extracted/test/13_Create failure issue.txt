@@ -1,0 +1,5 @@
+﻿2026-01-31T13:28:00.4711275Z ##[debug]Evaluating condition for step: 'Create failure issue'
+2026-01-31T13:28:00.4714956Z ##[debug]Evaluating: failure()
+2026-01-31T13:28:00.4715639Z ##[debug]Evaluating failure:
+2026-01-31T13:28:00.4718461Z ##[debug]=> false
+2026-01-31T13:28:00.4719143Z ##[debug]Result: false

@@ -1,0 +1,119 @@
+﻿2026-01-31T13:27:56.7043458Z ##[debug]Evaluating condition for step: 'Upload test reports'
+2026-01-31T13:27:56.7045411Z ##[debug]Evaluating: always()
+2026-01-31T13:27:56.7045793Z ##[debug]Evaluating always:
+2026-01-31T13:27:56.7046144Z ##[debug]=> true
+2026-01-31T13:27:56.7046467Z ##[debug]Result: true
+2026-01-31T13:27:56.7047065Z ##[debug]Starting: Upload test reports
+2026-01-31T13:27:56.7091428Z ##[debug]Loading inputs
+2026-01-31T13:27:56.7096729Z ##[debug]Loading env
+2026-01-31T13:27:56.7100639Z ##[group]Run actions/upload-artifact@v4
+2026-01-31T13:27:56.7100894Z with:
+2026-01-31T13:27:56.7101070Z   name: test-reports
+2026-01-31T13:27:56.7101294Z   path: target/surefire-reports/**/*.xml
+2026-01-31T13:27:56.7101560Z   if-no-files-found: warn
+2026-01-31T13:27:56.7101779Z   compression-level: 6
+2026-01-31T13:27:56.7101978Z   overwrite: false
+2026-01-31T13:27:56.7102174Z   include-hidden-files: false
+2026-01-31T13:27:56.7102391Z env:
+2026-01-31T13:27:56.7102774Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:27:56.7103262Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:27:56.7103620Z ##[endgroup]
+2026-01-31T13:27:56.9181512Z ##[debug]followSymbolicLinks 'true'
+2026-01-31T13:27:56.9182515Z ##[debug]implicitDescendants 'true'
+2026-01-31T13:27:56.9183298Z ##[debug]omitBrokenSymbolicLinks 'true'
+2026-01-31T13:27:56.9184076Z ##[debug]excludeHiddenFiles 'true'
+2026-01-31T13:27:56.9208313Z ##[debug]followSymbolicLinks 'true'
+2026-01-31T13:27:56.9209101Z ##[debug]implicitDescendants 'true'
+2026-01-31T13:27:56.9209844Z ##[debug]matchDirectories 'true'
+2026-01-31T13:27:56.9210572Z ##[debug]omitBrokenSymbolicLinks 'true'
+2026-01-31T13:27:56.9211372Z ##[debug]excludeHiddenFiles 'true'
+2026-01-31T13:27:56.9215380Z ##[debug]Search path '/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports'
+2026-01-31T13:27:56.9339642Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.CivilEcommerceApplicationTests.xml was found using the provided searchPath
+2026-01-31T13:27:56.9342963Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.admin.AdminDashboardTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9346371Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.analytics.AnalyticsReportingTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9349630Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.api.ApiIntegrationTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9353067Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.category.CategoryManagementTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9356785Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.controller.admin.AdminInventoryAnalyticsControllerTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9360289Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.controller.admin.AdminInventoryControllerTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9363816Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.controller.admin.AdminInventoryReportControllerTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9367348Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.controller.auth.AuthControllerTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9371191Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.controller.user.CheckoutControllerTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9374701Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.edgecase.EdgeCaseAndBoundaryTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9378018Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.inventory.InventoryManagementTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9381518Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.payment.PaymentProcessingTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9384978Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.performance.PerformanceBaselineTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9388201Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.performance.PerformanceTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9391315Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.rbac.RBACTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9394631Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.reliability.ReliabilityHATest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9397796Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.reliability.ReliabilityTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9401005Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.repository.CartRepositoryTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9404601Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.repository.CategoryRepositoryTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9407910Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.repository.DatabaseConstraintTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9411471Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.repository.InventoryThresholdBreachEventRepositoryTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9415151Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.repository.OrderRepositoryTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9418491Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.repository.PaymentRepositoryTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9421803Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.repository.ProductRepositoryTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9425726Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.security.AuthenticationAuthorizationSecurityTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9429266Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.security.InputValidationSecurityTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9432492Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.security.Jwt.JwtTokenProviderTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9436061Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.security.SecurityTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9439245Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.service.auth.AuthServiceImplTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9442518Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.service.cart.CartServiceImplTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9446245Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.service.order.OrderProcessingComprehensiveTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9449639Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.service.order.OrderServiceIntegrationTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9452885Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.service.product.ProductServiceImplTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9456207Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.validation.DataValidationTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9459443Z ##[debug]File:/home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports/TEST-com.example.buildnest_ecommerce.validation.InputValidationTest.xml was found using the provided searchPath
+2026-01-31T13:27:56.9461228Z With the provided path, there will be 36 files uploaded
+2026-01-31T13:27:56.9462579Z ##[debug]Root artifact directory is /home/runner/work/buildnest-ecommerce-platform/buildnest-ecommerce-platform/target/surefire-reports
+2026-01-31T13:27:56.9463611Z Artifact name is valid!
+2026-01-31T13:27:56.9463989Z Root directory input is valid!
+2026-01-31T13:27:56.9464971Z ##[debug]Workflow Run Backend ID: 1b5e1612-cca9-4427-9b69-ca3da21ebc56
+2026-01-31T13:27:56.9465948Z ##[debug]Workflow Job Run Backend ID: b1f10207-58fe-5404-be9a-c082ac62f9fd
+2026-01-31T13:27:56.9467580Z ##[debug][Request] CreateArtifact https://results-receiver.actions.githubusercontent.com/twirp/github.actions.results.api.v1.ArtifactService/CreateArtifact
+2026-01-31T13:27:57.1016959Z ##[debug][Response] - 200
+2026-01-31T13:27:57.1019311Z ##[debug]Headers: {
+2026-01-31T13:27:57.1019699Z ##[debug]  "content-length": "579",
+2026-01-31T13:27:57.1020185Z ##[debug]  "content-type": "application/json",
+2026-01-31T13:27:57.1020724Z ##[debug]  "date": "Sat, 31 Jan 2026 13:27:57 GMT",
+2026-01-31T13:27:57.1021607Z ##[debug]  "x-github-backend": "Kubernetes",
+2026-01-31T13:27:57.1022219Z ##[debug]  "x-github-request-id": "8400:8CED:32C25A:43BCFA:697E035D"
+2026-01-31T13:27:57.1022811Z ##[debug]}
+2026-01-31T13:27:57.1024614Z ::add-mask::***
+2026-01-31T13:27:57.1026168Z ::add-mask::***
+2026-01-31T13:27:57.1027242Z ##[debug]Body: {
+2026-01-31T13:27:57.1027586Z ##[debug]  "ok": true,
+2026-01-31T13:27:57.1031750Z ##[debug]  "signed_upload_url": "https://productionresultssa5.blob.core.windows.net/actions-results/1b5e1612-cca9-4427-9b69-ca3da21ebc56/workflow-job-run-b1f10207-58fe-5404-be9a-c082ac62f9fd/artifacts/a8ee34b70a29b77b41e8d016d697d3893db163d80502e5326fe9f4723f7ca101.zip?se=2026-01-31T14%3A27%3A57Z&sig=***&ske=2026-01-31T15%3A46%3A26Z&skoid=ca7593d4-ee42-46cd-af88-8b886a2f84eb&sks=b&skt=2026-01-31T11%3A46%3A26Z&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skv=2025-11-05&sp=cw&spr=https&sr=b&st=2026-01-31T13%3A27%3A52Z&sv=2025-11-05"
+2026-01-31T13:27:57.1035566Z ##[debug]}
+2026-01-31T13:27:57.1036341Z ##[debug]Creating Artifact archive with compressionLevel: 6
+2026-01-31T13:27:57.1059181Z ##[debug]Zip write high watermark value 8388608
+2026-01-31T13:27:57.1060051Z ##[debug]Zip read high watermark value 8388608
+2026-01-31T13:27:57.1109132Z ##[debug]Uploading artifact zip to blob storage with maxConcurrency: 5, bufferSize: 8388608
+2026-01-31T13:27:57.1118752Z Beginning upload of artifact content to blob storage
+2026-01-31T13:27:57.3081952Z ##[debug]Zip stream for upload has ended.
+2026-01-31T13:27:57.3084084Z ##[debug]Zip stream for upload has finished.
+2026-01-31T13:27:57.5980930Z Uploaded bytes 724561
+2026-01-31T13:27:57.6387492Z Finished uploading artifact content to blob storage!
+2026-01-31T13:27:57.6390878Z SHA256 digest of uploaded artifact zip is 357f754693cc9f1f8f710f5f9a6a9c90b8a4ff6ecc4bde1bcc7d53e345fc2861
+2026-01-31T13:27:57.6392651Z Finalizing artifact upload
+2026-01-31T13:27:57.6397799Z ##[debug][Request] FinalizeArtifact https://results-receiver.actions.githubusercontent.com/twirp/github.actions.results.api.v1.ArtifactService/FinalizeArtifact
+2026-01-31T13:27:57.7306678Z ##[debug][Response] - 200
+2026-01-31T13:27:57.7307632Z ##[debug]Headers: {
+2026-01-31T13:27:57.7308085Z ##[debug]  "content-length": "38",
+2026-01-31T13:27:57.7308722Z ##[debug]  "content-type": "application/json",
+2026-01-31T13:27:57.7309312Z ##[debug]  "date": "Sat, 31 Jan 2026 13:27:57 GMT",
+2026-01-31T13:27:57.7309838Z ##[debug]  "x-github-backend": "Kubernetes",
+2026-01-31T13:27:57.7310458Z ##[debug]  "x-github-request-id": "8400:8CED:32C391:43BE78:697E035D"
+2026-01-31T13:27:57.7311045Z ##[debug]}
+2026-01-31T13:27:57.7311627Z ##[debug]Body: {
+2026-01-31T13:27:57.7312303Z ##[debug]  "ok": true,
+2026-01-31T13:27:57.7312690Z ##[debug]  "artifact_id": "5328849896"
+2026-01-31T13:27:57.7313179Z ##[debug]}
+2026-01-31T13:27:57.7313758Z Artifact test-reports.zip successfully finalized. Artifact ID 5328849896
+2026-01-31T13:27:57.7315021Z Artifact test-reports has been successfully uploaded! Final size is 724561 bytes. Artifact ID is 5328849896
+2026-01-31T13:27:57.7319328Z Artifact download URL: https://github.com/pradip9096/buildnest-ecommerce-platform/actions/runs/21544708180/artifacts/5328849896
+2026-01-31T13:27:57.7406475Z ##[debug]Node Action run completed with exit code 0
+2026-01-31T13:27:57.7408531Z ##[debug]Set output artifact-id = 5328849896
+2026-01-31T13:27:57.7409043Z ##[debug]Set output artifact-digest = 357f754693cc9f1f8f710f5f9a6a9c90b8a4ff6ecc4bde1bcc7d53e345fc2861
+2026-01-31T13:27:57.7409862Z ##[debug]Set output artifact-url = https://github.com/pradip9096/buildnest-ecommerce-platform/actions/runs/21544708180/artifacts/5328849896
+2026-01-31T13:27:57.7410694Z ##[debug]Finishing: Upload test reports

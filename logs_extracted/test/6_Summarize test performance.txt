@@ -1,0 +1,23 @@
+﻿2026-01-31T13:27:56.4922719Z ##[debug]Evaluating condition for step: 'Summarize test performance'
+2026-01-31T13:27:56.4927876Z ##[debug]Evaluating: always()
+2026-01-31T13:27:56.4928290Z ##[debug]Evaluating always:
+2026-01-31T13:27:56.4929112Z ##[debug]=> true
+2026-01-31T13:27:56.4929479Z ##[debug]Result: true
+2026-01-31T13:27:56.4930115Z ##[debug]Starting: Summarize test performance
+2026-01-31T13:27:56.4937738Z ##[debug]Loading inputs
+2026-01-31T13:27:56.4938918Z ##[debug]Loading env
+2026-01-31T13:27:56.4942475Z ##[group]Run python scripts/test_performance_metrics.py
+2026-01-31T13:27:56.4942858Z [36;1mpython scripts/test_performance_metrics.py[0m
+2026-01-31T13:27:56.4973879Z shell: /usr/bin/bash -e {0}
+2026-01-31T13:27:56.4974122Z env:
+2026-01-31T13:27:56.4974633Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:27:56.4975129Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:27:56.4975497Z ##[endgroup]
+2026-01-31T13:27:56.5006845Z ##[debug]/usr/bin/bash -e /home/runner/work/_temp/c332f3ab-552e-487d-b6cf-b8c7b6cd09fd.sh
+2026-01-31T13:27:56.5851383Z Test Performance Summary
+2026-01-31T13:27:56.5851797Z ========================
+2026-01-31T13:27:56.5852076Z Total tests: 316
+2026-01-31T13:27:56.5852327Z Total time (s): 11.922
+2026-01-31T13:27:56.5852619Z Average time per test (s): 0.038
+2026-01-31T13:27:56.5853355Z Slowest test: com.example.buildnest_ecommerce.performance.PerformanceBaselineTest.testBatchOperationScalability (1.133s)
+2026-01-31T13:27:56.5909223Z ##[debug]Finishing: Summarize test performance

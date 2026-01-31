@@ -1,0 +1,43 @@
+﻿2026-01-31T13:28:00.4728169Z ##[debug]Evaluating condition for step: 'Post Set up JDK 21'
+2026-01-31T13:28:00.4729467Z ##[debug]Evaluating: always()
+2026-01-31T13:28:00.4729843Z ##[debug]Evaluating always:
+2026-01-31T13:28:00.4730207Z ##[debug]=> true
+2026-01-31T13:28:00.4730561Z ##[debug]Result: true
+2026-01-31T13:28:00.4731049Z ##[debug]Starting: Post Set up JDK 21
+2026-01-31T13:28:00.4760535Z ##[debug]Loading inputs
+2026-01-31T13:28:00.4769020Z ##[debug]Evaluating: job.status
+2026-01-31T13:28:00.4769361Z ##[debug]Evaluating Index:
+2026-01-31T13:28:00.4769628Z ##[debug]..Evaluating job:
+2026-01-31T13:28:00.4769910Z ##[debug]..=> Object
+2026-01-31T13:28:00.4770170Z ##[debug]..Evaluating String:
+2026-01-31T13:28:00.4770471Z ##[debug]..=> 'status'
+2026-01-31T13:28:00.4770792Z ##[debug]=> 'success'
+2026-01-31T13:28:00.4771048Z ##[debug]Result: 'success'
+2026-01-31T13:28:00.4772754Z ##[debug]Evaluating: (((github.server_url == 'https://github.com') && github.token) || '')
+2026-01-31T13:28:00.4773251Z ##[debug]Evaluating Or:
+2026-01-31T13:28:00.4773569Z ##[debug]..Evaluating And:
+2026-01-31T13:28:00.4773848Z ##[debug]....Evaluating Equal:
+2026-01-31T13:28:00.4774112Z ##[debug]......Evaluating Index:
+2026-01-31T13:28:00.4774660Z ##[debug]........Evaluating github:
+2026-01-31T13:28:00.4774982Z ##[debug]........=> Object
+2026-01-31T13:28:00.4775251Z ##[debug]........Evaluating String:
+2026-01-31T13:28:00.4775558Z ##[debug]........=> 'server_url'
+2026-01-31T13:28:00.4775875Z ##[debug]......=> 'https://github.com'
+2026-01-31T13:28:00.4776177Z ##[debug]......Evaluating String:
+2026-01-31T13:28:00.4776459Z ##[debug]......=> 'https://github.com'
+2026-01-31T13:28:00.4776753Z ##[debug]....=> true
+2026-01-31T13:28:00.4776999Z ##[debug]....Evaluating Index:
+2026-01-31T13:28:00.4777267Z ##[debug]......Evaluating github:
+2026-01-31T13:28:00.4777677Z ##[debug]......=> Object
+2026-01-31T13:28:00.4777930Z ##[debug]......Evaluating String:
+2026-01-31T13:28:00.4778200Z ##[debug]......=> 'token'
+2026-01-31T13:28:00.4778636Z ##[debug]....=> '***'
+2026-01-31T13:28:00.4778996Z ##[debug]..=> '***'
+2026-01-31T13:28:00.4779299Z ##[debug]=> '***'
+2026-01-31T13:28:00.4779864Z ##[debug]Expanded: ((('https://github.com' == 'https://github.com') && '***') || '')
+2026-01-31T13:28:00.4780420Z ##[debug]Result: '***'
+2026-01-31T13:28:00.4782245Z ##[debug]Loading env
+2026-01-31T13:28:00.4786546Z Post job cleanup.
+2026-01-31T13:28:00.6449938Z Cache hit occurred on the primary key setup-java-Linux-x64-maven-86be524c300434f26fb980053da6df07774116c089718f5fff63c4f2efe1a209, not saving cache.
+2026-01-31T13:28:00.6518343Z ##[debug]Node Action run completed with exit code 0
+2026-01-31T13:28:00.6520633Z ##[debug]Finishing: Post Set up JDK 21

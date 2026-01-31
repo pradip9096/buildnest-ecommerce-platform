@@ -1,0 +1,44 @@
+﻿2026-01-31T13:27:56.6397160Z ##[debug]Evaluating condition for step: 'Summarize coverage'
+2026-01-31T13:27:56.6398728Z ##[debug]Evaluating: always()
+2026-01-31T13:27:56.6399084Z ##[debug]Evaluating always:
+2026-01-31T13:27:56.6399417Z ##[debug]=> true
+2026-01-31T13:27:56.6399736Z ##[debug]Result: true
+2026-01-31T13:27:56.6400283Z ##[debug]Starting: Summarize coverage
+2026-01-31T13:27:56.6407310Z ##[debug]Loading inputs
+2026-01-31T13:27:56.6408403Z ##[debug]Loading env
+2026-01-31T13:27:56.6411808Z ##[group]Run python - <<'PY'
+2026-01-31T13:27:56.6412096Z [36;1mpython - <<'PY'[0m
+2026-01-31T13:27:56.6412342Z [36;1mimport xml.etree.ElementTree as ET[0m
+2026-01-31T13:27:56.6412637Z [36;1mfrom pathlib import Path[0m
+2026-01-31T13:27:56.6412874Z [36;1m[0m
+2026-01-31T13:27:56.6413102Z [36;1mreport = Path("target/site/jacoco/jacoco.xml")[0m
+2026-01-31T13:27:56.6413414Z [36;1mif not report.exists():[0m
+2026-01-31T13:27:56.6413694Z [36;1m    print("Jacoco XML report not found.")[0m
+2026-01-31T13:27:56.6413979Z [36;1m    raise SystemExit(0)[0m
+2026-01-31T13:27:56.6414380Z [36;1m[0m
+2026-01-31T13:27:56.6414564Z [36;1mtree = ET.parse(report)[0m
+2026-01-31T13:27:56.6414808Z [36;1mroot = tree.getroot()[0m
+2026-01-31T13:27:56.6415129Z [36;1mcounters = {c.get("type"): c for c in root.findall("counter")}[0m
+2026-01-31T13:27:56.6415477Z [36;1mline = counters.get("LINE")[0m
+2026-01-31T13:27:56.6415727Z [36;1mif line is None:[0m
+2026-01-31T13:27:56.6416007Z [36;1m    print("LINE counter not found in Jacoco report.")[0m
+2026-01-31T13:27:56.6416319Z [36;1m    raise SystemExit(0)[0m
+2026-01-31T13:27:56.6416654Z [36;1m[0m
+2026-01-31T13:27:56.6416854Z [36;1mmissed = int(line.get("missed", "0"))[0m
+2026-01-31T13:27:56.6417150Z [36;1mcovered = int(line.get("covered", "0"))[0m
+2026-01-31T13:27:56.6417423Z [36;1mtotal = missed + covered[0m
+2026-01-31T13:27:56.6417710Z [36;1mpct = (covered / total * 100.0) if total else 0.0[0m
+2026-01-31T13:27:56.6418092Z [36;1msummary = f"Line coverage: {pct:.2f}% ({covered}/{total})"[0m
+2026-01-31T13:27:56.6418416Z [36;1m[0m
+2026-01-31T13:27:56.6418631Z [36;1msummary_path = Path("$GITHUB_STEP_SUMMARY")[0m
+2026-01-31T13:27:56.6418997Z [36;1msummary_path.write_text(summary + "\n", encoding="utf-8")[0m
+2026-01-31T13:27:56.6419332Z [36;1mprint(summary)[0m
+2026-01-31T13:27:56.6419535Z [36;1mPY[0m
+2026-01-31T13:27:56.6449355Z shell: /usr/bin/bash -e {0}
+2026-01-31T13:27:56.6449588Z env:
+2026-01-31T13:27:56.6449886Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:27:56.6450366Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.10-7/x64
+2026-01-31T13:27:56.6450729Z ##[endgroup]
+2026-01-31T13:27:56.6481534Z ##[debug]/usr/bin/bash -e /home/runner/work/_temp/02b46b18-b86d-4174-9291-1db13d6bf4ea.sh
+2026-01-31T13:27:56.6963523Z Line coverage: 18.14% (947/5220)
+2026-01-31T13:27:56.7036804Z ##[debug]Finishing: Summarize coverage
