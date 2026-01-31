@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Application Performance Monitoring Service
  * 
  * Tracks and monitors API response times to ensure SLA compliance.
- * SYS-PERF-001: API response time < 500ms (95th percentile)
+ * SYS-PERF-001: API response time &lt; 500ms (95th percentile)
  * SYS-PERF-002: Support 1000 concurrent users
  * 
  * Collects metrics:
@@ -142,7 +142,7 @@ public class PerformanceMonitoringService implements IPerformanceMonitoringServi
     /**
      * Checks if SLA is being met
      * 
-     * @return true if p95 response time <= 500ms
+     * @return true if p95 response time &lt;= 500ms
      */
     public boolean isSLACompliant() {
         if (responseTimes.isEmpty())

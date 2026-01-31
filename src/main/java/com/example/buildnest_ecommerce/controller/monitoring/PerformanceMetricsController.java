@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * Application Performance Monitoring Endpoint
  *
- * PERFORMANCE_OPTIMIZATION_GUIDE - Section 7: Monitoring & Metrics
+ * PERFORMANCE_OPTIMIZATION_GUIDE - Section 7: Monitoring &amp; Metrics
  *
  * Provides comprehensive performance metrics for the application including
  * JVM statistics, GC information, memory usage, and uptime data.
@@ -115,7 +115,7 @@ public class PerformanceMetricsController {
     /**
      * Get cache performance metrics.
      *
-     * PERFORMANCE_OPTIMIZATION_GUIDE - Section 4 & 7
+     * PERFORMANCE_OPTIMIZATION_GUIDE - Section 4 &amp; 7
      *
      * @return Map containing cache hit rate and metrics
      */
@@ -149,7 +149,7 @@ public class PerformanceMetricsController {
     /**
      * Get database performance metrics.
      *
-     * PERFORMANCE_OPTIMIZATION_GUIDE - Section 3 & 7
+     * PERFORMANCE_OPTIMIZATION_GUIDE - Section 3 &amp; 7
      *
      * @return Map containing database query and connection metrics
      */

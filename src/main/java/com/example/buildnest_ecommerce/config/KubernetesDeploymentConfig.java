@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Configuration;
  * Initial Delay: 20s
  * Period: 5s
  * 
- * 4. Resource Requests & Limits:
+ * 4. Resource Requests &amp; Limits:
  * - Requests:
  * CPU: 500m (0.5 core)
  * Memory: 512Mi
@@ -69,7 +69,7 @@ import org.springframework.context.annotation.Configuration;
  * - Path routing: /api/*
  * - Rate limiting: 100 req/min per IP
  * 
- * 9. Monitoring & Observability:
+ * 9. Monitoring &amp; Observability:
  * - Prometheus metrics endpoint: /actuator/prometheus
  * - Jaeger tracing integration
  * - ELK stack for logs

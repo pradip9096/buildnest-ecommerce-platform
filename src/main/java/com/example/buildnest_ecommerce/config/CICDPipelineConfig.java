@@ -22,11 +22,11 @@ import org.springframework.context.annotation.Configuration;
  * - TruffleHog: Secret detection in code
  * - Trivy: Image vulnerability scanning
  * 
- * 3. Build & Compile (3-5 min):
+ * 3. Build &amp; Compile (3-5 min):
  * - Maven build with security checks
  * - Dependency resolution
  * - Unit test execution (199 tests)
- * - Code coverage validation (>85%)
+ * - Code coverage validation (&gt;85%)
  * 
  * 4. Docker Image Build (2-3 min):
  * - Multi-stage Dockerfile compilation
@@ -120,7 +120,7 @@ public class CICDPipelineConfig {
                             "\nPipeline Stages:\n" +
                             "1. Source Analysis (5 min)\n" +
                             "2. Security Scanning (8 min)\n" +
-                            "3. Build & Compile (4 min)\n" +
+                            "3. Build &amp; Compile (4 min)\n" +
                             "4. Docker Build (3 min)\n" +
                             "5. Integration Tests (9 min)\n" +
                             "6. Security Gate (3 min)\n" +

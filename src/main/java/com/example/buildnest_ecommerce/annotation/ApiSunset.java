@@ -11,13 +11,10 @@ import java.lang.annotation.*;
  * Usage:
  * 
  * <pre>
- * {
- *     &#64;code
- *     &#64;ApiSunset(date = "2026-12-31", version = "1.0", migrationGuide = "https://docs.buildnest.com/api/v2-migration")
- *     @RestController
- *     public class ProductControllerV1 {
- *         // ...
- *     }
+ * &#64;ApiSunset(date = "2026-12-31", version = "1.0", migrationGuide = "https://docs.buildnest.com/api/v2-migration")
+ * &#64;RestController
+ * public class ProductControllerV1 {
+ *     // ...
  * }
  * </pre>
  */

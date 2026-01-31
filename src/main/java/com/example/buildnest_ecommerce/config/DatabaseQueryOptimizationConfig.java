@@ -39,34 +39,35 @@ import org.springframework.context.annotation.Configuration;
  * - Cache product catalogs and categories
  * 
  * Example Query Before (N+1 Problem):
- * ```java
- * List<Product> products = productRepository.findAll(); // 1 query
+ * 
+ * <pre>
+ * List&lt;Product&gt; products = productRepository.findAll(); // 1 query
  * for (Product p : products) {
- * System.out.println(p.getCategory()); // N queries (one per product)
+ *     System.out.println(p.getCategory()); // N queries (one per product)
  * }
  * // Total: 1 + N queries
- * ```
+ * </pre>
  * 
  * Example Query After (Optimized with EntityGraph):
- * ```java
  * 
- * @EntityGraph(attributePaths = {"category"})
- *                             List<Product> findAll();
- *                             // Total: 1 query with LEFT OUTER JOIN
- *                             ```
+ * <pre>
+ * &#64;EntityGraph(attributePaths = { "category" })
+ * List&lt;Product&gt; findAll();
+ * // Total: 1 query with LEFT OUTER JOIN
+ * </pre>
  * 
- *                             Performance Metrics:
- *                             - Query reduction: 50-70% fewer database queries
- *                             - Response time: 200ms → 50ms average
- *                             - Memory usage: Optimized through batching
- *                             - Throughput: 100 req/s → 500 req/s
+ * Performance Metrics:
+ * - Query reduction: 50-70% fewer database queries
+ * - Response time: 200ms → 50ms average
+ * - Memory usage: Optimized through batching
+ * - Throughput: 100 req/s → 500 req/s
  * 
- *                             Implementation Status:
- *                             ✓ Entity graphs applied to CartRepository
- *                             ✓ Query optimization guidelines documented
- *                             ✓ Index creation scripts generated
- *                             ✓ Caching strategy defined
- *                             ✓ Monitoring added for slow queries
+ * Implementation Status:
+ * ✓ Entity graphs applied to CartRepository
+ * ✓ Query optimization guidelines documented
+ * ✓ Index creation scripts generated
+ * ✓ Caching strategy defined
+ * ✓ Monitoring added for slow queries
  */
 @Slf4j
 @Configuration

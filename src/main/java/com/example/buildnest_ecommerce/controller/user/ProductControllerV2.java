@@ -21,7 +21,7 @@ import java.math.BigDecimal;
  * Product API - Version 2 (Current)
  * 
  * Latest product endpoints with improved response wrapping and consistency.
- * All responses wrapped in ApiResponse<T> format.
+ * All responses wrapped in ApiResponse&lt;T&gt; format.
  * 
  * Section 2.5.2: API Versioning - Version 2 Current Implementation
  * Section 2.2.3: Consistent response wrapping

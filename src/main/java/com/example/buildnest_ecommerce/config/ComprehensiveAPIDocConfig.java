@@ -45,7 +45,7 @@ import org.springframework.context.annotation.Configuration;
  * - Caching strategies
  * - Connection pooling
  * 
- * 7. SDKs & Client Libraries
+ * 7. SDKs &amp; Client Libraries
  * - JavaScript/TypeScript SDK
  * - Java client library
  * - Python package

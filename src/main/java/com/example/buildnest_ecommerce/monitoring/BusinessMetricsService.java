@@ -11,7 +11,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Business Metrics Service - Collects and exposes business-level metrics
- * for production monitoring and observability (7.3 Monitoring & Observability)
+ * for production monitoring and observability (7.3 Monitoring &amp;
+ * Observability)
  * 
  * Metrics exposed to Prometheus at /actuator/prometheus
  * Dashboard: http://grafana:3000/d/buildnest-ecommerce

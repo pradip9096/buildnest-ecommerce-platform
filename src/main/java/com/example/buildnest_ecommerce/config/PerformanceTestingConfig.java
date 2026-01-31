@@ -38,41 +38,41 @@ import org.springframework.context.annotation.Configuration;
  * - GET /products
  * - GET /products/{id}
  * - GET /categories
- * - Target: <100ms response time
+ * - Target: &lt;100ms response time
  * 
  * 2. Shopping Cart (20% of traffic)
  * - POST /cart/add
  * - GET /cart
  * - DELETE /cart/{itemId}
- * - Target: <200ms response time
+ * - Target: &lt;200ms response time
  * 
  * 3. Checkout (15% of traffic)
  * - POST /orders
  * - POST /payment
  * - GET /orders/{id}
- * - Target: <500ms response time
+ * - Target: &lt;500ms response time
  * 
  * 4. User Management (10% of traffic)
  * - POST /users/register
  * - POST /auth/login
  * - GET /users/profile
- * - Target: <300ms response time
+ * - Target: &lt;300ms response time
  * 
  * 5. Search (5% of traffic)
  * - GET /search?q=...
  * - GET /products/filter
- * - Target: <200ms response time
+ * - Target: &lt;200ms response time
  * 
  * Expected Benchmarks:
- * - Average Response Time: <150ms
- * - P95 Response Time: <300ms
- * - P99 Response Time: <500ms
- * - Error Rate: <0.1%
+ * - Average Response Time: &lt;150ms
+ * - P95 Response Time: &lt;300ms
+ * - P99 Response Time: &lt;500ms
+ * - Error Rate: &lt;0.1%
  * - Throughput: 1000+ req/sec
  * - Concurrent Users: 5000+
- * - CPU Utilization: <70%
- * - Memory Utilization: <80%
- * - Database Connections: <100
+ * - CPU Utilization: &lt;70%
+ * - Memory Utilization: &lt;80%
+ * - Database Connections: &lt;100
  */
 @Slf4j
 @Configuration

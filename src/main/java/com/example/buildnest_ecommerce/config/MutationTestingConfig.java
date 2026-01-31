@@ -17,10 +17,10 @@ import org.springframework.context.annotation.Configuration;
  * 1. Arithmetic Operator Mutations
  * - Change + to -
  * - Change * to /
- * - Change > to <
+ * - Change &gt; to &lt;
  * 
  * 2. Conditional Boundary Mutations
- * - Change < to <=
+ * - Change &lt; to &lt;=
  * - Change == to !=
  * - Change true to false
  * 
@@ -36,25 +36,26 @@ import org.springframework.context.annotation.Configuration;
  * Tool: PIT (Pitest)
  * 
  * Configuration:
- * ```xml
- * <plugin>
- * <groupId>org.pitest</groupId>
- * <artifactId>pitest-maven</artifactId>
- * <version>1.14.4</version>
- * <configuration>
- * <targetClasses>
- * <param>com.example.buildnest_ecommerce.*</param>
- * </targetClasses>
- * <targetTests>
- * <param>com.example.buildnest_ecommerce.*Test</param>
- * </targetTests>
- * </configuration>
- * </plugin>
- * ```
+ * 
+ * <pre>
+ * &lt;plugin&gt;
+ *     &lt;groupId&gt;org.pitest&lt;/groupId&gt;
+ *     &lt;artifactId&gt;pitest-maven&lt;/artifactId&gt;
+ *     &lt;version&gt;1.14.4&lt;/version&gt;
+ *     &lt;configuration&gt;
+ *         &lt;targetClasses&gt;
+ *             &lt;param&gt;com.example.buildnest_ecommerce.*&lt;/param&gt;
+ *         &lt;/targetClasses&gt;
+ *         &lt;targetTests&gt;
+ *             &lt;param&gt;com.example.buildnest_ecommerce.*Test&lt;/param&gt;
+ *         &lt;/targetTests&gt;
+ *     &lt;/configuration&gt;
+ * &lt;/plugin&gt;
+ * </pre>
  * 
  * Goals:
  * - Current Mutation Score: Unknown (baseline)
- * - Target Mutation Score: >80%
+ * - Target Mutation Score: &gt;80%
  * - Focus Areas:
  * - Business logic classes
  * - Validation classes

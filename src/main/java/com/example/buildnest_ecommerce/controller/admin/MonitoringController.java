@@ -58,7 +58,7 @@ public class MonitoringController {
     /**
      * Check if current SLA is being met
      * 
-     * SLA Requirement: Response time < 500ms at 95th percentile
+     * SLA Requirement: Response time &lt; 500ms at 95th percentile
      * 
      * @return SLA compliance status
      */
@@ -175,7 +175,7 @@ public class MonitoringController {
      * 
      * Combined SLA check:
      * - Uptime: 99.5%
-     * - Response time: < 500ms (p95)
+     * - Response time: &lt; 500ms (p95)
      * 
      * @return Overall SLA status
      */

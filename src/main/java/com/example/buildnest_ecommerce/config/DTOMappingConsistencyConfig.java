@@ -52,28 +52,29 @@ import org.springframework.context.annotation.Configuration;
  * - Inventory ↔ StockStatusDTO
  * 
  * Example MapStruct Mapper:
- * ```java
  * 
- * @Mapper(componentModel = "spring")
- *                        public interface ProductMapper {
- *                        ProductDTO toDTO(Product product);
- *                        Product toEntity(ProductDTO dto);
+ * <pre>
+ * &#64;Mapper(componentModel = "spring")
+ * public interface ProductMapper {
+ *     ProductDTO toDTO(Product product);
  * 
- * @Mapping(source = "product.id", target = "productId")
- * @Mapping(source = "product.name", target = "productName")
- *                 ProductDetailDTO toDetailDTO(Product product);
- *                 }
- *                 ```
+ *     Product toEntity(ProductDTO dto);
  * 
- *                 Implementation Checklist:
- *                 ✓ Add MapStruct dependency to pom.xml
- *                 ✓ Create mapper interfaces for each entity
- *                 ✓ Add @Mapper annotations with componentModel = "spring"
- *                 ✓ Replace manual mapping code with mapper calls
- *                 ✓ Add custom mapping logic for complex properties
- *                 ✓ Update services to use injected mappers
- *                 ✓ Write unit tests for mappers
- *                 ✓ Update documentation
+ *     &#64;Mapping(source = "product.id", target = "productId")
+ *     &#64;Mapping(source = "product.name", target = "productName")
+ *     ProductDetailDTO toDetailDTO(Product product);
+ * }
+ * </pre>
+ * 
+ * Implementation Checklist:
+ * ✓ Add MapStruct dependency to pom.xml
+ * ✓ Create mapper interfaces for each entity
+ * ✓ Add @Mapper annotations with componentModel = "spring"
+ * ✓ Replace manual mapping code with mapper calls
+ * ✓ Add custom mapping logic for complex properties
+ * ✓ Update services to use injected mappers
+ * ✓ Write unit tests for mappers
+ * ✓ Update documentation
  */
 @Slf4j
 @Configuration

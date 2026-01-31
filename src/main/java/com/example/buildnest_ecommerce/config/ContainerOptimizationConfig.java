@@ -49,7 +49,7 @@ import org.springframework.context.annotation.Configuration;
  * 
  * # Stage 2: Runtime
  * FROM eclipse-temurin:21-jre-alpine
- * RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+ * RUN addgroup -S appgroup &amp;&amp; adduser -S appuser -G appgroup
  * WORKDIR /app
  * COPY --from=builder /build/target/buildnest-ecommerce-*.jar app.jar
  * RUN chown -R appuser:appgroup /app

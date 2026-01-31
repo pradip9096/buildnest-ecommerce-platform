@@ -38,7 +38,7 @@ public final class DatabaseQueryOptimizationPatterns {
      * <pre>
      * &#64;Query("SELECT new com.example.buildnest_ecommerce.model.dto.OrderDTO(o.id, o.orderNumber, o.totalAmount) "
      *         + "FROM Order o WHERE o.userId = :userId")
-     * List<OrderDTO> getUserOrders(@Param("userId") Long userId);
+     * List&lt;OrderDTO&gt; getUserOrders(@Param("userId") Long userId);
      * </pre>
      *
      * Benefits:
@@ -57,7 +57,7 @@ public final class DatabaseQueryOptimizationPatterns {
      * Example:
      * 
      * <pre>
-     * @Cacheable(value = "categories", key = "#categoryId")
+     * &#64;Cacheable(value = "categories", key = "#categoryId")
      * public Category getCategoryById(Long categoryId) {
      *     return categoryRepository.findById(categoryId).orElseThrow();
      * }
@@ -66,7 +66,7 @@ public final class DatabaseQueryOptimizationPatterns {
      * Benefits:
      * - Eliminates redundant database queries
      * - Reduces database load
-     * - Faster response times (Redis cache < 1ms)
+     * - Faster response times (Redis cache &lt; 1ms)
      */
     public static final String PATTERN_2_QUERY_CACHING = "Pattern 2: Query Result Caching (@Cacheable)";
 
@@ -81,10 +81,10 @@ public final class DatabaseQueryOptimizationPatterns {
      * <pre>
      * // Good: Single query for all product IDs
      * &#64;Query("SELECT p FROM Product p WHERE p.id IN (:productIds)")
-     * List<Product> findByIds(@Param("productIds") List<Long> productIds);
+     * List&lt;Product&gt; findByIds(@Param("productIds") List&lt;Long&gt; productIds);
      *
      * // Bad: N queries
-     * productIds.forEach(id -> productRepository.findById(id));
+     * productIds.forEach(id -&gt; productRepository.findById(id));
      * </pre>
      *
      * Benefits:
@@ -104,10 +104,10 @@ public final class DatabaseQueryOptimizationPatterns {
      * 
      * <pre>
      * &#64;Query("SELECT o FROM Order o WHERE o.status = :status ORDER BY o.createdAt DESC")
-     * Page<Order> findByStatus(@Param("status") String status, Pageable pageable);
+     * Page&lt;Order&gt; findByStatus(@Param("status") String status, Pageable pageable);
      *
      * // Usage:
-     * Page<Order> page = orderRepository.findByStatus("COMPLETED",
+     * Page&lt;Order&gt; page = orderRepository.findByStatus("COMPLETED",
      *         PageRequest.of(0, 50, Sort.by("createdAt").descending()));
      * </pre>
      *
@@ -129,11 +129,11 @@ public final class DatabaseQueryOptimizationPatterns {
      * <pre>
      * // Good: Single query with JOIN FETCH (1 query)
      * &#64;Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.items WHERE o.id = :orderId")
-     * Optional<Order> findByIdWithItems(@Param("orderId") Long orderId);
+     * Optional&lt;Order&gt; findByIdWithItems(@Param("orderId") Long orderId);
      *
      * // Bad: N+1 Query Problem
      * Order order = orderRepository.findById(orderId).orElseThrow();
-     * order.getItems().forEach(item -> item.getProduct().getName()); // Triggers N queries
+     * order.getItems().forEach(item -&gt; item.getProduct().getName()); // Triggers N queries
      * </pre>
      *
      * Benefits:
@@ -152,9 +152,9 @@ public final class DatabaseQueryOptimizationPatterns {
      * Example:
      * 
      * <pre>
-     * @EntityGraph(attributePaths = { "items", "payment", "user" })
+     * &#64;EntityGraph(attributePaths = { "items", "payment", "user" })
      * &#64;Query("SELECT o FROM Order o WHERE o.id = :orderId")
-     * Optional<Order> findWithAllRelations(@Param("orderId") Long orderId);
+     * Optional&lt;Order&gt; findWithAllRelations(@Param("orderId") Long orderId);
      * </pre>
      *
      * Benefits:
@@ -183,7 +183,7 @@ public final class DatabaseQueryOptimizationPatterns {
      *
      * &#64;Query("SELECT new com.example.buildnest_ecommerce.model.dto.ProductDTO(" +
      *         "p.id, p.name, p.price) FROM Product p WHERE p.category.id = :categoryId")
-     * List<ProductDTO> findByCategoryId(@Param("categoryId") Long categoryId);
+     * List&lt;ProductDTO&gt; findByCategoryId(@Param("categoryId") Long categoryId);
      * </pre>
      *
      * Benefits:

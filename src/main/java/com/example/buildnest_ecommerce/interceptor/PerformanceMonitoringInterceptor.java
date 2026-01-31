@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * Intercepts all HTTP requests and measures response time.
  * Enables tracking of API performance against SLA requirements.
  * 
- * SYS-PERF-001: API response time < 500ms (95th percentile)
+ * SYS-PERF-001: API response time &lt; 500ms (95th percentile)
  */
 @Slf4j
 @Component

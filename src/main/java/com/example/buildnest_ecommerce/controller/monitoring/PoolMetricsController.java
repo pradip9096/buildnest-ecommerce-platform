@@ -48,9 +48,9 @@ public class PoolMetricsController {
      * - waitingQueue: Threads waiting for connection
      *
      * Alert Thresholds (PERFORMANCE_OPTIMIZATION_GUIDE):
-     * - Active Connections > 90% of max: Scale up required
-     * - Idle Connections < 20% of total: Increase minimum-idle
-     * - Threads Awaiting Connection > 0: Increase pool size immediately
+     * - Active Connections &gt; 90% of max: Scale up required
+     * - Idle Connections &lt; 20% of total: Increase minimum-idle
+     * - Threads Awaiting Connection &gt; 0: Increase pool size immediately
      *
      * @return Map containing pool status metrics
      */
