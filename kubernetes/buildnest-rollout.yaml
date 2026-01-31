@@ -1,0 +1,414 @@
+---
+# CRITICAL BLOCKER #4 FIX: Blue-Green Deployment with Argo Rollouts
+#
+# This configuration implements zero-downtime blue-green deployment strategy
+# using Argo Rollouts for the BuildNest application
+#
+# Prerequisites:
+#   1. Install Argo Rollouts:
+#      kubectl create namespace argo-rollouts
+#      kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
+#
+#   2. Install Argo Rollouts kubectl plugin:
+#      curl -LO https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-windows-amd64
+#      Move to PATH as kubectl-argo-rollouts.exe
+#
+#   3. Verify installation:
+#      kubectl argo rollouts version
+#
+# Usage:
+#   kubectl apply -f buildnest-rollout.yaml
+#   kubectl argo rollouts get rollout buildnest-app -n buildnest --watch
+
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: buildnest-app
+  namespace: buildnest
+  labels:
+    app: buildnest
+    tier: application
+spec:
+  # Number of replicas
+  replicas: 3
+  
+  # Revision history limit
+  revisionHistoryLimit: 5
+  
+  # Selector for pods
+  selector:
+    matchLabels:
+      app: buildnest
+      tier: application
+  
+  # Pod template
+  template:
+    metadata:
+      labels:
+        app: buildnest
+        tier: application
+    spec:
+      containers:
+      - name: buildnest-app
+        image: buildnest/ecommerce:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8081
+          name: management
+          protocol: TCP
+        
+        env:
+        # Database Configuration
+        - name: SPRING_DATASOURCE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: buildnest-config
+              key: database.url
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: buildnest-secrets
+              key: database.username
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: buildnest-secrets
+              key: database.password
+        
+        # Redis Configuration
+        - name: SPRING_REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: buildnest-config
+              key: redis.host
+        - name: SPRING_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: buildnest-secrets
+              key: redis.password
+        
+        # JWT Configuration
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: buildnest-secrets
+              key: jwt.secret
+        
+        # Application Configuration
+        - name: SPRING_PROFILES_ACTIVE
+          value: "production"
+        - name: SERVER_PORT
+          value: "8080"
+        
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        
+        # Liveness Probe
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8081
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Readiness Probe
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+  
+  # Blue-Green Strategy Configuration
+  strategy:
+    blueGreen:
+      # Active service (receives production traffic)
+      activeService: buildnest-active
+      
+      # Preview service (new version for testing)
+      previewService: buildnest-preview
+      
+      # Auto-promotion disabled - requires manual approval
+      autoPromotionEnabled: false
+      
+      # Time to wait before scaling down old version (allows quick rollback)
+      scaleDownDelaySeconds: 3600  # 1 hour
+      
+      # Automatically scale down old version after promotion
+      scaleDownDelayRevisionLimit: 1
+      
+      # Anti-affinity to avoid pods on same node
+      antiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution: {}
+      
+      # Pre-promotion analysis (smoke tests)
+      prePromotionAnalysis:
+        templates:
+        - templateName: buildnest-smoke-tests
+        args:
+        - name: service-name
+          value: buildnest-preview
+
+---
+# Active Service (Production Traffic)
+apiVersion: v1
+kind: Service
+metadata:
+  name: buildnest-active
+  namespace: buildnest
+  labels:
+    app: buildnest
+    service-type: active
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 8081
+    targetPort: 8081
+    protocol: TCP
+    name: management
+  selector:
+    app: buildnest
+    tier: application
+
+---
+# Preview Service (New Version Testing)
+apiVersion: v1
+kind: Service
+metadata:
+  name: buildnest-preview
+  namespace: buildnest
+  labels:
+    app: buildnest
+    service-type: preview
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 8081
+    targetPort: 8081
+    protocol: TCP
+    name: management
+  selector:
+    app: buildnest
+    tier: application
+
+---
+# Analysis Template (Smoke Tests)
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: buildnest-smoke-tests
+  namespace: buildnest
+spec:
+  args:
+  - name: service-name
+  metrics:
+  
+  # Metric 1: Health Check
+  - name: health-check
+    interval: 10s
+    count: 3
+    successCondition: result == "UP"
+    provider:
+      web:
+        url: "http://{{args.service-name}}:8081/actuator/health"
+        jsonPath: "{$.status}"
+  
+  # Metric 2: Error Rate
+  - name: error-rate
+    interval: 30s
+    count: 5
+    successCondition: result < 0.05  # Less than 5% error rate
+    provider:
+      prometheus:
+        address: http://prometheus-server.monitoring.svc.cluster.local
+        query: |
+          sum(rate(http_server_requests_seconds_count{status=~"5..",service="{{args.service-name}}"}[5m])) / 
+          sum(rate(http_server_requests_seconds_count{service="{{args.service-name}}"}[5m]))
+  
+  # Metric 3: Response Time
+  - name: response-time-p95
+    interval: 30s
+    count: 5
+    successCondition: result < 1.0  # Less than 1 second p95
+    provider:
+      prometheus:
+        address: http://prometheus-server.monitoring.svc.cluster.local
+        query: |
+          histogram_quantile(0.95, 
+            sum(rate(http_server_requests_seconds_bucket{service="{{args.service-name}}"}[5m])) by (le))
+
+---
+# Deployment Workflow Instructions
+#
+# DEPLOYMENT PROCESS:
+#
+# Step 1: Deploy new version (blue-green automatically creates preview)
+#   kubectl set image rollout/buildnest-app \
+#     buildnest-app=buildnest/ecommerce:v1.0.1 -n buildnest
+#
+# Step 2: Watch rollout progress
+#   kubectl argo rollouts get rollout buildnest-app -n buildnest --watch
+#
+# Step 3: Test preview version
+#   kubectl port-forward svc/buildnest-preview 8080:8080 -n buildnest
+#   curl http://localhost:8080/actuator/health
+#   # Run manual smoke tests
+#
+# Step 4: Promote to production (if tests pass)
+#   kubectl argo rollouts promote buildnest-app -n buildnest
+#
+# Step 5: Monitor production traffic
+#   kubectl argo rollouts get rollout buildnest-app -n buildnest
+#
+# ROLLBACK PROCESS:
+#
+# Option 1: Abort during preview (before promotion)
+#   kubectl argo rollouts abort buildnest-app -n buildnest
+#
+# Option 2: Rollback after promotion (within 1 hour)
+#   kubectl argo rollouts undo buildnest-app -n buildnest
+#
+# Option 3: Rollback to specific revision
+#   kubectl argo rollouts undo buildnest-app --to-revision=3 -n buildnest
+#
+# VERIFICATION COMMANDS:
+#
+# Check rollout status:
+#   kubectl argo rollouts status buildnest-app -n buildnest
+#
+# List rollout history:
+#   kubectl argo rollouts history buildnest-app -n buildnest
+#
+# View analysis runs:
+#   kubectl get analysisrun -n buildnest
+#
+# Check which service is active:
+#   kubectl get svc buildnest-active -n buildnest -o jsonpath='{.spec.selector}'
+
+---
+# Alternative: Manual Blue-Green (Without Argo Rollouts)
+#
+# If Argo Rollouts is not available, use this manual process:
+#
+# 1. Deploy Blue version (current production)
+#    kubectl apply -f buildnest-deployment-blue.yaml
+#    kubectl apply -f buildnest-service.yaml  # Points to blue
+#
+# 2. Deploy Green version (new version)
+#    kubectl apply -f buildnest-deployment-green.yaml
+#
+# 3. Test Green version
+#    kubectl port-forward deployment/buildnest-green 8080:8080
+#    # Run smoke tests
+#
+# 4. Switch traffic to Green
+#    kubectl patch service buildnest-app -p '{"spec":{"selector":{"version":"green"}}}'
+#
+# 5. Monitor for 1 hour
+#
+# 6. If stable, delete Blue
+#    kubectl delete deployment buildnest-blue
+#
+# 7. If issues, rollback to Blue
+#    kubectl patch service buildnest-app -p '{"spec":{"selector":{"version":"blue"}}}'
+
+---
+# CI/CD Integration (GitHub Actions)
+#
+# Add to .github/workflows/ci-cd-pipeline.yml:
+#
+# deploy-production:
+#   name: Deploy to Production (Blue-Green)
+#   runs-on: ubuntu-latest
+#   needs: [unit-tests, integration-tests, build-image]
+#   if: github.ref == 'refs/heads/main'
+#   
+#   steps:
+#     - name: Configure kubectl
+#       uses: azure/k8s-set-context@v3
+#       with:
+#         kubeconfig: ${{ secrets.KUBE_CONFIG }}
+#     
+#     - name: Install Argo Rollouts plugin
+#       run: |
+#         curl -LO https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
+#         chmod +x kubectl-argo-rollouts-linux-amd64
+#         sudo mv kubectl-argo-rollouts-linux-amd64 /usr/local/bin/kubectl-argo-rollouts
+#     
+#     - name: Update rollout image
+#       run: |
+#         kubectl argo rollouts set image buildnest-app \
+#           buildnest-app=buildnest/ecommerce:${{ github.sha }} \
+#           -n buildnest
+#     
+#     - name: Wait for preview deployment
+#       run: |
+#         kubectl argo rollouts status buildnest-app -n buildnest --timeout=10m
+#     
+#     - name: Run smoke tests on preview
+#       run: |
+#         kubectl run smoke-test --rm -i --restart=Never --image=curlimages/curl \
+#           -- curl -f http://buildnest-preview:8080/actuator/health
+#     
+#     - name: Promote to production (if manual approval)
+#       if: github.event_name == 'workflow_dispatch'
+#       run: |
+#         kubectl argo rollouts promote buildnest-app -n buildnest
+#     
+#     - name: Wait for production deployment
+#       run: |
+#         kubectl argo rollouts status buildnest-app -n buildnest --timeout=10m
+#
+# For manual promotion, run:
+#   gh workflow run ci-cd-pipeline.yml --ref main
+
+---
+# Monitoring and Alerts
+#
+# Add Prometheus alerts for deployment issues:
+#
+# - alert: RolloutStuck
+#   expr: |
+#     sum(argo_rollout_phase{namespace="buildnest",name="buildnest-app",phase="Progressing"}) > 0
+#   for: 15m
+#   annotations:
+#     summary: "Rollout stuck in Progressing state"
+#
+# - alert: RolloutDegraded
+#   expr: |
+#     sum(argo_rollout_phase{namespace="buildnest",name="buildnest-app",phase="Degraded"}) > 0
+#   annotations:
+#     summary: "Rollout in degraded state - immediate action required"
+
+---
+# Best Practices
+#
+# 1. Always test preview service before promotion
+# 2. Keep old version running for 1 hour (quick rollback)
+# 3. Use analysis templates for automated smoke tests
+# 4. Monitor error rates and response times
+# 5. Have rollback plan ready
+# 6. Document each deployment in runbook
+# 7. Schedule deployments during low-traffic windows
+# 8. Require manual approval for production promotion

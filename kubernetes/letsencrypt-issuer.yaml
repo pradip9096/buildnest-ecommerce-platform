@@ -1,0 +1,243 @@
+---
+# CRITICAL BLOCKER #2 FIX: SSL Certificate Automation with cert-manager
+#
+# This configuration sets up automatic SSL certificate management using Let's Encrypt
+#
+# Prerequisites:
+#   1. Install cert-manager in cluster:
+#      kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
+#
+#   2. Verify cert-manager is running:
+#      kubectl get pods -n cert-manager
+#
+#   3. Create buildnest namespace:
+#      kubectl create namespace buildnest
+#
+# Usage:
+#   kubectl apply -f letsencrypt-issuer.yaml
+#   kubectl apply -f buildnest-ingress-tls.yaml
+
+# Staging Issuer (for testing)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    # Let's Encrypt staging server (for testing, higher rate limits)
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    
+    # Email address for urgent renewal and security notices
+    # REPLACE with actual email
+    email: admin@buildnest.com
+    
+    # Secret to store ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-staging-key
+    
+    # Enable HTTP-01 challenge (domain validation via HTTP)
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+---
+# Production Issuer (real certificates)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    # Let's Encrypt production server
+    server: https://acme-v02.api.letsencrypt.org/directory
+    
+    # Email address for urgent renewal and security notices
+    # REPLACE with actual email
+    email: admin@buildnest.com
+    
+    # Secret to store ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-prod-key
+    
+    # Enable HTTP-01 challenge
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+---
+# Ingress with TLS (HTTPS)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: buildnest-ingress
+  namespace: buildnest
+  annotations:
+    # Use cert-manager to issue certificate
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    
+    # Force HTTPS redirect
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+    
+    # Rate limiting (additional layer)
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    
+    # Timeout configuration
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+spec:
+  ingressClassName: nginx
+  
+  # TLS configuration
+  tls:
+  - hosts:
+    - api.buildnest.com
+    - www.buildnest.com
+    # cert-manager will create this secret automatically
+    secretName: buildnest-tls-cert
+  
+  # Routing rules
+  rules:
+  - host: api.buildnest.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: buildnest-app
+            port:
+              number: 8080
+  
+  - host: www.buildnest.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: buildnest-app
+            port:
+              number: 8080
+
+---
+# Alternative: Manual Certificate Secret
+# If NOT using cert-manager, create secret manually from existing certificate:
+#
+# kubectl create secret tls buildnest-tls-cert \
+#   --cert=path/to/cert.pem \
+#   --key=path/to/key.pem \
+#   --namespace=buildnest
+#
+# Then use this Ingress:
+#
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: buildnest-ingress-manual
+#   namespace: buildnest
+# spec:
+#   tls:
+#   - hosts:
+#     - api.buildnest.com
+#     secretName: buildnest-tls-cert
+#   rules:
+#   - host: api.buildnest.com
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: buildnest-app
+#             port:
+#               number: 8080
+
+---
+# Certificate Resource (optional - explicit certificate request)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: buildnest-cert
+  namespace: buildnest
+spec:
+  # Certificate details
+  secretName: buildnest-tls-cert
+  
+  # Certificate duration (90 days is Let's Encrypt default)
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days before expiration
+  
+  # Subject information
+  subject:
+    organizations:
+    - BuildNest
+  
+  # Common name
+  commonName: api.buildnest.com
+  
+  # DNS names
+  dnsNames:
+  - api.buildnest.com
+  - www.buildnest.com
+  
+  # Issuer reference
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+---
+# Verification Commands:
+#
+# 1. Check cert-manager is installed:
+#    kubectl get pods -n cert-manager
+#
+# 2. Check ClusterIssuer status:
+#    kubectl get clusterissuer
+#    kubectl describe clusterissuer letsencrypt-prod
+#
+# 3. Check certificate status:
+#    kubectl get certificate -n buildnest
+#    kubectl describe certificate buildnest-cert -n buildnest
+#
+# 4. Check certificate secret:
+#    kubectl get secret buildnest-tls-cert -n buildnest
+#
+# 5. Test HTTPS:
+#    curl -v https://api.buildnest.com/actuator/health
+#    # Should show valid certificate
+#
+# 6. Check certificate expiration:
+#    echo | openssl s_client -servername api.buildnest.com \
+#      -connect api.buildnest.com:443 2>/dev/null | \
+#      openssl x509 -noout -dates
+
+---
+# Troubleshooting:
+#
+# Certificate not issuing:
+#   kubectl describe certificate buildnest-cert -n buildnest
+#   kubectl describe certificaterequest -n buildnest
+#   kubectl logs -n cert-manager deployment/cert-manager
+#
+# HTTP-01 challenge failing:
+#   - Ensure domain points to ingress IP
+#   - Ensure port 80 is accessible
+#   - Check ingress controller logs:
+#     kubectl logs -n ingress-nginx deployment/ingress-nginx-controller
+#
+# Rate limit exceeded:
+#   - Use staging issuer for testing
+#   - Wait 1 hour (Let's Encrypt rate limit)
+#   - Check rate limits: https://letsencrypt.org/docs/rate-limits/
