@@ -1,0 +1,235 @@
+{
+  "kibana": {
+    "dashboards": [
+      {
+        "id": "api-errors-dashboard",
+        "title": "API Errors Dashboard",
+        "description": "Real-time monitoring of API errors by status code, endpoint, and frequency",
+        "panels": [
+          {
+            "id": "error-rate-trend",
+            "type": "visualization",
+            "title": "Error Rate Trend (24h)",
+            "query": {
+              "index": "audit-logs",
+              "agg": {
+                "type": "date_histogram",
+                "field": "timestamp",
+                "interval": "1h",
+                "sub_agg": {
+                  "type": "filter",
+                  "filter": "httpStatusCode >= 400",
+                  "sub_agg": {
+                    "type": "avg",
+                    "field": "responseTime"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "id": "status-code-distribution",
+            "type": "pie",
+            "title": "HTTP Status Code Distribution",
+            "query": {
+              "index": "audit-logs",
+              "agg": {
+                "type": "terms",
+                "field": "httpStatusCode",
+                "size": 20
+              },
+              "filter": "httpStatusCode >= 400"
+            }
+          },
+          {
+            "id": "top-error-endpoints",
+            "type": "table",
+            "title": "Top 10 Error Endpoints",
+            "query": {
+              "index": "audit-logs",
+              "agg": {
+                "type": "terms",
+                "field": "endpoint",
+                "size": 10,
+                "order": {
+                  "type": "count",
+                  "direction": "desc"
+                }
+              },
+              "filter": "httpStatusCode >= 400"
+            },
+            "columns": [
+              "endpoint",
+              "errorCount",
+              "avgResponseTime",
+              "lastOccurrence"
+            ]
+          },
+          {
+            "id": "error-category-breakdown",
+            "type": "bar",
+            "title": "Error Category Breakdown",
+            "query": {
+              "index": "audit-logs",
+              "agg": {
+                "type": "terms",
+                "field": "errorCategory",
+                "size": 10
+              },
+              "filter": "httpStatusCode >= 400"
+            }
+          },
+          {
+            "id": "client-vs-server-errors",
+            "type": "metric",
+            "title": "Client vs Server Errors",
+            "queries": [
+              {
+                "id": "client-errors",
+                "title": "4xx Errors",
+                "query": {
+                  "index": "audit-logs",
+                  "agg": {
+                    "type": "count"
+                  },
+                  "filter": "httpStatusCode >= 400 AND httpStatusCode < 500"
+                }
+              },
+              {
+                "id": "server-errors",
+                "title": "5xx Errors",
+                "query": {
+                  "index": "audit-logs",
+                  "agg": {
+                    "type": "count"
+                  },
+                  "filter": "httpStatusCode >= 500"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "system-health-dashboard",
+        "title": "System Health Monitor",
+        "description": "Real-time system health, performance, and resource utilization",
+        "panels": [
+          {
+            "id": "cpu-usage",
+            "type": "gauge",
+            "title": "CPU Usage (%)",
+            "query": {
+              "index": "system-metrics",
+              "agg": {
+                "type": "avg",
+                "field": "cpu_usage"
+              }
+            }
+          },
+          {
+            "id": "memory-usage",
+            "type": "gauge",
+            "title": "Memory Usage (%)",
+            "query": {
+              "index": "system-metrics",
+              "agg": {
+                "type": "avg",
+                "field": "memory_usage"
+              }
+            }
+          },
+          {
+            "id": "response-time-trend",
+            "type": "area",
+            "title": "Average Response Time (ms)",
+            "query": {
+              "index": "audit-logs",
+              "agg": {
+                "type": "date_histogram",
+                "field": "timestamp",
+                "interval": "5m",
+                "sub_agg": {
+                  "type": "avg",
+                  "field": "responseTime"
+                }
+              }
+            }
+          },
+          {
+            "id": "request-throughput",
+            "type": "area",
+            "title": "Request Throughput (req/s)",
+            "query": {
+              "index": "audit-logs",
+              "agg": {
+                "type": "date_histogram",
+                "field": "timestamp",
+                "interval": "1m",
+                "sub_agg": {
+                  "type": "count"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "security-audit-dashboard",
+        "title": "Security & Audit Trail",
+        "description": "Monitor security events, authentication attempts, and audit trail",
+        "panels": [
+          {
+            "id": "failed-auth-attempts",
+            "type": "metric",
+            "title": "Failed Authentication Attempts (24h)",
+            "query": {
+              "index": "audit-logs",
+              "agg": {
+                "type": "count"
+              },
+              "filter": "action = 'AUTHENTICATION_FAILURE'"
+            }
+          },
+          {
+            "id": "user-activities",
+            "type": "table",
+            "title": "Recent User Activities",
+            "query": {
+              "index": "audit-logs",
+              "sort": [
+                { "timestamp": "desc" }
+              ],
+              "size": 20
+            },
+            "columns": [
+              "timestamp",
+              "userId",
+              "action",
+              "entityType",
+              "entityId",
+              "severity"
+            ]
+          },
+          {
+            "id": "suspicious-patterns",
+            "type": "table",
+            "title": "Suspicious Patterns Detected",
+            "query": {
+              "index": "audit-logs",
+              "agg": {
+                "type": "terms",
+                "field": "userId",
+                "size": 20,
+                "sub_agg": {
+                  "type": "count"
+                }
+              },
+              "filter": "severity = 'HIGH' OR severity = 'CRITICAL'"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- 
+        OWASP Dependency-Check Suppressions
+        Add known false positives or accepted risks here.
+        Each suppression should have:
+        - CVE identifier or file path pattern
+        - Justification for suppression
+        - Expiration date for review
+    -->
+    
+    <!-- Example suppression (remove when not needed):
+    <suppress>
+        <notes>False positive for H2 database in test scope</notes>
+        <cve>CVE-2022-XXXXX</cve>
+        <filePath regex="true">.*h2-.*\.jar</filePath>
+        <until>2025-06-01Z</until>
+    </suppress>
+    -->
+</suppressions>

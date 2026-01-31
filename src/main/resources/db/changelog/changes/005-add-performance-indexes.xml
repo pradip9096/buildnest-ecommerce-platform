@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="005-add-performance-indexes-1" author="system">
+        <comment>Add performance indexes for frequently queried tables</comment>
+        
+        <!-- Product indexes for search and filtering -->
+        <createIndex tableName="products" indexName="idx_product_category_active">
+            <column name="category_id"/>
+            <column name="is_active"/>
+        </createIndex>
+        
+        <createIndex tableName="products" indexName="idx_product_name_lower">
+            <column name="name"/>
+        </createIndex>
+        
+        <createIndex tableName="products" indexName="idx_product_price">
+            <column name="price"/>
+        </createIndex>
+        
+        <createIndex tableName="products" indexName="idx_product_created_at">
+            <column name="created_at" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="005-add-performance-indexes-2" author="system">
+        <comment>Add indexes for order queries</comment>
+        
+        <!-- Order indexes for user queries and status filtering -->
+        <createIndex tableName="orders" indexName="idx_order_user_status">
+            <column name="user_id"/>
+            <column name="status"/>
+        </createIndex>
+        
+        <createIndex tableName="orders" indexName="idx_order_created_date">
+            <column name="created_at" descending="true"/>
+        </createIndex>
+        
+        <createIndex tableName="orders" indexName="idx_order_status_updated">
+            <column name="status"/>
+            <column name="updated_at"/>
+        </createIndex>
+        
+        <createIndex tableName="orders" indexName="idx_order_number">
+            <column name="order_number"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="005-add-performance-indexes-3" author="system">
+        <comment>Add indexes for inventory monitoring</comment>
+        
+        <!-- Inventory indexes for threshold monitoring -->
+        <createIndex tableName="inventory" indexName="idx_inventory_product">
+            <column name="product_id"/>
+            <column name="current_stock"/>
+        </createIndex>
+        
+        <createIndex tableName="inventory" indexName="idx_inventory_updated">
+            <column name="updated_at" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="005-add-performance-indexes-4" author="system">
+        <comment>Add indexes for audit logs</comment>
+        
+        <!-- Audit log indexes for user and date queries -->
+        <createIndex tableName="audit_log" indexName="idx_audit_user_action">
+            <column name="user_id"/>
+            <column name="action"/>
+            <column name="created_at"/>
+        </createIndex>
+        
+        <createIndex tableName="audit_log" indexName="idx_audit_date_range">
+            <column name="created_at" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="005-add-performance-indexes-5" author="system">
+        <comment>Add indexes for user and cart queries</comment>
+        
+        <!-- User indexes for authentication and searches -->
+        <createIndex tableName="users" indexName="idx_user_email">
+            <column name="email"/>
+        </createIndex>
+        
+        <createIndex tableName="users" indexName="idx_user_is_active">
+            <column name="is_active"/>
+        </createIndex>
+        
+        <!-- Cart indexes for user queries -->
+        <createIndex tableName="cart" indexName="idx_cart_user">
+            <column name="user_id"/>
+        </createIndex>
+        
+        <createIndex tableName="cart_item" indexName="idx_cart_item_cart">
+            <column name="cart_id"/>
+        </createIndex>
+        
+        <createIndex tableName="cart_item" indexName="idx_cart_item_product">
+            <column name="product_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="005-add-performance-indexes-6" author="system">
+        <comment>Add indexes for payment and category queries</comment>
+        
+        <!-- Payment indexes -->
+        <createIndex tableName="payment" indexName="idx_payment_order">
+            <column name="order_id"/>
+        </createIndex>
+        
+        <createIndex tableName="payment" indexName="idx_payment_status">
+            <column name="status"/>
+            <column name="created_at" descending="true"/>
+        </createIndex>
+        
+        <!-- Category indexes -->
+        <createIndex tableName="categories" indexName="idx_category_name">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

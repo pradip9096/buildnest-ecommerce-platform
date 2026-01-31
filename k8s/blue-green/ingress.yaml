@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: buildnest-ecommerce-blue-green
+spec:
+  rules:
+    - host: api.buildnest.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: buildnest-ecommerce-active
+                port:
+                  number: 80

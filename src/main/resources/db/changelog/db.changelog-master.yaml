@@ -1,0 +1,240 @@
+# Master Liquibase Changelog
+# This file orchestrates all database migrations for BuildNest E-Commerce Platform
+#
+# Liquibase documentation: https://www.liquibase.org/
+# Reference: https://www.liquibase.org/get-started/best-practices
+
+databaseChangeLog:
+  logicalFilePath: db/changelog/db.changelog-master.yaml
+  
+  - changeSet:
+    id: 001-initial-schema
+    author: buildnest-team
+    description: >
+      Initial database schema for BuildNest E-Commerce Platform.
+      Creates core entities: User, Product, Cart, Order, Inventory, Payment, AuditLog, RefreshToken
+    changes:
+      - sqlFile:
+          path: db/changelog/v001__initial_schema.sql
+          relativeToChangelogFile: true
+    rollback:
+      - dropTable:
+          tableName: refresh_token
+      - dropTable:
+          tableName: payment
+      - dropTable:
+          tableName: order_item
+      - dropTable:
+          tableName: orders
+      - dropTable:
+          tableName: cart_item
+      - dropTable:
+          tableName: cart
+      - dropTable:
+          tableName: inventory
+      - dropTable:
+          tableName: product
+      - dropTable:
+          tableName: audit_log
+      - dropTable:
+          tableName: users
+
+  - changeSet:
+    id: 002-add-indexes
+    author: buildnest-team
+    description: >
+      Add database indexes for performance optimization.
+      Improves query performance for frequently searched columns.
+    changes:
+      - createIndex:
+          indexName: idx_user_email
+          tableName: users
+          columns:
+            - column:
+                name: email
+      - createIndex:
+          indexName: idx_user_username
+          tableName: users
+          columns:
+            - column:
+                name: username
+      - createIndex:
+          indexName: idx_product_category
+          tableName: product
+          columns:
+            - column:
+                name: category
+      - createIndex:
+          indexName: idx_inventory_product_id
+          tableName: inventory
+          columns:
+            - column:
+                name: product_id
+      - createIndex:
+          indexName: idx_order_user_id
+          tableName: orders
+          columns:
+            - column:
+                name: user_id
+      - createIndex:
+          indexName: idx_order_status
+          tableName: orders
+          columns:
+            - column:
+                name: status
+      - createIndex:
+          indexName: idx_payment_order_id
+          tableName: payment
+          columns:
+            - column:
+                name: order_id
+      - createIndex:
+          indexName: idx_audit_log_user_id
+          tableName: audit_log
+          columns:
+            - column:
+                name: user_id
+      - createIndex:
+          indexName: idx_audit_log_timestamp
+          tableName: audit_log
+          columns:
+            - column:
+                name: created_at
+    rollback:
+      - dropIndex:
+          indexName: idx_user_email
+      - dropIndex:
+          indexName: idx_user_username
+      - dropIndex:
+          indexName: idx_product_category
+      - dropIndex:
+          indexName: idx_inventory_product_id
+      - dropIndex:
+          indexName: idx_order_user_id
+      - dropIndex:
+          indexName: idx_order_status
+      - dropIndex:
+          indexName: idx_payment_order_id
+      - dropIndex:
+          indexName: idx_audit_log_user_id
+      - dropIndex:
+          indexName: idx_audit_log_timestamp
+
+  - changeSet:
+    id: 003-add-constraints
+    author: buildnest-team
+    description: >
+      Add database constraints for data integrity.
+      Ensures referential integrity and data quality.
+    changes:
+      - addUniqueConstraint:
+          columnNames: email
+          constraintName: unique_user_email
+          tableName: users
+      - addUniqueConstraint:
+          columnNames: username
+          constraintName: unique_user_username
+          tableName: users
+      - addUniqueConstraint:
+          columnNames: product_id
+          constraintName: unique_inventory_product
+          tableName: inventory
+      - addForeignKeyConstraint:
+          baseColumnNames: user_id
+          baseTableName: cart
+          constraintName: fk_cart_user
+          referencedColumnNames: id
+          referencedTableName: users
+      - addForeignKeyConstraint:
+          baseColumnNames: user_id
+          baseTableName: orders
+          constraintName: fk_order_user
+          referencedColumnNames: id
+          referencedTableName: users
+      - addForeignKeyConstraint:
+          baseColumnNames: order_id
+          baseTableName: order_item
+          constraintName: fk_orderitem_order
+          referencedColumnNames: id
+          referencedTableName: orders
+      - addForeignKeyConstraint:
+          baseColumnNames: product_id
+          baseTableName: order_item
+          constraintName: fk_orderitem_product
+          referencedColumnNames: id
+          referencedTableName: product
+    rollback:
+      - dropUniqueConstraint:
+          constraintName: unique_user_email
+          tableName: users
+      - dropUniqueConstraint:
+          constraintName: unique_user_username
+          tableName: users
+      - dropUniqueConstraint:
+          constraintName: unique_inventory_product
+          tableName: inventory
+      - dropForeignKeyConstraint:
+          baseTableName: cart
+          constraintName: fk_cart_user
+      - dropForeignKeyConstraint:
+          baseTableName: orders
+          constraintName: fk_order_user
+      - dropForeignKeyConstraint:
+          baseTableName: order_item
+          constraintName: fk_orderitem_order
+      - dropForeignKeyConstraint:
+          baseTableName: order_item
+          constraintName: fk_orderitem_product
+
+  - changeSet:
+    id: 004-add-audit-triggers
+    author: buildnest-team
+    description: >
+      Add database triggers for automatic audit logging.
+      Captures all changes to sensitive tables for compliance.
+    comments: >
+      Triggers on users, product, orders, payment tables
+      - Update audit_log on INSERT/UPDATE/DELETE
+      - Records user_id, action, entity_type, old_value, new_value
+      - Implements immutable audit trail
+    changes:
+      - sql:
+          sql: >
+            CREATE TRIGGER audit_user_insert AFTER INSERT ON users
+            FOR EACH ROW BEGIN
+              INSERT INTO audit_log (user_id, action, entity_type, created_at)
+              VALUES (NEW.id, 'INSERT', 'USER', NOW());
+            END;
+          dbms: mysql
+
+  - changeSet:
+    id: 005-add-inventory-triggers
+    author: buildnest-team
+    description: >
+      Add triggers for inventory threshold monitoring.
+      Automatically updates inventory status based on quantity.
+    comments: >
+      Updates inventory status (IN_STOCK, LOW_STOCK, OUT_OF_STOCK)
+      when quantity changes
+    changes:
+      - sql:
+          sql: >
+            CREATE TRIGGER update_inventory_status AFTER UPDATE ON inventory
+            FOR EACH ROW BEGIN
+              UPDATE inventory SET
+                status = CASE
+                  WHEN NEW.quantity = 0 THEN 'OUT_OF_STOCK'
+                  WHEN NEW.quantity <= NEW.low_stock_threshold THEN 'LOW_STOCK'
+                  ELSE 'IN_STOCK'
+                END
+              WHERE id = NEW.id;
+            END;
+          dbms: mysql
+
+  # Future changesets for new features
+  # changeSet:
+  #   id: 006-add-wishlist-feature
+  #   author: buildnest-team
+  #   description: Add wishlist functionality
+  #   changes:
+  #     - createTable: ...

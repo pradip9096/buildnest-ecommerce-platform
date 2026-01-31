@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchange"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchange
+    http://www.liquibase.org/xml/ns/dbchange/dbchangelog-4.20.xsd">
+
+    <!-- Performance Optimization Indexes -->
+    <!-- Recommendation: Part 2.3.1 - Database Query Optimization -->
+    
+    <changeSet id="add-performance-indexes-product" author="buildnest-team">
+        <comment>Add performance indexes for product searches (Part 2.3.1)</comment>
+        
+        <!-- Product searches - composite index for category and active status -->
+        <createIndex tableName="product" indexName="idx_product_category_active">
+            <column name="category_id"/>
+            <column name="is_active"/>
+        </createIndex>
+        
+        <!-- Product name search - functional index for case-insensitive search -->
+        <sql>
+            CREATE INDEX idx_product_name_search ON product((LOWER(name)));
+        </sql>
+        
+        <!-- Product price range queries -->
+        <createIndex tableName="product" indexName="idx_product_price_range">
+            <column name="price"/>
+        </createIndex>
+        
+        <!-- Product stock level for inventory monitoring -->
+        <createIndex tableName="product" indexName="idx_product_stock">
+            <column name="minimum_stock_level"/>
+            <column name="is_active"/>
+        </createIndex>
+        
+        <!-- Product creation date for reporting -->
+        <createIndex tableName="product" indexName="idx_product_created_date">
+            <column name="created_at" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add-performance-indexes-order" author="buildnest-team">
+        <comment>Add performance indexes for order management (Part 2.3.1)</comment>
+        
+        <!-- Order user and status queries - composite index -->
+        <createIndex tableName="orders" indexName="idx_order_user_status">
+            <column name="user_id"/>
+            <column name="status"/>
+        </createIndex>
+        
+        <!-- Order creation date for reporting and analytics -->
+        <createIndex tableName="orders" indexName="idx_order_created_date">
+            <column name="created_at" descending="true"/>
+        </createIndex>
+        
+        <!-- Order status and update time for workflow management -->
+        <createIndex tableName="orders" indexName="idx_order_status_updated">
+            <column name="status"/>
+            <column name="updated_at" descending="true"/>
+        </createIndex>
+        
+        <!-- Order payment status for payment processing -->
+        <createIndex tableName="orders" indexName="idx_order_payment_status">
+            <column name="payment_status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add-performance-indexes-inventory" author="buildnest-team">
+        <comment>Add performance indexes for inventory management (Part 2.3.1)</comment>
+        
+        <!-- Inventory product and stock level -->
+        <createIndex tableName="inventory" indexName="idx_inventory_product_stock">
+            <column name="product_id"/>
+            <column name="current_stock"/>
+        </createIndex>
+        
+        <!-- Low stock monitoring -->
+        <createIndex tableName="inventory" indexName="idx_inventory_low_stock">
+            <column name="current_stock"/>
+        </createIndex>
+        
+        <!-- Inventory update tracking -->
+        <createIndex tableName="inventory" indexName="idx_inventory_updated">
+            <column name="updated_at" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add-performance-indexes-audit" author="buildnest-team">
+        <comment>Add performance indexes for audit log queries (Part 2.3.1)</comment>
+        
+        <!-- Audit log user and action queries -->
+        <createIndex tableName="audit_log" indexName="idx_audit_user_action">
+            <column name="user_id"/>
+            <column name="action"/>
+            <column name="created_at" descending="true"/>
+        </createIndex>
+        
+        <!-- Audit log date range queries -->
+        <createIndex tableName="audit_log" indexName="idx_audit_date_range">
+            <column name="created_at" descending="true"/>
+        </createIndex>
+        
+        <!-- Audit log action type filtering -->
+        <createIndex tableName="audit_log" indexName="idx_audit_action_type">
+            <column name="action"/>
+            <column name="entity_type"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add-performance-indexes-cart" author="buildnest-team">
+        <comment>Add performance indexes for cart operations (Part 2.3.1)</comment>
+        
+        <!-- Cart user lookup -->
+        <createIndex tableName="cart" indexName="idx_cart_user">
+            <column name="user_id"/>
+        </createIndex>
+        
+        <!-- Cart creation date for abandoned cart analysis -->
+        <createIndex tableName="cart" indexName="idx_cart_created_date">
+            <column name="created_at" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add-performance-indexes-payment" author="buildnest-team">
+        <comment>Add performance indexes for payment queries (Part 2.3.1)</comment>
+        
+        <!-- Payment order lookup -->
+        <createIndex tableName="payment" indexName="idx_payment_order">
+            <column name="order_id"/>
+        </createIndex>
+        
+        <!-- Payment status queries -->
+        <createIndex tableName="payment" indexName="idx_payment_status">
+            <column name="status"/>
+            <column name="created_at" descending="true"/>
+        </createIndex>
+        
+        <!-- Payment transaction ID lookup -->
+        <createIndex tableName="payment" indexName="idx_payment_transaction">
+            <column name="transaction_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add-performance-indexes-category" author="buildnest-team">
+        <comment>Add performance indexes for category queries (Part 2.3.1)</comment>
+        
+        <!-- Category name lookup -->
+        <createIndex tableName="category" indexName="idx_category_name">
+            <column name="name"/>
+        </createIndex>
+        
+        <!-- Category active status -->
+        <createIndex tableName="category" indexName="idx_category_active">
+            <column name="is_active"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

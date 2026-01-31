@@ -1,0 +1,168 @@
+version: '3.8'
+
+services:
+  # Elasticsearch - Distributed search and analytics engine (RQ-ES-01, RQ-ES-EL-03)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    container_name: es-single-node
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=changeme
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - buildnest-ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://elastic:changeme@localhost:9200 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kibana - Visualization and analytics dashboard (RQ-ES-VIS-01, RQ-ES-VIS-02, RQ-ES-VIS-03, RQ-ES-VIS-04)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.10.2
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=changeme
+      - xpack.security.enabled=true
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - buildnest-ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Logstash - Log processing and pipeline (RQ-ES-ING-01, RQ-ES-ING-02, RQ-ES-ING-03)
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.10.2
+    container_name: logstash
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    environment:
+      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+      - ELASTICSEARCH_HOSTS=elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=changeme
+    ports:
+      - "5000:5000"
+      - "9600:9600"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - buildnest-ecommerce-network
+
+  # Prometheus - Metrics collection and alerting
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - buildnest-ecommerce
+    networks:
+      - buildnest-ecommerce-network
+
+  # MySQL Database - Primary data store (synchronized with Elasticsearch)
+  mysql:
+    image: mysql:8.2
+    container_name: buildnest-ecommerce-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Pradip@123
+      MYSQL_DATABASE: buildnest_ecommerce
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - buildnest-ecommerce-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Caching and session storage (RQ-RATE-01)
+  redis:
+    image: redis:7-alpine
+    container_name: buildnest-ecommerce-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - buildnest-ecommerce-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # BuildNest – E-Commerce Platform for Home Construction and Décor Products (RQ-ES-02 integration)
+  buildnest-ecommerce:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: buildnest-ecommerce-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/buildnest_ecommerce
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Pradip@123
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: changeme
+      ELASTICSEARCH_SSL_ENABLED: "false"
+      ELASTICSEARCH_METRICS_ENABLED: "true"
+      ELASTICSEARCH_ALERT_ENABLED: "true"
+      ELASTICSEARCH_ALERT_CPU_THRESHOLD: "80"
+      ELASTICSEARCH_ALERT_MEMORY_THRESHOLD: "90"
+      ELASTICSEARCH_ALERT_ERROR_RATE_THRESHOLD: "5"
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    networks:
+      - buildnest-ecommerce-network
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  prometheus_data:
+    driver: local
+
+networks:
+  buildnest-ecommerce-network:
+    driver: bridge

@@ -1,0 +1,257 @@
+---
+# BuildNest Application Deployment
+# Recommendation: Part 4.3 - Kubernetes Deployment Manifests
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buildnest-app
+  namespace: buildnest
+  labels:
+    app: buildnest
+    tier: application
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: buildnest
+      tier: application
+  template:
+    metadata:
+      labels:
+        app: buildnest
+        tier: application
+        version: v1
+    spec:
+      containers:
+      - name: buildnest-app
+        image: buildnest/ecommerce:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8081
+          name: management
+          protocol: TCP
+        
+        env:
+        # Database Configuration
+        - name: SPRING_DATASOURCE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: buildnest-config
+              key: database.url
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: buildnest-secrets
+              key: database.username
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: buildnest-secrets
+              key: database.password
+        
+        # Redis Configuration
+        - name: SPRING_REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: buildnest-config
+              key: redis.host
+        - name: SPRING_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: buildnest-secrets
+              key: redis.password
+        
+        # JWT Configuration
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: buildnest-secrets
+              key: jwt.secret
+        
+        # Application Configuration
+        - name: SPRING_PROFILES_ACTIVE
+          value: "production"
+        - name: SERVER_PORT
+          value: "8080"
+        
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        
+        # Liveness Probe - checks if container is alive
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8081
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Readiness Probe - checks if container is ready to serve traffic
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        # Startup Probe - gives app time to start
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8081
+          initialDelaySeconds: 0
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 12
+        
+        volumeMounts:
+        - name: app-logs
+          mountPath: /app/logs
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+      
+      volumes:
+      - name: app-logs
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: buildnest-config
+
+---
+# Service - LoadBalancer
+apiVersion: v1
+kind: Service
+metadata:
+  name: buildnest-service
+  namespace: buildnest
+  labels:
+    app: buildnest
+spec:
+  type: LoadBalancer
+  selector:
+    app: buildnest
+    tier: application
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 8081
+    targetPort: 8081
+    protocol: TCP
+    name: management
+  sessionAffinity: None
+
+---
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: buildnest-hpa
+  namespace: buildnest
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: buildnest-app
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+      - type: Pods
+        value: 2
+        periodSeconds: 30
+      selectPolicy: Max
+
+---
+# Pod Disruption Budget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: buildnest-pdb
+  namespace: buildnest
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: buildnest
+      tier: application
+
+---
+# ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: buildnest-config
+  namespace: buildnest
+data:
+  database.url: "jdbc:mysql://mysql-service:3306/buildnest_db?useSSL=false"
+  redis.host: "redis-service"
+  redis.port: "6379"
+  elasticsearch.uri: "http://elasticsearch-service:9200"
+  zipkin.url: "http://zipkin-service:9411"
+
+---
+# Secrets (Base64 encoded - replace with actual values)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: buildnest-secrets
+  namespace: buildnest
+type: Opaque
+data:
+  database.username: YnVpbGRuZXN0X3VzZXI=  # buildnest_user
+  database.password: YnVpbGRuZXN0X3Bhc3M=  # buildnest_pass
+  redis.password: cmVkaXNfcGFzc3dvcmQ=      # redis_password
+  jwt.secret: bXktc2VjcmV0LWtleS1mb3ItcHJvZHVjdGlvbg==  # Change this!
+
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: buildnest
+  labels:
+    name: buildnest
+    environment: production

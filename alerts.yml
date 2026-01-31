@@ -1,0 +1,264 @@
+# Prometheus Alert Rules
+# PERFORMANCE_OPTIMIZATION_GUIDE - Section 7: Monitoring & Metrics
+# Generated: January 31, 2026
+#
+# Alert Thresholds based on PERFORMANCE_OPTIMIZATION_GUIDE Performance Baselines:
+# - API Response Time p95: 200ms (GOOD), 1s (INVESTIGATE)
+# - Throughput: 1000+ req/s (GOOD)
+# - Cache Hit Rate: >85% (GOOD), <70% (POOR)
+# - Error Rate: 0% (GOOD), >0.1% (INVESTIGATE)
+# - GC Pause Time: <100ms (GOOD), >200ms (INVESTIGATE)
+
+groups:
+  - name: buildnest_application_alerts
+    interval: 30s
+    rules:
+      # High HTTP Response Time (p95)
+      # PERFORMANCE_OPTIMIZATION_GUIDE - Troubleshooting #2
+      - alert: HighAPIResponseTime
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="buildnest"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API Response Time (p95 > 1 second)"
+          description: "API endpoint response time p95 is {{ $value }}s. Expected < 1s. Check database queries and cache hit rate."
+          runbook: "https://docs.buildnest.local/performance-troubleshooting#slow-api"
+
+      # Critical High Response Time
+      - alert: CriticalAPIResponseTime
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="buildnest"}[5m])) > 3
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "CRITICAL: API Response Time Exceeds 3 Seconds"
+          description: "API response time p95 is {{ $value }}s. Immediate action required."
+
+      # High Error Rate
+      # PERFORMANCE_OPTIMIZATION_GUIDE - Section 7: Alert Rules
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{job="buildnest",status=~"5.."}[5m]))
+          /
+          sum(rate(http_server_requests_seconds_count{job="buildnest"}[5m]))
+          > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High Error Rate (> 1%)"
+          description: "Error rate is {{ $value | humanizePercentage }}. Check application logs."
+
+      # Critical Error Rate
+      - alert: CriticalErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{job="buildnest",status=~"5.."}[5m]))
+          /
+          sum(rate(http_server_requests_seconds_count{job="buildnest"}[5m]))
+          > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "CRITICAL: Error Rate Exceeds 5%"
+          description: "Error rate is {{ $value | humanizePercentage }}. Immediate action required."
+
+      # Low Cache Hit Rate
+      # PERFORMANCE_OPTIMIZATION_GUIDE - Section 7: Alert Rules
+      - alert: LowCacheHitRate
+        expr: |
+          (sum(increase(cache_gets_hit_total[5m])))
+          /
+          (sum(increase(cache_gets_total[5m])))
+          < 0.70
+        for: 10m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low Cache Hit Rate (< 70%)"
+          description: "Cache hit rate is {{ $value | humanizePercentage }}. Expected > 85%. Review cache configuration and TTL."
+
+      # Database Connection Pool Exhaustion
+      # PERFORMANCE_OPTIMIZATION_GUIDE - Connection Pool Tuning
+      - alert: DatabaseConnectionPoolExhaustion
+        expr: |
+          (hikaricp_connections_active)
+          /
+          (hikaricp_connections)
+          > 0.90
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Database Connection Pool Utilization > 90%"
+          description: "Active connections: {{ $value }}. Consider increasing pool size."
+          runbook: "https://docs.buildnest.local/performance-troubleshooting#connection-pool"
+
+      # Database Connections Waiting
+      - alert: DatabaseConnectionWaiting
+        expr: hikaricp_connections_pending > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Threads Waiting for Database Connections"
+          description: "{{ $value }} threads waiting for database connections. Pool exhausted! Immediate scale-up required."
+
+      # High Memory Usage
+      # PERFORMANCE_OPTIMIZATION_GUIDE - Troubleshooting #1
+      - alert: HighMemoryUsage
+        expr: |
+          (jvm_memory_used_bytes{area="heap"})
+          /
+          (jvm_memory_max_bytes{area="heap"})
+          > 0.80
+        for: 5m
+        labels:
+          severity: warning
+          component: jvm
+        annotations:
+          summary: "High Heap Memory Usage (> 80%)"
+          description: "Heap memory usage: {{ $value | humanizePercentage }}. Monitor GC activity."
+
+      # Critical Memory Usage
+      - alert: CriticalMemoryUsage
+        expr: |
+          (jvm_memory_used_bytes{area="heap"})
+          /
+          (jvm_memory_max_bytes{area="heap"})
+          > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          component: jvm
+        annotations:
+          summary: "CRITICAL: Heap Memory Usage > 95%"
+          description: "Heap memory usage: {{ $value | humanizePercentage }}. Application may soon crash."
+
+      # High GC Pause Time
+      # PERFORMANCE_OPTIMIZATION_GUIDE - Troubleshooting #1
+      - alert: HighGCPauseTime
+        expr: |
+          rate(jvm_gc_pause_seconds_sum[5m])
+          /
+          rate(jvm_gc_pause_seconds_count[5m])
+          > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          component: jvm
+        annotations:
+          summary: "High GC Pause Time (> 200ms avg)"
+          description: "Average GC pause time: {{ $value }}s. Consider JVM tuning."
+
+      # High CPU Usage
+      # PERFORMANCE_OPTIMIZATION_GUIDE - Troubleshooting #3
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total{job="buildnest"}[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU Usage (> 80%)"
+          description: "CPU usage: {{ $value | humanizePercentage }}. Check for hot methods."
+
+      # Database Query Timeout
+      - alert: DatabaseQueryTimeout
+        expr: increase(hikaricp_connection_timeout_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Database Connection Timeout Detected"
+          description: "{{ $value }} connection timeouts in last 5m. Increase pool size or optimize queries."
+
+      # Payment Processing Failures
+      - alert: HighPaymentFailureRate
+        expr: |
+          sum(rate(payment_failures_total[5m]))
+          /
+          sum(rate(payment_attempts_total[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: payments
+        annotations:
+          summary: "Payment Processing Failure Rate > 5%"
+          description: "Payment failure rate: {{ $value | humanizePercentage }}. Check Razorpay integration."
+
+      # Webhook Delivery Failures
+      - alert: HighWebhookFailureRate
+        expr: |
+          sum(rate(webhook_delivery_failures_total[5m]))
+          /
+          sum(rate(webhook_deliveries_total[5m]))
+          > 0.10
+        for: 10m
+        labels:
+          severity: warning
+          component: webhooks
+        annotations:
+          summary: "Webhook Delivery Failure Rate > 10%"
+          description: "{{ $value | humanizePercentage }} of webhooks failing. Check subscriber endpoints."
+
+  - name: buildnest_infrastructure_alerts
+    interval: 30s
+    rules:
+      # Application Down
+      - alert: ApplicationDown
+        expr: up{job="buildnest"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: availability
+        annotations:
+          summary: "BuildNest Application is Down"
+          description: "Application unreachable for 1+ minute. Check service status."
+
+      # High Disk Usage
+      - alert: HighDiskUsage
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) > 0.80
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High Disk Usage (> 80%)"
+          description: "Disk usage: {{ $value | humanizePercentage }}. Clean up old logs/data."
+
+      # Redis Connection Issues
+      - alert: RedisConnectionFailures
+        expr: increase(redis_connected_clients_total[5m]) == 0
+        for: 2m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Redis Connection Issues"
+          description: "Cannot connect to Redis cache. Check connectivity."
+
+      # Database Connection Pool Low Idle
+      - alert: DatabaseLowIdleConnections
+        expr: |
+          (hikaricp_connections_idle)
+          /
+          (hikaricp_connections)
+          < 0.20
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Database Pool: Low Idle Connections (< 20%)"
+          description: "Consider increasing minimum-idle in pool configuration."

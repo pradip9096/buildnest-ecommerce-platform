@@ -1,0 +1,70 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'buildnest-ecommerce'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Alert rule files (PERFORMANCE_OPTIMIZATION_GUIDE - Section 7)
+rule_files:
+  - 'alerts.yml'
+
+scrape_configs:
+  # BuildNest Application Metrics (PERFORMANCE_OPTIMIZATION_GUIDE - Monitoring & Metrics)
+  - job_name: 'buildnest'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['buildnest-ecommerce:8080']
+        labels:
+          service: 'buildnest-ecommerce'
+          tier: 'application'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Prometheus Self-Monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['prometheus:9090']
+        labels:
+          service: 'prometheus'
+          tier: 'monitoring'
+
+  # MySQL Database Metrics (optional - if using mysqld_exporter)
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['localhost:9104']
+        labels:
+          service: 'buildnest-database'
+          tier: 'database'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Redis Cache Metrics (optional - if using redis_exporter)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['localhost:9121']
+        labels:
+          service: 'buildnest-cache'
+          tier: 'cache'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Node Exporter System Metrics (optional)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+        labels:
+          service: 'system-metrics'
+          tier: 'infrastructure'
+    scrape_interval: 30s
+    scrape_timeout: 10s

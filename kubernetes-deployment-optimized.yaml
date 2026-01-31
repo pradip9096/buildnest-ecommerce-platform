@@ -1,0 +1,298 @@
+---
+# PERFORMANCE_OPTIMIZATION_GUIDE - Section 9: Deployment Optimization
+# Kubernetes Deployment with Optimized Resource Configuration
+# Generated: January 31, 2026
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buildnest-app
+  namespace: buildnest
+  labels:
+    app: buildnest
+    component: application
+    tier: backend
+  annotations:
+    description: "BuildNest E-Commerce Application with Performance Optimization"
+
+spec:
+  # Replicas - start with 2 for HA, HPA will scale based on metrics
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  selector:
+    matchLabels:
+      app: buildnest
+      tier: backend
+
+  template:
+    metadata:
+      labels:
+        app: buildnest
+        tier: backend
+        version: v1
+
+    spec:
+      # Pod disruption budget for HA
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - buildnest
+                topologyKey: kubernetes.io/hostname
+
+      # Service Account
+      serviceAccountName: buildnest-app
+
+      # Init containers for pre-checks
+      initContainers:
+        - name: check-dependencies
+          image: busybox:latest
+          command: ['sh', '-c', 'echo "Checking dependencies..." && sleep 5']
+
+      containers:
+        - name: buildnest-app
+          image: buildnest/civil-ecommerce:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+
+          # PERFORMANCE_OPTIMIZATION_GUIDE - Environment Configuration
+          env:
+            # Spring Profiles
+            - name: SPRING_PROFILES_ACTIVE
+              value: "production"
+
+            # JVM Tuning
+            - name: JAVA_OPTS
+              value: "-Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ParallelRefProcEnabled"
+
+            # Database Configuration
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: buildnest-secrets
+                  key: database-url
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: buildnest-secrets
+                  key: database-username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: buildnest-secrets
+                  key: database-password
+
+            # Database Connection Pool (PERFORMANCE_OPTIMIZATION_GUIDE Section 5)
+            - name: DB_POOL_MAX_SIZE
+              value: "30"
+            - name: DB_POOL_MIN_IDLE
+              value: "15"
+            - name: DB_CONNECTION_TIMEOUT
+              value: "30000"
+            - name: DB_IDLE_TIMEOUT
+              value: "600000"
+
+            # Redis Configuration (PERFORMANCE_OPTIMIZATION_GUIDE Section 4)
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: buildnest-config
+                  key: redis-host
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: buildnest-config
+                  key: redis-port
+            - name: REDIS_POOL_MAX_ACTIVE
+              value: "32"
+            - name: REDIS_POOL_MAX_IDLE
+              value: "16"
+            - name: REDIS_POOL_MIN_IDLE
+              value: "8"
+
+            # Cache TTL Configuration (PERFORMANCE_OPTIMIZATION_GUIDE Section 4)
+            - name: CACHE_TTL
+              value: "3600000"
+
+            # Rate Limiting (PERFORMANCE_OPTIMIZATION_GUIDE Section 6)
+            - name: RATE_LIMIT_LOGIN_REQUESTS
+              value: "3"
+            - name: RATE_LIMIT_LOGIN_DURATION
+              value: "300"
+            - name: RATE_LIMIT_PRODUCT_SEARCH_REQUESTS
+              value: "50"
+
+            # Graceful Shutdown
+            - name: SERVER_SHUTDOWN
+              value: "graceful"
+
+          # PERFORMANCE_OPTIMIZATION_GUIDE - Resource Limits and Requests
+          # Requests define guaranteed resources; Limits define maximum allowed
+          resources:
+            requests:
+              # CPU request: 250m means guaranteed 1/4 CPU core
+              cpu: 250m
+              # Memory request: 512Mi guaranteed
+              memory: 512Mi
+            limits:
+              # CPU limit: 1000m = 1 full CPU core
+              cpu: 1000m
+              # Memory limit: 1Gi maximum before OOMKill
+              memory: 1Gi
+
+          # PERFORMANCE_OPTIMIZATION_GUIDE - Health Checks for Kubernetes
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+
+          # Security Context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          # Volume mounts
+          volumeMounts:
+            - name: logs
+              mountPath: /var/log/app
+            - name: config
+              mountPath: /etc/app/config
+
+      # Volumes
+      volumes:
+        - name: logs
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: buildnest-config
+
+      # Pod termination grace period (PERFORMANCE_OPTIMIZATION_GUIDE Graceful Shutdown)
+      terminationGracePeriodSeconds: 45
+
+---
+# PERFORMANCE_OPTIMIZATION_GUIDE - Section 9: Kubernetes HPA
+# Horizontal Pod Autoscaler for automatic scaling based on metrics
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: buildnest-hpa
+  namespace: buildnest
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: buildnest-app
+
+  # Scaling limits
+  minReplicas: 2
+  maxReplicas: 10
+
+  # Scaling metrics (PERFORMANCE_OPTIMIZATION_GUIDE - Performance Baselines)
+  metrics:
+    # CPU-based scaling: scale when average CPU > 70%
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+    # Memory-based scaling: scale when average memory > 80%
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+  # Custom metrics scaling (requires metrics-server)
+  # - type: Pods
+  #   pods:
+  #     metric:
+  #       name: http_requests_per_second
+  #     target:
+  #       type: AverageValue
+  #       averageValue: "1000"
+
+  # Scaling behavior
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+
+---
+# Service Configuration
+apiVersion: v1
+kind: Service
+metadata:
+  name: buildnest-app
+  namespace: buildnest
+  labels:
+    app: buildnest
+
+spec:
+  type: ClusterIP
+  selector:
+    app: buildnest
+    tier: backend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+
+---
+# Pod Disruption Budget for High Availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: buildnest-pdb
+  namespace: buildnest
+
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: buildnest
+      tier: backend

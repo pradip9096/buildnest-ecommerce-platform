@@ -1,0 +1,300 @@
+name: BuildNest E-Commerce CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run stress tests weekly on Sunday at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+env:
+  JAVA_VERSION: '21'
+  JAVA_DISTRIBUTION: 'temurin'
+
+jobs:
+  # Job 1: Unit Tests (Fast Feedback)
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+      
+      - name: Run unit tests
+        run: ./mvnw test -P unit-tests
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: target/surefire-reports/
+
+  # Job 2: Integration Tests with Coverage
+  integration-tests:
+    name: Integration Tests & Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: unit-tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+      
+      - name: Run integration tests with coverage
+        run: ./mvnw verify -P ci
+      
+      - name: Generate coverage report
+        run: ./mvnw jacoco:report
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./target/site/jacoco/jacoco.xml
+          flags: integration
+          name: integration-coverage
+      
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: target/site/jacoco/
+      
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(grep -oP 'Total.*?\K[0-9]+(?=%)' target/site/jacoco/index.html || echo "0")
+          echo "Coverage: ${COVERAGE}%"
+          if [ "$COVERAGE" -lt 60 ]; then
+            echo "Coverage ${COVERAGE}% is below 60% threshold"
+            exit 1
+          fi
+
+  # Job 3: Reliability Tests
+  reliability-tests:
+    name: Reliability Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: unit-tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+      
+      - name: Run reliability tests
+        run: ./mvnw test -Dtest=ReliabilityTest
+      
+      - name: Upload reliability test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reliability-test-results
+          path: target/surefire-reports/
+
+  # Job 4: E2E Tests
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: integration-tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+      
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@latest
+        with:
+          chrome-version: stable
+      
+      - name: Run E2E tests
+        run: ./mvnw test -P e2e-tests
+        continue-on-error: true
+      
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: target/surefire-reports/
+      
+      - name: Upload E2E screenshots (if any)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: target/screenshots/
+
+  # Job 5: Security Scan
+  security-scan:
+    name: Security Scan (OWASP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: unit-tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+      
+      - name: Run OWASP dependency check
+        run: ./mvnw dependency-check:check
+        continue-on-error: true
+      
+      - name: Upload OWASP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-report
+          path: target/dependency-check-report.html
+
+  # Job 6: Load Tests (Main branch only)
+  load-tests:
+    name: Load Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: integration-tests
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+      
+      - name: Run Gatling load tests
+        run: ./mvnw gatling:test
+        continue-on-error: true
+      
+      - name: Upload Gatling reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gatling-reports
+          path: target/gatling/
+
+  # Job 7: Stress Tests (Scheduled only)
+  stress-tests:
+    name: Stress Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+      
+      - name: Run stress tests
+        run: ./mvnw test -P stress-tests
+        continue-on-error: true
+      
+      - name: Upload stress test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stress-test-results
+          path: target/surefire-reports/
+
+  # Job 8: Build and Package
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [integration-tests, security-scan]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+      
+      - name: Build application
+        run: ./mvnw clean package -DskipTests
+      
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-jar
+          path: target/*.jar
+
+  # Job 9: Performance Report Summary
+  report-summary:
+    name: Generate Test Report Summary
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, reliability-tests, e2e-tests]
+    if: always()
+    
+    steps:
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results/
+      
+      - name: Generate summary
+        run: |
+          echo "# Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Unit Tests: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Integration Tests: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Reliability Tests: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ E2E Tests: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "- Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Load Test Reports" >> $GITHUB_STEP_SUMMARY

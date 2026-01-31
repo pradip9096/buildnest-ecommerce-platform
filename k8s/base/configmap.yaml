@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: buildnest-ecommerce-config
+data:
+  SPRING_PROFILES_ACTIVE: "production"
+  SERVER_SSL_ENABLED: "true"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  ELASTICSEARCH_HOST: "elasticsearch"
+  ELASTICSEARCH_PORT: "9200"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
