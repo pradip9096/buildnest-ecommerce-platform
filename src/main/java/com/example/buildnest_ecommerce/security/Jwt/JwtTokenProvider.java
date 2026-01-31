@@ -16,7 +16,7 @@ import java.util.Date;
 public class JwtTokenProvider {
     @Value("${jwt.secret:mySecretKeyForJwtTokenGenerationAndValidation}")
     private String jwtSecret;
-    
+
     // Previous JWT secret for rotation support (optional)
     @Value("${jwt.secret.previous:}")
     private String jwtSecretPrevious;
@@ -27,7 +27,7 @@ public class JwtTokenProvider {
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
-    
+
     private SecretKey getPreviousSigningKey() {
         if (jwtSecretPrevious == null || jwtSecretPrevious.isEmpty()) {
             return null;
@@ -36,8 +36,8 @@ public class JwtTokenProvider {
     }
 
     public String generateToken(Authentication authentication) {
-        org.springframework.security.core.userdetails.UserDetails userPrincipal = 
-            (org.springframework.security.core.userdetails.UserDetails) authentication.getPrincipal();
+        org.springframework.security.core.userdetails.UserDetails userPrincipal = (org.springframework.security.core.userdetails.UserDetails) authentication
+                .getPrincipal();
 
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
