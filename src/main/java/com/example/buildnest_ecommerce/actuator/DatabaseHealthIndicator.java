@@ -23,7 +23,7 @@ import java.sql.SQLException;
 public class DatabaseHealthIndicator implements HealthIndicator {
 
     private final DataSource dataSource;
-    
+
     /**
      * Performs a health check on the database connection.
      * 

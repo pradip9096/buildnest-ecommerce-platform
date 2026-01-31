@@ -12,7 +12,8 @@ import java.util.Properties;
 
 /**
  * Custom health indicator for Redis connectivity.
- * Provides detailed health checks for the Redis cache and rate limiting storage.
+ * Provides detailed health checks for the Redis cache and rate limiting
+ * storage.
  * 
  * @author BuildNest Team
  * @since 1.0.0
@@ -23,7 +24,7 @@ import java.util.Properties;
 public class RedisHealthIndicator implements HealthIndicator {
 
     private final RedisConnectionFactory redisConnectionFactory;
-    
+
     /**
      * Performs a health check on the Redis connection.
      * 
@@ -33,13 +34,13 @@ public class RedisHealthIndicator implements HealthIndicator {
     public Health health() {
         try {
             RedisConnection connection = redisConnectionFactory.getConnection();
-            
+
             try {
                 // Perform PING command
                 long startTime = System.currentTimeMillis();
                 String pong = connection.ping();
                 long responseTime = System.currentTimeMillis() - startTime;
-                
+
                 if ("PONG".equals(pong)) {
                     // Get server info
                     @SuppressWarnings("deprecation")
@@ -48,7 +49,7 @@ public class RedisHealthIndicator implements HealthIndicator {
                     String uptime = info.getProperty("uptime_in_seconds", "unknown");
                     String connectedClients = info.getProperty("connected_clients", "unknown");
                     String usedMemory = info.getProperty("used_memory_human", "unknown");
-                    
+
                     Health.Builder builder = Health.up()
                             .withDetail("cache", "Redis")
                             .withDetail("status", "Available")
@@ -57,12 +58,12 @@ public class RedisHealthIndicator implements HealthIndicator {
                             .withDetail("uptime", uptime + "s")
                             .withDetail("connectedClients", connectedClients)
                             .withDetail("usedMemory", usedMemory);
-                    
+
                     // Warn if response time is high
                     if (responseTime > 100) {
                         builder.withDetail("warning", "High response time detected");
                     }
-                    
+
                     return builder.build();
                 } else {
                     return Health.down()
