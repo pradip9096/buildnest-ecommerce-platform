@@ -46,15 +46,21 @@ public class AuditLogService implements IAuditLogService {
     public void logAction(Long userId, String action, String entityType, Long entityId,
             String ipAddress, String userAgent, Object oldValue, Object newValue) {
         try {
+            Long resolvedUserId = userId != null ? userId : 0L;
+            String resolvedAction = action != null ? action : "UNKNOWN_ACTION";
+            String resolvedEntityType = entityType != null ? entityType : "UNKNOWN_ENTITY";
             AuditLog auditLog = AuditLog.builder()
-                    .userId(userId)
-                    .action(action)
-                    .entityType(entityType)
+                .userId(resolvedUserId)
+                .action(resolvedAction)
+                .entityType(resolvedEntityType)
                     .entityId(entityId)
+                    .timestamp(LocalDateTime.now())
                     .ipAddress(ipAddress)
                     .userAgent(userAgent)
                     .oldValue(oldValue != null ? objectMapper.writeValueAsString(oldValue) : null)
                     .newValue(newValue != null ? objectMapper.writeValueAsString(newValue) : null)
+                    .httpStatusCode(200)
+                    .errorCategory("SUCCESS")
                     .build();
 
             auditLogRepository.save(auditLog);
