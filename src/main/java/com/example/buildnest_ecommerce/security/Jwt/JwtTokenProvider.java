@@ -16,12 +16,23 @@ import java.util.Date;
 public class JwtTokenProvider {
     @Value("${jwt.secret:mySecretKeyForJwtTokenGenerationAndValidation}")
     private String jwtSecret;
+    
+    // Previous JWT secret for rotation support (optional)
+    @Value("${jwt.secret.previous:}")
+    private String jwtSecretPrevious;
 
     @Value("${jwt.expiration:86400000}")
     private long jwtExpirationInMs;
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+    }
+    
+    private SecretKey getPreviousSigningKey() {
+        if (jwtSecretPrevious == null || jwtSecretPrevious.isEmpty()) {
+            return null;
+        }
+        return Keys.hmacShaKeyFor(jwtSecretPrevious.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(Authentication authentication) {
@@ -66,6 +77,7 @@ public class JwtTokenProvider {
     }
 
     public boolean validateToken(String authToken) {
+        // Try to validate with current secret
         try {
             Jwts.parser()
                     .verifyWith(getSigningKey())
@@ -73,7 +85,23 @@ public class JwtTokenProvider {
                     .parseSignedClaims(authToken);
             return true;
         } catch (SecurityException e) {
-            log.error("Invalid JWT signature: {}", e.getMessage());
+            // If current secret fails, try previous secret (for rotation support)
+            SecretKey previousKey = getPreviousSigningKey();
+            if (previousKey != null) {
+                try {
+                    Jwts.parser()
+                            .verifyWith(previousKey)
+                            .build()
+                            .parseSignedClaims(authToken);
+                    log.info("Token validated with previous secret (rotation in progress)");
+                    return true;
+                } catch (Exception ex) {
+                    // Previous secret also failed, log original error
+                    log.error("Invalid JWT signature (both current and previous secrets): {}", e.getMessage());
+                }
+            } else {
+                log.error("Invalid JWT signature: {}", e.getMessage());
+            }
         } catch (io.jsonwebtoken.MalformedJwtException e) {
             log.error("Invalid JWT token: {}", e.getMessage());
         } catch (io.jsonwebtoken.ExpiredJwtException e) {

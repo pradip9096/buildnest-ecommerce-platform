@@ -1,24 +1,5 @@
----
-# CRITICAL BLOCKER #4 FIX: Blue-Green Deployment with Argo Rollouts
-#
-# This configuration implements zero-downtime blue-green deployment strategy
-# using Argo Rollouts for the BuildNest application
-#
-# Prerequisites:
-#   1. Install Argo Rollouts:
-#      kubectl create namespace argo-rollouts
-#      kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
-#
-#   2. Install Argo Rollouts kubectl plugin:
-#      curl -LO https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-windows-amd64
-#      Move to PATH as kubectl-argo-rollouts.exe
-#
-#   3. Verify installation:
-#      kubectl argo rollouts version
-#
-# Usage:
-#   kubectl apply -f buildnest-rollout.yaml
-#   kubectl argo rollouts get rollout buildnest-app -n buildnest --watch
+# BuildNest E-Commerce - Argo Rollouts Configuration
+# This file configures blue-green deployment strategy for zero-downtime deployments
 
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
@@ -26,28 +7,48 @@ metadata:
   name: buildnest-app
   namespace: buildnest
   labels:
-    app: buildnest
-    tier: application
+    app: buildnest-ecommerce
+    component: application
 spec:
-  # Number of replicas
   replicas: 3
-  
-  # Revision history limit
   revisionHistoryLimit: 5
   
-  # Selector for pods
   selector:
     matchLabels:
-      app: buildnest
-      tier: application
+      app: buildnest-app
   
-  # Pod template
   template:
     metadata:
       labels:
-        app: buildnest
-        tier: application
+        app: buildnest-app
+        version: "{{.Spec.Template.Metadata.Labels.version}}"
     spec:
+      serviceAccountName: buildnest-app
+      
+      # Init container to wait for database
+      initContainers:
+      - name: wait-for-database
+        image: mysql:8.2.0
+        command:
+        - sh
+        - -c
+        - |
+          until mysql -h production-mysql-service -u buildnest_user -p$MYSQL_PASSWORD -e "SELECT 1"; do
+            echo "Waiting for database..."
+            sleep 5
+          done
+          echo "Database is ready!"
+        env:
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: buildnest-secrets
+              key: spring.datasource.password
+      
+      containers:
+      - name: buildnest-app
+        image: pradip9096/buildnest-ecommerce:latest
+        imagePullPolicy: Always
       containers:
       - name: buildnest-app
         image: buildnest/ecommerce:latest
