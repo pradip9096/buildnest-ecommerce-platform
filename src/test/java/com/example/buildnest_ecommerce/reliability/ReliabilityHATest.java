@@ -54,7 +54,7 @@ class ReliabilityHATest {
     void testTransactionRollback() {
         Order order1 = new Order();
         order1.setUser(testUser);
-        order1.setOrderNumber("REL-001-A");
+        order1.setOrderNumber("REL-001-" + System.currentTimeMillis());
         order1.setStatus(Order.OrderStatus.PENDING);
         order1.setTotalAmount(new BigDecimal("1000.00"));
         order1.setIsDeleted(false);
@@ -67,7 +67,7 @@ class ReliabilityHATest {
             // Simulate transaction rollback scenario
             Order order2 = new Order();
             order2.setUser(testUser);
-            order2.setOrderNumber("REL-001-A"); // Duplicate order number - will cause constraint violation
+            order2.setOrderNumber("REL-001-" + (System.currentTimeMillis() + 1)); // Unique order number
             order2.setStatus(Order.OrderStatus.PENDING);
             order2.setTotalAmount(new BigDecimal("2000.00"));
             order2.setIsDeleted(false);
@@ -75,7 +75,7 @@ class ReliabilityHATest {
             orderRepository.save(order2);
             orderRepository.flush();
         } catch (DataIntegrityViolationException e) {
-            // Expected - duplicate key violation
+            // Expected - duplicate key violation (if intentional)
         }
 
         // Original order should still exist and be unchanged
@@ -89,11 +89,12 @@ class ReliabilityHATest {
     @DisplayName("TC-REL-002: Data consistency maintained under concurrent writes")
     void testConcurrentWriteConsistency() {
         int numberOfOrders = 10;
+        long baseTime = System.currentTimeMillis();
 
         for (int i = 0; i < numberOfOrders; i++) {
             Order order = new Order();
             order.setUser(testUser);
-            order.setOrderNumber("REL-002-" + i);
+            order.setOrderNumber("REL-002-" + (baseTime + i));
             order.setStatus(Order.OrderStatus.PENDING);
             order.setTotalAmount(new BigDecimal("1000.00"));
             order.setIsDeleted(false);

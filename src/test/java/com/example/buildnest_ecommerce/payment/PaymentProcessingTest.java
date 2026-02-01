@@ -39,8 +39,8 @@ class PaymentProcessingTest {
     @BeforeEach
     void setUp() {
         testUser = new User();
-        testUser.setUsername("paymenttest");
-        testUser.setEmail("payment@example.com");
+        testUser.setUsername("paymenttest-" + System.currentTimeMillis());
+        testUser.setEmail("payment-" + System.currentTimeMillis() + "@example.com");
         testUser.setPassword("hashedPassword");
         testUser.setFirstName("Payment");
         testUser.setLastName("Test");
@@ -49,7 +49,7 @@ class PaymentProcessingTest {
 
         testOrder = new Order();
         testOrder.setUser(testUser);
-        testOrder.setOrderNumber("PAY-001");
+        testOrder.setOrderNumber("PAY-" + System.currentTimeMillis());
         testOrder.setStatus(Order.OrderStatus.PENDING);
         testOrder.setTotalAmount(new BigDecimal("5000.00"));
         testOrder.setCreatedAt(LocalDateTime.now());

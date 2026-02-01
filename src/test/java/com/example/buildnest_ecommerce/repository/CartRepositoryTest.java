@@ -34,10 +34,11 @@ class CartRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // Create test user
+        // Create test user with unique identifier to avoid constraint violations
+        long uniqueId = System.currentTimeMillis();
         testUser = new User();
-        testUser.setUsername("testuser");
-        testUser.setEmail("test@example.com");
+        testUser.setUsername("carttest-" + uniqueId);
+        testUser.setEmail("carttest-" + uniqueId + "@example.com");
         testUser.setPassword("hashedPassword");
         testUser.setFirstName("Test");
         testUser.setLastName("User");
@@ -208,10 +209,11 @@ class CartRepositoryTest {
     @Test
     @DisplayName("TC-CART-REPO-005: Find active carts by date range")
     void testFindActiveCartsByDateRange() {
-        // Arrange
+        // Arrange - Create second user with unique identifier to avoid unique constraint violation
+        long uniqueId = System.currentTimeMillis() + 1;
         User user2 = new User();
-        user2.setUsername("user2");
-        user2.setEmail("user2@example.com");
+        user2.setUsername("user2-" + uniqueId);
+        user2.setEmail("user2-" + uniqueId + "@example.com");
         user2.setPassword("hashedPassword");
         user2.setFirstName("User");
         user2.setLastName("Two");

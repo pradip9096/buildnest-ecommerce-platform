@@ -41,8 +41,8 @@ class OrderRepositoryTest {
     @BeforeEach
     void setUp() {
         testUser = new User();
-        testUser.setUsername("repotest");
-        testUser.setEmail("repotest@example.com");
+        testUser.setUsername("repotest-" + System.currentTimeMillis());
+        testUser.setEmail("repotest-" + System.currentTimeMillis() + "@example.com");
         testUser.setPassword("hashedPassword");
         testUser.setFirstName("Repo");
         testUser.setLastName("Test");
@@ -51,7 +51,7 @@ class OrderRepositoryTest {
 
         testOrder = new Order();
         testOrder.setUser(testUser);
-        testOrder.setOrderNumber("ORD-REPO-TEST-001");
+        testOrder.setOrderNumber("ORD-REPO-TEST-" + System.currentTimeMillis());
         testOrder.setStatus(Order.OrderStatus.PENDING);
         testOrder.setTotalAmount(new BigDecimal("2000.00"));
         testOrder.setIsDeleted(false);
