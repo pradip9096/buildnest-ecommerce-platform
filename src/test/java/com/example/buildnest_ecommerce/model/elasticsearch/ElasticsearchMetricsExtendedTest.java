@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,7 +56,7 @@ class ElasticsearchMetricsExtendedTest {
                 .timestamp(now)
                 .host("server1")
                 .environment("prod")
-                .tags("important", "critical")
+                .tags(Map.of("important", "critical"))
                 .build();
 
         assertAll(
@@ -135,10 +136,19 @@ class ElasticsearchMetricsExtendedTest {
     }
 
     @Test
-    @DisplayName("Test allArgs constructor")
-    void testAllArgsConstructor() {
+    @DisplayName("Test builder with required core fields")
+    void testBuilderCoreFields() {
         LocalDateTime now = LocalDateTime.now();
-        ElasticsearchMetrics m = new ElasticsearchMetrics("m1", "cpu", 80.0, "%", "svc", now, "host1", "prod");
+        ElasticsearchMetrics m = ElasticsearchMetrics.builder()
+                .id("m1")
+                .metricName("cpu")
+                .value(80.0)
+                .unit("%")
+                .service("svc")
+                .timestamp(now)
+                .host("host1")
+                .environment("prod")
+                .build();
 
         assertEquals("m1", m.getId());
         assertEquals("cpu", m.getMetricName());
@@ -249,8 +259,8 @@ class ElasticsearchMetricsExtendedTest {
     }
 
     @Test
-    @DisplayName("Test clone via builder")
-    void testCloneViaBuilder() {
+    @DisplayName("Test builder with modified copy")
+    void testBuilderWithModifiedCopy() {
         ElasticsearchMetrics original = ElasticsearchMetrics.builder()
                 .id("orig")
                 .metricName("test")
@@ -258,7 +268,12 @@ class ElasticsearchMetricsExtendedTest {
                 .unit("%")
                 .build();
 
-        ElasticsearchMetrics clone = original.toBuilder().id("clone").build();
+        ElasticsearchMetrics clone = ElasticsearchMetrics.builder()
+                .id("clone")
+                .metricName(original.getMetricName())
+                .value(original.getValue())
+                .unit(original.getUnit())
+                .build();
 
         assertEquals("clone", clone.getId());
         assertEquals("test", clone.getMetricName());
@@ -271,7 +286,7 @@ class ElasticsearchMetricsExtendedTest {
     void testTagsField() {
         ElasticsearchMetrics m = ElasticsearchMetrics.builder()
                 .id("m1")
-                .tags("tag1", "tag2", "tag3")
+                .tags(Map.of("tag1", "value1", "tag2", "value2", "tag3", "value3"))
                 .build();
 
         assertNotNull(m.getId());

@@ -1,7 +1,6 @@
 package com.example.buildnest_ecommerce.performance;
 
 import com.example.buildnest_ecommerce.config.TestClockConfig;
-import com.example.buildnest_ecommerce.config.TestElasticsearchConfig;
 import com.example.buildnest_ecommerce.config.TestSecurityConfig;
 import com.example.buildnest_ecommerce.model.dto.CheckoutRequestDTO;
 import com.example.buildnest_ecommerce.security.CustomUserDetails;
@@ -43,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({ TestSecurityConfig.class, TestElasticsearchConfig.class, TestClockConfig.class })
+@Import({ TestSecurityConfig.class, PerformanceBaselineTest.ElasticsearchTestConfig.class, TestClockConfig.class })
 class PerformanceBaselineTest {
 
     @Autowired
@@ -57,6 +56,45 @@ class PerformanceBaselineTest {
 
     private static final int WARMUP_ITERATIONS = 5;
     private static final int TEST_ITERATIONS = 10;
+
+    @org.springframework.boot.test.context.TestConfiguration
+    static class ElasticsearchTestConfig {
+        @org.springframework.context.annotation.Bean
+        com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchIngestionService elasticsearchIngestionService() {
+            return org.mockito.Mockito.mock(
+                    com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchIngestionService.class);
+        }
+
+        @org.springframework.context.annotation.Bean
+        com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchAlertingService elasticsearchAlertingService() {
+            return org.mockito.Mockito.mock(
+                    com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchAlertingService.class);
+        }
+
+        @org.springframework.context.annotation.Bean
+        com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchMetricsCollectorService elasticsearchMetricsCollectorService() {
+            return org.mockito.Mockito.mock(
+                    com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchMetricsCollectorService.class);
+        }
+
+        @org.springframework.context.annotation.Bean
+        com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchAuditLogRepository elasticsearchAuditLogRepository() {
+            return org.mockito.Mockito.mock(
+                    com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchAuditLogRepository.class);
+        }
+
+        @org.springframework.context.annotation.Bean
+        com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchMetricsRepository elasticsearchMetricsRepository() {
+            return org.mockito.Mockito.mock(
+                    com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchMetricsRepository.class);
+        }
+
+        @org.springframework.context.annotation.Bean
+        com.example.buildnest_ecommerce.service.notification.NotificationService notificationService() {
+            return org.mockito.Mockito.mock(
+                    com.example.buildnest_ecommerce.service.notification.NotificationService.class);
+        }
+    }
 
     @BeforeEach
     void setUp() {

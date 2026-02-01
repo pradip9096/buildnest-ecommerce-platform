@@ -19,6 +19,7 @@ class HealthIndicatorTest {
 
     @Test
     @DisplayName("Redis health should be up on PONG")
+    @SuppressWarnings("deprecation")
     void testRedisHealthUp() {
         RedisConnectionFactory factory = mock(RedisConnectionFactory.class);
         RedisConnection connection = mock(RedisConnection.class);

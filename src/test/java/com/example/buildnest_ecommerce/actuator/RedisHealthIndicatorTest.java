@@ -13,6 +13,7 @@ import static org.mockito.Mockito.*;
 class RedisHealthIndicatorTest {
 
     @Test
+    @SuppressWarnings("deprecation")
     void healthUpWhenPong() {
         RedisConnectionFactory factory = mock(RedisConnectionFactory.class);
         RedisConnection connection = mock(RedisConnection.class);

@@ -24,7 +24,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("InventoryThresholdManagementService tests")
-@SuppressWarnings("unchecked")
 class InventoryThresholdManagementServiceTest {
 
     @Mock
