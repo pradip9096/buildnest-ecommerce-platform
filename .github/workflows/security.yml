@@ -31,10 +31,12 @@ jobs:
       - name: Run dependency check
         uses: dependency-check/Dependency-Check_Action@main
         with:
+          project: 'civil-ecommerce'
           path: '.'
           format: 'SARIF'
           args: >
             --enableExperimental
+            --failOnCVSS 7
             --scan .
 
       - name: Upload SARIF Report
@@ -98,13 +100,15 @@ jobs:
           cache: "maven"
 
       - name: Run Quality Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           chmod +x mvnw
           ./mvnw -B clean test \
             -Psonar \
             -Dsonar.projectKey=buildnest-ecommerce \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.login=$SONAR_TOKEN \
             || echo "SonarQube analysis skipped (credentials not configured)"
 
       - name: Run CheckStyle
@@ -133,4 +137,4 @@ jobs:
             target/spotbugsXml.xml
             target/checkstyle-result.xml
             target/sonarqube-report.xml
-          continue-on-error: true
+        continue-on-error: true
