@@ -148,15 +148,19 @@ class WebhookSubscriptionExtendedTest {
     @Test
     @DisplayName("Test equals with same values")
     void testEqualsWithSameValues() {
+        LocalDateTime now = LocalDateTime.now();
+
         WebhookSubscription ws1 = new WebhookSubscription();
         ws1.setId(1L);
         ws1.setEventType("order.created");
         ws1.setTargetUrl("https://webhook.com");
+        ws1.setCreatedAt(now);
 
         WebhookSubscription ws2 = new WebhookSubscription();
         ws2.setId(1L);
         ws2.setEventType("order.created");
         ws2.setTargetUrl("https://webhook.com");
+        ws2.setCreatedAt(now);
 
         assertEquals(ws1, ws2);
     }
