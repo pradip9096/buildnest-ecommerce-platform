@@ -2,17 +2,23 @@ package com.example.buildnest_ecommerce.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "inventory")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = { "product", "thresholdBreaches", "updatedAt", "lastRestocked", "lastThresholdBreach" })
+@ToString(exclude = { "product", "thresholdBreaches" })
 public class Inventory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

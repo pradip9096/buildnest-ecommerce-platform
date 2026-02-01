@@ -4,8 +4,11 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 
@@ -22,10 +25,13 @@ import java.time.LocalDateTime;
         @Index(name = "idx_rating", columnList = "rating"),
         @Index(name = "idx_created_at", columnList = "created_at")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(exclude = { "product", "user", "createdAt", "updatedAt" })
+@ToString(exclude = { "product", "user" })
 public class ProductReview {
 
     @Id

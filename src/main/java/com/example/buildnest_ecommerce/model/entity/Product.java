@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = { "category", "inventory" })
+@EqualsAndHashCode(exclude = { "category", "inventory", "createdAt", "updatedAt" })
 @ToString(exclude = { "category", "inventory" })
 public class Product implements AggregateRoot {
     @Id

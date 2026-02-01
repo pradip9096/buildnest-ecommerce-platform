@@ -2,17 +2,23 @@ package com.example.buildnest_ecommerce.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
 @Table(name = "orders")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = { "user", "shippingAddress", "orderItems", "createdAt", "updatedAt", "deletedAt" })
+@ToString(exclude = { "user", "shippingAddress", "orderItems" })
 public class Order implements AggregateRoot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
