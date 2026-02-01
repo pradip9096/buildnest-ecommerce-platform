@@ -284,6 +284,9 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           cache: 'maven'
+
+      - name: Grant execute permissions to mvnw
+        run: chmod +x ./mvnw
       
       - name: Build application JAR
         run: ./mvnw clean package -DskipTests
