@@ -37,13 +37,16 @@ jobs:
           args: >
             --enableExperimental
             --failOnCVSS 7
+            --report target/dependency-check-report.sarif
             --scan .
 
       - name: Upload SARIF Report
-        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'dependency-check-report.sarif'
+          sarif_file: 'target/dependency-check-report.sarif'
           wait-for-processing: true
+        continue-on-error: true
 
   security-scan:
     name: Security Vulnerabilities
