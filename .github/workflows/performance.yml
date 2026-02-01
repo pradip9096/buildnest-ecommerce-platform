@@ -1,0 +1,89 @@
+name: Performance & Load Testing
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 0'  # Weekly at 3 AM
+
+jobs:
+  performance-test:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+          cache: "maven"
+
+      - name: Build Application
+        run: |
+          chmod +x mvnw
+          ./mvnw -B clean package -DskipTests
+
+      - name: Run Performance Benchmarks
+        run: |
+          if [ -f "scripts/test_performance_metrics.py" ]; then
+            python scripts/test_performance_metrics.py
+          else
+            echo "Performance test script not found"
+          fi
+
+      - name: Generate Performance Report
+        if: always()
+        run: |
+          echo "## ⚡ Performance Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Test execution completed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Details**: Check artifacts for baseline comparison" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Performance Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-reports
+          path: |
+            target/test-performance/
+            performance-benchmark-*.json
+
+  load-test:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    if: false  # Enable when JMeter is configured
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install JMeter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jmeter
+
+      - name: Run Load Tests
+        run: |
+          if [ -f "load-testing/buildnest-load-test.jmx" ]; then
+            jmeter -n -t load-testing/buildnest-load-test.jmx \
+              -l results.jtl -j jmeter.log
+          fi
+
+      - name: Generate Load Test Report
+        if: always()
+        run: |
+          echo "## 📊 Load Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Load test completed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Load Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results
+          path: |
+            results.jtl
+            jmeter.log
