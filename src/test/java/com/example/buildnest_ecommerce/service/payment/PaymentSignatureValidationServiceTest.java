@@ -111,6 +111,16 @@ class PaymentSignatureValidationServiceTest {
     }
 
     @Test
+    @DisplayName("Should return false when signature length is invalid")
+    void testValidatePaymentSignatureInvalidLength() {
+        PaymentSignatureValidationService service = new PaymentSignatureValidationService();
+        ReflectionTestUtils.setField(service, "razorpayKeySecret", "secret");
+        ReflectionTestUtils.setField(service, "razorpayKeyId", "keyId");
+
+        assertFalse(service.validatePaymentSignature("order", "pay", "short"));
+    }
+
+    @Test
     @DisplayName("Should reject invalid inputs")
     void testValidateInputsFailures() {
         PaymentSignatureValidationService service = new PaymentSignatureValidationService();

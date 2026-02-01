@@ -10,6 +10,7 @@ import com.example.buildnest_ecommerce.service.inventory.InventoryService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -107,6 +108,23 @@ class CheckoutServiceImplTest {
 
         Order order = checkoutService.checkoutCart(1L, 10L);
         assertNotNull(order.getId());
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        Order saved = orderCaptor.getValue();
+        assertEquals(cart.getUser(), saved.getUser());
+        assertNotNull(saved.getOrderNumber());
+        assertNotNull(saved.getCreatedAt());
+        assertEquals(Order.OrderStatus.PENDING, saved.getStatus());
+        assertEquals(0, new BigDecimal("260.00").compareTo(saved.getTotalAmount()));
+        assertEquals(0, new BigDecimal("10.00").compareTo(saved.getTaxAmount()));
+        assertEquals(0, new BigDecimal("50.00").compareTo(saved.getShippingAmount()));
+        assertEquals(1, saved.getOrderItems().size());
+        OrderItem savedItem = saved.getOrderItems().iterator().next();
+        assertEquals(5L, savedItem.getProduct().getId());
+        assertEquals(2, savedItem.getQuantity());
+        assertEquals(0, new BigDecimal("100").compareTo(savedItem.getPrice()));
+
         verify(cartService).clearCart(1L);
         verify(inventoryService).deductStock(5L, 2);
     }
@@ -128,6 +146,23 @@ class CheckoutServiceImplTest {
 
         Order order = checkoutService.checkoutWithPayment(1L, 10L, new CheckoutRequestDTO());
         assertNotNull(order.getId());
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        Order saved = orderCaptor.getValue();
+        assertEquals(user, saved.getUser());
+        assertNotNull(saved.getOrderNumber());
+        assertNotNull(saved.getCreatedAt());
+        assertEquals(Order.OrderStatus.PENDING, saved.getStatus());
+        assertEquals(0, new BigDecimal("260.00").compareTo(saved.getTotalAmount()));
+        assertEquals(0, new BigDecimal("10.00").compareTo(saved.getTaxAmount()));
+        assertEquals(0, new BigDecimal("50.00").compareTo(saved.getShippingAmount()));
+        assertEquals(1, saved.getOrderItems().size());
+        OrderItem savedItem = saved.getOrderItems().iterator().next();
+        assertEquals(5L, savedItem.getProduct().getId());
+        assertEquals(2, savedItem.getQuantity());
+        assertEquals(0, new BigDecimal("100").compareTo(savedItem.getPrice()));
+
         verify(cartService).clearCart(1L);
         verify(inventoryService).deductStock(5L, 2);
     }
@@ -147,5 +182,52 @@ class CheckoutServiceImplTest {
         when(cartRepository.findById(10L)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> checkoutService.checkoutCart(1L, 10L));
+    }
+
+    @Test
+    @DisplayName("Should fail validation when cart has no items")
+    void testValidateCheckoutEmptyCart() {
+        Cart cart = buildCart(1L, 10L);
+        cart.setItems(java.util.List.of());
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+
+        assertFalse(checkoutService.validateCheckout(1L, 10L));
+    }
+
+    @Test
+    @DisplayName("Should fail validation when stock is insufficient")
+    void testValidateCheckoutInsufficientStock() {
+        Cart cart = buildCart(1L, 10L);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+        when(inventoryService.hasStock(5L, 2)).thenReturn(false);
+
+        assertFalse(checkoutService.validateCheckout(1L, 10L));
+    }
+
+    @Test
+    @DisplayName("Should fail validation when cart belongs to another user")
+    void testValidateCheckoutWrongUser() {
+        Cart cart = buildCart(2L, 10L);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+
+        assertFalse(checkoutService.validateCheckout(1L, 10L));
+    }
+
+    @Test
+    @DisplayName("Should return false when validation throws exception")
+    void testValidateCheckoutHandlesException() {
+        when(cartRepository.findById(10L)).thenThrow(new RuntimeException("db error"));
+
+        assertFalse(checkoutService.validateCheckout(1L, 10L));
+    }
+
+    @Test
+    @DisplayName("Should calculate final total including tax and shipping")
+    void testCalculateFinalTotalExpected() {
+        Cart cart = buildCart(1L, 10L);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+
+        Double total = checkoutService.calculateFinalTotal(10L);
+        assertEquals(260.0, total, 0.001);
     }
 }

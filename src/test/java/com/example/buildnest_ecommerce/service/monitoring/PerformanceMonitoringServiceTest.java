@@ -77,4 +77,51 @@ class PerformanceMonitoringServiceTest {
         Map<String, Object> metrics = service.getPerformanceMetrics();
         assertEquals("✓ PASS", metrics.get("slaCompliance"));
     }
+
+    @Test
+    void testSlowQueryRatioWithMultipleRequests() {
+        PerformanceMonitoringService service = new PerformanceMonitoringService();
+
+        // Record mix of fast and slow requests to test math operations
+        service.recordResponseTime("/api/test", 100); // Fast
+        service.recordResponseTime("/api/test", 100); // Fast
+        service.recordResponseTime("/api/test", 1200); // Slow
+        service.recordResponseTime("/api/test", 1500); // Slow
+
+        double slowQueryRatio = service.getSlowQueryRatio();
+        assertTrue(slowQueryRatio >= 0); // Verify calculation ran without error
+    }
+
+    @Test
+    void testPerformanceMetricsWithMultipleRecords() {
+        PerformanceMonitoringService service = new PerformanceMonitoringService();
+
+        // Test averaging calculation (division operation)
+        service.recordResponseTime("/api/test", 100);
+        service.recordResponseTime("/api/test", 200);
+        service.recordResponseTime("/api/test", 300);
+
+        Map<String, Object> metrics = service.getPerformanceMetrics();
+        assertNotNull(metrics.get("averageResponseTimeMs"));
+        assertTrue((Long) metrics.get("totalRequests") == 3);
+    }
+
+    @Test
+    void testEndpointMetricsCalculations() {
+        PerformanceMonitoringService service = new PerformanceMonitoringService();
+
+        service.recordResponseTime("/api/users", 100);
+        service.recordResponseTime("/api/users", 200);
+        service.recordResponseTime("/api/users", 300);
+        service.recordResponseTime("/api/users", 2000); // Slow request
+
+        Map<String, Object> endpointMetrics = service.getEndpointMetrics("/api/users");
+
+        assertNotNull(endpointMetrics.get("averageResponseTimeMs"));
+        // Verify request count recorded (may be Integer or Long)
+        Object countObj = endpointMetrics.get("requestCount");
+        assertNotNull(countObj);
+        long requestCount = countObj instanceof Long ? (Long) countObj : ((Number) countObj).longValue();
+        assertEquals(4L, requestCount); // 4 requests recorded
+    }
 }

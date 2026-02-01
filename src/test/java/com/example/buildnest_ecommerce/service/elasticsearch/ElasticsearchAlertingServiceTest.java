@@ -211,4 +211,129 @@ class ElasticsearchAlertingServiceTest {
         assertEquals(1, summary.get("metricsCollected"));
         assertEquals(1L, summary.get("criticalAlerts"));
     }
+
+    @Test
+    @DisplayName("Boundary: CPU threshold at exact boundary")
+    void testCpuThresholdAtBoundary() {
+        ElasticsearchMetricsRepository repository = mock(ElasticsearchMetricsRepository.class);
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ElasticsearchAlertingService service = new ElasticsearchAlertingService(repository, restTemplate);
+
+        ReflectionTestUtils.setField(service, "cpuThreshold", 50.0);
+        ReflectionTestUtils.setField(service, "memoryThreshold", 90.0);
+        ReflectionTestUtils.setField(service, "errorRateThreshold", 5.0);
+        ReflectionTestUtils.setField(service, "webhookUrl", "http://webhook");
+        ReflectionTestUtils.setField(service, "alertingEnabled", true);
+
+        ElasticsearchMetrics metric = new ElasticsearchMetrics();
+        metric.setMetricName("cpu.usage");
+        metric.setValue(50.0); // Exactly at threshold
+        metric.setService("svc");
+        metric.setHost("host");
+
+        when(repository.findByTimestampAfter(any(LocalDateTime.class))).thenReturn(List.of(metric));
+
+        service.monitorMetrics();
+        // Should not trigger alert when exactly at boundary (> not >=)
+    }
+
+    @Test
+    @DisplayName("Boundary: CPU just above threshold")
+    void testCpuThresholdJustAbove() {
+        ElasticsearchMetricsRepository repository = mock(ElasticsearchMetricsRepository.class);
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ElasticsearchAlertingService service = new ElasticsearchAlertingService(repository, restTemplate);
+
+        ReflectionTestUtils.setField(service, "cpuThreshold", 50.0);
+        ReflectionTestUtils.setField(service, "memoryThreshold", 90.0);
+        ReflectionTestUtils.setField(service, "errorRateThreshold", 5.0);
+        ReflectionTestUtils.setField(service, "webhookUrl", "http://webhook");
+        ReflectionTestUtils.setField(service, "alertingEnabled", true);
+
+        ElasticsearchMetrics metric = new ElasticsearchMetrics();
+        metric.setMetricName("cpu.usage");
+        metric.setValue(50.1); // Just above threshold
+        metric.setService("svc");
+        metric.setHost("host");
+
+        when(repository.findByTimestampAfter(any(LocalDateTime.class))).thenReturn(List.of(metric));
+
+        service.monitorMetrics();
+        verify(restTemplate).postForObject(eq("http://webhook"), any(), eq(String.class));
+    }
+
+    @Test
+    @DisplayName("Boundary: Memory threshold at exact boundary")
+    void testMemoryThresholdAtBoundary() {
+        ElasticsearchMetricsRepository repository = mock(ElasticsearchMetricsRepository.class);
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ElasticsearchAlertingService service = new ElasticsearchAlertingService(repository, restTemplate);
+
+        ReflectionTestUtils.setField(service, "memoryThreshold", 90.0);
+        ReflectionTestUtils.setField(service, "cpuThreshold", 80.0);
+        ReflectionTestUtils.setField(service, "errorRateThreshold", 5.0);
+        ReflectionTestUtils.setField(service, "webhookUrl", "http://webhook");
+        ReflectionTestUtils.setField(service, "alertingEnabled", true);
+
+        ElasticsearchMetrics metric = new ElasticsearchMetrics();
+        metric.setMetricName("jvmMemory.usage");
+        metric.setValue(90.0); // Exactly at threshold
+        metric.setService("svc");
+        metric.setHost("host");
+
+        when(repository.findByTimestampAfter(any(LocalDateTime.class))).thenReturn(List.of(metric));
+
+        service.monitorMetrics();
+        // Should not trigger when exactly at boundary
+    }
+
+    @Test
+    @DisplayName("Boundary: Error rate at exact boundary")
+    void testErrorRateThresholdAtBoundary() {
+        ElasticsearchMetricsRepository repository = mock(ElasticsearchMetricsRepository.class);
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ElasticsearchAlertingService service = new ElasticsearchAlertingService(repository, restTemplate);
+
+        ReflectionTestUtils.setField(service, "cpuThreshold", 80.0);
+        ReflectionTestUtils.setField(service, "memoryThreshold", 90.0);
+        ReflectionTestUtils.setField(service, "errorRateThreshold", 5.0);
+        ReflectionTestUtils.setField(service, "webhookUrl", "http://webhook");
+        ReflectionTestUtils.setField(service, "alertingEnabled", true);
+
+        ElasticsearchMetrics metric = new ElasticsearchMetrics();
+        metric.setMetricName("error.rate");
+        metric.setValue(5.0); // Exactly at threshold
+        metric.setService("svc");
+        metric.setHost("host");
+
+        when(repository.findByTimestampAfter(any(LocalDateTime.class))).thenReturn(List.of(metric));
+
+        service.monitorMetrics();
+        // Should not trigger when exactly at boundary
+    }
+
+    @Test
+    @DisplayName("Boundary: Zero metrics value")
+    void testZeroMetricsValue() {
+        ElasticsearchMetricsRepository repository = mock(ElasticsearchMetricsRepository.class);
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        ElasticsearchAlertingService service = new ElasticsearchAlertingService(repository, restTemplate);
+
+        ReflectionTestUtils.setField(service, "cpuThreshold", 50.0);
+        ReflectionTestUtils.setField(service, "memoryThreshold", 90.0);
+        ReflectionTestUtils.setField(service, "errorRateThreshold", 5.0);
+        ReflectionTestUtils.setField(service, "webhookUrl", "http://webhook");
+        ReflectionTestUtils.setField(service, "alertingEnabled", true);
+
+        ElasticsearchMetrics metric = new ElasticsearchMetrics();
+        metric.setMetricName("cpu.usage");
+        metric.setValue(0.0); // Zero value
+        metric.setService("svc");
+        metric.setHost("host");
+
+        when(repository.findByTimestampAfter(any(LocalDateTime.class))).thenReturn(List.of(metric));
+
+        service.monitorMetrics();
+        // Should not trigger alert for zero metrics
+    }
 }

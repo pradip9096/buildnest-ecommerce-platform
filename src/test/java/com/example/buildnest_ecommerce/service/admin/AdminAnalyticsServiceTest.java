@@ -66,6 +66,38 @@ class AdminAnalyticsServiceTest {
     }
 
     @Test
+    void handlesEndpointErrorsGracefully() {
+        when(repository.findByTimestampBetween(any(), any())).thenThrow(new RuntimeException("fail"));
+
+        Map<String, Object> response = service.getApiErrorsByEndpoint(null, null);
+        assertTrue(response.containsKey("error"));
+    }
+
+    @Test
+    void handlesDashboardErrorsGracefully() {
+        when(repository.findByTimestampBetween(any(), any())).thenThrow(new RuntimeException("fail"));
+
+        Map<String, Object> response = service.getDashboardData();
+        assertTrue(response.containsKey("error"));
+    }
+
+    @Test
+    void handlesApiErrorRateErrorsGracefully() {
+        when(repository.findByTimestampBetween(any(), any())).thenThrow(new RuntimeException("fail"));
+
+        Map<String, Object> response = service.getApiErrorRate(null, null);
+        assertTrue(response.containsKey("error"));
+    }
+
+    @Test
+    void handlesCorrelationIdErrorsGracefully() {
+        when(repository.findByTimestampBetween(any(), any())).thenThrow(new RuntimeException("fail"));
+
+        Map<String, Object> response = service.getErrorByCorrelationId("corr");
+        assertTrue(response.containsKey("error"));
+    }
+
+    @Test
     void testGetApiErrorsByStatusCodeWith4xxErrors() {
         List<ElasticsearchAuditLog> logs = List.of(
                 createLog("1", 404, "/api/notfound", "GET"),
@@ -392,5 +424,94 @@ class AdminAnalyticsServiceTest {
 
         assertTrue(result.containsKey("startDate"));
         assertTrue(result.containsKey("endDate"));
+    }
+
+    @Test
+    void testParseDateDirectInvocation() throws Exception {
+        var method = AdminAnalyticsService.class.getDeclaredMethod("parseDate", String.class, LocalDateTime.class);
+        method.setAccessible(true);
+
+        LocalDateTime fallback = LocalDateTime.of(2024, 1, 1, 0, 0);
+        assertEquals(fallback, method.invoke(service, null, fallback));
+        assertEquals(fallback, method.invoke(service, "", fallback));
+        assertEquals(fallback, method.invoke(service, "invalid-date", fallback));
+
+        LocalDateTime parsed = (LocalDateTime) method.invoke(service, "2024-02-03T04:05:06", fallback);
+        assertEquals(LocalDateTime.of(2024, 2, 3, 4, 5, 6), parsed);
+    }
+
+    @Test
+    void testGetErrorCategoryBoundaries() throws Exception {
+        var method = AdminAnalyticsService.class.getDeclaredMethod("getErrorCategory", Integer.class);
+        method.setAccessible(true);
+
+        assertEquals("UNKNOWN", method.invoke(service, 199));
+        assertEquals("SUCCESS", method.invoke(service, 200));
+        assertEquals("SUCCESS", method.invoke(service, 299));
+        assertEquals("REDIRECT", method.invoke(service, 300));
+        assertEquals("REDIRECT", method.invoke(service, 399));
+        assertEquals("CLIENT_ERROR", method.invoke(service, 400));
+        assertEquals("CLIENT_ERROR", method.invoke(service, 499));
+        assertEquals("SERVER_ERROR", method.invoke(service, 500));
+    }
+
+    @Test
+    void testEndpointStatsOrderingAndRecentErrors() {
+        ElasticsearchAuditLog a1 = createLog("1", 500, "/a", "GET");
+        a1.setTimestamp(LocalDateTime.now().minusHours(2));
+        ElasticsearchAuditLog a2 = createLog("2", 500, "/a", "POST");
+        a2.setTimestamp(LocalDateTime.now().minusHours(1));
+        ElasticsearchAuditLog a3 = createLog("3", 404, "/a", "GET");
+        a3.setTimestamp(LocalDateTime.now().minusHours(3));
+
+        ElasticsearchAuditLog b1 = createLog("4", 500, "/b", "GET");
+        b1.setTimestamp(LocalDateTime.now().minusHours(4));
+        ElasticsearchAuditLog c1 = createLog("5", 404, "/c", "GET");
+        c1.setTimestamp(LocalDateTime.now().minusHours(5));
+
+        when(repository.findByTimestampBetween(any(), any())).thenReturn(List.of(a1, a2, a3, b1, c1));
+
+        Map<String, Object> result = service.getApiErrorsByEndpoint(null, null);
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> stats = (List<Map<String, Object>>) result.get("endpointStatistics");
+        assertEquals("/a", stats.get(0).get("endpoint"));
+        assertEquals(3, ((Number) stats.get(0).get("totalErrors")).intValue());
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> recentErrors = (List<Map<String, Object>>) stats.get(0).get("recentErrors");
+        assertEquals(a2.getTimestamp(), recentErrors.get(0).get("timestamp"));
+    }
+
+    @Test
+    void testDashboardTopErrorEndpointsOrder() {
+        ElasticsearchAuditLog a1 = createLog("1", 500, "/top", "GET");
+        ElasticsearchAuditLog a2 = createLog("2", 404, "/top", "POST");
+        ElasticsearchAuditLog b1 = createLog("3", 500, "/other", "GET");
+        ElasticsearchAuditLog ok = createLog("4", 200, "/ok", "GET");
+
+        when(repository.findByTimestampBetween(any(), any())).thenReturn(List.of(a1, a2, b1, ok));
+
+        Map<String, Object> result = service.getDashboardData();
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> top = (List<Map<String, Object>>) result.get("topErrorEndpoints");
+        assertEquals("/top", top.get(0).get("endpoint"));
+        assertEquals(2L, top.get(0).get("errorCount"));
+    }
+
+    @Test
+    void testStatusCodePercentageCalculation() {
+        ElasticsearchAuditLog error = createLog("1", 500, "/err", "GET");
+        ElasticsearchAuditLog success = createLog("2", 200, "/ok", "GET");
+        when(repository.findByTimestampBetween(any(), any())).thenReturn(List.of(error, success));
+
+        Map<String, Object> result = service.getApiErrorsByStatusCode(null, null);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> stats = (Map<String, Object>) result.get("statusCodeStatistics");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> errorStats = (Map<String, Object>) stats.get("500");
+        assertEquals("50.00%", errorStats.get("percentage"));
     }
 }

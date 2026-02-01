@@ -205,4 +205,232 @@ class ConsolidatedUtilitiesTest {
         assertEquals(5, utils.validatePageSize(5, 5, 20));
         assertEquals(20, utils.validatePageSize(25, 5, 20));
     }
+
+    // ========== BOUNDARY CONDITION TESTS FOR MUTATION COVERAGE ==========
+
+    @Test
+    void isPositiveBoundaryConditions() {
+        ConsolidatedUtilities utils = new ConsolidatedUtilities();
+
+        // Boundary: value > 0
+        assertTrue(utils.isPositive(new BigDecimal("0.01")));
+        assertTrue(utils.isPositive(new BigDecimal("1")));
+        assertTrue(utils.isPositive(new BigDecimal("100")));
+
+        // Boundary: value = 0 (should NOT be positive)
+        assertFalse(utils.isPositive(new BigDecimal("0")));
+        assertFalse(utils.isPositive(new BigDecimal("0.00")));
+
+        // Boundary: value < 0 (should NOT be positive)
+        assertFalse(utils.isPositive(new BigDecimal("-0.01")));
+        assertFalse(utils.isPositive(new BigDecimal("-1")));
+
+        // Null case
+        assertFalse(utils.isPositive(null));
+    }
+
+    @Test
+    void isNegativeBoundaryConditions() {
+        ConsolidatedUtilities utils = new ConsolidatedUtilities();
+
+        // Boundary: value < 0
+        assertTrue(utils.isNegative(new BigDecimal("-0.01")));
+        assertTrue(utils.isNegative(new BigDecimal("-1")));
+        assertTrue(utils.isNegative(new BigDecimal("-100")));
+
+        // Boundary: value = 0 (should NOT be negative)
+        assertFalse(utils.isNegative(new BigDecimal("0")));
+        assertFalse(utils.isNegative(new BigDecimal("0.00")));
+
+        // Boundary: value > 0 (should NOT be negative)
+        assertFalse(utils.isNegative(new BigDecimal("0.01")));
+        assertFalse(utils.isNegative(new BigDecimal("1")));
+
+        // Null case
+        assertFalse(utils.isNegative(null));
+    }
+
+    @Test
+    void isZeroBoundaryConditions() {
+        ConsolidatedUtilities utils = new ConsolidatedUtilities();
+
+        // Boundary: value = 0
+        assertTrue(utils.isZero(new BigDecimal("0")));
+        assertTrue(utils.isZero(new BigDecimal("0.00")));
+
+        // Boundary: value != 0
+        assertFalse(utils.isZero(new BigDecimal("0.01")));
+        assertFalse(utils.isZero(new BigDecimal("-0.01")));
+        assertFalse(utils.isZero(new BigDecimal("1")));
+        assertFalse(utils.isZero(new BigDecimal("-1")));
+
+        // Null case
+        assertFalse(utils.isZero(null));
+    }
+
+    @Test
+    void truncateToLengthBoundaryConditions() {
+        ConsolidatedUtilities utils = new ConsolidatedUtilities();
+
+        // Test boundary: length = maxLength (should NOT truncate)
+        assertEquals("abc", utils.truncateToLength("abc", 3));
+        assertEquals("abc", utils.truncateToLength("abc", 3));
+
+        // Test boundary: length > maxLength (should truncate)
+        assertEquals("ab", utils.truncateToLength("abc", 2));
+        assertEquals("a", utils.truncateToLength("abc", 1));
+
+        // Test boundary: length < maxLength (should NOT truncate)
+        assertEquals("ab", utils.truncateToLength("ab", 3));
+        assertEquals("a", utils.truncateToLength("a", 3));
+
+        // Edge cases
+        assertEquals("", utils.truncateToLength("abc", 0));
+        assertNull(utils.truncateToLength(null, 3));
+    }
+
+    @Test
+    void calculateOffsetBoundaryConditions() {
+        ConsolidatedUtilities utils = new ConsolidatedUtilities();
+
+        // Test boundary: page = 0
+        assertEquals(0, utils.calculateOffset(0, 10));
+        assertEquals(0, utils.calculateOffset(0, 1));
+        assertEquals(0, utils.calculateOffset(0, 100));
+
+        // Test normal cases
+        assertEquals(10, utils.calculateOffset(1, 10));
+        assertEquals(20, utils.calculateOffset(2, 10));
+        assertEquals(50, utils.calculateOffset(5, 10));
+
+        // Test with different page sizes
+        assertEquals(0, utils.calculateOffset(0, 20));
+        assertEquals(20, utils.calculateOffset(1, 20));
+        assertEquals(40, utils.calculateOffset(2, 20));
+
+        // Negative page should throw
+        assertThrows(IllegalArgumentException.class, () -> utils.calculateOffset(-1, 10));
+
+        // Invalid pageSize should throw
+        assertThrows(IllegalArgumentException.class, () -> utils.calculateOffset(0, 0));
+        assertThrows(IllegalArgumentException.class, () -> utils.calculateOffset(0, -1));
+    }
+
+    @Test
+    void validatePageSizeBoundaryConditions() {
+        ConsolidatedUtilities utils = new ConsolidatedUtilities();
+
+        // Test boundary: pageSize < minSize (should return minSize)
+        assertEquals(5, utils.validatePageSize(3, 5, 20)); // 3 < 5
+        assertEquals(10, utils.validatePageSize(9, 10, 50)); // 9 < 10
+        assertEquals(1, utils.validatePageSize(0, 1, 100)); // 0 < 1
+
+        // Test boundary: pageSize = minSize (should return pageSize)
+        assertEquals(5, utils.validatePageSize(5, 5, 20)); // 5 = 5
+        assertEquals(10, utils.validatePageSize(10, 10, 50)); // 10 = 10
+
+        // Test boundary: minSize < pageSize < maxSize (should return pageSize)
+        assertEquals(10, utils.validatePageSize(10, 5, 20)); // 5 < 10 < 20
+        assertEquals(15, utils.validatePageSize(15, 5, 20)); // 5 < 15 < 20
+
+        // Test boundary: pageSize = maxSize (should return pageSize)
+        assertEquals(20, utils.validatePageSize(20, 5, 20)); // 20 = 20
+        assertEquals(50, utils.validatePageSize(50, 10, 50)); // 50 = 50
+
+        // Test boundary: pageSize > maxSize (should return maxSize)
+        assertEquals(20, utils.validatePageSize(25, 5, 20)); // 25 > 20
+        assertEquals(50, utils.validatePageSize(100, 10, 50)); // 100 > 50
+    }
+
+    @Test
+    void dateOperationsBoundaryConditions() {
+        ConsolidatedUtilities utils = new ConsolidatedUtilities();
+
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate today = LocalDate.now();
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+
+        // Test isInPast
+        assertTrue(utils.isInPast(yesterday));
+        assertFalse(utils.isInPast(today)); // Today is NOT in past
+        assertFalse(utils.isInPast(tomorrow));
+        assertFalse(utils.isInPast(null));
+
+        // Test isInFuture
+        assertFalse(utils.isInFuture(yesterday));
+        assertFalse(utils.isInFuture(today)); // Today is NOT in future
+        assertTrue(utils.isInFuture(tomorrow));
+        assertFalse(utils.isInFuture(null));
+
+        // Test isToday
+        assertFalse(utils.isToday(yesterday));
+        assertTrue(utils.isToday(today));
+        assertFalse(utils.isToday(tomorrow));
+        assertFalse(utils.isToday(null));
+
+        // Test daysBetween
+        assertEquals(-1, utils.daysBetween(today, yesterday)); // Negative days
+        assertEquals(0, utils.daysBetween(today, today)); // Same day
+        assertEquals(1, utils.daysBetween(today, tomorrow)); // Positive days
+        assertEquals(0, utils.daysBetween(null, today)); // Null from
+        assertEquals(0, utils.daysBetween(today, null)); // Null to
+        assertEquals(0, utils.daysBetween(null, null)); // Both null
+    }
+
+    @Test
+    void getOrDefaultBoundaryConditions() {
+        ConsolidatedUtilities utils = new ConsolidatedUtilities();
+
+        // Test: value is not null (should return value)
+        assertEquals("test", utils.getOrDefault("test", "default"));
+        assertEquals(42, utils.getOrDefault(42, 0));
+
+        // Test: value is null (should return default)
+        assertEquals("default", utils.getOrDefault(null, "default"));
+        assertEquals(0, utils.getOrDefault(null, 0));
+
+        // Test: both null
+        assertNull(utils.getOrDefault(null, null));
+
+        // Test: value is present even if "falsy"
+        assertEquals(0, utils.getOrDefault(0, 42)); // 0 is NOT null
+        assertEquals("", utils.getOrDefault("", "default")); // "" is NOT null
+    }
+
+    @Test
+    void requireNonNullBoundaryConditions() {
+        ConsolidatedUtilities utils = new ConsolidatedUtilities();
+
+        // Test: value is not null (should return value)
+        assertEquals("test", utils.requireNonNull("test", "testField"));
+        assertEquals(42, utils.requireNonNull(42, "numberField"));
+
+        // Test: value is null (should throw)
+        IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class,
+                () -> utils.requireNonNull(null, "testField"));
+        assertTrue(ex1.getMessage().contains("testField"));
+
+        // Test: empty string is NOT null
+        assertEquals("", utils.requireNonNull("", "emptyField"));
+
+        // Test: zero is NOT null
+        assertEquals(0, utils.requireNonNull(0, "zeroField"));
+    }
+
+    @Test
+    void executeWithFallbackBoundaryConditions() {
+        ConsolidatedUtilities utils = new ConsolidatedUtilities();
+
+        // Test: successful execution (should return result)
+        assertEquals("success", utils.executeWithFallback(() -> "success", "fallback"));
+        assertEquals(42, utils.executeWithFallback(() -> 42, 0));
+
+        // Test: exception thrown (should return fallback)
+        assertEquals("fallback", utils.executeWithFallback(() -> {
+            throw new RuntimeException("test error");
+        }, "fallback"));
+        assertEquals(0, utils.executeWithFallback(() -> {
+            throw new RuntimeException("test error");
+        }, 0));
+    }
 }

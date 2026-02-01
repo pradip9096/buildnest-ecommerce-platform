@@ -61,4 +61,53 @@ class RateLimitUtilTest {
         assertEquals(5L, seconds);
         verify(service).getRetryAfterSeconds(eq("127.0.0.1:login"));
     }
+
+    @Test
+    void usesPasswordResetLimitsAndSubjectKey() {
+        RateLimiterService service = mock(RateLimiterService.class);
+        RateLimitUtil util = new RateLimitUtil(service);
+
+        ReflectionTestUtils.setField(util, "passwordResetRequests", 3);
+        ReflectionTestUtils.setField(util, "passwordResetDuration", 3600);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getHeader("X-Forwarded-For")).thenReturn("1.2.3.4, 5.6.7.8");
+        when(service.isAllowed(anyString(), anyInt(), any(Duration.class))).thenReturn(true);
+
+        assertTrue(util.isAllowed(request, "password-reset", 99L));
+        verify(service).isAllowed(eq("1.2.3.4:password-reset:user:99"), eq(3), eq(Duration.ofSeconds(3600)));
+    }
+
+    @Test
+    void usesRefreshTokenLimits() {
+        RateLimiterService service = mock(RateLimiterService.class);
+        RateLimitUtil util = new RateLimitUtil(service);
+
+        ReflectionTestUtils.setField(util, "refreshTokenRequests", 10);
+        ReflectionTestUtils.setField(util, "refreshTokenDuration", 60);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getHeader("X-Forwarded-For")).thenReturn(null);
+        when(request.getRemoteAddr()).thenReturn("10.0.0.9");
+        when(service.isAllowed(anyString(), anyInt(), any(Duration.class))).thenReturn(true);
+
+        assertTrue(util.isAllowed(request, "refresh"));
+        verify(service).isAllowed(eq("10.0.0.9:refresh"), eq(10), eq(Duration.ofSeconds(60)));
+    }
+
+    @Test
+    void fallsBackToLoginLimitsForUnknownEndpoint() {
+        RateLimiterService service = mock(RateLimiterService.class);
+        RateLimitUtil util = new RateLimitUtil(service);
+
+        ReflectionTestUtils.setField(util, "loginRequests", 5);
+        ReflectionTestUtils.setField(util, "loginDuration", 60);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getRemoteAddr()).thenReturn("127.0.0.2");
+        when(service.isAllowed(anyString(), anyInt(), any(Duration.class))).thenReturn(true);
+
+        assertTrue(util.isAllowed(request, "unknown-endpoint"));
+        verify(service).isAllowed(eq("127.0.0.2:unknown-endpoint"), eq(5), eq(Duration.ofSeconds(60)));
+    }
 }

@@ -85,6 +85,16 @@ class InventoryThresholdManagementServiceTest {
     }
 
     @Test
+    @DisplayName("Should return cached category threshold without repository access")
+    void testCategoryThresholdCacheHit() {
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("category:threshold:7")).thenReturn("9");
+
+        assertEquals(9, thresholdService.getCategoryThreshold(7L));
+        verify(categoryRepository, never()).findById(any());
+    }
+
+    @Test
     @DisplayName("Should return effective threshold using category")
     void testEffectiveThreshold() {
         Product product = new Product();
@@ -134,6 +144,25 @@ class InventoryThresholdManagementServiceTest {
 
         assertTrue(inventory.getUseCategoryThreshold());
         verify(inventoryRepository).save(inventory);
+    }
+
+    @Test
+    @DisplayName("Should return effective threshold when category disabled")
+    void testEffectiveThresholdWithoutCategoryUsage() {
+        Product product = new Product();
+        product.setId(1L);
+        Category category = new Category();
+        category.setId(2L);
+        product.setCategory(category);
+
+        Inventory inventory = new Inventory();
+        inventory.setMinimumStockLevel(7);
+        inventory.setUseCategoryThreshold(false);
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+
+        assertEquals(7, thresholdService.getEffectiveThreshold(1L));
     }
 
     @Test

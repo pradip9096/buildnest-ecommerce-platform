@@ -36,7 +36,15 @@ class MapperUtilTest {
         product.setCategory(category);
 
         PublicProductDTO dto = util.toPublicProductDTO(product);
+        assertEquals(1L, dto.getId());
         assertEquals("Prod", dto.getName());
+        assertEquals("Desc", dto.getDescription());
+        assertEquals(BigDecimal.TEN, dto.getPrice());
+        assertEquals(BigDecimal.ONE, dto.getDiscountPrice());
+        assertEquals("SKU", dto.getSku());
+        assertEquals("img", dto.getImageUrl());
+        assertEquals(10, dto.getStockQuantity());
+        assertTrue(dto.getIsActive());
         assertEquals("Cement", dto.getCategoryName());
     }
 
@@ -144,8 +152,17 @@ class MapperUtilTest {
         order.setOrderItems(items);
 
         PublicOrderDTO dto = util.toPublicOrderDTO(order);
+        assertEquals(1L, dto.getId());
         assertEquals("O-1", dto.getOrderNumber());
+        assertEquals(BigDecimal.TEN, dto.getTotalAmount());
+        assertEquals("CONFIRMED", dto.getStatus());
+        assertNotNull(dto.getShippingAddress());
+        assertTrue(dto.getShippingAddress().contains("Street"));
         assertEquals(1, dto.getItems().size());
+        assertEquals(10L, dto.getItems().get(0).getProductId());
+        assertEquals("Prod", dto.getItems().get(0).getProductName());
+        assertEquals(2, dto.getItems().get(0).getQuantity());
+        assertEquals(BigDecimal.TEN, dto.getItems().get(0).getPrice());
     }
 
     @Test

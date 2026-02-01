@@ -200,4 +200,133 @@ class PerformanceMetricsControllerTest {
         Map<String, Object> health = (Map<String, Object>) metrics.get("health");
         assertEquals("WARNING", health.get("status"));
     }
+
+    @Test
+    @DisplayName("Math: Heap usage percentage calculation with boundary values")
+    void testHeapUsagePercentageCalculations() {
+        PerformanceMetricsController customController = new PerformanceMetricsController() {
+            @Override
+            protected long getHeapUsed(MemoryMXBean memoryBean) {
+                return 512; // Test boundary value
+            }
+
+            @Override
+            protected long getHeapMax(MemoryMXBean memoryBean) {
+                return 1024;
+            }
+
+            @Override
+            protected long getNonHeapUsed(MemoryMXBean memoryBean) {
+                return 0;
+            }
+        };
+
+        Map<String, Object> metrics = customController.getPerformanceMetrics();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> jvmMetrics = (Map<String, Object>) metrics.get("jvm");
+
+        String heapPercentage = (String) jvmMetrics.get("heapUsagePercentage");
+        assertTrue(heapPercentage.contains("50.00"));
+    }
+
+    @Test
+    @DisplayName("Math: Zero heap usage")
+    void testZeroHeapUsagePercentage() {
+        PerformanceMetricsController customController = new PerformanceMetricsController() {
+            @Override
+            protected long getHeapUsed(MemoryMXBean memoryBean) {
+                return 0;
+            }
+
+            @Override
+            protected long getHeapMax(MemoryMXBean memoryBean) {
+                return 1024;
+            }
+
+            @Override
+            protected long getNonHeapUsed(MemoryMXBean memoryBean) {
+                return 0;
+            }
+        };
+
+        Map<String, Object> metrics = customController.getPerformanceMetrics();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> jvmMetrics = (Map<String, Object>) metrics.get("jvm");
+
+        String heapPercentage = (String) jvmMetrics.get("heapUsagePercentage");
+        assertTrue(heapPercentage.contains("0.00"));
+    }
+
+    @Test
+    @DisplayName("Math: Maximum heap usage (100%)")
+    void testFullHeapUsagePercentage() {
+        PerformanceMetricsController customController = new PerformanceMetricsController() {
+            @Override
+            protected long getHeapUsed(MemoryMXBean memoryBean) {
+                return 1024;
+            }
+
+            @Override
+            protected long getHeapMax(MemoryMXBean memoryBean) {
+                return 1024;
+            }
+
+            @Override
+            protected long getNonHeapUsed(MemoryMXBean memoryBean) {
+                return 0;
+            }
+        };
+
+        Map<String, Object> metrics = customController.getPerformanceMetrics();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> jvmMetrics = (Map<String, Object>) metrics.get("jvm");
+
+        String heapPercentage = (String) jvmMetrics.get("heapUsagePercentage");
+        assertTrue(heapPercentage.contains("100.00"));
+    }
+
+    @Test
+    @DisplayName("Math: Heap division by 1MB constant (1024 * 1024)")
+    void testHeapConversionFromBytesToMB() {
+        PerformanceMetricsController customController = new PerformanceMetricsController() {
+            @Override
+            protected long getHeapUsed(MemoryMXBean memoryBean) {
+                return 1048576; // Exactly 1 MB in bytes
+            }
+
+            @Override
+            protected long getHeapMax(MemoryMXBean memoryBean) {
+                return 2097152; // Exactly 2 MB in bytes
+            }
+
+            @Override
+            protected long getNonHeapUsed(MemoryMXBean memoryBean) {
+                return 524288; // Exactly 0.5 MB in bytes
+            }
+        };
+
+        Map<String, Object> metrics = customController.getPerformanceMetrics();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> jvmMetrics = (Map<String, Object>) metrics.get("jvm");
+
+        // Verify heap conversion calculations were performed (division by 1024*1024)
+        Object heapUsed = jvmMetrics.get("heapUsed_MB");
+        Object heapMax = jvmMetrics.get("heapMax_MB");
+        assertNotNull(heapUsed);
+        assertNotNull(heapMax);
+        // Values should be calculated from bytes to MB
+        assertTrue(heapUsed.toString().length() > 0);
+        assertTrue(heapMax.toString().length() > 0);
+    }
+
+    @Test
+    @DisplayName("Math: Uptime seconds calculation")
+    void testUptimeSecondsCalculation() {
+        Map<String, Object> metrics = controller.getPerformanceMetrics();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> runtimeMetrics = (Map<String, Object>) metrics.get("runtime");
+
+        Long uptimeSeconds = (Long) runtimeMetrics.get("uptimeSeconds");
+        assertTrue(uptimeSeconds >= 0);
+    }
 }

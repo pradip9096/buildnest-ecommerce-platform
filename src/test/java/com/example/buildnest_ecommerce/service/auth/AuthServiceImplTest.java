@@ -122,6 +122,17 @@ class AuthServiceImplTest {
     }
 
     @Test
+    void testRegisterPublishesEvent() {
+        when(userRepository.findAll()).thenReturn(new java.util.ArrayList<>());
+        when(passwordEncoder.encode("Password@123")).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        authService.register(registerRequest);
+
+        verify(domainEventPublisher).publish(any());
+    }
+
+    @Test
     void testRegisterWithExistingUsername() {
         // Arrange
         User existingUser = new User();
@@ -224,5 +235,40 @@ class AuthServiceImplTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.refreshAccessToken("expired"));
         assertTrue(ex.getMessage().contains("expired or revoked"));
+    }
+
+    @Test
+    void testLoginUserNotFoundThrows() {
+        String username = "missing";
+        Authentication authentication = mock(Authentication.class);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authentication);
+        when(jwtTokenProvider.generateToken(authentication)).thenReturn("jwt-token");
+        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.login(username, "pass"));
+        assertTrue(ex.getMessage().contains("Login failed"));
+    }
+
+    @Test
+    void testLogoutWithNullTokenDoesNothing() {
+        authService.logout(null);
+
+        verifyNoInteractions(refreshTokenService);
+        verifyNoInteractions(auditLogService);
+    }
+
+    @Test
+    void testRefreshAccessTokenUserNotFoundThrows() {
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setToken("valid");
+        refreshToken.setUserId(1L);
+
+        when(refreshTokenService.findByToken("valid")).thenReturn(Optional.of(refreshToken));
+        when(refreshTokenService.validateRefreshToken(refreshToken)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.refreshAccessToken("valid"));
+        assertTrue(ex.getMessage().contains("User not found"));
     }
 }

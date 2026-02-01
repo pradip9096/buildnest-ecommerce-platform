@@ -84,6 +84,8 @@ class WebhookServiceImplTest {
         WebhookSubscription saved = captor.getValue();
         assertEquals("order.created", saved.getEventType());
         assertTrue(saved.getActive());
+        assertNotNull(saved.getCreatedAt());
+        assertNotNull(saved.getUpdatedAt());
     }
 
     @Test
@@ -198,6 +200,7 @@ class WebhookServiceImplTest {
 
         // Assert - should have retried
         verify(repository, atLeastOnce()).findByEventTypeAndActiveTrue("order.created");
+        verify(repository, atLeastOnce()).save(any(WebhookSubscription.class));
     }
 
     @Test

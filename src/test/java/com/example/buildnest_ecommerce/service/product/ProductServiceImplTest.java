@@ -8,6 +8,7 @@ import com.example.buildnest_ecommerce.repository.CategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -59,6 +60,10 @@ class ProductServiceImplTest {
         createRequest.setName("OPC 53 Grade Cement");
         createRequest.setDescription("High-quality cement");
         createRequest.setPrice(BigDecimal.valueOf(450.00));
+        createRequest.setDiscountPrice(BigDecimal.valueOf(400.00));
+        createRequest.setStockQuantity(25);
+        createRequest.setSku("CEM-53");
+        createRequest.setImageUrl("https://cdn.example.com/cement.jpg");
         createRequest.setCategoryId(1L);
     }
 
@@ -114,8 +119,21 @@ class ProductServiceImplTest {
         // Assert
         assertNotNull(result);
         assertEquals("OPC 53 Grade Cement", result.getName());
+
+        ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
+        verify(productRepository).save(captor.capture());
+        Product saved = captor.getValue();
+        assertEquals("OPC 53 Grade Cement", saved.getName());
+        assertEquals("High-quality cement", saved.getDescription());
+        assertEquals(0, BigDecimal.valueOf(450.00).compareTo(saved.getPrice()));
+        assertEquals(0, BigDecimal.valueOf(400.00).compareTo(saved.getDiscountPrice()));
+        assertEquals(25, saved.getStockQuantity());
+        assertEquals("CEM-53", saved.getSku());
+        assertEquals("https://cdn.example.com/cement.jpg", saved.getImageUrl());
+        assertNotNull(saved.getCreatedAt());
+        assertEquals(testCategory, saved.getCategory());
+
         verify(categoryRepository).findById(1L);
-        verify(productRepository).save(any(Product.class));
     }
 
     @Test
@@ -139,7 +157,12 @@ class ProductServiceImplTest {
         // Arrange
         CreateProductRequest updateRequest = new CreateProductRequest();
         updateRequest.setName("Updated Cement");
+        updateRequest.setDescription("Updated desc");
         updateRequest.setPrice(BigDecimal.valueOf(500.00));
+        updateRequest.setDiscountPrice(BigDecimal.valueOf(450.00));
+        updateRequest.setStockQuantity(99);
+        updateRequest.setSku("CEM-UPDATED");
+        updateRequest.setImageUrl("https://cdn.example.com/updated.jpg");
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
         when(productRepository.save(any(Product.class))).thenReturn(testProduct);
@@ -149,8 +172,20 @@ class ProductServiceImplTest {
 
         // Assert
         assertNotNull(result);
+
+        ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
+        verify(productRepository).save(captor.capture());
+        Product saved = captor.getValue();
+        assertEquals("Updated Cement", saved.getName());
+        assertEquals("Updated desc", saved.getDescription());
+        assertEquals(0, BigDecimal.valueOf(500.00).compareTo(saved.getPrice()));
+        assertEquals(0, BigDecimal.valueOf(450.00).compareTo(saved.getDiscountPrice()));
+        assertEquals(99, saved.getStockQuantity());
+        assertEquals("CEM-UPDATED", saved.getSku());
+        assertEquals("https://cdn.example.com/updated.jpg", saved.getImageUrl());
+        assertNotNull(saved.getUpdatedAt());
+
         verify(productRepository).findById(1L);
-        verify(productRepository).save(any(Product.class));
     }
 
     @Test

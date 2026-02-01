@@ -42,6 +42,7 @@ class PoolMetricsControllerTest {
         when(poolMXBean.getIdleConnections()).thenReturn(5);
         when(poolMXBean.getThreadsAwaitingConnection()).thenReturn(0);
         when(dataSource.getMaximumPoolSize()).thenReturn(20);
+        when(dataSource.getMinimumIdle()).thenReturn(5);
 
         // Act
         Map<String, Object> status = controller.poolStatus();
@@ -53,6 +54,7 @@ class PoolMetricsControllerTest {
         assertEquals(5, status.get("idleConnections"));
         assertEquals(0, status.get("waitingQueue"));
         assertEquals(20, status.get("maxPoolSize"));
+        assertEquals(5, status.get("minIdle"));
         assertTrue(status.containsKey("utilizationPercentage"));
     }
 
@@ -120,12 +122,16 @@ class PoolMetricsControllerTest {
         when(poolMXBean.getIdleConnections()).thenReturn(0);
         when(poolMXBean.getThreadsAwaitingConnection()).thenReturn(5);
         when(dataSource.getMaximumPoolSize()).thenReturn(10);
+        when(dataSource.getMinimumIdle()).thenReturn(0);
 
         // Act
         Map<String, Object> status = controller.poolStatus();
 
         // Assert
         assertEquals(5, status.get("waitingQueue"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> alerts = (Map<String, Object>) status.get("alerts");
+        assertTrue((Boolean) alerts.get("waitingThreads_Alert"));
     }
 
     @Test

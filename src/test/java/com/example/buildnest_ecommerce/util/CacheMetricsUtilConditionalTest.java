@@ -3,6 +3,7 @@ package com.example.buildnest_ecommerce.util;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Field;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -200,6 +201,18 @@ class CacheMetricsUtilConditionalTest {
     }
 
     @Test
+    @DisplayName("CacheMetrics canEqual and hashCode behavior")
+    void testCacheMetricsCanEqualAndHashCode() {
+        CacheMetricsUtil.CacheMetrics base = new CacheMetricsUtil.CacheMetrics("cache");
+        CacheMetricsUtil.CacheMetrics same = new CacheMetricsUtil.CacheMetrics("cache");
+
+        assertTrue(base.canEqual(same));
+        assertFalse(base.canEqual("other"));
+        assertEquals(base.hashCode(), base.hashCode());
+        assertNotEquals(base, same);
+    }
+
+    @Test
     @DisplayName("CacheMetrics increment operations - hits")
     void testCacheMetricsIncrementHits() {
         CacheMetricsUtil.CacheMetrics metrics = new CacheMetricsUtil.CacheMetrics("test");
@@ -345,5 +358,44 @@ class CacheMetricsUtilConditionalTest {
             assertEquals((long) (i + 1), allMetrics.get(cacheName).getHits().get());
             assertEquals((long) i, allMetrics.get(cacheName).getMisses().get());
         }
+    }
+
+    @Test
+    @DisplayName("CacheMetrics equals with shared AtomicLong references")
+    void testCacheMetricsEqualsWithSharedReferences() throws Exception {
+        CacheMetricsUtil.CacheMetrics base = new CacheMetricsUtil.CacheMetrics("shared");
+        CacheMetricsUtil.CacheMetrics other = new CacheMetricsUtil.CacheMetrics("shared");
+
+        Field hits = CacheMetricsUtil.CacheMetrics.class.getDeclaredField("hits");
+        Field misses = CacheMetricsUtil.CacheMetrics.class.getDeclaredField("misses");
+        Field evictions = CacheMetricsUtil.CacheMetrics.class.getDeclaredField("evictions");
+
+        hits.setAccessible(true);
+        misses.setAccessible(true);
+        evictions.setAccessible(true);
+
+        hits.set(other, base.getHits());
+        misses.set(other, base.getMisses());
+        evictions.set(other, base.getEvictions());
+
+        assertEquals(base, other);
+        assertEquals(base.hashCode(), other.hashCode());
+        assertNotEquals(base, new CacheMetricsUtil.CacheMetrics("shared"));
+    }
+
+    @Test
+    @DisplayName("CacheMetrics hashCode matches Lombok formula")
+    void testCacheMetricsHashCodeMatchesObjectsHash() {
+        CacheMetricsUtil.CacheMetrics metrics = new CacheMetricsUtil.CacheMetrics("hash");
+        metrics.incrementHits();
+        metrics.incrementMisses();
+
+        int result = 1;
+        result = result * 59 + (metrics.getCacheName() == null ? 43 : metrics.getCacheName().hashCode());
+        result = result * 59 + (metrics.getHits() == null ? 43 : metrics.getHits().hashCode());
+        result = result * 59 + (metrics.getMisses() == null ? 43 : metrics.getMisses().hashCode());
+        result = result * 59 + (metrics.getEvictions() == null ? 43 : metrics.getEvictions().hashCode());
+
+        assertEquals(result, metrics.hashCode());
     }
 }
