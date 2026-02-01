@@ -209,7 +209,8 @@ class CartRepositoryTest {
     @Test
     @DisplayName("TC-CART-REPO-005: Find active carts by date range")
     void testFindActiveCartsByDateRange() {
-        // Arrange - Create second user with unique identifier to avoid unique constraint violation
+        // Arrange - Create second user with unique identifier to avoid unique
+        // constraint violation
         long uniqueId = System.currentTimeMillis() + 1;
         User user2 = new User();
         user2.setUsername("user2-" + uniqueId);

@@ -70,7 +70,8 @@ class OrderRepositoryTest {
 
         assertTrue(retrievedOrder.isPresent());
         assertEquals(savedOrder.getId(), retrievedOrder.get().getId());
-        assertEquals("ORD-REPO-TEST-001", retrievedOrder.get().getOrderNumber());
+        // Order number is now dynamically generated with timestamp
+        assertTrue(retrievedOrder.get().getOrderNumber().startsWith("ORD-REPO-TEST-"));
         assertEquals(Order.OrderStatus.PENDING, retrievedOrder.get().getStatus());
     }
 
@@ -170,7 +171,8 @@ class OrderRepositoryTest {
 
         Order duplicateOrder = new Order();
         duplicateOrder.setUser(testUser);
-        duplicateOrder.setOrderNumber("ORD-REPO-TEST-001"); // Same order number
+        // Use the same order number as testOrder to create a duplicate
+        duplicateOrder.setOrderNumber(testOrder.getOrderNumber());
         duplicateOrder.setStatus(Order.OrderStatus.PENDING);
         duplicateOrder.setTotalAmount(new BigDecimal("1000.00"));
         duplicateOrder.setIsDeleted(false);
@@ -193,7 +195,8 @@ class OrderRepositoryTest {
         assertTrue(retrievedOrder.isPresent());
         assertNotNull(retrievedOrder.get().getUser());
         assertEquals(testUser.getId(), retrievedOrder.get().getUser().getId());
-        assertEquals("repotest", retrievedOrder.get().getUser().getUsername());
+        // Username is now dynamically generated with timestamp
+        assertTrue(retrievedOrder.get().getUser().getUsername().startsWith("repotest-"));
     }
 
     @Test
