@@ -198,6 +198,51 @@ class CustomUserDetailsTest {
         }
 
         @Test
+        void testHashCodeMatchesExpectedAlgorithm() {
+                CustomUserDetails userDetails = new CustomUserDetails(
+                                1L,
+                                "user",
+                                "email@test.com",
+                                "pass",
+                                List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                                true,
+                                true,
+                                false,
+                                true);
+
+                int expected = expectedHashCode(userDetails);
+                assertEquals(expected, userDetails.hashCode());
+        }
+
+        @Test
+        void testEqualsWithNullFields() {
+                CustomUserDetails user1 = new CustomUserDetails(
+                                null, null, null, null, null, false, false, false, false);
+                CustomUserDetails user2 = new CustomUserDetails(
+                                null, null, null, null, null, false, false, false, false);
+                CustomUserDetails user3 = new CustomUserDetails(
+                                1L, null, null, null, null, false, false, false, false);
+
+                assertEquals(user1, user2);
+                assertNotEquals(user1, user3);
+        }
+
+        private int expectedHashCode(CustomUserDetails userDetails) {
+                int result = 1;
+                result = result * 59 + (userDetails.isEnabled() ? 79 : 97);
+                result = result * 59 + (userDetails.isAccountNonExpired() ? 79 : 97);
+                result = result * 59 + (userDetails.isAccountNonLocked() ? 79 : 97);
+                result = result * 59 + (userDetails.isCredentialsNonExpired() ? 79 : 97);
+                result = result * 59 + (userDetails.getId() == null ? 43 : userDetails.getId().hashCode());
+                result = result * 59 + (userDetails.getUsername() == null ? 43 : userDetails.getUsername().hashCode());
+                result = result * 59 + (userDetails.getEmail() == null ? 43 : userDetails.getEmail().hashCode());
+                result = result * 59 + (userDetails.getPassword() == null ? 43 : userDetails.getPassword().hashCode());
+                result = result * 59 +
+                                (userDetails.getAuthorities() == null ? 43 : userDetails.getAuthorities().hashCode());
+                return result;
+        }
+
+        @Test
         void testEmptyAuthorities() {
                 CustomUserDetails userDetails = new CustomUserDetails(
                                 1L, "user", "email", "pass", Arrays.asList(), true, true, true, true);
@@ -217,20 +262,6 @@ class CustomUserDetailsTest {
                                 1L, "admin", "admin@test.com", "pass", authorities, true, true, true, true);
 
                 assertEquals(3, userDetails.getAuthorities().size());
-        }
-
-        @Test
-        void testEqualsWithNullFields() {
-                CustomUserDetails nullFieldsA = new CustomUserDetails(
-                                1L, null, null, null, null, true, true, true, true);
-                CustomUserDetails nullFieldsB = new CustomUserDetails(
-                                1L, null, null, null, null, true, true, true, true);
-                CustomUserDetails nullFieldsDifferentId = new CustomUserDetails(
-                                2L, null, null, null, null, true, true, true, true);
-
-                assertEquals(nullFieldsA, nullFieldsB);
-                assertEquals(nullFieldsA.hashCode(), nullFieldsB.hashCode());
-                assertNotEquals(nullFieldsA, nullFieldsDifferentId);
         }
 
         @Test

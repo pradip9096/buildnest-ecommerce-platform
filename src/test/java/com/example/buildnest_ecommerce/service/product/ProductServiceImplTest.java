@@ -203,7 +203,9 @@ class ProductServiceImplTest {
 
         assertNotNull(result);
         verify(categoryRepository).findById(1L);
-        verify(productRepository).save(any(Product.class));
+        ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
+        verify(productRepository).save(captor.capture());
+        assertEquals(testCategory, captor.getValue().getCategory());
     }
 
     @Test
@@ -257,6 +259,88 @@ class ProductServiceImplTest {
         // Assert
         assertNotNull(result);
         assertTrue(result.size() <= 1);
+    }
+
+    @Test
+    void testSearchProductsMatchesNameOrDescriptionCaseInsensitive() {
+        Product other = new Product();
+        other.setId(2L);
+        other.setName("Steel Rods");
+        other.setDescription("Premium rebar");
+
+        when(productRepository.findAll()).thenReturn(List.of(testProduct, other));
+
+        List<Product> byName = productService.searchProducts("cement");
+        List<Product> byDesc = productService.searchProducts("ReBaR");
+
+        assertEquals(1, byName.size());
+        assertEquals("OPC 53 Grade Cement", byName.get(0).getName());
+        assertEquals(1, byDesc.size());
+        assertEquals("Steel Rods", byDesc.get(0).getName());
+    }
+
+    @Test
+    void testFindByIdReturnsProduct() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+
+        Product result = productService.findById(1L);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+    }
+
+    @Test
+    void testAdvancedSearchFiltersAndBoundaries() {
+        Category category = new Category();
+        category.setId(1L);
+
+        Product p1 = new Product();
+        p1.setId(1L);
+        p1.setName("Cement Pro");
+        p1.setDescription("Strong cement");
+        p1.setPrice(new BigDecimal("100.00"));
+        p1.setStockQuantity(10);
+        p1.setCategory(category);
+
+        Product p2 = new Product();
+        p2.setId(2L);
+        p2.setName("Cement Lite");
+        p2.setDescription("Budget cement");
+        p2.setPrice(new BigDecimal("50.00"));
+        p2.setStockQuantity(0);
+        p2.setCategory(category);
+
+        Product p3 = new Product();
+        p3.setId(3L);
+        p3.setName("Steel Rod");
+        p3.setDescription("Rebar");
+        p3.setPrice(new BigDecimal("150.00"));
+        p3.setStockQuantity(5);
+        p3.setCategory(category);
+
+        when(productRepository.findAll()).thenReturn(List.of(p1, p2, p3));
+
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<Product> result = productService.advancedSearch("cement", 1L,
+                new BigDecimal("50.00"), new BigDecimal("100.00"), true, pageable);
+
+        assertEquals(1, result.getContent().size());
+        assertEquals(1L, result.getContent().get(0).getId());
+    }
+
+    @Test
+    void testFindByCategoryFiltersNullCategory() {
+        Product withoutCategory = new Product();
+        withoutCategory.setId(2L);
+        withoutCategory.setCategory(null);
+
+        when(productRepository.findAll()).thenReturn(List.of(testProduct, withoutCategory));
+
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<Product> page = productService.findByCategory(1L, pageable);
+
+        assertEquals(1, page.getContent().size());
+        assertEquals(1L, page.getContent().get(0).getId());
     }
 
     @Test

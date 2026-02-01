@@ -378,4 +378,181 @@ class InventoryServiceImplTest {
         assertEquals(InventoryStatus.IN_STOCK, updated.getStatus());
         verify(domainEventPublisher, never()).publish(any());
     }
+
+    @Test
+    @DisplayName("Should verify that getInventoryByProductId throws exception when product not found (not returning null)")
+    void testGetInventoryByProductIdThrowsExceptionNotNull() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> inventoryService.getInventoryByProductId(1L));
+        assertTrue(ex.getMessage().contains("Product not found"));
+    }
+
+    @Test
+    @DisplayName("Should verify that getInventoryByProductId throws exception when inventory not found")
+    void testGetInventoryByProductIdThrowsWhenInventoryNotFound() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> inventoryService.getInventoryByProductId(1L));
+        assertTrue(ex.getMessage().contains("Inventory not found"));
+    }
+
+    @Test
+    @DisplayName("Should verify addStock calls inventoryRepository.save()")
+    void testAddStockCallsSave() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        Inventory inventory = buildInventory(product, 5, 2);
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(any(Inventory.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        inventoryService.addStock(1L, 3);
+
+        verify(inventoryRepository, times(1)).save(any(Inventory.class));
+    }
+
+    @Test
+    @DisplayName("Should verify deductStock increments reserved quantity correctly")
+    void testDeductStockIncrementsReserved() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        Inventory inventory = buildInventory(product, 10, 2);
+        inventory.setQuantityReserved(0);
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(any(Inventory.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        inventoryService.deductStock(1L, 3);
+
+        assertEquals(7, inventory.getQuantityInStock());
+        assertEquals(3, inventory.getQuantityReserved());
+        verify(inventoryRepository).save(any(Inventory.class));
+    }
+
+    @Test
+    @DisplayName("Should verify deductStock calls save")
+    void testDeductStockCallsSave() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        Inventory inventory = buildInventory(product, 10, 2);
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(any(Inventory.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        inventoryService.deductStock(1L, 3);
+
+        verify(inventoryRepository, times(1)).save(any(Inventory.class));
+    }
+
+    @Test
+    @DisplayName("Should verify lastThresholdBreach is set when transitioning to LOW_STOCK")
+    void testLastThresholdBreachSetOnLowStockTransition() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        Inventory inventory = buildInventory(product, 10, 5);
+        inventory.setStatus(InventoryStatus.IN_STOCK);
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(any(Inventory.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Inventory result = inventoryService.updateStock(1L, 3);
+
+        assertEquals(InventoryStatus.LOW_STOCK, result.getStatus());
+        assertNotNull(result.getLastThresholdBreach(), "lastThresholdBreach should be set on transition to LOW_STOCK");
+    }
+
+    @Test
+    @DisplayName("Should verify lastThresholdBreach NOT updated when already in LOW_STOCK")
+    void testLastThresholdBreachNotUpdatedWhenAlreadyLowStock() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        Inventory inventory = buildInventory(product, 3, 5);
+        inventory.setStatus(InventoryStatus.LOW_STOCK);
+        java.time.LocalDateTime previousTime = java.time.LocalDateTime.now().minusHours(1);
+        inventory.setLastThresholdBreach(previousTime);
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(any(Inventory.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Inventory result = inventoryService.updateStock(1L, 2);
+
+        assertEquals(InventoryStatus.LOW_STOCK, result.getStatus());
+        assertEquals(previousTime, result.getLastThresholdBreach(),
+                "lastThresholdBreach should NOT change when already LOW_STOCK");
+    }
+
+    @Test
+    @DisplayName("Should verify addStock sets product on new inventory")
+    void testAddStockSetsProductField() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        Inventory newInventory = new Inventory();
+        newInventory.setQuantityInStock(0);
+        newInventory.setMinimumStockLevel(2);
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(newInventory));
+        when(inventoryRepository.save(any(Inventory.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Inventory result = inventoryService.addStock(1L, 5);
+
+        assertNotNull(result.getProduct(), "Product field should be set");
+        assertEquals(product.getId(), result.getProduct().getId());
+    }
+
+    @Test
+    @DisplayName("Should verify updateStock sets product field")
+    void testUpdateStockSetsProductField() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        Inventory inventory = buildInventory(product, 5, 2);
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(any(Inventory.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Inventory result = inventoryService.updateStock(1L, 10);
+
+        assertNotNull(result.getProduct());
+        assertEquals(product.getId(), result.getProduct().getId());
+    }
+
+    @Test
+    @DisplayName("Should verify hasStock throws exception when product not found")
+    void testHasStockThrowsWhenProductNotFound() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> inventoryService.hasStock(1L, 5));
+        assertTrue(ex.getMessage().contains("Product not found"));
+    }
+
+    @Test
+    @DisplayName("Should verify isBelowThreshold throws exception when product not found")
+    void testIsBelowThresholdThrowsWhenProductNotFound() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class,
+                () -> inventoryService.isBelowThreshold(1L));
+    }
+
+    @Test
+    @DisplayName("Should verify updateStock throws exception when product not found")
+    void testUpdateStockThrowsWhenProductNotFound() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> inventoryService.updateStock(1L, 10));
+        assertTrue(ex.getMessage().contains("Product not found"));
+    }
+
+    @Test
+    @DisplayName("Should verify deductStock throws exception when product not found")
+    void testDeductStockThrowsWhenProductNotFound() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> inventoryService.deductStock(1L, 5));
+        assertTrue(ex.getMessage().contains("Product not found"));
+    }
+
+    @Test
+    @DisplayName("Should verify deductStock throws exception when insufficient stock")
+    void testDeductStockThrowsWhenInsufficientStock() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        Inventory inventory = buildInventory(product, 3, 2);
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> inventoryService.deductStock(1L, 5));
+        assertTrue(ex.getMessage().contains("Insufficient stock"));
+    }
 }

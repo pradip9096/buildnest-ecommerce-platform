@@ -126,4 +126,106 @@ class PaymentServiceImplTest {
 
         assertThrows(RuntimeException.class, () -> paymentService.getPaymentById(99L));
     }
+
+    @Test
+    @DisplayName("Should verify initiatePayment saves payment to repository")
+    void testInitiatePaymentCallsSave() {
+        when(razorpayAdapter.createOrder(100.0, 1L)).thenReturn("rp-order");
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        paymentService.initiatePayment(1L, 100.0);
+
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    @DisplayName("Should verify initiatePayment sets order ID on payment")
+    void testInitiatePaymentSetsOrderId() {
+        when(razorpayAdapter.createOrder(100.0, 1L)).thenReturn("rp-order");
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payment payment = paymentService.initiatePayment(1L, 100.0);
+
+        assertEquals(1L, payment.getOrderId());
+    }
+
+    @Test
+    @DisplayName("Should verify initiatePayment sets amount on payment")
+    void testInitiatePaymentSetsAmount() {
+        when(razorpayAdapter.createOrder(100.0, 1L)).thenReturn("rp-order");
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payment payment = paymentService.initiatePayment(1L, 100.0);
+
+        assertEquals(100.0, payment.getAmount());
+    }
+
+    @Test
+    @DisplayName("Should verify processPaymentCallback sets payment ID")
+    void testProcessPaymentCallbackSetsPaymentId() {
+        Payment payment = new Payment();
+        payment.setId(10L);
+        payment.setOrderId(5L);
+        payment.setRazorpayOrderId("rp-order");
+        payment.setAmount(100.0);
+
+        when(razorpayAdapter.verifySignature("rp-order", "rp-pay", "sig")).thenReturn(true);
+        when(paymentRepository.findAll()).thenReturn(List.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payment result = paymentService.processPaymentCallback("rp-order", "rp-pay", "sig");
+
+        assertEquals("rp-pay", result.getRazorpayPaymentId());
+    }
+
+    @Test
+    @DisplayName("Should verify processPaymentCallback saves payment")
+    void testProcessPaymentCallbackSavesCalled() {
+        Payment payment = new Payment();
+        payment.setId(10L);
+        payment.setOrderId(5L);
+        payment.setRazorpayOrderId("rp-order");
+        payment.setAmount(100.0);
+
+        when(razorpayAdapter.verifySignature("rp-order", "rp-pay", "sig")).thenReturn(true);
+        when(paymentRepository.findAll()).thenReturn(List.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        paymentService.processPaymentCallback("rp-order", "rp-pay", "sig");
+
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    @DisplayName("Should verify refundPayment saves payment with REFUNDED status")
+    void testRefundPaymentUpdateStatus() {
+        Payment payment = new Payment();
+        payment.setId(1L);
+        payment.setRazorpayPaymentId("rp-pay");
+        payment.setAmount(50.0);
+
+        when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        paymentService.refundPayment(1L);
+
+        assertEquals("REFUNDED", payment.getStatus());
+        verify(paymentRepository).save(any(Payment.class));
+    }
+
+    @Test
+    @DisplayName("Should verify refundPayment calls razorpay adapter")
+    void testRefundPaymentCallsAdapter() {
+        Payment payment = new Payment();
+        payment.setId(1L);
+        payment.setRazorpayPaymentId("rp-pay");
+        payment.setAmount(50.0);
+
+        when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        paymentService.refundPayment(1L);
+
+        verify(razorpayAdapter, times(1)).refundPayment("rp-pay", 50.0);
+    }
 }

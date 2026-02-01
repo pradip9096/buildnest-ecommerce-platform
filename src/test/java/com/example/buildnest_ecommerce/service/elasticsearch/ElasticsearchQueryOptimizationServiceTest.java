@@ -26,6 +26,18 @@ class ElasticsearchQueryOptimizationServiceTest {
     }
 
     @Test
+    @DisplayName("Should return mutable list for optimized search")
+    void testSearchAuditLogsOptimizedReturnsMutableList() {
+        ElasticsearchQueryOptimizationService service = new ElasticsearchQueryOptimizationService();
+
+        List<ElasticsearchAuditLog> results = service.searchAuditLogsOptimized("1",
+                LocalDateTime.now().minusDays(1), LocalDateTime.now());
+
+        assertNotNull(results);
+        assertDoesNotThrow(() -> results.add(new ElasticsearchAuditLog()));
+    }
+
+    @Test
     @DisplayName("Should return pageable with constrained size")
     void testGetOptimizedPageable() {
         ElasticsearchQueryOptimizationService service = new ElasticsearchQueryOptimizationService();
@@ -45,6 +57,18 @@ class ElasticsearchQueryOptimizationServiceTest {
     }
 
     @Test
+    @DisplayName("Should return mutable list from search with timeout")
+    void testSearchWithTimeoutReturnsMutableList() {
+        ElasticsearchQueryOptimizationService service = new ElasticsearchQueryOptimizationService();
+
+        List<ElasticsearchAuditLog> results = service.searchWithTimeout("1",
+                LocalDateTime.now().minusDays(1), LocalDateTime.now());
+
+        assertNotNull(results);
+        assertDoesNotThrow(() -> results.add(new ElasticsearchAuditLog()));
+    }
+
+    @Test
     @DisplayName("Should return empty list on timeout")
     void testExecuteWithTimeoutTimeoutPath() throws Exception {
         ElasticsearchQueryOptimizationService service = new ElasticsearchQueryOptimizationService();
@@ -59,6 +83,24 @@ class ElasticsearchQueryOptimizationServiceTest {
 
         assertNotNull(results);
         assertTrue(results.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Should return results on successful execution")
+    void testExecuteWithTimeoutReturnsResults() {
+        ElasticsearchQueryOptimizationService service = new ElasticsearchQueryOptimizationService();
+
+        List<ElasticsearchAuditLog> expected = new java.util.ArrayList<>();
+        expected.add(new ElasticsearchAuditLog());
+
+        java.util.concurrent.Callable<List<ElasticsearchAuditLog>> query = () -> expected;
+
+        List<ElasticsearchAuditLog> results = ReflectionTestUtils.invokeMethod(
+                service, "executeWithTimeout", query, 1000L);
+
+        assertNotNull(results);
+        assertSame(expected, results);
+        assertEquals(1, results.size());
     }
 
     @Test

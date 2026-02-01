@@ -271,4 +271,67 @@ class PoolMetricsControllerTest {
 
         assertEquals("HEALTHY", health.get("status"));
     }
+
+    @Test
+    @DisplayName("Should respect alert boundaries for pool status")
+    @SuppressWarnings("unchecked")
+    void testPoolStatusAlertBoundaries() {
+        when(poolMXBean.getActiveConnections()).thenReturn(9);
+        when(poolMXBean.getTotalConnections()).thenReturn(10);
+        when(poolMXBean.getIdleConnections()).thenReturn(2);
+        when(poolMXBean.getThreadsAwaitingConnection()).thenReturn(0);
+        when(dataSource.getMaximumPoolSize()).thenReturn(10);
+        when(dataSource.getMinimumIdle()).thenReturn(2);
+
+        Map<String, Object> status = controller.poolStatus();
+        Map<String, Object> alerts = (Map<String, Object>) status.get("alerts");
+
+        assertFalse((Boolean) alerts.get("activeConnections_90Percent_Alert"));
+        assertFalse((Boolean) alerts.get("idleConnections_20Percent_Alert"));
+        assertFalse((Boolean) alerts.get("waitingThreads_Alert"));
+
+        when(poolMXBean.getActiveConnections()).thenReturn(10);
+        when(poolMXBean.getIdleConnections()).thenReturn(1);
+        when(poolMXBean.getThreadsAwaitingConnection()).thenReturn(1);
+
+        Map<String, Object> statusAlert = controller.poolStatus();
+        Map<String, Object> alertsAlert = (Map<String, Object>) statusAlert.get("alerts");
+
+        assertTrue((Boolean) alertsAlert.get("activeConnections_90Percent_Alert"));
+        assertTrue((Boolean) alertsAlert.get("idleConnections_20Percent_Alert"));
+        assertTrue((Boolean) alertsAlert.get("waitingThreads_Alert"));
+    }
+
+    @Test
+    @DisplayName("Should handle pool health boundary thresholds")
+    @SuppressWarnings("unchecked")
+    void testPoolHealthBoundaryThresholds() {
+        when(poolMXBean.getActiveConnections()).thenReturn(19);
+        when(poolMXBean.getTotalConnections()).thenReturn(20);
+        when(poolMXBean.getIdleConnections()).thenReturn(1);
+        when(poolMXBean.getThreadsAwaitingConnection()).thenReturn(0);
+        when(dataSource.getMaximumPoolSize()).thenReturn(20);
+        when(dataSource.getMinimumIdle()).thenReturn(2);
+
+        Map<String, Object> healthWarning = controller.poolHealth();
+        assertEquals("WARNING", healthWarning.get("status"));
+
+        when(poolMXBean.getActiveConnections()).thenReturn(9);
+        when(poolMXBean.getTotalConnections()).thenReturn(10);
+        when(poolMXBean.getIdleConnections()).thenReturn(2);
+
+        Map<String, Object> healthCaution = controller.poolHealth();
+        assertEquals("CAUTION", healthCaution.get("status"));
+
+        when(poolMXBean.getActiveConnections()).thenReturn(7);
+        when(poolMXBean.getTotalConnections()).thenReturn(10);
+        when(poolMXBean.getIdleConnections()).thenReturn(3);
+
+        Map<String, Object> healthHealthy = controller.poolHealth();
+        assertEquals("HEALTHY", healthHealthy.get("status"));
+
+        Map<String, String> recommendations = (Map<String, String>) healthWarning.get("recommendations");
+        assertTrue(recommendations.containsKey("pool_size"));
+        assertTrue(recommendations.containsKey("idle_connections"));
+    }
 }

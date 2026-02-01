@@ -4,7 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -166,6 +169,81 @@ class UptimeMonitoringServiceTest {
 
         Map<String, Object> metrics = service.getUptimeMetrics();
         assertNotNull(metrics.get("totalDowntimeSeconds"));
+    }
+
+    @Test
+    void performHealthCheckUpdatesDowntimeWithinExpectedRange() {
+        UptimeMonitoringService service = new UptimeMonitoringService();
+        ReflectionTestUtils.setField(service, "isHealthy", false);
+        ReflectionTestUtils.setField(service, "totalDowntimeSeconds", 0L);
+
+        long start = System.currentTimeMillis() - 2500;
+        ReflectionTestUtils.setField(service, "lastDowntimeStart",
+                new java.util.concurrent.atomic.AtomicLong(start));
+
+        service.performHealthCheck();
+
+        Long totalDowntimeSeconds = (Long) ReflectionTestUtils.getField(service, "totalDowntimeSeconds");
+        assertNotNull(totalDowntimeSeconds);
+        assertTrue(totalDowntimeSeconds >= 2 && totalDowntimeSeconds <= 3);
+    }
+
+    @Test
+    void uptimeMetricsSlaPassesWhenAboveTarget() {
+        UptimeMonitoringService service = new UptimeMonitoringService();
+        ReflectionTestUtils.setField(service, "totalDowntimeSeconds", 0L);
+        ReflectionTestUtils.setField(service, "applicationStartTime", LocalDateTime.now().minusSeconds(1000));
+
+        Map<String, Object> metrics = service.getUptimeMetrics();
+        assertEquals("\u2713 PASS", metrics.get("slaCompliance"));
+    }
+
+    @Test
+    void uptimeMetricsSlaFailsWhenBelowTarget() {
+        UptimeMonitoringService service = new UptimeMonitoringService();
+        ReflectionTestUtils.setField(service, "totalDowntimeSeconds", 200L);
+        ReflectionTestUtils.setField(service, "applicationStartTime", LocalDateTime.now().minusSeconds(1000));
+
+        Map<String, Object> metrics = service.getUptimeMetrics();
+        assertEquals("\u2717 FAIL", metrics.get("slaCompliance"));
+    }
+
+    @Test
+    void uptimeMetricsReflectsUnhealthyStatus() {
+        UptimeMonitoringService service = new UptimeMonitoringService();
+        ReflectionTestUtils.setField(service, "isHealthy", false);
+
+        Map<String, Object> metrics = service.getUptimeMetrics();
+        assertEquals("UNHEALTHY", metrics.get("currentHealthStatus"));
+    }
+
+    @Test
+    void formattedUptimeCalculatesExactUnits() {
+        UptimeMonitoringService service = new UptimeMonitoringService();
+
+        long expectedDays = 1;
+        long expectedHours = 5;
+        long expectedMinutes = 30;
+        long expectedSeconds = 40;
+
+        long totalSeconds = expectedDays * 86400 + expectedHours * 3600 + expectedMinutes * 60 + expectedSeconds;
+        LocalDateTime startTime = LocalDateTime.now().minusSeconds(totalSeconds);
+        ReflectionTestUtils.setField(service, "applicationStartTime", startTime);
+
+        String formatted = service.getFormattedUptime();
+        Matcher matcher = Pattern.compile("(\\d+) days, (\\d+) hours, (\\d+) minutes, (\\d+) seconds")
+                .matcher(formatted);
+        assertTrue(matcher.find());
+
+        long days = Long.parseLong(matcher.group(1));
+        long hours = Long.parseLong(matcher.group(2));
+        long minutes = Long.parseLong(matcher.group(3));
+        long seconds = Long.parseLong(matcher.group(4));
+
+        assertEquals(expectedDays, days);
+        assertEquals(expectedHours, hours);
+        assertEquals(expectedMinutes, minutes);
+        assertTrue(seconds == expectedSeconds || seconds == expectedSeconds + 1);
     }
 
     @Test

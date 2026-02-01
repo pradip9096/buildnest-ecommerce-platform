@@ -143,4 +143,48 @@ class PaymentSignatureValidationServiceTest {
 
         assertFalse(service.validatePaymentSignature("order_3", "pay_3", signature));
     }
+
+    @Test
+    @DisplayName("Should compare strings in constant time")
+    void testConstantTimeEqualsBehavior() {
+        PaymentSignatureValidationService service = new PaymentSignatureValidationService();
+
+        Boolean equal = ReflectionTestUtils.invokeMethod(service, "constantTimeEquals", "abc", "abc");
+        Boolean diff = ReflectionTestUtils.invokeMethod(service, "constantTimeEquals", "abc", "abd");
+        Boolean diffLen = ReflectionTestUtils.invokeMethod(service, "constantTimeEquals", "abc", "ab");
+        Boolean nullInput = ReflectionTestUtils.invokeMethod(service, "constantTimeEquals", null, "ab");
+
+        assertTrue(equal);
+        assertFalse(diff);
+        assertFalse(diffLen);
+        assertFalse(nullInput);
+    }
+
+    @Test
+    @DisplayName("Should sanitize values for audit logging")
+    void testSanitizeForLogging() {
+        PaymentSignatureValidationService service = new PaymentSignatureValidationService();
+
+        String sanitized = ReflectionTestUtils.invokeMethod(service, "sanitizeForLogging", "a|b\n\rc");
+        String nullSanitized = ReflectionTestUtils.invokeMethod(service, "sanitizeForLogging", (String) null);
+
+        assertEquals("a_b__c", sanitized);
+        assertEquals("null", nullSanitized);
+    }
+
+    @Test
+    @DisplayName("Should validate inputs accurately")
+    void testValidateInputsDirectly() {
+        PaymentSignatureValidationService service = new PaymentSignatureValidationService();
+
+        Boolean valid = ReflectionTestUtils.invokeMethod(service, "validateInputs", "order", "pay", "a".repeat(64));
+        Boolean invalidLength = ReflectionTestUtils.invokeMethod(service, "validateInputs", "order", "pay",
+                "a".repeat(63));
+        Boolean invalidOrder = ReflectionTestUtils.invokeMethod(service, "validateInputs", " ", "pay",
+                "a".repeat(64));
+
+        assertTrue(valid);
+        assertFalse(invalidLength);
+        assertFalse(invalidOrder);
+    }
 }

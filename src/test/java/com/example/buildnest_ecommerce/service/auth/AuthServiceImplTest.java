@@ -99,6 +99,9 @@ class AuthServiceImplTest {
         // Assert
         assertNotNull(response);
         assertEquals("jwt-token", response.getAccessToken());
+        assertEquals("refresh-token", response.getRefreshToken());
+        assertEquals("Bearer", response.getTokenType());
+        assertEquals("testuser", response.getUsername());
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(jwtTokenProvider).generateToken(authentication);
         verify(userRepository).findByUsername(username);
@@ -119,6 +122,32 @@ class AuthServiceImplTest {
         // Assert
         verify(userRepository).save(any(User.class));
         verify(auditLogService).logAuthenticationEvent(eq(1L), eq("REGISTER"), any(), any());
+    }
+
+    @Test
+    void testRegisterSetsUserFieldsAndValidatesPassword() {
+        when(userRepository.findAll()).thenReturn(new java.util.ArrayList<>());
+        when(passwordEncoder.encode("Password@123")).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        authService.register(registerRequest);
+
+        var captor = org.mockito.ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        User saved = captor.getValue();
+        assertEquals("newuser", saved.getUsername());
+        assertEquals("new@example.com", saved.getEmail());
+        assertEquals("encodedPassword", saved.getPassword());
+        assertEquals("New", saved.getFirstName());
+        assertEquals("User", saved.getLastName());
+        assertTrue(saved.getIsActive());
+        assertFalse(saved.getIsDeleted());
+        assertNotNull(saved.getCreatedAt());
+        assertNotNull(saved.getRoles());
+        assertEquals(1, saved.getRoles().size());
+        assertEquals("ROLE_USER", saved.getRoles().iterator().next().getName());
+
+        verify(validationUtil).validatePassword("Password@123");
     }
 
     @Test
@@ -170,7 +199,10 @@ class AuthServiceImplTest {
         assertNotNull(response);
         assertEquals("new-jwt-token", response.getAccessToken());
         assertEquals("new-refresh-token", response.getRefreshToken());
+        assertEquals("Bearer", response.getTokenType());
+        assertEquals("testuser", response.getUsername());
         verify(refreshTokenService).rotateRefreshToken(any());
+        verify(auditLogService).logAuthenticationEvent(eq(1L), eq("TOKEN_REFRESH"), any(), any());
     }
 
     @Test
@@ -195,6 +227,14 @@ class AuthServiceImplTest {
         when(jwtTokenProvider.validateToken("token")).thenReturn(true);
 
         assertTrue(authService.validateToken("token"));
+        verify(jwtTokenProvider).validateToken("token");
+    }
+
+    @Test
+    void testValidateTokenReturnsFalse() {
+        when(jwtTokenProvider.validateToken("token")).thenReturn(false);
+
+        assertFalse(authService.validateToken("token"));
         verify(jwtTokenProvider).validateToken("token");
     }
 

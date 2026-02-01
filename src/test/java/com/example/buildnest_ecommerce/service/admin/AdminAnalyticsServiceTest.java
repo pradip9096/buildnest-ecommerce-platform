@@ -4,6 +4,7 @@ import com.example.buildnest_ecommerce.model.elasticsearch.ElasticsearchAuditLog
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchAuditLogRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -133,6 +134,40 @@ class AdminAnalyticsServiceTest {
     }
 
     @Test
+    void testGetApiErrorsByStatusCodeBoundaryFiltering() {
+        List<ElasticsearchAuditLog> logs = List.of(
+                createLog("1", 399, "/api/redirect", "GET"),
+                createLog("2", 400, "/api/bad", "GET"),
+                createLog("3", 500, "/api/error", "POST"));
+        when(repository.findByTimestampBetween(any(), any())).thenReturn(logs);
+
+        Map<String, Object> result = service.getApiErrorsByStatusCode(null, null);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> stats = (Map<String, Object>) result.get("statusCodeStatistics");
+        assertFalse(stats.containsKey("399"));
+        assertTrue(stats.containsKey("400"));
+        assertTrue(stats.containsKey("500"));
+        assertEquals(2L, result.get("totalErrors"));
+    }
+
+    @Test
+    void testGetApiErrorsByStatusCodeNullEndpointUsesFallback() {
+        ElasticsearchAuditLog log = createLog("1", 500, null, "GET");
+        when(repository.findByTimestampBetween(any(), any())).thenReturn(List.of(log));
+
+        Map<String, Object> result = service.getApiErrorsByStatusCode(null, null);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> stats = (Map<String, Object>) result.get("statusCodeStatistics");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> statusStats = (Map<String, Object>) stats.get("500");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> errors = (List<Map<String, Object>>) statusStats.get("errors");
+        assertEquals("N/A", errors.get(0).get("endpoint"));
+    }
+
+    @Test
     void testGetApiErrorsByEndpointGroupsCorrectly() {
         List<ElasticsearchAuditLog> logs = List.of(
                 createLog("1", 404, "/api/users", "GET"),
@@ -182,6 +217,31 @@ class AdminAnalyticsServiceTest {
         assertTrue(result.containsKey("statusDistribution"));
         assertTrue(result.containsKey("topErrorEndpoints"));
         assertTrue(result.containsKey("errorCategoryDistribution"));
+        assertEquals("50.00%", result.get("errorRate"));
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> topEndpoints = (List<Map<String, Object>>) result.get("topErrorEndpoints");
+        assertEquals(2, topEndpoints.size());
+        assertTrue(topEndpoints.stream().anyMatch(map -> "/api/missing".equals(map.get("endpoint"))
+                && ((Number) map.get("errorCount")).longValue() == 1L));
+        assertTrue(topEndpoints.stream().anyMatch(map -> "/api/error".equals(map.get("endpoint"))
+                && ((Number) map.get("errorCount")).longValue() == 1L));
+    }
+
+    @Test
+    void testDashboardCategoryDistribution() {
+        List<ElasticsearchAuditLog> logs = List.of(
+                createLog("1", 500, "/api/error", "POST"),
+                createLog("2", 404, "/api/missing", "GET"),
+                createLog("3", 201, "/api/created", "POST"));
+        when(repository.findByTimestampBetween(any(), any())).thenReturn(logs);
+
+        Map<String, Object> result = service.getDashboardData();
+
+        @SuppressWarnings("unchecked")
+        Map<String, Long> categoryDistribution = (Map<String, Long>) result.get("errorCategoryDistribution");
+        assertEquals(1L, categoryDistribution.get("SERVER_ERROR"));
+        assertEquals(1L, categoryDistribution.get("CLIENT_ERROR"));
     }
 
     @Test
@@ -252,6 +312,19 @@ class AdminAnalyticsServiceTest {
         assertEquals(2L, result.get("errorRequests"));
         assertEquals("100.00%", result.get("errorRate"));
         assertEquals("0.00%", result.get("successRate"));
+    }
+
+    @Test
+    void testParseDateFallbacks() {
+        LocalDateTime fallback = LocalDateTime.now().minusDays(1);
+
+        LocalDateTime parsedEmpty = ReflectionTestUtils.invokeMethod(service, "parseDate", "", fallback);
+        LocalDateTime parsedNull = ReflectionTestUtils.invokeMethod(service, "parseDate", null, fallback);
+        LocalDateTime parsedInvalid = ReflectionTestUtils.invokeMethod(service, "parseDate", "invalid", fallback);
+
+        assertEquals(fallback, parsedEmpty);
+        assertEquals(fallback, parsedNull);
+        assertEquals(fallback, parsedInvalid);
     }
 
     @Test
