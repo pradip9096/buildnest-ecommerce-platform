@@ -51,10 +51,10 @@ public class PerformanceMetricsController {
         // JVM Metrics
         Map<String, Object> jvmMetrics = new HashMap<>();
 
-        MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
-        long heapUsed = memoryBean.getHeapMemoryUsage().getUsed();
-        long heapMax = memoryBean.getHeapMemoryUsage().getMax();
-        long nonHeapUsed = memoryBean.getNonHeapMemoryUsage().getUsed();
+        MemoryMXBean memoryBean = getMemoryMXBean();
+        long heapUsed = getHeapUsed(memoryBean);
+        long heapMax = getHeapMax(memoryBean);
+        long nonHeapUsed = getNonHeapUsed(memoryBean);
 
         jvmMetrics.put("heapUsed_MB", heapUsed / (1024 * 1024));
         jvmMetrics.put("heapMax_MB", heapMax / (1024 * 1024));
@@ -65,11 +65,11 @@ public class PerformanceMetricsController {
 
         // Runtime Metrics
         Map<String, Object> runtimeMetrics = new HashMap<>();
-        RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+        RuntimeMXBean runtimeBean = getRuntimeMXBean();
 
         long uptimeSeconds = runtimeBean.getUptime() / 1000;
-        int threadCount = ManagementFactory.getThreadMXBean().getThreadCount();
-        int peakThreadCount = ManagementFactory.getThreadMXBean().getPeakThreadCount();
+        int threadCount = getThreadCount();
+        int peakThreadCount = getPeakThreadCount();
 
         runtimeMetrics.put("uptimeSeconds", uptimeSeconds);
         runtimeMetrics.put("currentThreadCount", threadCount);
@@ -93,23 +93,60 @@ public class PerformanceMetricsController {
         Map<String, Object> health = new HashMap<>();
         double heapUtilization = (double) heapUsed / heapMax * 100;
 
-        String status = "HEALTHY";
-        if (heapUtilization > 95) {
-            status = "CRITICAL";
-        } else if (heapUtilization > 80) {
-            status = "WARNING";
-        }
+        String status = determineHeapStatus(heapUtilization);
 
         health.put("status", status);
         health.put("timestamp", System.currentTimeMillis());
 
-        if (heapUtilization > 80) {
+        if (shouldLogHeapWarning(heapUtilization)) {
             log.warn("ALERT: Heap utilization at {:.2f}%. Consider increasing -Xmx", heapUtilization);
         }
 
         metrics.put("health", health);
 
         return metrics;
+    }
+
+    protected String determineHeapStatus(double heapUtilization) {
+        if (heapUtilization > 95) {
+            return "CRITICAL";
+        }
+        if (heapUtilization > 80) {
+            return "WARNING";
+        }
+        return "HEALTHY";
+    }
+
+    protected boolean shouldLogHeapWarning(double heapUtilization) {
+        return heapUtilization > 80;
+    }
+
+    protected MemoryMXBean getMemoryMXBean() {
+        return ManagementFactory.getMemoryMXBean();
+    }
+
+    protected RuntimeMXBean getRuntimeMXBean() {
+        return ManagementFactory.getRuntimeMXBean();
+    }
+
+    protected int getThreadCount() {
+        return ManagementFactory.getThreadMXBean().getThreadCount();
+    }
+
+    protected int getPeakThreadCount() {
+        return ManagementFactory.getThreadMXBean().getPeakThreadCount();
+    }
+
+    protected long getHeapUsed(MemoryMXBean memoryBean) {
+        return memoryBean.getHeapMemoryUsage().getUsed();
+    }
+
+    protected long getHeapMax(MemoryMXBean memoryBean) {
+        return memoryBean.getHeapMemoryUsage().getMax();
+    }
+
+    protected long getNonHeapUsed(MemoryMXBean memoryBean) {
+        return memoryBean.getNonHeapMemoryUsage().getUsed();
     }
 
     /**

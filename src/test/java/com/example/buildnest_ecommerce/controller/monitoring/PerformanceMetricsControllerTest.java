@@ -3,29 +3,26 @@ package com.example.buildnest_ecommerce.controller.monitoring;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.lang.management.MemoryMXBean;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("PerformanceMetricsController Tests")
 class PerformanceMetricsControllerTest {
 
-    @InjectMocks
     private PerformanceMetricsController controller;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
+        controller = new PerformanceMetricsController();
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -151,5 +148,56 @@ class PerformanceMetricsControllerTest {
         String heapUsagePercentage = (String) jvmMetrics.get("heapUsagePercentage");
         assertNotNull(heapUsagePercentage);
         assertTrue(heapUsagePercentage.endsWith("%"));
+    }
+
+    @Test
+    @DisplayName("Should return performance report structure")
+    void testGetPerformanceReport() {
+        Map<String, Object> report = controller.getPerformanceReport();
+        assertNotNull(report);
+        assertTrue(report.containsKey("title"));
+        assertTrue(report.containsKey("sections"));
+        assertTrue(report.containsKey("quickAssessment"));
+    }
+
+    @Test
+    @DisplayName("Should determine heap status for thresholds")
+    void testDetermineHeapStatusThresholds() {
+        assertEquals("CRITICAL", controller.determineHeapStatus(96.0));
+        assertEquals("WARNING", controller.determineHeapStatus(85.0));
+        assertEquals("HEALTHY", controller.determineHeapStatus(50.0));
+    }
+
+    @Test
+    @DisplayName("Should decide heap warning logging")
+    void testShouldLogHeapWarning() {
+        assertTrue(controller.shouldLogHeapWarning(81.0));
+        assertFalse(controller.shouldLogHeapWarning(80.0));
+    }
+
+    @Test
+    @DisplayName("Should log warning when heap utilization exceeds 80%")
+    void testHeapWarningTriggeredInMetrics() {
+        PerformanceMetricsController customController = new PerformanceMetricsController() {
+            @Override
+            protected long getHeapUsed(MemoryMXBean memoryBean) {
+                return 90;
+            }
+
+            @Override
+            protected long getHeapMax(MemoryMXBean memoryBean) {
+                return 100;
+            }
+
+            @Override
+            protected long getNonHeapUsed(MemoryMXBean memoryBean) {
+                return 0;
+            }
+        };
+
+        Map<String, Object> metrics = customController.getPerformanceMetrics();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> health = (Map<String, Object>) metrics.get("health");
+        assertEquals("WARNING", health.get("status"));
     }
 }

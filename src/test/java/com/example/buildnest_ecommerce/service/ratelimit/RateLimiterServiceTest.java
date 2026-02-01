@@ -221,4 +221,47 @@ class RateLimiterServiceTest {
         assertTrue(allowed1);
         assertTrue(allowed2);
     }
+
+    @Test
+    @DisplayName("Should return retry-after 0 on circuit breaker error")
+    void testGetRetryAfterSecondsCircuitBreaker() {
+        @SuppressWarnings("unchecked")
+        RedisTemplate<String, Object> redisTemplate = (RedisTemplate<String, Object>) mock(RedisTemplate.class);
+        CircuitBreaker cb = mock(CircuitBreaker.class);
+        when(cb.executeSupplier(any())).thenThrow(new RuntimeException("cb"));
+
+        RateLimiterService service = new RateLimiterService(redisTemplate, cb);
+
+        long retryAfter = service.getRetryAfterSeconds("key");
+        assertEquals(0L, retryAfter);
+    }
+
+    @Test
+    @DisplayName("Should return full limit on remaining tokens error")
+    void testGetRemainingTokensCircuitBreaker() {
+        @SuppressWarnings("unchecked")
+        RedisTemplate<String, Object> redisTemplate = (RedisTemplate<String, Object>) mock(RedisTemplate.class);
+        CircuitBreaker cb = mock(CircuitBreaker.class);
+        when(cb.executeSupplier(any())).thenThrow(new RuntimeException("cb"));
+
+        RateLimiterService service = new RateLimiterService(redisTemplate, cb);
+
+        long remaining = service.getRemainingTokens("key", 50);
+        assertEquals(50L, remaining);
+    }
+
+    @Test
+    @DisplayName("Should reset rate limit when requested")
+    void testResetRateLimit() {
+        rateLimiterService.resetRateLimit("key");
+        verify(redisTemplate).delete("key");
+    }
+
+    @Test
+    @DisplayName("Should delegate getTimeUntilReset")
+    void testGetTimeUntilReset() {
+        when(redisTemplate.getExpire(anyString(), any(TimeUnit.class))).thenReturn(15L);
+        long reset = rateLimiterService.getTimeUntilReset("key");
+        assertEquals(15L, reset);
+    }
 }

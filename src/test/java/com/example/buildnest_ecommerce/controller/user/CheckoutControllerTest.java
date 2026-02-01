@@ -6,6 +6,7 @@ import com.example.buildnest_ecommerce.model.dto.CheckoutRequestDTO;
 import com.example.buildnest_ecommerce.model.entity.Order;
 import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import com.example.buildnest_ecommerce.service.checkout.CheckoutService;
+import com.example.buildnest_ecommerce.service.ratelimit.RateLimiterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,9 +24,12 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -39,6 +43,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SuppressWarnings("null")
 class CheckoutControllerTest {
 
+        private static class NonEqualCartTotalDTO extends CheckoutController.CartTotalDTO {
+                @Override
+                public boolean canEqual(Object other) {
+                        return false;
+                }
+        }
+
+        private static class SubclassCartTotalDTO extends CheckoutController.CartTotalDTO {
+        }
+
         @Autowired
         private MockMvc mockMvc;
 
@@ -47,6 +61,9 @@ class CheckoutControllerTest {
 
         @MockBean
         private CheckoutService checkoutService;
+
+        @MockBean
+        private RateLimiterService rateLimiterService;
 
         private CustomUserDetails userDetails;
 
@@ -62,6 +79,8 @@ class CheckoutControllerTest {
                                 true,
                                 true,
                                 true);
+                when(rateLimiterService.getRemainingTokens(anyString(), anyInt())).thenReturn(50);
+                when(rateLimiterService.getRetryAfterSeconds(anyString())).thenReturn(0L);
         }
 
         @Test
@@ -86,6 +105,45 @@ class CheckoutControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                                 .andExpect(status().isCreated());
+        }
+
+        @Test
+        void testProcessCheckoutValid() throws Exception {
+                Order order = new Order();
+                order.setId(20L);
+                order.setTotalAmount(new BigDecimal("1500.00"));
+
+                when(checkoutService.checkoutCart(anyLong(), anyLong())).thenReturn(order);
+
+                mockMvc.perform(post("/api/checkout/process/3")
+                                .with(user(userDetails)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.success").value(true))
+                                .andExpect(jsonPath("$.message").value("Order placed successfully"));
+        }
+
+        @Test
+        void testProcessCheckoutInvalidCart() throws Exception {
+                doThrow(new IllegalArgumentException("Invalid cart"))
+                                .when(checkoutService).checkoutCart(anyLong(), anyLong());
+
+                mockMvc.perform(post("/api/checkout/process/4")
+                                .with(user(userDetails)))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.success").value(false))
+                                .andExpect(jsonPath("$.message").value("Invalid cart"));
+        }
+
+        @Test
+        void testProcessCheckoutError() throws Exception {
+                doThrow(new RuntimeException("Checkout failed"))
+                                .when(checkoutService).checkoutCart(anyLong(), anyLong());
+
+                mockMvc.perform(post("/api/checkout/process/5")
+                                .with(user(userDetails)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.success").value(false))
+                                .andExpect(jsonPath("$.message").value("Error processing checkout: Checkout failed"));
         }
 
         @Test
@@ -149,12 +207,60 @@ class CheckoutControllerTest {
         }
 
         @Test
+        void testValidateCartNotReady() throws Exception {
+                when(checkoutService.validateCheckout(anyLong(), anyLong())).thenReturn(false);
+
+                mockMvc.perform(get("/api/checkout/validate/2")
+                                .with(user(userDetails)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.success").value(true))
+                                .andExpect(jsonPath("$.message").value("Cart is not ready for checkout"))
+                                .andExpect(jsonPath("$.data").value(false));
+        }
+
+        @Test
+        void testValidateCartError() throws Exception {
+                doThrow(new RuntimeException("Validation error"))
+                                .when(checkoutService).validateCheckout(anyLong(), anyLong());
+
+                mockMvc.perform(get("/api/checkout/validate/3")
+                                .with(user(userDetails)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.success").value(false))
+                                .andExpect(jsonPath("$.message").value("Error validating checkout"));
+        }
+
+        @Test
         void testCalculateTotalForCart() throws Exception {
                 when(checkoutService.calculateFinalTotal(anyLong())).thenReturn(2500.0);
 
                 // JWT validation in test context returns 401 for authenticated endpoints
                 mockMvc.perform(get("/api/checkout/calculate-total/1"))
                                 .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        void testCalculateTotalForCartAuthorized() throws Exception {
+                when(checkoutService.calculateFinalTotal(anyLong())).thenReturn(2500.0);
+
+                mockMvc.perform(get("/api/checkout/calculate-total/1")
+                                .with(user(userDetails)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.success").value(true))
+                                .andExpect(jsonPath("$.message").value("Total calculated successfully"))
+                                .andExpect(jsonPath("$.data.finalTotal").value(2500.0));
+        }
+
+        @Test
+        void testCalculateTotalError() throws Exception {
+                doThrow(new RuntimeException("Calc error"))
+                                .when(checkoutService).calculateFinalTotal(anyLong());
+
+                mockMvc.perform(get("/api/checkout/calculate-total/2")
+                                .with(user(userDetails)))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.success").value(false))
+                                .andExpect(jsonPath("$.message").value("Error calculating total"));
         }
 
         @Test
@@ -212,5 +318,40 @@ class CheckoutControllerTest {
                                 .content(objectMapper.writeValueAsString(request)))
                                 .andExpect(status().isInternalServerError())
                                 .andExpect(jsonPath("$.success").value(false));
+        }
+
+        @Test
+        void cartTotalDtoLombokMethods() {
+                CheckoutController.CartTotalDTO dto1 = new CheckoutController.CartTotalDTO();
+                CheckoutController.CartTotalDTO dto2 = new CheckoutController.CartTotalDTO(2500.0);
+                CheckoutController.CartTotalDTO dto3 = new CheckoutController.CartTotalDTO(2500.0);
+                CheckoutController.CartTotalDTO dto4 = new CheckoutController.CartTotalDTO(100.0);
+                CheckoutController.CartTotalDTO dtoNull1 = new CheckoutController.CartTotalDTO();
+                CheckoutController.CartTotalDTO dtoNull2 = new CheckoutController.CartTotalDTO();
+
+                dto1.setFinalTotal(2500.0);
+
+                assertEquals(2500.0, dto1.getFinalTotal());
+                assertEquals(dto2, dto3);
+                assertEquals(dto2.hashCode(), dto3.hashCode());
+                assertTrue(dto2.toString().contains("2500.0"));
+                assertNotEquals(dto2, dto4);
+                assertFalse(dto2.equals(null));
+                assertFalse(dto2.equals("not-a-dto"));
+                assertEquals(dto2, dto2);
+
+                assertEquals(dtoNull1, dtoNull2);
+                assertNotEquals(dtoNull1, dto2);
+                assertNotEquals(dto2, dtoNull1);
+                dtoNull1.hashCode();
+                dto2.hashCode();
+
+                SubclassCartTotalDTO subclassDto = new SubclassCartTotalDTO();
+                subclassDto.setFinalTotal(2500.0);
+                assertTrue(dto2.equals(subclassDto));
+
+                NonEqualCartTotalDTO nonEqualDto = new NonEqualCartTotalDTO();
+                nonEqualDto.setFinalTotal(2500.0);
+                assertFalse(dto2.equals(nonEqualDto));
         }
 }

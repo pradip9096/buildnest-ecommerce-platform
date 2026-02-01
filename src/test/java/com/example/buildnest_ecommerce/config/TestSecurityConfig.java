@@ -2,7 +2,8 @@ package com.example.buildnest_ecommerce.config;
 
 import com.example.buildnest_ecommerce.security.Jwt.JwtAuthenticationEntryPoint;
 import com.example.buildnest_ecommerce.security.Jwt.JwtAuthenticationFilter;
-import com.example.buildnest_ecommerce.security.AdminRateLimitFilter;
+import com.example.buildnest_ecommerce.service.ratelimit.RateLimiterService;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -32,9 +33,6 @@ public class TestSecurityConfig {
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    @Autowired
-    private AdminRateLimitFilter adminRateLimitFilter;
-
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter();
@@ -43,6 +41,16 @@ public class TestSecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    @Primary
+    public RateLimiterService rateLimiterService() {
+        RateLimiterService mock = Mockito.mock(RateLimiterService.class);
+        Mockito.when(mock.getRemainingTokens(Mockito.anyString(), Mockito.anyInt())).thenReturn(50);
+        Mockito.when(mock.getRetryAfterSeconds(Mockito.anyString())).thenReturn(0L);
+        Mockito.when(mock.isAllowed(Mockito.anyString(), Mockito.anyInt(), Mockito.any())).thenReturn(true);
+        return mock;
     }
 
     @Bean
@@ -88,7 +96,6 @@ public class TestSecurityConfig {
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
                         // Any other request
                         .anyRequest().authenticated())
-                .addFilterBefore(adminRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

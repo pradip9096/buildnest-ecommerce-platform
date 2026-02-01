@@ -9,7 +9,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest
+@SpringBootTest(classes = CivilEcommerceApplication.class)
 @ActiveProfiles("test")
 @Import(TestElasticsearchConfig.class)
 class CivilEcommerceApplicationTests {

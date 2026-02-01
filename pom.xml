@@ -456,7 +456,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<!-- Allow ByteBuddy agent for Mockito without JDK warnings -->
-					<argLine>${jacoco.argLine} -XX:+EnableDynamicAgentLoading</argLine>
+					<argLine>${jacoco.argLine} -XX:+EnableDynamicAgentLoading -Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -479,6 +479,16 @@
 						<goals>
 							<goal>report</goal>
 						</goals>
+						<configuration>
+							<excludes>
+								<exclude>**/model/dto/**</exclude>
+								<exclude>**/model/payload/**</exclude>
+								<exclude>**/model/entity/**</exclude>
+								<exclude>**/model/elasticsearch/**</exclude>
+								<exclude>**/config/**</exclude>
+								<exclude>**/*Application.class</exclude>
+							</excludes>
+						</configuration>
 					</execution>
 					<execution>
 						<id>report-aggregate</id>
@@ -486,6 +496,17 @@
 						<goals>
 							<goal>report-aggregate</goal>
 						</goals>
+						<configuration>
+							<excludes>
+								<exclude>**/model/dto/**</exclude>
+								<exclude>**/model/payload/**</exclude>
+							<!-- Entity and elasticsearch models now have comprehensive tests -->
+							<!-- <exclude>**/model/entity/**</exclude> -->
+							<!-- <exclude>**/model/elasticsearch/**</exclude> -->
+								<exclude>**/config/**</exclude>
+								<exclude>**/*Application.class</exclude>
+							</excludes>
+						</configuration>
 					</execution>
 				</executions>
 				<configuration>
@@ -493,6 +514,9 @@
 						<!-- Exclude generated code and DTOs from coverage -->
 						<exclude>**/model/dto/**</exclude>
 						<exclude>**/model/payload/**</exclude>
+						<!-- Entity and elasticsearch models now have comprehensive tests -->
+						<!-- <exclude>**/model/entity/**</exclude> -->
+						<!-- <exclude>**/model/elasticsearch/**</exclude> -->
 						<exclude>**/config/**</exclude>
 						<exclude>**/*Application.class</exclude>
 					</excludes>

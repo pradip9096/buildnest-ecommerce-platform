@@ -179,4 +179,97 @@ class PoolMetricsControllerTest {
         verify(dataSource, times(2)).getMaximumPoolSize();
         verify(dataSource).getMinimumIdle();
     }
+
+    @Test
+    @DisplayName("Should report CRITICAL when waiting threads exist")
+    @SuppressWarnings("unchecked")
+    void testPoolHealthCriticalWithWaitingThreads() {
+        when(poolMXBean.getActiveConnections()).thenReturn(10);
+        when(poolMXBean.getTotalConnections()).thenReturn(10);
+        when(poolMXBean.getIdleConnections()).thenReturn(0);
+        when(poolMXBean.getThreadsAwaitingConnection()).thenReturn(3);
+        when(dataSource.getMaximumPoolSize()).thenReturn(10);
+        when(dataSource.getMinimumIdle()).thenReturn(2);
+
+        Map<String, Object> health = controller.poolHealth();
+
+        assertEquals("CRITICAL", health.get("status"));
+        Map<String, String> recommendations = (Map<String, String>) health.get("recommendations");
+        assertTrue(recommendations.containsKey("immediate_action"));
+    }
+
+    @Test
+    @DisplayName("Should report WARNING when utilization above 90%")
+    void testPoolHealthWarning() {
+        when(poolMXBean.getActiveConnections()).thenReturn(19);
+        when(poolMXBean.getTotalConnections()).thenReturn(20);
+        when(poolMXBean.getIdleConnections()).thenReturn(1);
+        when(poolMXBean.getThreadsAwaitingConnection()).thenReturn(0);
+        when(dataSource.getMaximumPoolSize()).thenReturn(20);
+        when(dataSource.getMinimumIdle()).thenReturn(2);
+
+        Map<String, Object> health = controller.poolHealth();
+
+        assertEquals("WARNING", health.get("status"));
+    }
+
+    @Test
+    @DisplayName("Should report CAUTION when utilization above 70%")
+    void testPoolHealthCaution() {
+        when(poolMXBean.getActiveConnections()).thenReturn(8);
+        when(poolMXBean.getTotalConnections()).thenReturn(10);
+        when(poolMXBean.getIdleConnections()).thenReturn(2);
+        when(poolMXBean.getThreadsAwaitingConnection()).thenReturn(0);
+        when(dataSource.getMaximumPoolSize()).thenReturn(20);
+        when(dataSource.getMinimumIdle()).thenReturn(2);
+
+        Map<String, Object> health = controller.poolHealth();
+
+        assertEquals("CAUTION", health.get("status"));
+    }
+
+    @Test
+    @DisplayName("Should report HEALTHY when utilization below thresholds")
+    void testPoolHealthHealthy() {
+        when(poolMXBean.getActiveConnections()).thenReturn(2);
+        when(poolMXBean.getTotalConnections()).thenReturn(10);
+        when(poolMXBean.getIdleConnections()).thenReturn(8);
+        when(poolMXBean.getThreadsAwaitingConnection()).thenReturn(0);
+        when(dataSource.getMaximumPoolSize()).thenReturn(20);
+        when(dataSource.getMinimumIdle()).thenReturn(2);
+
+        Map<String, Object> health = controller.poolHealth();
+
+        assertEquals("HEALTHY", health.get("status"));
+    }
+
+    @Test
+    @DisplayName("Should report CRITICAL when utilization above 95% without waiting threads")
+    void testPoolHealthCriticalHighUtilization() {
+        when(poolMXBean.getActiveConnections()).thenReturn(96);
+        when(poolMXBean.getTotalConnections()).thenReturn(100);
+        when(poolMXBean.getIdleConnections()).thenReturn(4);
+        when(poolMXBean.getThreadsAwaitingConnection()).thenReturn(0);
+        when(dataSource.getMaximumPoolSize()).thenReturn(100);
+        when(dataSource.getMinimumIdle()).thenReturn(2);
+
+        Map<String, Object> health = controller.poolHealth();
+
+        assertEquals("CRITICAL", health.get("status"));
+    }
+
+    @Test
+    @DisplayName("Should handle pool health with zero total connections")
+    void testPoolHealthZeroTotalConnections() {
+        when(poolMXBean.getActiveConnections()).thenReturn(0);
+        when(poolMXBean.getTotalConnections()).thenReturn(0);
+        when(poolMXBean.getIdleConnections()).thenReturn(0);
+        when(poolMXBean.getThreadsAwaitingConnection()).thenReturn(0);
+        when(dataSource.getMaximumPoolSize()).thenReturn(10);
+        when(dataSource.getMinimumIdle()).thenReturn(1);
+
+        Map<String, Object> health = controller.poolHealth();
+
+        assertEquals("HEALTHY", health.get("status"));
+    }
 }

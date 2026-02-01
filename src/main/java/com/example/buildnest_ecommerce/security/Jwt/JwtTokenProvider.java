@@ -84,7 +84,7 @@ public class JwtTokenProvider {
                     .build()
                     .parseSignedClaims(authToken);
             return true;
-        } catch (SecurityException e) {
+        } catch (io.jsonwebtoken.security.SecurityException e) {
             // If current secret fails, try previous secret (for rotation support)
             SecretKey previousKey = getPreviousSigningKey();
             if (previousKey != null) {

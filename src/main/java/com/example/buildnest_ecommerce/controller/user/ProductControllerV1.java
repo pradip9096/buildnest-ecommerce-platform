@@ -49,23 +49,32 @@ public class ProductControllerV1 {
          */
         @PostConstruct
         public void checkSunsetDate() {
-                LocalDate today = LocalDate.now();
+                LocalDate today = getToday();
+                LocalDate sunsetDate = getSunsetDate();
 
-                if (today.isAfter(SUNSET_DATE)) {
+                if (today.isAfter(sunsetDate)) {
                         String errorMessage = String.format(
                                         "API V1 has reached sunset date (%s). This controller must be removed. " +
                                                         "Migration guide: %s",
-                                        SUNSET_DATE, MIGRATION_GUIDE_URL);
+                                        sunsetDate, MIGRATION_GUIDE_URL);
                         log.error(errorMessage);
                         throw new IllegalStateException(errorMessage);
                 }
 
                 // Log warning if within 90 days of sunset
-                long daysUntilSunset = java.time.temporal.ChronoUnit.DAYS.between(today, SUNSET_DATE);
+                long daysUntilSunset = java.time.temporal.ChronoUnit.DAYS.between(today, sunsetDate);
                 if (daysUntilSunset <= 90) {
                         log.warn("API V1 will sunset in {} days ({}). Please migrate to V2. Guide: {}",
-                                        daysUntilSunset, SUNSET_DATE, MIGRATION_GUIDE_URL);
+                                        daysUntilSunset, sunsetDate, MIGRATION_GUIDE_URL);
                 }
+        }
+
+        protected LocalDate getToday() {
+                return LocalDate.now();
+        }
+
+        protected LocalDate getSunsetDate() {
+                return SUNSET_DATE;
         }
 
         @Operation(summary = "Get all products (V1 - Deprecated)", description = "Returns all products with pagination. Use v2 for better response format", deprecated = true)

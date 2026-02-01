@@ -50,9 +50,9 @@ public class AuditLogService implements IAuditLogService {
             String resolvedAction = action != null ? action : "UNKNOWN_ACTION";
             String resolvedEntityType = entityType != null ? entityType : "UNKNOWN_ENTITY";
             AuditLog auditLog = AuditLog.builder()
-                .userId(resolvedUserId)
-                .action(resolvedAction)
-                .entityType(resolvedEntityType)
+                    .userId(resolvedUserId)
+                    .action(resolvedAction)
+                    .entityType(resolvedEntityType)
                     .entityId(entityId)
                     .timestamp(LocalDateTime.now())
                     .ipAddress(ipAddress)

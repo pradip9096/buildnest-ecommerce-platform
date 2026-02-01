@@ -178,4 +178,51 @@ class AuthServiceImplTest {
         verify(refreshTokenService).revokeRefreshToken("refresh-token");
         verify(auditLogService).logAuthenticationEvent(eq(1L), eq("LOGOUT"), any(), any());
     }
+
+    @Test
+    void testValidateTokenReturnsTrue() {
+        when(jwtTokenProvider.validateToken("token")).thenReturn(true);
+
+        assertTrue(authService.validateToken("token"));
+        verify(jwtTokenProvider).validateToken("token");
+    }
+
+    @Test
+    void testValidateTokenReturnsFalseOnException() {
+        when(jwtTokenProvider.validateToken("bad-token")).thenThrow(new RuntimeException("bad"));
+
+        assertFalse(authService.validateToken("bad-token"));
+        verify(jwtTokenProvider).validateToken("bad-token");
+    }
+
+    @Test
+    void testLoginFailureThrows() {
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new RuntimeException("auth failed"));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.login("user", "bad"));
+        assertTrue(ex.getMessage().contains("Login failed"));
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+    }
+
+    @Test
+    void testRefreshAccessTokenInvalidTokenThrows() {
+        when(refreshTokenService.findByToken("missing")).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.refreshAccessToken("missing"));
+        assertTrue(ex.getMessage().contains("Invalid refresh token"));
+    }
+
+    @Test
+    void testRefreshAccessTokenExpiredTokenThrows() {
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setToken("expired");
+        refreshToken.setUserId(1L);
+
+        when(refreshTokenService.findByToken("expired")).thenReturn(Optional.of(refreshToken));
+        when(refreshTokenService.validateRefreshToken(refreshToken)).thenReturn(false);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.refreshAccessToken("expired"));
+        assertTrue(ex.getMessage().contains("expired or revoked"));
+    }
 }

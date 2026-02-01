@@ -78,6 +78,34 @@ class ElasticsearchIngestionServiceTest {
     }
 
     @Test
+    @DisplayName("Should map 3xx status to REDIRECT category")
+    void testIndexAuditLogWithStatusRedirectCategory() {
+        ingestionService.indexAuditLogWithStatus(21L, "ACCESS_RESOURCE", "RESOURCE", 12L,
+                "10.0.0.1", "agent", null, null, 302, "/api/resource", null);
+
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        ElasticsearchAuditLog saved = auditLogCaptor.getValue();
+
+        assertEquals("REDIRECT", saved.getErrorCategory());
+        assertEquals("INFO", saved.getSeverity());
+        assertEquals(302, saved.getHttpStatusCode());
+    }
+
+    @Test
+    @DisplayName("Should map 5xx status to SERVER_ERROR category")
+    void testIndexAuditLogWithStatusServerErrorCategory() {
+        ingestionService.indexAuditLogWithStatus(22L, "ORDER_UPDATE", "ORDER", 88L,
+                "10.0.0.1", "agent", null, null, 503, "/api/orders/88", null);
+
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        ElasticsearchAuditLog saved = auditLogCaptor.getValue();
+
+        assertEquals("SERVER_ERROR", saved.getErrorCategory());
+        assertEquals("WARN", saved.getSeverity());
+        assertEquals(503, saved.getHttpStatusCode());
+    }
+
+    @Test
     @DisplayName("Should preserve explicit error category when provided")
     void testIndexAuditLogWithStatusRespectsProvidedCategory() {
         ingestionService.indexAuditLogWithStatus(30L, "ORDER_UPDATE", "ORDER", 55L,
@@ -88,6 +116,41 @@ class ElasticsearchIngestionServiceTest {
 
         assertEquals("CUSTOM_CATEGORY", saved.getErrorCategory());
         assertEquals(500, saved.getHttpStatusCode());
+    }
+
+    @Test
+    @DisplayName("Should allow null status and category")
+    void testIndexAuditLogWithNullStatusAndCategory() {
+        ingestionService.indexAuditLogWithStatus(31L, "LOGIN", "AUTH", 1L,
+                "10.0.0.3", "agent", null, null, null, null, null);
+
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        ElasticsearchAuditLog saved = auditLogCaptor.getValue();
+
+        assertNull(saved.getErrorCategory());
+        assertNull(saved.getHttpStatusCode());
+        assertEquals("INFO", saved.getSeverity());
+    }
+
+    @Test
+    @DisplayName("Should set WARN severity for UPDATE and RESET actions")
+    void testIndexAuditLogWarnSeverity() {
+        ingestionService.indexAuditLogWithStatus(32L, "PASSWORD_RESET", "USER", 2L,
+                "10.0.0.4", "agent", null, null, 200, "/api/users/2/reset", null);
+
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        ElasticsearchAuditLog saved = auditLogCaptor.getValue();
+
+        assertEquals("WARN", saved.getSeverity());
+    }
+
+    @Test
+    @DisplayName("Should handle audit log repository failures gracefully")
+    void testIndexAuditLogHandlesRepositoryException() {
+        doThrow(new RuntimeException("save failed")).when(auditLogRepository).save(any(ElasticsearchAuditLog.class));
+
+        assertDoesNotThrow(() -> ingestionService.indexAuditLogWithStatus(40L, "LOGIN", "AUTH", 3L,
+                "10.0.0.5", "agent", null, null, 200, "/api/login", null));
     }
 
     @Test
@@ -105,6 +168,15 @@ class ElasticsearchIngestionServiceTest {
         assertEquals("host-1", saved.getHost());
         assertEquals("test", saved.getEnvironment());
         assertNotNull(saved.getTimestamp());
+    }
+
+    @Test
+    @DisplayName("Should handle metrics repository failures gracefully")
+    void testIndexMetricsHandlesRepositoryException() {
+        doThrow(new RuntimeException("metrics save failed")).when(metricsRepository)
+                .save(any(ElasticsearchMetrics.class));
+
+        assertDoesNotThrow(() -> ingestionService.indexMetrics("mem", 10.0, "MB", "svc", "host", "test"));
     }
 
     @Test
