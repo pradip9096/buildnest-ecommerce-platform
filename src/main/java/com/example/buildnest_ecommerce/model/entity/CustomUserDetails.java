@@ -1,14 +1,49 @@
 package com.example.buildnest_ecommerce.model.entity;
 
+import java.util.Collection;
 import java.util.Objects;
 
 public class CustomUserDetails {
+    private Long id;
     private String username;
     private String password;
+    private Collection<String> authorities;
     private boolean enabled;
     private boolean accountNonExpired;
     private boolean credentialsNonExpired;
     private boolean accountNonLocked;
+
+    public CustomUserDetails() {
+    }
+
+    public CustomUserDetails(Long id, String username, String email, String password,
+            Collection<String> authorities, boolean enabled, boolean accountNonExpired,
+            boolean accountNonLocked, boolean credentialsNonExpired) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.authorities = authorities;
+        this.enabled = enabled;
+        this.accountNonExpired = accountNonExpired;
+        this.credentialsNonExpired = credentialsNonExpired;
+        this.accountNonLocked = accountNonLocked;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Collection<String> getAuthorities() {
+        return authorities;
+    }
+
+    public void setAuthorities(Collection<String> authorities) {
+        this.authorities = authorities;
+    }
 
     public String getUsername() {
         return username;

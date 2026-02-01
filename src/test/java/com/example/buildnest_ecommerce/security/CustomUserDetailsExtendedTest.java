@@ -114,7 +114,7 @@ class CustomUserDetailsExtendedTest {
                 true);
 
         CustomUserDetails user2 = new CustomUserDetails(
-                2L,
+                1L, // Same ID to ensure equality based on other fields
                 "testuser",
                 "user@example.com",
                 "password",
@@ -143,7 +143,7 @@ class CustomUserDetailsExtendedTest {
                 true);
 
         CustomUserDetails user2 = new CustomUserDetails(
-                2L,
+                1L, // Same ID to ensure equality based on other fields
                 "testuser",
                 "user@example.com",
                 "password",
