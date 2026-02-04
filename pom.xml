@@ -391,9 +391,6 @@
 		<!-- CI/CD Profile with Coverage -->
 		<profile>
 			<id>ci</id>
-			<properties>
-				<pitest.skip>true</pitest.skip>
-			</properties>
 			<build>
 				<plugins>
 					<plugin>
@@ -639,8 +636,34 @@
 						<param>com.example.buildnest_ecommerce.security.*</param>
 					</targetClasses>
 					<targetTests>
-						<param>com.example.buildnest_ecommerce.*</param>
+						<param>com.example.buildnest_ecommerce.service.*ImplTest</param>
+						<param>com.example.buildnest_ecommerce.service.*ServiceTest</param>
+						<param>com.example.buildnest_ecommerce.util.*Test</param>
+						<param>com.example.buildnest_ecommerce.controller.*ControllerTest</param>
 					</targetTests>
+					<excludedTestClasses>
+						<!-- Exclude Spring Boot integration tests that require full application context -->
+						<param>**/*IntegrationTest</param>
+						<param>**/*E2ETest</param>
+						<param>**/*StressTest</param>
+						<param>**/*ReliabilityTest</param>
+						<param>**/*PerformanceTest</param>
+						<param>**/*PerformanceBaselineTest</param>
+						<param>com.example.buildnest_ecommerce.e2e.*</param>
+						<param>com.example.buildnest_ecommerce.stress.*</param>
+						<param>com.example.buildnest_ecommerce.reliability.*</param>
+						<param>com.example.buildnest_ecommerce.performance.*</param>
+						<param>com.example.buildnest_ecommerce.validation.*</param>
+						<param>com.example.buildnest_ecommerce.security.*SecurityTest</param>
+						<param>com.example.buildnest_ecommerce.rbac.*</param>
+						<param>com.example.buildnest_ecommerce.repository.*</param>
+						<param>com.example.buildnest_ecommerce.api.*</param>
+						<param>com.example.buildnest_ecommerce.admin.*</param>
+						<param>com.example.buildnest_ecommerce.analytics.*</param>
+						<param>com.example.buildnest_ecommerce.category.*</param>
+						<param>com.example.buildnest_ecommerce.inventory.*</param>
+						<param>com.example.buildnest_ecommerce.payment.*</param>
+					</excludedTestClasses>
 					<mutationThreshold>75</mutationThreshold>
 					<coverageThreshold>70</coverageThreshold>
 					<outputFormats>
