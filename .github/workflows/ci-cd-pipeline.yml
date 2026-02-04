@@ -78,11 +78,12 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.pit_debug == 'true' }}
         continue-on-error: true
         run: >-
+          mkdir -p target/pit-reports &&
           ./mvnw org.pitest:pitest-maven:mutationCoverage
           -Dpitest.verbose=true
           -Dverbose=true
           -Dpitest.threads=1
-          -Dpitest.jvmArgs="-Xmx2g -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=target/pit-reports/pit-heapdump.hprof"
+          -Dpitest.jvmArgs="-Xmx2g -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=target/pit-reports/pit-heapdump.hprof -XX:ErrorFile=target/pit-reports/hs_err_pid%p.log"
           -Dpitest.skip=false
           -Dpitest.failWhenNoMutations=false
           -Dspring.profiles.active=test
@@ -95,6 +96,7 @@ jobs:
           path: |
             target/pit-reports/
             target/pit-reports/*.hprof
+            target/pit-reports/hs_err_pid*.log
       
       - name: Generate coverage report
         run: ./mvnw jacoco:report
