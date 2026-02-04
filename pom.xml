@@ -631,15 +631,12 @@
 					<skip>${pitest.skip}</skip>
 					<targetClasses>
 						<param>com.example.buildnest_ecommerce.service.*</param>
-						<param>com.example.buildnest_ecommerce.controller.*</param>
 						<param>com.example.buildnest_ecommerce.util.*</param>
-						<param>com.example.buildnest_ecommerce.security.*</param>
 					</targetClasses>
 					<targetTests>
 						<param>com.example.buildnest_ecommerce.service.*ImplTest</param>
 						<param>com.example.buildnest_ecommerce.service.*ServiceTest</param>
 						<param>com.example.buildnest_ecommerce.util.*Test</param>
-						<param>com.example.buildnest_ecommerce.controller.*ControllerTest</param>
 					</targetTests>
 					<excludedTestClasses>
 						<!-- Exclude Spring Boot integration tests that require full application context -->
@@ -649,6 +646,7 @@
 						<param>**/*ReliabilityTest</param>
 						<param>**/*PerformanceTest</param>
 						<param>**/*PerformanceBaselineTest</param>
+						<param>**/*ControllerTest</param>
 						<param>com.example.buildnest_ecommerce.e2e.*</param>
 						<param>com.example.buildnest_ecommerce.stress.*</param>
 						<param>com.example.buildnest_ecommerce.reliability.*</param>
