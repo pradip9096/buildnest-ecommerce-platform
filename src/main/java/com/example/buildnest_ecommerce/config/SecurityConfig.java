@@ -7,6 +7,7 @@ import com.example.buildnest_ecommerce.security.HttpsEnforcementFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,6 +27,7 @@ import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
 
 @Configuration
+@Profile("!test")
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true, prePostEnabled = true)
 public class SecurityConfig {
