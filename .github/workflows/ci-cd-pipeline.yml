@@ -5,6 +5,12 @@ on:
     branches: [ main, master, develop ]
   pull_request:
     branches: [ main, master, develop ]
+  workflow_dispatch:
+    inputs:
+      pit_debug:
+        description: 'Run PIT mutation testing in verbose debug mode'
+        required: false
+        default: 'false'
   schedule:
     # Run stress tests weekly on Sunday at 2 AM UTC
     - cron: '0 2 * * 0'
@@ -67,6 +73,24 @@ jobs:
       
       - name: Run integration tests with coverage
         run: ./mvnw verify -P ci
+
+      - name: Run PIT mutation testing (debug)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.pit_debug == 'true' }}
+        run: >-
+          ./mvnw org.pitest:pitest-maven:mutationCoverage
+          -Dpitest.verbose=true
+          -Dpitest.threads=1
+          -Dpitest.jvmArgs="-Xmx2g"
+          -Dpitest.skip=false
+          -Dpitest.failWhenNoMutations=false
+          -Dspring.profiles.active=test
+
+      - name: Upload PIT reports
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.pit_debug == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pit-reports
+          path: target/pit-reports/
       
       - name: Generate coverage report
         run: ./mvnw jacoco:report
