@@ -72,7 +72,7 @@ jobs:
         run: chmod +x ./mvnw
       
       - name: Run integration tests with coverage
-        run: ./mvnw verify -P ci
+        run: ./mvnw verify -P ci -Dpitest.skip=${{ github.event_name == 'workflow_dispatch' && inputs.pit_debug == 'true' }}
 
       - name: Run PIT mutation testing (debug)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.pit_debug == 'true' }}
