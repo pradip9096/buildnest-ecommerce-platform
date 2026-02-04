@@ -79,7 +79,7 @@ jobs:
         continue-on-error: true
         run: >-
           mkdir -p target/pit-reports &&
-          ./mvnw org.pitest:pitest-maven:mutationCoverage
+          ./mvnw -e -X org.pitest:pitest-maven:mutationCoverage
           -Dpitest.verbose=true
           -Dverbose=true
           -Dpitest.threads=1
