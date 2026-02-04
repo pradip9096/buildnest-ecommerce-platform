@@ -1,6 +1,7 @@
 package com.example.buildnest_ecommerce;
 
 import com.example.buildnest_ecommerce.config.TestElasticsearchConfig;
+import com.example.buildnest_ecommerce.config.TestSecurityConfig;
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchAuditLogRepository;
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchMetricsRepository;
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(classes = CivilEcommerceApplication.class)
 @ActiveProfiles("test")
-@Import(TestElasticsearchConfig.class)
+@Import({TestElasticsearchConfig.class, TestSecurityConfig.class})
 @SuppressWarnings("removal")
 class CivilEcommerceApplicationTests {
 
