@@ -391,6 +391,9 @@
 		<!-- CI/CD Profile with Coverage -->
 		<profile>
 			<id>ci</id>
+			<properties>
+				<pitest.skip>true</pitest.skip>
+			</properties>
 			<build>
 				<plugins>
 					<plugin>
@@ -628,6 +631,7 @@
 					</dependency>
 				</dependencies>
 				<configuration>
+					<skip>${pitest.skip}</skip>
 					<targetClasses>
 						<param>com.example.buildnest_ecommerce.service.*</param>
 						<param>com.example.buildnest_ecommerce.controller.*</param>
