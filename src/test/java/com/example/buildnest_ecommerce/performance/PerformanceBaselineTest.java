@@ -43,6 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import({ TestSecurityConfig.class, PerformanceBaselineTest.ElasticsearchTestConfig.class, TestClockConfig.class })
+@SuppressWarnings("removal")
 class PerformanceBaselineTest {
 
     @Autowired

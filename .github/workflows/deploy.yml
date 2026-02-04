@@ -44,23 +44,23 @@ jobs:
           ./mvnw -B clean package -DskipTests
           
           # Build Docker image
-          docker build -t buildnest-ecommerce:latest .
-          docker tag buildnest-ecommerce:latest buildnest-ecommerce:${{ github.sha }}
+          docker build -t pradipghadge/buildnest-ecommerce:tagname .
+          docker tag pradipghadge/buildnest-ecommerce:tagname pradipghadge/buildnest-ecommerce:${{ github.sha }}
 
       - name: Push to Container Registry
         if: false  # Configure with your registry credentials
         run: |
           echo "Configure Docker registry push here"
           # docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
-          # docker push buildnest-ecommerce:latest
-          # docker push buildnest-ecommerce:${{ github.sha }}
+          # docker push pradipghadge/buildnest-ecommerce:tagname
+          # docker push pradipghadge/buildnest-ecommerce:${{ github.sha }}
 
       - name: Deploy to Kubernetes
         if: false  # Configure with your K8s cluster
         run: |
           echo "Configure Kubernetes deployment here"
           # kubectl set image deployment/buildnest-ecommerce \
-          #   buildnest-ecommerce=buildnest-ecommerce:${{ github.sha }} \
+          #   buildnest-ecommerce=pradipghadge/buildnest-ecommerce:${{ github.sha }} \
           #   --namespace=production
 
       - name: Health Check
@@ -69,7 +69,7 @@ jobs:
           echo "## 🏥 Deployment Health Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Status**: ⏳ Ready for manual deployment" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image**: buildnest-ecommerce:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: pradipghadge/buildnest-ecommerce:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Notify Deployment

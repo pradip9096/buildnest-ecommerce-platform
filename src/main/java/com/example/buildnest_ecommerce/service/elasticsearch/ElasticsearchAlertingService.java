@@ -28,16 +28,16 @@ public class ElasticsearchAlertingService {
     private final ElasticsearchMetricsRepository metricsRepository;
     private final RestTemplate restTemplate;
 
-    @Value("${elasticsearch.alert.cpu.threshold:80}")
+    @Value("${elasticsearch.alert.cpu-threshold:80}")
     private double cpuThreshold;
 
-    @Value("${elasticsearch.alert.memory.threshold:90}")
+    @Value("${elasticsearch.alert.memory-threshold:90}")
     private double memoryThreshold;
 
-    @Value("${elasticsearch.alert.error-rate.threshold:5}")
+    @Value("${elasticsearch.alert.error-rate-threshold:5}")
     private double errorRateThreshold;
 
-    @Value("${elasticsearch.alert.webhook.url:}")
+    @Value("${elasticsearch.alert.webhook-url:}")
     private String webhookUrl;
 
     @Value("${elasticsearch.alert.enabled:true}")

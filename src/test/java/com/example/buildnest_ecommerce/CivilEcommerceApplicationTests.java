@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest(classes = CivilEcommerceApplication.class)
 @ActiveProfiles("test")
 @Import(TestElasticsearchConfig.class)
+@SuppressWarnings("removal")
 class CivilEcommerceApplicationTests {
 
 	@MockBean

@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import({ TestElasticsearchConfig.class, TestSecurityConfig.class })
 @Tag("e2e")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@SuppressWarnings("removal")
 class E2ETest {
 
     // Mock Elasticsearch and notification services not needed for E2E UI tests

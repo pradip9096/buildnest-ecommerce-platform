@@ -29,7 +29,7 @@ public class TestProfilePropertyValidator {
                 "spring.datasource.driver-class-name",
                 "jwt.secret",
                 "jwt.expiration",
-                "jwt.refresh.expiration",
+                "jwt.refresh-expiration",
                 "spring.liquibase.change-log");
 
         for (String key : required) {

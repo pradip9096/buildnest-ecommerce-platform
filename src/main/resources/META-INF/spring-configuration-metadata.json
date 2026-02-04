@@ -1,0 +1,70 @@
+{
+  "properties": [
+    { "name": "jwt.secret", "type": "java.lang.String" },
+    { "name": "jwt.secret.previous", "type": "java.lang.String" },
+    { "name": "jwt.expiration", "type": "java.lang.Long" },
+    { "name": "jwt.refresh-expiration", "type": "java.lang.Long" },
+
+    { "name": "password.reset.token.expiration", "type": "java.lang.Long" },
+
+    { "name": "cache.ttl.products", "type": "java.lang.Long" },
+    { "name": "cache.ttl.categories", "type": "java.lang.Long" },
+    { "name": "cache.ttl.users", "type": "java.lang.Long" },
+    { "name": "cache.ttl.orders", "type": "java.lang.Long" },
+    { "name": "cache.ttl.rate-limit-stats", "type": "java.lang.Long" },
+    { "name": "cache.ttl.audit-logs", "type": "java.lang.Long" },
+    { "name": "cache.ttl.user-permissions", "type": "java.lang.Long" },
+    { "name": "cache.ttl.inventory-items", "type": "java.lang.Long" },
+
+    { "name": "rate.limit.login.requests", "type": "java.lang.Integer" },
+    { "name": "rate.limit.login.duration", "type": "java.lang.Integer" },
+    { "name": "rate.limit.password-reset.requests", "type": "java.lang.Integer" },
+    { "name": "rate.limit.password-reset.duration", "type": "java.lang.Integer" },
+    { "name": "rate.limit.refresh-token.requests", "type": "java.lang.Integer" },
+    { "name": "rate.limit.refresh-token.duration", "type": "java.lang.Integer" },
+    { "name": "rate.limit.product-search.requests", "type": "java.lang.Integer" },
+    { "name": "rate.limit.product-search.duration", "type": "java.lang.Integer" },
+    { "name": "rate.limit.admin.requests", "type": "java.lang.Integer" },
+    { "name": "rate.limit.admin.duration", "type": "java.lang.Integer" },
+    { "name": "rate.limit.user.requests", "type": "java.lang.Integer" },
+    { "name": "rate.limit.user.duration", "type": "java.lang.Integer" },
+    { "name": "rate.limit.api.requests", "type": "java.lang.Integer" },
+    { "name": "rate.limit.api.duration", "type": "java.lang.Integer" },
+
+    { "name": "razorpay.key.id", "type": "java.lang.String" },
+    { "name": "razorpay.key.secret", "type": "java.lang.String" },
+
+    { "name": "chaos.enabled", "type": "java.lang.Boolean" },
+    { "name": "chaos.error-rate", "type": "java.lang.Double" },
+    { "name": "chaos.delay-ms", "type": "java.lang.Integer" },
+
+    { "name": "elasticsearch.enabled", "type": "java.lang.Boolean" },
+    { "name": "elasticsearch.host", "type": "java.lang.String" },
+    { "name": "elasticsearch.port", "type": "java.lang.Integer" },
+    { "name": "elasticsearch.username", "type": "java.lang.String" },
+    { "name": "elasticsearch.password", "type": "java.lang.String" },
+    { "name": "elasticsearch.ssl.enabled", "type": "java.lang.Boolean" },
+
+    { "name": "elasticsearch.alert.enabled", "type": "java.lang.Boolean" },
+    { "name": "elasticsearch.alert.cpu-threshold", "type": "java.lang.Integer" },
+    { "name": "elasticsearch.alert.memory-threshold", "type": "java.lang.Integer" },
+    { "name": "elasticsearch.alert.error-rate-threshold", "type": "java.lang.Integer" },
+    { "name": "elasticsearch.alert.webhook-url", "type": "java.lang.String" },
+    { "name": "elasticsearch.alert.email.enabled", "type": "java.lang.Boolean" },
+    { "name": "elasticsearch.alert.email.to", "type": "java.lang.String" },
+    { "name": "elasticsearch.alert.slack.enabled", "type": "java.lang.Boolean" },
+    { "name": "elasticsearch.alert.slack.webhook", "type": "java.lang.String" },
+    { "name": "elasticsearch.alert.smtp.host", "type": "java.lang.String" },
+    { "name": "elasticsearch.alert.smtp.port", "type": "java.lang.Integer" },
+
+    { "name": "elasticsearch.metrics.enabled", "type": "java.lang.Boolean" },
+
+    { "name": "webhook.events.enabled", "type": "java.lang.Boolean" },
+    { "name": "webhook.handlers.payment", "type": "java.lang.Boolean" },
+    { "name": "webhook.handlers.inventory", "type": "java.lang.Boolean" },
+    { "name": "webhook.handlers.order", "type": "java.lang.Boolean" },
+    { "name": "webhook.handlers.alert", "type": "java.lang.Boolean" },
+    { "name": "webhook.max-retries", "type": "java.lang.Integer" },
+    { "name": "webhook.retry-delay-ms", "type": "java.lang.Integer" }
+  ]
+}

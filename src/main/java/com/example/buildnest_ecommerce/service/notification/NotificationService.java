@@ -26,7 +26,7 @@ public class NotificationService {
 
     private final RestTemplate restTemplate;
 
-    @Value("${elasticsearch.alert.webhook.url:}")
+    @Value("${elasticsearch.alert.webhook-url:}")
     private String webhookUrl;
 
     @Value("${elasticsearch.alert.email.enabled:false}")

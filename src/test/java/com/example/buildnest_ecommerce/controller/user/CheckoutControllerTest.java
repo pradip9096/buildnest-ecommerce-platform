@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import({ TestElasticsearchConfig.class, TestSecurityConfig.class })
-@SuppressWarnings("null")
+@SuppressWarnings({ "null", "removal" })
 class CheckoutControllerTest {
 
         private static class NonEqualCartTotalDTO extends CheckoutController.CartTotalDTO {

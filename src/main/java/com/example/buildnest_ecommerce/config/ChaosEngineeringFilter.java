@@ -22,10 +22,10 @@ public class ChaosEngineeringFilter extends OncePerRequestFilter {
 
     private final Random random = new Random();
 
-    @Value("${chaos.error.rate:0.02}")
+    @Value("${chaos.error-rate:0.02}")
     private double errorRate;
 
-    @Value("${chaos.delay.ms:200}")
+    @Value("${chaos.delay-ms:200}")
     private int delayMs;
 
     @Override

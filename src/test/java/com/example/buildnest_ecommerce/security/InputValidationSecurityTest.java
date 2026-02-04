@@ -45,6 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import({ TestElasticsearchConfig.class, TestSecurityConfig.class })
 @Transactional
+@SuppressWarnings("removal")
 class InputValidationSecurityTest {
 
         @Autowired

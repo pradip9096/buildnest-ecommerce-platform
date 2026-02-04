@@ -3,6 +3,7 @@ package com.example.buildnest_ecommerce.config;
 import com.example.buildnest_ecommerce.security.Jwt.JwtAuthenticationEntryPoint;
 import com.example.buildnest_ecommerce.security.Jwt.JwtAuthenticationFilter;
 import com.example.buildnest_ecommerce.security.AdminRateLimitFilter;
+import com.example.buildnest_ecommerce.security.HttpsEnforcementFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -96,14 +97,6 @@ public class SecurityConfig {
         boolean isTestProfile = Arrays.asList(environment.getActiveProfiles()).contains("test");
 
         http
-                // HTTPS enforcement - requires channel to be HTTPS (RQ-SEC-05)
-                // Note: Disabled for test profile; in production, configure HTTPS at reverse
-                // proxy/load balancer
-                .requiresChannel(channel -> {
-                    if (!isTestProfile) {
-                        channel.anyRequest().requiresSecure();
-                    }
-                })
                 // Security headers for OWASP compliance
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp.policyDirectives(
@@ -149,6 +142,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
                         // Any other request
                         .anyRequest().authenticated())
+                        .addFilterBefore(new HttpsEnforcementFilter(!isTestProfile), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(adminRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
