@@ -630,9 +630,12 @@
 				<configuration>
 					<skip>${pitest.skip}</skip>
 					<targetClasses>
+						<param>com.example.buildnest_ecommerce.service.*</param>
 						<param>com.example.buildnest_ecommerce.util.*</param>
 					</targetClasses>
 					<targetTests>
+						<param>com.example.buildnest_ecommerce.service.*ImplTest</param>
+						<param>com.example.buildnest_ecommerce.service.*ServiceTest</param>
 						<param>com.example.buildnest_ecommerce.util.*Test</param>
 					</targetTests>
 					<excludedTestClasses>
