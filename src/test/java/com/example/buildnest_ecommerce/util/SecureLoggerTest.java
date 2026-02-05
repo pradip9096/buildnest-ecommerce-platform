@@ -15,6 +15,7 @@ class SecureLoggerTest {
         String sanitized = logger.sanitize(input);
 
         assertFalse(sanitized.contains("user@example.com"));
+        assertTrue(sanitized.contains("u***@example.com"));
         assertFalse(sanitized.contains("4111-1111-1111-1111"));
         assertFalse(sanitized.contains("123-45-6789"));
         assertFalse(sanitized.contains("123-456-7890"));

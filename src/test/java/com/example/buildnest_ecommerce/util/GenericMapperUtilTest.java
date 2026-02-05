@@ -57,6 +57,33 @@ class GenericMapperUtilTest {
         public Integer count;
     }
 
+    public static class PrivateSource {
+        private String secret;
+        private int count;
+
+        public PrivateSource(String secret, int count) {
+            this.secret = secret;
+            this.count = count;
+        }
+    }
+
+    public static class PrivateTarget {
+        private String secret;
+        private int count;
+    }
+
+    public static class IncompatibleSource {
+        public String value;
+
+        public IncompatibleSource(String value) {
+            this.value = value;
+        }
+    }
+
+    public static class IncompatibleTarget {
+        public Integer value;
+    }
+
     public static class NoDefaultCtor {
         public String value;
 
@@ -78,6 +105,7 @@ class GenericMapperUtilTest {
 
         List<Target> list = util.mapList(Arrays.asList(source), Target.class);
         assertEquals(1, list.size());
+        assertNotNull(list.get(0));
     }
 
     @Test
@@ -179,5 +207,35 @@ class GenericMapperUtilTest {
         Target result = builder.build();
         assertEquals("Dora", result.name);
         assertNull(result.ignore);
+    }
+
+    @Test
+    void mapCopiesPrivateFieldsAndToMapIncludesPrivateFields() throws Exception {
+        GenericMapperUtil util = new GenericMapperUtil();
+
+        PrivateSource source = new PrivateSource("secret", 7);
+        PrivateTarget target = util.map(source, PrivateTarget.class);
+        assertNotNull(target);
+
+        java.lang.reflect.Field secretField = PrivateTarget.class.getDeclaredField("secret");
+        secretField.setAccessible(true);
+        assertEquals("secret", secretField.get(target));
+
+        java.lang.reflect.Field countField = PrivateTarget.class.getDeclaredField("count");
+        countField.setAccessible(true);
+        assertEquals(7, countField.get(target));
+
+        Map<String, Object> map = util.toMap(source);
+        assertEquals("secret", map.get("secret"));
+        assertEquals(7, map.get("count"));
+    }
+
+    @Test
+    void mapSkipsIncompatibleFieldTypes() {
+        GenericMapperUtil util = new GenericMapperUtil();
+
+        IncompatibleTarget target = util.map(new IncompatibleSource("value"), IncompatibleTarget.class);
+        assertNotNull(target);
+        assertNull(target.value);
     }
 }

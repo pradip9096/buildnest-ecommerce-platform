@@ -83,6 +83,12 @@ class MapperUtilTest {
         user.setAddresses(new HashSet<>(Collections.singletonList(address)));
 
         PublicUserDTO dto = util.toPublicUserDTO(user);
+        assertEquals(2L, dto.getId());
+        assertEquals("user", dto.getUsername());
+        assertEquals("u@example.com", dto.getEmail());
+        assertEquals("First", dto.getFirstName());
+        assertEquals("Last", dto.getLastName());
+        assertEquals("123", dto.getPhone());
         assertTrue(dto.getAddress().contains("Street"));
     }
 
@@ -138,6 +144,10 @@ class MapperUtilTest {
         order.setOrderNumber("O-1");
         order.setTotalAmount(BigDecimal.TEN);
         order.setStatus(Order.OrderStatus.CONFIRMED);
+        java.time.LocalDateTime createdAt = java.time.LocalDateTime.now().minusDays(1);
+        java.time.LocalDateTime updatedAt = java.time.LocalDateTime.now();
+        order.setCreatedAt(createdAt);
+        order.setUpdatedAt(updatedAt);
 
         Address address = new Address();
         address.setStreetAddress("Street");
@@ -156,6 +166,8 @@ class MapperUtilTest {
         assertEquals("O-1", dto.getOrderNumber());
         assertEquals(BigDecimal.TEN, dto.getTotalAmount());
         assertEquals("CONFIRMED", dto.getStatus());
+        assertEquals(createdAt, dto.getCreatedAt());
+        assertEquals(updatedAt, dto.getUpdatedAt());
         assertNotNull(dto.getShippingAddress());
         assertTrue(dto.getShippingAddress().contains("Street"));
         assertEquals(1, dto.getItems().size());

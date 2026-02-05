@@ -14,6 +14,7 @@ class ValidationUtilTest {
     void validateProductRequestPassesForValidData() {
         ValidationUtil util = new ValidationUtil();
         assertDoesNotThrow(() -> util.validateProductRequest("Product", BigDecimal.TEN, "ABC-123"));
+        assertDoesNotThrow(() -> util.validateProductRequest("A".repeat(255), BigDecimal.ONE, "ABC-123"));
     }
 
     @Test
@@ -174,6 +175,8 @@ class ValidationUtilTest {
         assertThrows(IllegalArgumentException.class, () -> util.validatePassword("A".repeat(129)));
         assertDoesNotThrow(() -> util.validatePassword("ValidPass12!"));
         assertDoesNotThrow(() -> util.validatePassword("A".repeat(10) + "a2!"));
+        assertDoesNotThrow(() -> util.validatePassword("A1!aaaaaaBBB"));
+        assertDoesNotThrow(() -> util.validatePassword("A".repeat(125) + "a1!"));
     }
 
     @Test

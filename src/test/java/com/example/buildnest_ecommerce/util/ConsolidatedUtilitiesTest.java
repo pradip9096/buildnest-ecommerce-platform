@@ -36,6 +36,8 @@ class ConsolidatedUtilitiesTest {
         assertTrue(utils.isNullOrEmpty(" "));
         assertEquals("abc", utils.truncateToLength("abcdef", 3));
         assertEquals("ab", utils.truncateToLength("ab", 3));
+        assertEquals("abc", utils.truncateToLength("abc", 3));
+        assertEquals("", utils.truncateToLength("abc", 0));
 
         assertTrue(utils.isNullOrEmpty(Collections.emptyList()));
         assertTrue(utils.getFirstItem(Collections.emptyList()).isEmpty());
@@ -203,6 +205,7 @@ class ConsolidatedUtilitiesTest {
 
         assertEquals(5, utils.validatePageSize(3, 5, 20));
         assertEquals(5, utils.validatePageSize(5, 5, 20));
+        assertEquals(20, utils.validatePageSize(20, 5, 20));
         assertEquals(20, utils.validatePageSize(25, 5, 20));
     }
 

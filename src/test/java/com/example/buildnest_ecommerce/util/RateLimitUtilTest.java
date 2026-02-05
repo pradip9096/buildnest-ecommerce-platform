@@ -110,4 +110,20 @@ class RateLimitUtilTest {
         assertTrue(util.isAllowed(request, "unknown-endpoint"));
         verify(service).isAllowed(eq("127.0.0.2:unknown-endpoint"), eq(5), eq(Duration.ofSeconds(60)));
     }
+
+    @Test
+    void returnsFalseWhenRateLimitExceeded() {
+        RateLimiterService service = mock(RateLimiterService.class);
+        RateLimitUtil util = new RateLimitUtil(service);
+
+        ReflectionTestUtils.setField(util, "loginRequests", 5);
+        ReflectionTestUtils.setField(util, "loginDuration", 60);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getRemoteAddr()).thenReturn("10.1.1.1");
+        when(service.isAllowed(anyString(), anyInt(), any(Duration.class))).thenReturn(false);
+
+        assertFalse(util.isAllowed(request, "login"));
+        verify(service).isAllowed(eq("10.1.1.1:login"), eq(5), eq(Duration.ofSeconds(60)));
+    }
 }

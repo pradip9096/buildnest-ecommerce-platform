@@ -1,10 +1,13 @@
 package com.example.buildnest_ecommerce.util;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.slf4j.Logger;
 
 import java.math.BigDecimal;
+import java.util.NoSuchElementException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -62,5 +65,30 @@ class LoggingStandardsTest {
 
         verify(logger, atLeastOnce()).info(any(String.class), any(), any());
         verify(logger, atLeastOnce()).error(any(String.class), any(), any(), any(), any());
+    }
+
+    @Test
+    void bestPracticesErrorCodeUsesExceptionType() {
+        Logger logger = mock(Logger.class);
+        ArgumentCaptor<Object> errorCodeCaptor = ArgumentCaptor.forClass(Object.class);
+
+        LoggingStandards.BestPractices.goodExceptionHandling(logger, new IllegalArgumentException("bad"), 10L);
+
+        verify(logger).error(any(String.class), any(), errorCodeCaptor.capture(), any(), any());
+        assertEquals("INVALID_ARGUMENT", errorCodeCaptor.getValue());
+
+        reset(logger);
+        errorCodeCaptor = ArgumentCaptor.forClass(Object.class);
+
+        LoggingStandards.BestPractices.goodExceptionHandling(logger, new NoSuchElementException("missing"), 11L);
+        verify(logger).error(any(String.class), any(), errorCodeCaptor.capture(), any(), any());
+        assertEquals("NOT_FOUND", errorCodeCaptor.getValue());
+
+        reset(logger);
+        errorCodeCaptor = ArgumentCaptor.forClass(Object.class);
+
+        LoggingStandards.BestPractices.goodExceptionHandling(logger, new RuntimeException("boom"), 12L);
+        verify(logger).error(any(String.class), any(), errorCodeCaptor.capture(), any(), any());
+        assertEquals("RuntimeException", errorCodeCaptor.getValue());
     }
 }
