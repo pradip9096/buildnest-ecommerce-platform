@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "metrics-#{T(java.time.LocalDate).now()}")
+@Document(indexName = "metrics-#{T(java.time.LocalDate).now().toString()}")
 public class ElasticsearchMetrics {
 
     @Id

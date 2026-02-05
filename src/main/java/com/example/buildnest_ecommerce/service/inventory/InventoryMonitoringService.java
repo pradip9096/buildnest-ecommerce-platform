@@ -8,6 +8,7 @@ import com.example.buildnest_ecommerce.repository.InventoryThresholdBreachEventR
 import com.example.buildnest_ecommerce.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true", matchIfMissing = false)
 public class InventoryMonitoringService {
 
     private final InventoryRepository inventoryRepository;

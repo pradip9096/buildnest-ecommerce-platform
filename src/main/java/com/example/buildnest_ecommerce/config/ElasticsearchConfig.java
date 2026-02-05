@@ -14,8 +14,8 @@ import java.net.InetSocketAddress;
  * Only enabled when elasticsearch.enabled=true property is set.
  */
 @Configuration
-@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true", matchIfMissing = true)
-@EnableElasticsearchRepositories(basePackages = "com.example.civil_ecommerce.repository.elasticsearch")
+@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true", matchIfMissing = false)
+@EnableElasticsearchRepositories(basePackages = "com.example.buildnest_ecommerce.repository.elasticsearch")
 public class ElasticsearchConfig extends ElasticsearchConfiguration {
 
     @Value("${elasticsearch.host:localhost}")

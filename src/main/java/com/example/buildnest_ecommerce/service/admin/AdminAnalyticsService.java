@@ -4,6 +4,7 @@ import com.example.buildnest_ecommerce.model.elasticsearch.ElasticsearchAuditLog
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchAuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true", matchIfMissing = false)
 public class AdminAnalyticsService implements IAdminAnalyticsService {
 
     private final ElasticsearchAuditLogRepository auditLogRepository;

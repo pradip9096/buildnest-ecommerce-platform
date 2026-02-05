@@ -7,6 +7,7 @@ import com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchAlerti
 import com.example.buildnest_ecommerce.service.admin.AdminAnalyticsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +26,7 @@ import java.util.*;
 @RequestMapping("/api/admin/analytics")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
+@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true", matchIfMissing = false)
 public class AdminAnalyticsController {
 
     private final ElasticsearchIngestionService ingestionService;

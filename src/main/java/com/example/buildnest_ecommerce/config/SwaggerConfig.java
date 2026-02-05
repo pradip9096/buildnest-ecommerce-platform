@@ -11,6 +11,7 @@ import io.swagger.v3.oas.models.ExternalDocumentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import java.util.List;
 
@@ -29,6 +30,7 @@ public class SwaggerConfig {
         private String apiBaseUrl;
 
         @Bean(name = "swaggerOpenAPI")
+        @Primary
         public OpenAPI swaggerOpenAPI() {
                 return new OpenAPI()
                                 .info(new Info()

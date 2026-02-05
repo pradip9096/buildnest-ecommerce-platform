@@ -23,7 +23,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "audit-logs-#{T(java.time.LocalDate).now()}")
+@Document(indexName = "audit-logs-#{T(java.time.LocalDate).now().toString()}")
 public class ElasticsearchAuditLog {
 
     @Id

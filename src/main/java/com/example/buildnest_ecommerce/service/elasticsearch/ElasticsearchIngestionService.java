@@ -22,7 +22,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true", matchIfMissing = false)
 @RequiredArgsConstructor
 public class ElasticsearchIngestionService {
 
