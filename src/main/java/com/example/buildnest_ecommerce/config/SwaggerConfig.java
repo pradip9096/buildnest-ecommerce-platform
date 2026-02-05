@@ -28,8 +28,8 @@ public class SwaggerConfig {
         @Value("${app.api.base-url:http://localhost:8080}")
         private String apiBaseUrl;
 
-        @Bean
-        public OpenAPI customOpenAPI() {
+        @Bean(name = "swaggerOpenAPI")
+        public OpenAPI swaggerOpenAPI() {
                 return new OpenAPI()
                                 .info(new Info()
                                                 .title("BuildNest E-Commerce Platform API")
