@@ -35,3 +35,7 @@ build/
 ### Test artifacts ###
 artifacts/
 pit-reports-download/
+
+### Logs ###
+logs/
+*_IS_UNDEFINED

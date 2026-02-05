@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true">
     <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="buildnest-ecommerce"/>
+    <springProperty scope="context" name="logFile" source="logging.file.name" defaultValue="logs/buildnest-ecommerce.log"/>
+    <springProperty scope="context" name="eventLogFile" source="logging.file.event" defaultValue="logs/event.log"/>
+    <springProperty scope="context" name="transactionLogFile" source="logging.file.transaction" defaultValue="logs/transaction.log"/>
     <springProperty scope="context" name="logstashHost" source="LOGSTASH_HOST" defaultValue="localhost"/>
     <springProperty scope="context" name="logstashPort" source="LOGSTASH_PORT" defaultValue="5000"/>
 
@@ -32,16 +35,95 @@
         <writeBufferSize>8192</writeBufferSize>
     </appender>
 
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logFile}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logFile}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>14</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {"level":"%level","logger":"%logger","thread":"%thread","message":"%message","app":"${appName}","traceId":"%X{traceId:-}","spanId":"%X{spanId:-}"}
+                    </pattern>
+                </pattern>
+                <mdc />
+                <arguments />
+                <stackTrace />
+            </providers>
+        </encoder>
+    </appender>
+
+    <appender name="EVENT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${eventLogFile}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${eventLogFile}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>14</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {"level":"%level","logger":"%logger","thread":"%thread","message":"%message","app":"${appName}","traceId":"%X{traceId:-}","spanId":"%X{spanId:-}"}
+                    </pattern>
+                </pattern>
+                <mdc />
+                <arguments />
+                <stackTrace />
+            </providers>
+        </encoder>
+    </appender>
+
+    <appender name="TRANSACTION_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${transactionLogFile}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${transactionLogFile}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>14</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {"level":"%level","logger":"%logger","thread":"%thread","message":"%message","app":"${appName}","traceId":"%X{traceId:-}","spanId":"%X{spanId:-}"}
+                    </pattern>
+                </pattern>
+                <mdc />
+                <arguments />
+                <stackTrace />
+            </providers>
+        </encoder>
+    </appender>
+
+    <logger name="EVENT_LOG" level="INFO" additivity="false">
+        <appender-ref ref="EVENT_FILE"/>
+    </logger>
+
+    <logger name="TRANSACTION_LOG" level="INFO" additivity="false">
+        <appender-ref ref="TRANSACTION_FILE"/>
+    </logger>
+
     <springProfile name="logstash">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="LOGSTASH"/>
+            <appender-ref ref="FILE"/>
         </root>
     </springProfile>
 
     <springProfile name="!logstash">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
         </root>
     </springProfile>
 </configuration>

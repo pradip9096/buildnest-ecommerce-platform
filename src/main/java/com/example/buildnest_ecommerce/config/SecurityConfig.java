@@ -98,6 +98,10 @@ public class SecurityConfig {
         // Check if running in test profile
         boolean isTestProfile = Arrays.asList(environment.getActiveProfiles()).contains("test");
 
+        boolean sslEnabled = environment.getProperty("server.ssl.enabled", Boolean.class, false);
+        boolean isProductionProfile = Arrays.asList(environment.getActiveProfiles()).contains("production");
+        boolean enforceHttps = sslEnabled || isProductionProfile;
+
         http
                 // Security headers for OWASP compliance
                 .headers(headers -> headers
@@ -133,7 +137,7 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         // Actuator endpoints - health is public, others require ADMIN (RQ-ES-SEC-01,
                         // RQ-ES-SEC-02)
-                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/health/**").permitAll()
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
                         // Admin endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -144,7 +148,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
                         // Any other request
                         .anyRequest().authenticated())
-                        .addFilterBefore(new HttpsEnforcementFilter(!isTestProfile), UsernamePasswordAuthenticationFilter.class)
+                        .addFilterBefore(new HttpsEnforcementFilter(enforceHttps && !isTestProfile), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(adminRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
