@@ -2,10 +2,38 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** CSD-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** ISO/IEC 25010:2011 — Software Quality Model
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                                      |
+| :----------------------- | :----------------------------------------- |
+| **Document Title**       | Coding Standards Document                  |
+| **Document ID**          | CSD-BUILDNEST-001                          |
+| **Version**              | 2.0                                        |
+| **Date**                 | February 11, 2026                          |
+| **Status**               | Baselined                                  |
+| **Classification**       | Internal Use                               |
+| **Conformance Standard** | ISO/IEC 25010:2011                         |
+| **Parent Document**      | [SDD (DOC-SDD-001)](SDD_IEEE_1016_2017.md) |
+
+---
+
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author   | Changes                                                                          | Approval    |
+| :------ | :--------- | :------- | :------------------------------------------------------------------------------- | :---------- |
+| 1.0     | 2026-02-10 | Dev Team | Initial — basic naming conventions                                               | ✅ Approved |
+| 2.0     | 2026-02-11 | Dev Team | ISO 25010 alignment: added Quality Model mapping, Security standards, Checklists | ✅ Pending  |
+
+### Document Approval
+
+| Role               | Name     | Signature      | Date             |
+| :----------------- | :------- | :------------- | :--------------- |
+| **Technical Lead** | Dev Lead | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **QA Lead**        | QA Lead  | \***\*\_\*\*** | \***\*\_\_\*\*** |
 
 ---
 
@@ -26,6 +54,28 @@ This document establishes coding standards, naming conventions, and quality patt
 | **Configuration** | `config.*` (38 files)                                                                                                                       | §3.5              |
 | **Security**      | `security.*` (8 files)                                                                                                                      | §3.6              |
 | **Cross-cutting** | `aspect.*`, `annotation.*`, `interceptor.*`, `validation.*`, `validator.*`                                                                  | §3.7              |
+
+---
+
+### 1.3 Normative References
+
+| Reference                    | Description                               |
+| :--------------------------- | :---------------------------------------- |
+| **ISO/IEC 25010:2011**       | Systems and software engineering — SQuaRE |
+| [SDD](SDD_IEEE_1016_2017.md) | Software Design Description               |
+
+### 1.4 Definitions & Abbreviations
+
+| Term / Abbr | Definition                                   |
+| :---------- | :------------------------------------------- |
+| **CSD**     | Coding Standards Document                    |
+| **SQuaRE**  | Software Quality Requirements and Evaluation |
+| **DTO**     | Data Transfer Object                         |
+| **AOP**     | Aspect-Oriented Programming                  |
+
+### 1.5 Conformance Statement
+
+> This document conforms to **ISO/IEC 25010:2011** by defining quality characteristics (maintainability, reliability, security) and mapping them to concrete coding standards and verification criteria.
 
 ---
 
@@ -388,11 +438,10 @@ public class ProductReviewServiceTest {
 
 ## 8. Revision History
 
-| Version | Date       | Author        | Changes                                                                                                                                                     |
-| :------ | :--------- | :------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.0     | 2026-02-10 | BuildNest Dev | Initial — general conventions                                                                                                                               |
-| 2.0     | 2026-02-11 | BuildNest Dev | Added 38 config class standards, custom annotations, domain event patterns, Elasticsearch doc patterns, exception hierarchy, 12-point code review checklist |
+See [Document Control](#document-control) for full revision history and approvals.
 
 ---
 
 **— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC 25010:2011 for the BuildNest E-Commerce Platform._

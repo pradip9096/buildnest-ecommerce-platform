@@ -2,16 +2,65 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** VVR-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** ISO/IEC/IEEE 12207:2017
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                                                               |
+| :----------------------- | :------------------------------------------------------------------ |
+| **Document Title**       | Verification & Validation Report                                    |
+| **Document ID**          | VVR-BUILDNEST-001                                                   |
+| **Version**              | 2.0                                                                 |
+| **Date**                 | February 11, 2026                                                   |
+| **Status**               | Baselined                                                           |
+| **Classification**       | Internal Use                                                        |
+| **Conformance Standard** | ISO/IEC/IEEE 12207:2017                                             |
+| **Related Documents**    | [Test Plan](Test_Plan_IEEE_29119.md), [SRS](SRS_IEEE_29148_2018.md) |
 
 ---
 
-## 1. Executive Summary
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author  | Changes                                                                                | Approval    |
+| :------ | :--------- | :------ | :------------------------------------------------------------------------------------- | :---------- |
+| 1.0     | 2026-02-10 | QA Team | Initial — functional verification only                                                 | ✅ Approved |
+| 2.0     | 2026-02-11 | QA Team | ISO 12207 alignment: added Traceability Chain, Document Review matrix, release verdict | ✅ Pending  |
+
+### Document Approval
+
+| Role                | Name         | Signature      | Date             |
+| :------------------ | :----------- | :------------- | :--------------- |
+| **QA Manager**      | QA Mgr       | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Project Manager** | Project Lead | \***\*\_\*\*** | \***\*\_\_\*\*** |
+
+---
+
+## 1. Introduction
+
+### 1.1 Executive Summary
 
 The Verification & Validation process for BuildNest covered all 12 functional modules, 124 test cases, and 16 ISO-compliant documents. Results show an **86.3% pass rate** with 5 open defects (1 critical). The overall assessment is a **Conditional Pass** — release is blocked by DEF-003 (Stored XSS).
+
+### 1.2 Normative References
+
+| Reference                     | Description                                  |
+| :---------------------------- | :------------------------------------------- |
+| **ISO/IEC/IEEE 12207:2017**   | Software Life Cycle Processes (V&V Activity) |
+| [TP](Test_Plan_IEEE_29119.md) | Test Plan (IEEE 29119)                       |
+
+### 1.3 Definitions & Abbreviations
+
+| Term / Abbr | Definition                       |
+| :---------- | :------------------------------- |
+| **V&V**     | Verification and Validation      |
+| **VVR**     | Verification & Validation Report |
+| **SUT**     | System Under Test                |
+
+### 1.4 Conformance Statement
+
+> This document conforms to **ISO/IEC/IEEE 12207:2017**, specifically the Verification Process (6.4.6) and Validation Process (6.4.8), providing objective evidence that requirements have been fulfilled.
 
 ---
 
@@ -189,11 +238,10 @@ All 124 test case results in [TER](Test_Execution_Report_IEEE_29119.md) trace ba
 
 ## 8. Revision History
 
-| Version | Date       | Author       | Changes                                                                                        |
-| :------ | :--------- | :----------- | :--------------------------------------------------------------------------------------------- |
-| 1.0     | 2026-02-10 | BuildNest QA | Initial — 27 TC scope, 6-module coverage                                                       |
-| 2.0     | 2026-02-11 | BuildNest QA | 124 TC scope, 12-module coverage, 16-document compliance matrix, traceability chain validation |
+See [Document Control](#document-control) for full revision history and approvals.
 
 ---
 
 **— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC/IEEE 12207:2017 for the BuildNest E-Commerce Platform._
