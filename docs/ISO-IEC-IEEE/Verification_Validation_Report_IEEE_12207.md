@@ -3,194 +3,196 @@
 ## BuildNest E-Commerce Platform
 
 **Document ID:** VVR-BUILDNEST-001
-**Version:** 1.0
+**Version:** 2.0
 **Date:** 2026-02-11
-**Standard:** ISO/IEC/IEEE 12207:2017 — Software Life Cycle Processes (Clause 6.4.9 Verification, Clause 6.4.10 Validation)
+**Standard:** ISO/IEC/IEEE 12207:2017
 
 ---
 
-## 1. Introduction
+## 1. Executive Summary
 
-### 1.1 Purpose
-
-This report documents the **Verification** and **Validation** activities performed on the BuildNest E-Commerce Platform per ISO/IEC/IEEE 12207:2017.
-
-- **Verification:** "Are we building the product right?" — Confirms each work product conforms to its specification.
-- **Validation:** "Are we building the right product?" — Confirms the system meets stakeholder needs.
-
-### 1.2 References
-
-| Document                                                                       | ID                | Standard                |
-| :----------------------------------------------------------------------------- | :---------------- | :---------------------- |
-| [Software Requirements Specification](SRS_IEEE_29148_2018.md)                  | SRS-BUILDNEST-001 | ISO/IEC/IEEE 29148:2018 |
-| [Software Design Description](SDD_IEEE_1016_2017.md)                           | SDD-BUILDNEST-001 | ISO/IEC/IEEE 1016:2017  |
-| [Software Architecture Document](Software_Architecture_Document_IEEE_42010.md) | SAD-BUILDNEST-001 | ISO/IEC/IEEE 42010:2022 |
-| [Test Plan](Test_Plan_IEEE_29119.md)                                           | TP-BUILDNEST-001  | ISO/IEC/IEEE 29119:2021 |
-| [Test Execution Report](Test_Execution_Report_IEEE_29119.md)                   | TER-BUILDNEST-001 | ISO/IEC/IEEE 29119:2021 |
-| [Defect Report](Defect_Bug_Report_IEEE_29119.md)                               | DBR-BUILDNEST-001 | ISO/IEC/IEEE 29119:2021 |
+The Verification & Validation process for BuildNest covered all 12 functional modules, 124 test cases, and 16 ISO-compliant documents. Results show an **86.3% pass rate** with 5 open defects (1 critical). The overall assessment is a **Conditional Pass** — release is blocked by DEF-003 (Stored XSS).
 
 ---
 
 ## 2. Verification Activities
 
-### 2.1 Requirements Verification
+### 2.1 Document Review
 
-| Activity                  | Method                                                   | Result  | Evidence                                   |
-| :------------------------ | :------------------------------------------------------- | :-----: | :----------------------------------------- |
-| SRS completeness check    | Peer Review                                              | ✅ Pass | All 51 requirements have unique IDs        |
-| SRS consistency check     | Cross-reference audit                                    | ✅ Pass | No conflicting requirements found          |
-| SRS testability check     | Review against IEEE 29148                                | ✅ Pass | Each FR has measurable acceptance criteria |
-| Requirements traceability | [RTM](Requirements_Traceability_Matrix_IEEE_29148.md)    | ✅ Pass | All FRs traced to design & test            |
-| Business rules validation | [BRD](Business_Rules_Document_IEEE_29148.md) cross-check | ✅ Pass | Rules traced to SRS/SDD                    |
+| Document                                              | Standard        | Review Status      | Compliance |
+| :---------------------------------------------------- | :-------------- | :----------------- | :--------- |
+| [SRS](SRS_IEEE_29148_2018.md)                         | IEEE 29148:2018 | ✅ Reviewed        | Compliant  |
+| [SAD](Software_Architecture_Document_IEEE_42010.md)   | IEEE 42010:2022 | ✅ Reviewed        | Compliant  |
+| [HLD](High_Level_Design_IEEE_42010.md)                | IEEE 42010:2022 | ✅ Reviewed        | Compliant  |
+| [LLD](Low_Level_Design_IEEE_42010.md)                 | IEEE 42010:2022 | ✅ Reviewed        | Compliant  |
+| [ICD](Interface_Control_Document_IEEE_42010.md)       | IEEE 42010:2022 | ✅ Reviewed        | Compliant  |
+| [SDD](SDD_IEEE_1016_2017.md)                          | IEEE 1016:2017  | ✅ Reviewed        | Compliant  |
+| [UCS](Use_Case_Specification_IEEE_29148.md)           | IEEE 29148:2018 | ✅ Reviewed        | Compliant  |
+| [BRD](Business_Rules_Document_IEEE_29148.md)          | IEEE 29148:2018 | ✅ Reviewed        | Compliant  |
+| [RTM](Requirements_Traceability_Matrix_IEEE_29148.md) | IEEE 29148:2018 | ✅ Reviewed        | Compliant  |
+| [CSD](Coding_Standards_Document_ISO_25010.md)         | ISO 25010:2011  | ✅ Reviewed        | Compliant  |
+| [TP](Test_Plan_IEEE_29119.md)                         | IEEE 29119:2021 | ✅ Reviewed        | Compliant  |
+| [TCS](Test_Case_Specification_IEEE_29119.md)          | IEEE 29119:2021 | ✅ Reviewed        | Compliant  |
+| [TDS](Test_Data_Specification_IEEE_29119.md)          | IEEE 29119:2021 | ✅ Reviewed        | Compliant  |
+| [TER](Test_Execution_Report_IEEE_29119.md)            | IEEE 29119:2021 | ✅ Reviewed        | Compliant  |
+| [DBR](Defect_Bug_Report_IEEE_29119.md)                | IEEE 29119:2021 | ✅ Reviewed        | Compliant  |
+| **V&V Report** (this)                                 | IEEE 12207:2017 | ✅ Self-assessment | Compliant  |
 
-### 2.2 Design Verification
+### 2.2 Code Review Summary
 
-| Activity                 | Method                                                 | Result  | Evidence                                     |
-| :----------------------- | :----------------------------------------------------- | :-----: | :------------------------------------------- |
-| SDD completeness         | Review against SRS                                     | ✅ Pass | All FRs have corresponding design elements   |
-| Architecture conformance | SAD review against constraints                         | ✅ Pass | 4+1 views documented                         |
-| HLD module mapping       | HLD ↔ SRS trace                                        | ✅ Pass | 6 modules cover all requirement groups       |
-| LLD schema verification  | Schema ↔ Entity model check                            | ✅ Pass | All entities have physical table definitions |
-| Interface completeness   | [ICD](Interface_Control_Document_IEEE_42010.md) review | ✅ Pass | 12 interfaces cataloged                      |
+| Area             | Files Reviewed |            Issues Found            | Resolved |
+| :--------------- | :------------: | :--------------------------------: | :------: |
+| Controllers (28) |       28       |     3 (input validation gaps)      |    1     |
+| Services (56)    |       56       |     5 (missing rollback, XSS)      |    2     |
+| Models (48)      |       48       | 2 (missing validation annotations) |    1     |
+| Config (38)      |       38       |      1 (HTTPS keystore check)      |    1     |
+| Security (8)     |       8        |                 0                  |    0     |
+| **Total**        |    **178**     |               **11**               |  **5**   |
 
-### 2.3 Code Verification (Static Analysis)
+### 2.3 Static Analysis
 
-| Activity                      | Tool                                                              |   Result   | Details                                        |
-| :---------------------------- | :---------------------------------------------------------------- | :--------: | :--------------------------------------------- |
-| Code style compliance         | [Coding Standards](Coding_Standards_Document_ISO_25010.md) review |  ✅ Pass   | Naming, structure, formatting verified         |
-| Dependency vulnerability scan | OWASP Dependency-Check                                            | ⚠️ Warning | 2 LOW-severity CVEs in transitive dependencies |
-| Static code analysis          | SonarQube                                                         |  ✅ Pass   | 0 Critical, 0 High issues; 3 Code Smells       |
-| SQL injection analysis        | Parameterized query audit                                         |  ✅ Pass   | All queries use JPA/JPQL                       |
-
-### 2.4 Test Verification
-
-| Activity                   | Method                                              | Result  | Evidence                                            |
-| :------------------------- | :-------------------------------------------------- | :-----: | :-------------------------------------------------- |
-| Test plan completeness     | Review against SRS scope                            | ✅ Pass | All 8 feature groups covered                        |
-| Test case coverage         | [TCS](Test_Case_Specification_IEEE_29119.md) ↔ SRS  | ⚠️ 53%  | 27 of 51 requirements have test cases               |
-| Test data adequacy         | [TDS](Test_Data_Specification_IEEE_29119.md) review | ✅ Pass | Valid, invalid, boundary, and security data defined |
-| Unit test execution        | JUnit 5 + Mockito                                   | ✅ Pass | 47 test classes, 0 failures                         |
-| Integration test execution | Spring Boot Test                                    | ✅ Pass | All API endpoints verified                          |
-| Code coverage              | JaCoCo                                              | ⚠️ 78%  | Target: 80% — 2% below threshold                    |
-
----
-
-## 3. Validation Activities
-
-### 3.1 Functional Validation
-
-| Requirement Group          | Total  | Validated |  Pass  | Fail  | Result |
-| :------------------------- | :----: | :-------: | :----: | :---: | :----: |
-| FR-AUTH (Authentication)   |   11   |     6     |   6    |   0   |   ✅   |
-| FR-PROD (Product Catalog)  |   7    |     4     |   4    |   0   |   ✅   |
-| FR-CART (Shopping Cart)    |   6    |     4     |   4    |   0   |   ✅   |
-| FR-CHK (Checkout & Orders) |   8    |     3     |   2    |   1   |   ⚠️   |
-| FR-PAY (Payment)           |   5    |     2     |   1    |   1   |   ⚠️   |
-| FR-ADM (Admin)             |   6    |     3     |   3    |   0   |   ✅   |
-| **Total Functional**       | **43** |  **22**   | **20** | **2** | **⚠️** |
-
-### 3.2 Non-Functional Validation
-
-| Quality Attribute   | Requirement               | Validated |   Result   | Details                        |
-| :------------------ | :------------------------ | :-------: | :--------: | :----------------------------- |
-| **Performance**     | Response ≤ 500ms (p95)    |    ✅     |  ✅ Pass   | p95 = 380ms                    |
-| **Performance**     | 500 concurrent users      |    ✅     |  ✅ Pass   | Avg 1.8s response              |
-| **Security**        | SQL injection prevention  |    ✅     |  ✅ Pass   | Parameterized queries          |
-| **Security**        | XSS prevention            |    ✅     |  ❌ Fail   | DEF-003: Stored XSS found      |
-| **Security**        | Rate limiting             |    ❌     | 🟡 Blocked | Not configured in Staging      |
-| **Reliability**     | 99.9% uptime target       |    ❌     |     —      | Requires production monitoring |
-| **Portability**     | Docker deployment         |    ✅     |  ✅ Pass   | Docker Compose + K8s verified  |
-| **Maintainability** | Code standards compliance |    ✅     |  ✅ Pass   | ISO 25010 standards met        |
-
-### 3.3 User Acceptance Validation (UAT)
-
-| Scenario                               | Stakeholder   |   Result   | Notes                            |
-| :------------------------------------- | :------------ | :--------: | :------------------------------- |
-| Customer browses and purchases product | Product Owner |  ✅ Pass   | End-to-end flow verified         |
-| Admin manages product catalog          | Product Owner |  ✅ Pass   | CRUD operations confirmed        |
-| Customer views order history           | Product Owner |  ✅ Pass   | Pagination and filtering work    |
-| Payment flow with Razorpay             | Product Owner |  ✅ Pass   | Sandbox payment successful       |
-| Admin views sales dashboard            | Product Owner | ⏳ Pending | Dashboard feature in development |
+| Tool                  | Scope            |      Findings      | Critical |
+| :-------------------- | :--------------- | :----------------: | :------: |
+| **Java Compiler**     | All source       |      0 errors      |    0     |
+| **Maven Build**       | Full project     |   Clean compile    |    0     |
+| **Spring Validation** | Bean constraints | 2 missing `@Valid` |    0     |
+| **Dependency Audit**  | `pom.xml`        |  0 high-risk CVEs  |    0     |
 
 ---
 
-## 4. Defect Impact on V&V
+## 3. Validation Results
 
-| Defect                                     | Severity        | V&V Impact                                     | Blocks Release? |
-| :----------------------------------------- | :-------------- | :--------------------------------------------- | :-------------: |
-| [DEF-001](Defect_Bug_Report_IEEE_29119.md) | S2 High         | Error handling gap — user sees stack trace     |  ⚠️ Should fix  |
-| [DEF-002](Defect_Bug_Report_IEEE_29119.md) | S2 High         | Error handling gap — payment error unclear     |  ⚠️ Should fix  |
-| [DEF-003](Defect_Bug_Report_IEEE_29119.md) | **S1 Critical** | **Security vulnerability — XSS attack vector** |  **❌ Blocks**  |
-| DEF-004                                    | S3 Medium       | Data accuracy — resolved                       |    ✅ Fixed     |
-| DEF-005                                    | S4 Low          | Cosmetic — resolved                            |    ✅ Fixed     |
+### 3.1 Test Execution Summary
 
----
+| Level           | Total TCs | Passed  | Failed | Blocked | Pass Rate |
+| :-------------- | :-------: | :-----: | :----: | :-----: | :-------: |
+| **Functional**  |    61     |   54    |   5    |    2    |    89%    |
+| **Security**    |    19     |   15    |   3    |    1    |    79%    |
+| **Performance** |     3     |    3    |   0    |    0    |   100%    |
+| **Stress**      |     3     |    2    |   0    |    1    |    67%    |
+| **Reliability** |     5     |    4    |   1    |    0    |    80%    |
+| **Edge Cases**  |    10     |    8    |   1    |    1    |    80%    |
+| **E2E**         |     6     |    6    |   0    |    0    |   100%    |
+| **Integration** |     5     |    4    |   1    |    0    |    80%    |
+| **Monitoring**  |     5     |    5    |   0    |    0    |   100%    |
+| **Total**       |  **124**  | **107** | **12** |  **5**  | **86.3%** |
 
-## 5. Compliance Matrix
+### 3.2 Coverage Metrics
 
-### 5.1 ISO/IEC/IEEE 12207:2017 Process Compliance
+| Metric                       | Target | Achieved |     Status      |
+| :--------------------------- | :----: | :------: | :-------------: |
+| Line Coverage                | ≥ 80%  |   78%    | ⚠️ Below target |
+| Branch Coverage              | ≥ 70%  |   65%    | ⚠️ Below target |
+| Requirement Coverage         |  100%  |   80%    | ⚠️ Below target |
+| Module Coverage (12 modules) |  100%  |   100%   |     ✅ Met      |
+| Test Case Execution          |  100%  |   100%   |     ✅ Met      |
+| E2E Pass Rate                |  100%  |   100%   |     ✅ Met      |
 
-| Clause | Process          | Activity                                   | Compliant | Evidence                                    |
-| :----- | :--------------- | :----------------------------------------- | :-------: | :------------------------------------------ |
-| 6.4.1  | Implementation   | Code developed per architecture            |    ✅     | SDD, SAD, Source code                       |
-| 6.4.5  | Integration      | Modules integrated and tested              |    ✅     | Integration test results                    |
-| 6.4.9  | **Verification** | Work products verified against specs       |    ✅     | This report (Section 2)                     |
-| 6.4.10 | **Validation**   | System validated against stakeholder needs |    ⚠️     | This report (Section 3) — 1 critical defect |
-| 6.4.11 | Transition       | Deployment process documented              |    ✅     | SDD §4.10 Deployment                        |
+### 3.3 Module Coverage Breakdown
 
-### 5.2 Documentation Compliance
-
-| Document       | Standard                    | Produced | Compliant |
-| :------------- | :-------------------------- | :------: | :-------: |
-| SRS            | ISO/IEC/IEEE 29148:2018     |    ✅    |    ✅     |
-| SDD            | ISO/IEC/IEEE 1016:2017      |    ✅    |    ✅     |
-| SAD            | ISO/IEC/IEEE 42010:2022     |    ✅    |    ✅     |
-| HLD            | ISO/IEC/IEEE 42010:2022     |    ✅    |    ✅     |
-| LLD            | ISO/IEC/IEEE 42010:2022     |    ✅    |    ✅     |
-| UCS            | ISO/IEC/IEEE 29148:2018     |    ✅    |    ✅     |
-| RTM            | ISO/IEC/IEEE 29148:2018     |    ✅    |    ✅     |
-| BRD            | ISO/IEC/IEEE 29148:2018     |    ✅    |    ✅     |
-| ICD            | ISO/IEC/IEEE 42010:2022     |    ✅    |    ✅     |
-| CSD            | ISO/IEC 25010:2011          |    ✅    |    ✅     |
-| TP             | ISO/IEC/IEEE 29119:2021     |    ✅    |    ✅     |
-| TCS            | ISO/IEC/IEEE 29119:2021     |    ✅    |    ✅     |
-| TDS            | ISO/IEC/IEEE 29119:2021     |    ✅    |    ✅     |
-| TER            | ISO/IEC/IEEE 29119:2021     |    ✅    |    ✅     |
-| DBR            | ISO/IEC/IEEE 29119:2021     |    ✅    |    ✅     |
-| **V&V Report** | **ISO/IEC/IEEE 12207:2017** |    ✅    |    ✅     |
-
----
-
-## 6. Overall V&V Verdict
-
-```mermaid
-flowchart LR
-    V["Verification"] -->|All work products reviewed| R1["✅ PASS"]
-    VAL["Validation"] -->|1 Critical defect open| R2["⚠️ CONDITIONAL"]
-    R1 --> Final["Overall: ⚠️ CONDITIONAL PASS"]
-    R2 --> Final
-```
-
-| Criterion                             | Status                       |
-| :------------------------------------ | :--------------------------- |
-| All verification activities completed | ✅ Yes                       |
-| All validation activities completed   | ⚠️ 1 blocked (Rate Limiting) |
-| 0 Critical defects open               | ❌ 1 Critical (DEF-003 XSS)  |
-| Requirements coverage ≥ 80%           | ❌ 53% (expansion needed)    |
-| Code coverage ≥ 80%                   | ⚠️ 78% (2% below)            |
-
-**Verdict:** **⚠️ Conditional Pass** — Release is blocked by DEF-003. After resolution and re-verification, the system may proceed to production.
+| Module                 | Components | Line Coverage | Test Files |
+| :--------------------- | :--------: | :-----------: | :--------: |
+| **Auth & Password**    |     11     |      85%      |     8      |
+| **Product Catalog**    |     8      |      82%      |     6      |
+| **Cart**               |     3      |      80%      |     3      |
+| **Checkout & Orders**  |     6      |      78%      |     5      |
+| **Payment**            |     2      |      72%      |     2      |
+| **Inventory**          |     6      |      75%      |     4      |
+| **Wishlist**           |     3      |      88%      |     2      |
+| **Review**             |     3      |      70%      |     3      |
+| **Admin**              |     25     |      76%      |     10     |
+| **Monitoring**         |     5      |      65%      |     3      |
+| **Notification/Event** |     4      |      60%      |     2      |
+| **Config/Security**    |     11     |      68%      |     4      |
 
 ---
 
-## 7. Sign-Off
+## 4. Traceability Chain Validation
 
-| Role              | Name                   | Signature              | Date         |
-| :---------------- | :--------------------- | :--------------------- | :----------- |
-| **V&V Lead**      | ********\_\_\_******** | ********\_\_\_******** | **_/_**/2026 |
-| **QA Lead**       | ********\_\_\_******** | ********\_\_\_******** | **_/_**/2026 |
-| **Tech Lead**     | ********\_\_\_******** | ********\_\_\_******** | **_/_**/2026 |
-| **Product Owner** | ********\_\_\_******** | ********\_\_\_******** | **_/_**/2026 |
+### 4.1 Forward Traceability (SRS → RTM → TCS → TER)
+
+| Requirement Group | SRS Reqs | RTM Mapped | TCS Covered | TER Executed |
+| :---------------- | :------: | :--------: | :---------: | :----------: |
+| FR-AUTH (01-11)   |    11    |     11     |     11      |      11      |
+| FR-PROD (01-07)   |    7     |     7      |      5      |      5       |
+| FR-CART (01-06)   |    6     |     6      |      5      |      5       |
+| FR-CHK (01-08)    |    8     |     8      |      6      |      6       |
+| FR-PAY (01-05)    |    5     |     5      |      2      |      2       |
+| FR-INV (01-07)    |    7     |     7      |      5      |      5       |
+| FR-WISH (01-05)   |    5     |     5      |      5      |      5       |
+| FR-REV (01-05)    |    5     |     5      |      5      |      5       |
+| FR-ADM (01-12)    |    12    |     12     |      9      |      9       |
+| NFR-SEC (01-12)   |    12    |     12     |     10      |      10      |
+| NFR-PERF (01-06)  |    6     |     6      |      3      |      3       |
+| NFR-REL (01-05)   |    5     |     5      |      5      |      5       |
+| **Total**         |  **89**  |   **89**   |   **71**    |    **71**    |
+
+### 4.2 Backward Traceability (TER → TCS → RTM → SRS)
+
+All 124 test case results in [TER](Test_Execution_Report_IEEE_29119.md) trace back to test case definitions in [TCS](Test_Case_Specification_IEEE_29119.md), which map to requirements in [RTM](Requirements_Traceability_Matrix_IEEE_29148.md), originating from [SRS](SRS_IEEE_29148_2018.md). ✅ Chain complete.
+
+---
+
+## 5. Defect Impact Assessment
+
+| Defect                                                          | Impact on Validation                                         | Blocks Release? |
+| :-------------------------------------------------------------- | :----------------------------------------------------------- | :-------------: |
+| [DEF-003](Defect_Bug_Report_IEEE_29119.md) (Stored XSS)         | Invalidates security validation — Stored XSS is OWASP Top 10 |     **YES**     |
+| [DEF-002](Defect_Bug_Report_IEEE_29119.md) (Inventory rollback) | Data integrity risk — phantom reservations                   |     **YES**     |
+| [DEF-001](Defect_Bug_Report_IEEE_29119.md) (Rate limit flaky)   | Test reliability impact only                                 |       No        |
+| [DEF-004](Defect_Bug_Report_IEEE_29119.md) (Negative quantity)  | Low — input boundary issue                                   |       No        |
+| [DEF-005](Defect_Bug_Report_IEEE_29119.md) (Null cart total)    | Cosmetic — UI display issue                                  |       No        |
+
+---
+
+## 6. Release Verdict
+
+| Criterion                   | Status             |
+| :-------------------------- | :----------------- |
+| All S1 defects resolved     | ❌ DEF-003 open    |
+| All S2 defects resolved     | ❌ DEF-002 open    |
+| Code coverage ≥ 80%         | ⚠️ 78% (close)     |
+| Pass rate ≥ 95%             | ⚠️ 86.3%           |
+| All documents ISO-compliant | ✅ 16/16 compliant |
+| All modules tested          | ✅ 12/12 tested    |
+
+**Overall Verdict:** **CONDITIONAL PASS**
+
+> [!CAUTION]
+> Release is **blocked** until:
+>
+> 1. DEF-003 (Stored XSS) is fixed and re-verified → TC-SEC-012 and TC-REV-002 must pass
+> 2. DEF-002 (Inventory rollback) is fixed and re-verified → TC-CHK-005 and TC-INT-003 must pass
+>
+> After fixes, re-run regression suite. If pass rate reaches ≥ 95% and no new S1/S2 defects, release can proceed.
+
+---
+
+## 7. Recommendations
+
+1. **Immediate (Before Release):**
+   - Fix DEF-003: Add OWASP HTML Sanitizer to `ProductReviewService`
+   - Fix DEF-002: Add `releaseReservation()` in `CheckoutService` catch block
+   - Re-run TC-SEC-012, TC-REV-002, TC-CHK-005, TC-INT-003
+
+2. **Short-term (Next Sprint):**
+   - Increase code coverage from 78% to 80%+ (focus on Notification and Monitoring)
+   - Fix DEF-004 (negative quantity validation)
+   - Add mutation testing (PIT) for test effectiveness
+
+3. **Long-term:**
+   - Integrate OWASP ZAP for automated security scanning
+   - Set up continuous compliance monitoring
+   - Expand E2E test suite for new modules (Wishlist, Review flows)
+
+---
+
+## 8. Revision History
+
+| Version | Date       | Author       | Changes                                                                                        |
+| :------ | :--------- | :----------- | :--------------------------------------------------------------------------------------------- |
+| 1.0     | 2026-02-10 | BuildNest QA | Initial — 27 TC scope, 6-module coverage                                                       |
+| 2.0     | 2026-02-11 | BuildNest QA | 124 TC scope, 12-module coverage, 16-document compliance matrix, traceability chain validation |
 
 ---
 
