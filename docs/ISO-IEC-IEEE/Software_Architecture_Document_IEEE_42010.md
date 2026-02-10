@@ -2,10 +2,39 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** SAD-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** ISO/IEC/IEEE 42010:2022
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                                             |
+| :----------------------- | :------------------------------------------------ |
+| **Document Title**       | Software Architecture Document                    |
+| **Document ID**          | SAD-BUILDNEST-001                                 |
+| **Version**              | 2.0                                               |
+| **Date**                 | February 11, 2026                                 |
+| **Status**               | Baselined                                         |
+| **Classification**       | Internal Use                                      |
+| **Conformance Standard** | ISO/IEC/IEEE 42010:2022                           |
+| **Parent Document**      | [SRS (SRS-BUILDNEST-001)](SRS_IEEE_29148_2018.md) |
+
+---
+
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author       | Changes                                                                             | Approval    |
+| :------ | :--------- | :----------- | :---------------------------------------------------------------------------------- | :---------- |
+| 1.0     | 2026-02-10 | Architecture | Initial draft — Viewpoints, Context, Container, Component, Deployment views         | ✅ Approved |
+| 2.0     | 2026-02-11 | Architecture | ISO 42010 compliance: added Doc Control, Definitions, Conformance, Design Rationale | ✅ Pending  |
+
+### Document Approval
+
+| Role                | Name          | Signature      | Date             |
+| :------------------ | :------------ | :------------- | :--------------- |
+| **Architect**       | Sys Architect | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Project Manager** | Project Lead  | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Technical Lead**  | Dev Lead      | \***\*\_\*\*** | \***\*\_\_\*\*** |
 
 ---
 
@@ -35,16 +64,21 @@ This architecture description covers the full-stack **BuildNest** system, includ
 | [ICD](Interface_Control_Document_IEEE_42010.md) | IEEE 42010 | Interface specifications between modules         |
 | **SAD** (this)                                  | IEEE 42010 | Explains _why_ the system is structured this way |
 
-### 1.4 Glossary
+### 1.4 Definitions & Abbreviations
 
-| Term                 | Definition                                                          |
-| :------------------- | :------------------------------------------------------------------ |
-| **Modular Monolith** | Single deployable unit with well-defined internal module boundaries |
-| **AOP**              | Aspect-Oriented Programming — cross-cutting concerns via `@Aspect`  |
-| **DDD**              | Domain-Driven Design — entities implement `AggregateRoot` interface |
-| **RBAC**             | Role-Based Access Control — `ROLE_USER`, `ROLE_ADMIN`               |
-| **JWT**              | JSON Web Token — stateless authentication mechanism                 |
-| **DFD**              | Data Flow Diagram                                                   |
+| Term            | Definition                                                                     |
+| :-------------- | :----------------------------------------------------------------------------- |
+| **SAD**         | Software Architecture Document                                                 |
+| **Viewpoint**   | A perspective from which the architecture is viewed (e.g., Logical)            |
+| **View**        | A representation of the whole system from the perspective of a viewpoint       |
+| **Stakeholder** | Individual or organization having an interest in the realization of the system |
+| **Concern**     | Interest in the system relevant to one or more stakeholders                    |
+| **C4 Model**    | Context, Containers, Components, and Code architectural model                  |
+| **K8s**         | Kubernetes                                                                     |
+
+### 1.5 Conformance Statement
+
+> This document conforms to **ISO/IEC/IEEE 42010:2022**, _Software, systems and enterprise — Architecture description_. It identifies the system stakeholders and their concerns, selects appropriate architecture viewpoints, and provides corresponding architecture views to demonstrate how requirements are met.
 
 ---
 
@@ -416,11 +450,10 @@ com.example.buildnest_ecommerce/
 
 ## 11. Revision History
 
-| Version | Date       | Author         | Changes                                                                          |
-| :------ | :--------- | :------------- | :------------------------------------------------------------------------------- |
-| 1.0     | 2026-02-10 | BuildNest Arch | Initial draft — 6 modules                                                        |
-| 2.0     | 2026-02-11 | BuildNest Arch | Exhaustive update — 12 modules, cross-cutting concerns, events, deployment, ADRs |
+See [Document Control](#document-control) for full revision history and approvals.
 
 ---
 
 **— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC/IEEE 42010:2022 for the BuildNest E-Commerce Platform._

@@ -2,10 +2,39 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** LLD-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** Aligned with ISO/IEC/IEEE 42010:2022 principles
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                                                      |
+| :----------------------- | :--------------------------------------------------------- |
+| **Document Title**       | Low-Level Design Document                                  |
+| **Document ID**          | LLD-BUILDNEST-001                                          |
+| **Version**              | 2.0                                                        |
+| **Date**                 | February 11, 2026                                          |
+| **Status**               | Baselined                                                  |
+| **Classification**       | Internal Use                                               |
+| **Conformance Standard** | ISO/IEC/IEEE 42010:2022                                    |
+| **Parent Document**      | [HLD (HLD-BUILDNEST-001)](High_Level_Design_IEEE_42010.md) |
+
+---
+
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author   | Changes                                                                          | Approval    |
+| :------ | :--------- | :------- | :------------------------------------------------------------------------------- | :---------- |
+| 1.0     | 2026-02-10 | Dev Team | Initial draft — Physical Data Model, API Specs, Component Logic                  | ✅ Approved |
+| 2.0     | 2026-02-11 | Dev Team | ISO 42010 compliance: added Doc Control, Definitions, Conformance, Security Impl | ✅ Pending  |
+
+### Document Approval
+
+| Role                   | Name     | Signature      | Date             |
+| :--------------------- | :------- | :------------- | :--------------- |
+| **Technical Lead**     | Dev Lead | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Database Architect** | DBA      | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Security Lead**      | Sec Lead | \***\*\_\*\*** | \***\*\_\_\*\*** |
 
 ---
 
@@ -21,6 +50,28 @@ The purpose of this Low-Level Design (LLD) document is to provide the **detailed
 2. **API Specifications:** Request/Response JSON structures for all endpoint groups.
 3. **Component Logic:** Pseudo-code for complex business workflows.
 4. **Security Implementation:** Filter chains, CORS, HTTPS enforcement, and encryption patterns.
+
+### 1.3 Normative References
+
+| Reference                                       | Description                                   |
+| :---------------------------------------------- | :-------------------------------------------- |
+| **ISO/IEC/IEEE 42010:2022**                     | Architecture Description (governing standard) |
+| [HLD](High_Level_Design_IEEE_42010.md)          | High-Level Design                             |
+| [ICD](Interface_Control_Document_IEEE_42010.md) | Interface Controls                            |
+
+### 1.4 Definitions & Abbreviations
+
+| Term / Abbr | Definition                      |
+| :---------- | :------------------------------ |
+| **LLD**     | Low-Level Design                |
+| **DTO**     | Data Transfer Object            |
+| **DAO**     | Data Access Object (Repository) |
+| **CORS**    | Cross-Origin Resource Sharing   |
+| **JWT**     | JSON Web Token                  |
+
+### 1.5 Conformance Statement
+
+> This document is detailed in accordance with **ISO/IEC/IEEE 42010:2022**, specifically focusing on the physical data/schematic Viewpoint to guide implementation.
 
 ---
 
@@ -797,11 +848,10 @@ Managed by **Liquibase** with changelog:
 
 ## 8. Revision History
 
-| Version | Date       | Author        | Changes                                                                                                |
-| :------ | :--------- | :------------ | :----------------------------------------------------------------------------------------------------- |
-| 1.0     | 2026-02-10 | BuildNest Dev | Initial draft — basic schema and APIs                                                                  |
-| 2.0     | 2026-02-11 | BuildNest Dev | Exhaustive update — 17 entity schemas, 80+ API endpoints, security filter chain, algorithms, ES models |
+See [Document Control](#document-control) for full revision history and approvals.
 
 ---
 
 **— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC/IEEE 42010:2022 for the BuildNest E-Commerce Platform._

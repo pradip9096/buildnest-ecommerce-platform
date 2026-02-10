@@ -2,10 +2,39 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** HLD-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** Aligned with ISO/IEC/IEEE 42010:2022 principles
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                                                                   |
+| :----------------------- | :---------------------------------------------------------------------- |
+| **Document Title**       | High-Level Design Document                                              |
+| **Document ID**          | HLD-BUILDNEST-001                                                       |
+| **Version**              | 2.0                                                                     |
+| **Date**                 | February 11, 2026                                                       |
+| **Status**               | Baselined                                                               |
+| **Classification**       | Internal Use                                                            |
+| **Conformance Standard** | ISO/IEC/IEEE 42010:2022                                                 |
+| **Parent Document**      | [SAD (SAD-BUILDNEST-001)](Software_Architecture_Document_IEEE_42010.md) |
+
+---
+
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author   | Changes                                                                               | Approval    |
+| :------ | :--------- | :------- | :------------------------------------------------------------------------------------ | :---------- |
+| 1.0     | 2026-02-10 | Dev Team | Initial draft — System Decomposition, Data Flow, Data Architecture                    | ✅ Approved |
+| 2.0     | 2026-02-11 | Dev Team | ISO 42010 compliance: added Doc Control, Definitions, Conformance, Interface Strategy | ✅ Pending  |
+
+### Document Approval
+
+| Role                   | Name         | Signature      | Date             |
+| :--------------------- | :----------- | :------------- | :--------------- |
+| **Technical Lead**     | Dev Lead     | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Database Architect** | DBA          | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Project Manager**    | Project Lead | \***\*\_\*\*** | \***\*\_\_\*\*** |
 
 ---
 
@@ -23,6 +52,28 @@ This document covers:
 2. **Data Architecture:** High-level Entity-Relationship (ER) model covering all 17 entities and data retention policies.
 3. **Functional Architecture:** Data Flow Diagrams (DFD) illustrating information movement across all major flows.
 4. **Interface Strategy:** Standard API response envelopes, error handling, and versioning strategy.
+
+### 1.3 Normative References
+
+| Reference                                           | Description                                   |
+| :-------------------------------------------------- | :-------------------------------------------- |
+| **ISO/IEC/IEEE 42010:2022**                         | Architecture Description (governing standard) |
+| [SAD](Software_Architecture_Document_IEEE_42010.md) | Software Architecture Document                |
+| [SRS](SRS_IEEE_29148_2018.md)                       | Functional Requirements                       |
+
+### 1.4 Definitions & Abbreviations
+
+| Term / Abbr | Definition                        |
+| :---------- | :-------------------------------- |
+| **HLD**     | High-Level Design                 |
+| **DFD**     | Data Flow Diagram                 |
+| **ER**      | Entity-Relationship (Model)       |
+| **API**     | Application Programming Interface |
+| **RBAC**    | Role-Based Access Control         |
+
+### 1.5 Conformance Statement
+
+> This document is developed in alignment with **ISO/IEC/IEEE 42010:2022**, using functional decomposition and data architecture views to bridge the gap between architectural decisions and detailed design.
 
 ---
 
@@ -418,11 +469,10 @@ The `@ApiSunset` custom annotation adds `Sunset` and `Deprecation` HTTP headers 
 
 ## 7. Revision History
 
-| Version | Date       | Author         | Changes                                                                                                                                 |
-| :------ | :--------- | :------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.0     | 2026-02-10 | BuildNest Arch | Initial draft — 6 modules                                                                                                               |
-| 2.0     | 2026-02-11 | BuildNest Arch | Exhaustive update — 12 modules, 17+ entities in ERD, DFDs for Review/Wishlist/Analytics, webhook system, API versioning, data retention |
+See [Document Control](#document-control) for full revision history and approvals.
 
 ---
 
 **— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC/IEEE 42010:2022 for the BuildNest E-Commerce Platform._

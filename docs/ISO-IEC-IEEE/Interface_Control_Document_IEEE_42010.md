@@ -2,10 +2,39 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** ICD-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** Aligned with ISO/IEC/IEEE 42010:2022 principles
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                                                                   |
+| :----------------------- | :---------------------------------------------------------------------- |
+| **Document Title**       | Interface Control Document                                              |
+| **Document ID**          | ICD-BUILDNEST-001                                                       |
+| **Version**              | 2.0                                                                     |
+| **Date**                 | February 11, 2026                                                       |
+| **Status**               | Baselined                                                               |
+| **Classification**       | Internal Use                                                            |
+| **Conformance Standard** | ISO/IEC/IEEE 42010:2022                                                 |
+| **Parent Document**      | [SAD (SAD-BUILDNEST-001)](Software_Architecture_Document_IEEE_42010.md) |
+
+---
+
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author   | Changes                                                                               | Approval    |
+| :------ | :--------- | :------- | :------------------------------------------------------------------------------------ | :---------- |
+| 1.0     | 2026-02-10 | Dev Team | Initial draft — Internal, External, Event interfaces                                  | ✅ Approved |
+| 2.0     | 2026-02-11 | Dev Team | ISO 42010 compliance: added Doc Control, Definitions, Conformance, Interface Strategy | ✅ Pending  |
+
+### Document Approval
+
+| Role                 | Name         | Signature      | Date             |
+| :------------------- | :----------- | :------------- | :--------------- |
+| **Integration Lead** | Int Lead     | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Project Manager**  | Project Lead | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Technical Lead**   | Dev Lead     | \***\*\_\*\*** | \***\*\_\_\*\*** |
 
 ---
 
@@ -21,6 +50,28 @@ This Interface Control Document (ICD) defines every interface in the BuildNest p
 - **6 Domain Event Interfaces** (async event-driven)
 - **4 External Interfaces** (Razorpay, SMTP, Webhook, Frontend)
 - **4 Infrastructure Interfaces** (MySQL, Redis, Elasticsearch, Actuator)
+
+### 1.3 Normative References
+
+| Reference                                           | Description                                   |
+| :-------------------------------------------------- | :-------------------------------------------- |
+| **ISO/IEC/IEEE 42010:2022**                         | Architecture Description (governing standard) |
+| [SAD](Software_Architecture_Document_IEEE_42010.md) | Software Architecture Document                |
+| [LLD](Low_Level_Design_IEEE_42010.md)               | Low-Level Design                              |
+
+### 1.4 Definitions & Abbreviations
+
+| Term / Abbr | Definition                             |
+| :---------- | :------------------------------------- |
+| **ICD**     | Interface Control Document             |
+| **API**     | Application Programming Interface      |
+| **REST**    | Representational State Transfer        |
+| **HMAC**    | Hash-based Message Authentication Code |
+| **AOP**     | Aspect-Oriented Programming            |
+
+### 1.5 Conformance Statement
+
+> This document conforms to **ISO/IEC/IEEE 42010:2022** by defining the content and semantics of interfaces (Clause 5.7.3), ensuring rigorous control over boundaries between system elements.
 
 ---
 
@@ -301,11 +352,10 @@ graph LR
 
 ## 9. Revision History
 
-| Version | Date       | Author         | Changes                                                                                                                    |
-| :------ | :--------- | :------------- | :------------------------------------------------------------------------------------------------------------------------- |
-| 1.0     | 2026-02-10 | BuildNest Arch | Initial draft — 4 internal, 3 external, 3 infra                                                                            |
-| 2.0     | 2026-02-11 | BuildNest Arch | Exhaustive update — 10 internal, 6 event, 4 external, 4 infra interfaces; event architecture; 12-module interaction matrix |
+See [Document Control](#document-control) for full revision history and approvals.
 
 ---
 
 **— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC/IEEE 42010:2022 for the BuildNest E-Commerce Platform._
