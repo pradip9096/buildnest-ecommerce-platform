@@ -35,37 +35,37 @@ This document covers:
 
 ### 2.1 Access Control Rules (BR-ACC)
 
-| ID             | Rule Name               | Description                                                                                                                       | Enforcement | Source         |
-| :------------- | :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------- | :---------- | :------------- |
-| **BR-ACC-001** | **Role-Based Access**   | The system shall distinguish between `USER` (customer) and `ADMIN` (manager) roles. Guests have read-only access to public pages. | Strict      | SRS §3.2.1     |
-| **BR-ACC-002** | **Token Expiry**        | JWT Access Tokens must expire after **15 minutes**. Refresh Tokens must expire after **30 days**.                                 | Strict      | SRS FR-AUTH-03 |
-| **BR-ACC-003** | **Password Security**   | Passwords must be hashed using **BCrypt** with a work factor (strength) of **10 rounds**.                                         | Strict      | SRS FR-AUTH-10 |
-| **BR-ACC-004** | **Session Termination** | Logout invalidates the user's Refresh Token immediately, preventing new access token generation.                                  | Strict      | SRS FR-AUTH-07 |
+| ID             | Rule Name               | Description                                                                                                                       | Enforcement | Source                                   |
+| :------------- | :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------- | :---------- | :--------------------------------------- |
+| **BR-ACC-001** | **Role-Based Access**   | The system shall distinguish between `USER` (customer) and `ADMIN` (manager) roles. Guests have read-only access to public pages. | Strict      | [SRS §3.2.1](SRS_IEEE_29148_2018.md)     |
+| **BR-ACC-002** | **Token Expiry**        | JWT Access Tokens must expire after **15 minutes**. Refresh Tokens must expire after **30 days**.                                 | Strict      | [SRS FR-AUTH-03](SRS_IEEE_29148_2018.md) |
+| **BR-ACC-003** | **Password Security**   | Passwords must be hashed using **BCrypt** with a work factor (strength) of **10 rounds**.                                         | Strict      | [SRS FR-AUTH-10](SRS_IEEE_29148_2018.md) |
+| **BR-ACC-004** | **Session Termination** | Logout invalidates the user's Refresh Token immediately, preventing new access token generation.                                  | Strict      | [SRS FR-AUTH-07](SRS_IEEE_29148_2018.md) |
 
 ### 2.2 Operational Rules (BR-OPS)
 
-| ID             | Rule Name                 | Description                                                                                                       | Enforcement | Source         |
-| :------------- | :------------------------ | :---------------------------------------------------------------------------------------------------------------- | :---------- | :------------- |
-| **BR-OPS-001** | **Single Active Cart**    | A user account can have exactly **one** active shopping cart.                                                     | Strict      | SRS FR-CART-06 |
-| **BR-OPS-002** | **Inventory Deduction**   | Stock specific to an order is deducted from the global inventory **immediately upon successful order placement**. | Strict      | SRS FR-CHK-06  |
-| **BR-OPS-003** | **Order Finality**        | An order in `SHIPPED` or `DELIVERED` state cannot be cancelled by the user.                                       | Strict      | SDD §4.9.1     |
-| **BR-OPS-004** | **Low Stock Threshold**   | If product stock falls below the configured threshold (default: 10), a `LowStockWarningEvent` is triggered.       | Warning     | SRS FR-INV-06  |
-| **BR-OPS-005** | **Zero Stock Prevention** | A product with stock quantity **0** cannot be added to the cart or purchased.                                     | Strict      | SDD §4.9.3     |
+| ID             | Rule Name                 | Description                                                                                                       | Enforcement | Source                                   |
+| :------------- | :------------------------ | :---------------------------------------------------------------------------------------------------------------- | :---------- | :--------------------------------------- |
+| **BR-OPS-001** | **Single Active Cart**    | A user account can have exactly **one** active shopping cart.                                                     | Strict      | [SRS FR-CART-06](SRS_IEEE_29148_2018.md) |
+| **BR-OPS-002** | **Inventory Deduction**   | Stock specific to an order is deducted from the global inventory **immediately upon successful order placement**. | Strict      | [SRS FR-CHK-06](SRS_IEEE_29148_2018.md)  |
+| **BR-OPS-003** | **Order Finality**        | An order in `SHIPPED` or `DELIVERED` state cannot be cancelled by the user.                                       | Strict      | [SDD §4.9.1](SDD_IEEE_1016_2017.md)      |
+| **BR-OPS-004** | **Low Stock Threshold**   | If product stock falls below the configured threshold (default: 10), a `LowStockWarningEvent` is triggered.       | Warning     | [SRS FR-INV-06](SRS_IEEE_29148_2018.md)  |
+| **BR-OPS-005** | **Zero Stock Prevention** | A product with stock quantity **0** cannot be added to the cart or purchased.                                     | Strict      | [SDD §4.9.3](SDD_IEEE_1016_2017.md)      |
 
 ### 2.3 Data Integrity Rules (BR-DAT)
 
-| ID             | Rule Name                | Description                                                            | Enforcement | Source            |
-| :------------- | :----------------------- | :--------------------------------------------------------------------- | :---------- | :---------------- |
-| **BR-DAT-001** | **Unique Identity**      | Email addresses and Usernames must be unique across the entire system. | Strict      | SRS FR-AUTH-01    |
-| **BR-DAT-002** | **Price Positivity**     | Product prices must be greater than or equal to zero.                  | Strict      | Domain Constraint |
-| **BR-DAT-003** | **Address Completeness** | Shipping addresses must include Street, City, State, and Zip Code.     | Strict      | SRS FR-CHK-01     |
+| ID             | Rule Name                | Description                                                            | Enforcement | Source                                   |
+| :------------- | :----------------------- | :--------------------------------------------------------------------- | :---------- | :--------------------------------------- |
+| **BR-DAT-001** | **Unique Identity**      | Email addresses and Usernames must be unique across the entire system. | Strict      | [SRS FR-AUTH-01](SRS_IEEE_29148_2018.md) |
+| **BR-DAT-002** | **Price Positivity**     | Product prices must be greater than or equal to zero.                  | Strict      | Domain Constraint                        |
+| **BR-DAT-003** | **Address Completeness** | Shipping addresses must include Street, City, State, and Zip Code.     | Strict      | [SRS FR-CHK-01](SRS_IEEE_29148_2018.md)  |
 
 ### 2.4 Financial Rules (BR-PAY)
 
-| ID             | Rule Name                  | Description                                                                                                 | Enforcement | Source            |
-| :------------- | :------------------------- | :---------------------------------------------------------------------------------------------------------- | :---------- | :---------------- |
-| **BR-PAY-001** | **Payment Signature Info** | All Razorpay payment callbacks must have their signature verified against the secret key before processing. | Strict      | SRS FR-PAY-02     |
-| **BR-PAY-002** | **Exact Amount Match**     | The amount paid via Razorpay must exactly match the calculated Order Total.                                 | Strict      | Domain Constraint |
+| ID             | Rule Name                  | Description                                                                                                 | Enforcement | Source                                  |
+| :------------- | :------------------------- | :---------------------------------------------------------------------------------------------------------- | :---------- | :-------------------------------------- |
+| **BR-PAY-001** | **Payment Signature Info** | All Razorpay payment callbacks must have their signature verified against the secret key before processing. | Strict      | [SRS FR-PAY-02](SRS_IEEE_29148_2018.md) |
+| **BR-PAY-002** | **Exact Amount Match**     | The amount paid via Razorpay must exactly match the calculated Order Total.                                 | Strict      | Domain Constraint                       |
 
 ---
 
