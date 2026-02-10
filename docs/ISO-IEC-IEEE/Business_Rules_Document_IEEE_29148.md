@@ -3,8 +3,8 @@
 ## BuildNest E-Commerce Platform
 
 **Document ID:** BRD-BUILDNEST-001
-**Version:** 1.0
-**Date:** 2026-02-10
+**Version:** 2.0
+**Date:** 2026-02-11
 **Standard:** ISO/IEC/IEEE 29148:2018
 
 ---
@@ -13,111 +13,164 @@
 
 ### 1.1 Purpose
 
-The purpose of this Business Rules Document (BRD) is to define the specific constraints, logic, and policies that govern the behavior of the **BuildNest E-Commerce Platform**. While the **SRS** defines _what_ the system must do, this document defines the _rules_ under which those functions operate.
+This document catalogs all business rules governing the BuildNest E-Commerce Platform. Each rule is traceable to its implementing component and related functional requirements.
 
-### 1.2 Scope
+### 1.2 Rule Classification
 
-This document covers:
-
-1.  **Access Control Rules:** Policies regarding user roles and authentication sessions.
-2.  **Operational Rules:** Logic governing core business flows (Order, Inventory, Cart).
-3.  **Data Integrity Rules:** Constraints on data quality and validation.
-4.  **Financial Rules:** Policies for payments and refunds.
-
-### 1.3 Definitions
-
-- **Business Rule (BR):** A statement that defines or constrains some aspect of the business.
-- **Enforcement Level:** Indicates how strictly the rule is applied (Strict = System Error, Warning = Alert).
+| Category                     | Description                             |
+| :--------------------------- | :-------------------------------------- |
+| **Access Control (AC)**      | Who can do what, RBAC authorization     |
+| **Operational (OP)**         | Business workflow and process rules     |
+| **Data Validation (DV)**     | Input constraints and data integrity    |
+| **Financial (FN)**           | Pricing, tax, payment, and refund rules |
+| **Inventory (INV)**          | Stock management and threshold rules    |
+| **Review & Engagement (RE)** | Customer review and wishlist rules      |
+| **Notification (NT)**        | Alert and communication rules           |
 
 ---
 
-## 2. Business Rule Catalog
+## 2. Access Control Rules (AC)
 
-### 2.1 Access Control Rules (BR-ACC)
-
-| ID             | Rule Name               | Description                                                                                                                       | Enforcement | Source                                   |
-| :------------- | :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------- | :---------- | :--------------------------------------- |
-| **BR-ACC-001** | **Role-Based Access**   | The system shall distinguish between `USER` (customer) and `ADMIN` (manager) roles. Guests have read-only access to public pages. | Strict      | [SRS §3.2.1](SRS_IEEE_29148_2018.md)     |
-| **BR-ACC-002** | **Token Expiry**        | JWT Access Tokens must expire after **15 minutes**. Refresh Tokens must expire after **30 days**.                                 | Strict      | [SRS FR-AUTH-03](SRS_IEEE_29148_2018.md) |
-| **BR-ACC-003** | **Password Security**   | Passwords must be hashed using **BCrypt** with a work factor (strength) of **10 rounds**.                                         | Strict      | [SRS FR-AUTH-10](SRS_IEEE_29148_2018.md) |
-| **BR-ACC-004** | **Session Termination** | Logout invalidates the user's Refresh Token immediately, preventing new access token generation.                                  | Strict      | [SRS FR-AUTH-07](SRS_IEEE_29148_2018.md) |
-
-### 2.2 Operational Rules (BR-OPS)
-
-| ID             | Rule Name                 | Description                                                                                                       | Enforcement | Source                                   |
-| :------------- | :------------------------ | :---------------------------------------------------------------------------------------------------------------- | :---------- | :--------------------------------------- |
-| **BR-OPS-001** | **Single Active Cart**    | A user account can have exactly **one** active shopping cart.                                                     | Strict      | [SRS FR-CART-06](SRS_IEEE_29148_2018.md) |
-| **BR-OPS-002** | **Inventory Deduction**   | Stock specific to an order is deducted from the global inventory **immediately upon successful order placement**. | Strict      | [SRS FR-CHK-06](SRS_IEEE_29148_2018.md)  |
-| **BR-OPS-003** | **Order Finality**        | An order in `SHIPPED` or `DELIVERED` state cannot be cancelled by the user.                                       | Strict      | [SDD §4.9.1](SDD_IEEE_1016_2017.md)      |
-| **BR-OPS-004** | **Low Stock Threshold**   | If product stock falls below the configured threshold (default: 10), a `LowStockWarningEvent` is triggered.       | Warning     | [SRS FR-INV-06](SRS_IEEE_29148_2018.md)  |
-| **BR-OPS-005** | **Zero Stock Prevention** | A product with stock quantity **0** cannot be added to the cart or purchased.                                     | Strict      | [SDD §4.9.3](SDD_IEEE_1016_2017.md)      |
-
-### 2.3 Data Integrity Rules (BR-DAT)
-
-| ID             | Rule Name                | Description                                                            | Enforcement | Source                                   |
-| :------------- | :----------------------- | :--------------------------------------------------------------------- | :---------- | :--------------------------------------- |
-| **BR-DAT-001** | **Unique Identity**      | Email addresses and Usernames must be unique across the entire system. | Strict      | [SRS FR-AUTH-01](SRS_IEEE_29148_2018.md) |
-| **BR-DAT-002** | **Price Positivity**     | Product prices must be greater than or equal to zero.                  | Strict      | Domain Constraint                        |
-| **BR-DAT-003** | **Address Completeness** | Shipping addresses must include Street, City, State, and Zip Code.     | Strict      | [SRS FR-CHK-01](SRS_IEEE_29148_2018.md)  |
-
-### 2.4 Financial Rules (BR-PAY)
-
-| ID             | Rule Name                  | Description                                                                                                 | Enforcement | Source                                  |
-| :------------- | :------------------------- | :---------------------------------------------------------------------------------------------------------- | :---------- | :-------------------------------------- |
-| **BR-PAY-001** | **Payment Signature Info** | All Razorpay payment callbacks must have their signature verified against the secret key before processing. | Strict      | [SRS FR-PAY-02](SRS_IEEE_29148_2018.md) |
-| **BR-PAY-002** | **Exact Amount Match**     | The amount paid via Razorpay must exactly match the calculated Order Total.                                 | Strict      | Domain Constraint                       |
+| Rule ID   | Description                                                  | Enforcement | Implementing Component                            | SRS Req    |
+| :-------- | :----------------------------------------------------------- | :---------- | :------------------------------------------------ | :--------- |
+| **AC-01** | Only authenticated users may access `/api/user/**` endpoints | Strict      | `SecurityConfig` — `.hasAnyRole("USER", "ADMIN")` | FR-AUTH-04 |
+| **AC-02** | Only ADMIN role may access `/api/admin/**` endpoints         | Strict      | `SecurityConfig` — `.hasRole("ADMIN")`            | FR-AUTH-09 |
+| **AC-03** | Only ADMIN role may access `/actuator/**` (except health)    | Strict      | `SecurityConfig` — `.hasRole("ADMIN")`            | FR-MON-01  |
+| **AC-04** | Users may only view/modify their own orders                  | Strict      | `OrderService` — ownership validation             | FR-CHK-06  |
+| **AC-05** | Users may only modify their own reviews                      | Strict      | `ProductReviewService` — ownership check          | FR-REV-05  |
+| **AC-06** | Users may only manage their own wishlist                     | Strict      | `WishlistService` — user ID check                 | FR-WISH-01 |
+| **AC-07** | Users may only manage their own cart                         | Strict      | `CartService` — user ID validation                | FR-CART-01 |
+| **AC-08** | Password reset links are single-use                          | Strict      | `PasswordResetToken.used` flag                    | FR-AUTH-11 |
+| **AC-09** | JWT tokens expire after configured time                      | Strict      | `JwtProvider` — token TTL                         | FR-AUTH-03 |
+| **AC-10** | Refresh tokens rotate on use (old invalidated)               | Strict      | `RefreshTokenService` — delete + create           | FR-AUTH-07 |
 
 ---
 
-## 3. Decision Tables & State Matrices
+## 3. Operational Rules (OP)
 
-### 3.1 Order Status Transition Matrix
+| Rule ID   | Description                                                      | Enforcement | Implementing Component                                 | SRS Req    |
+| :-------- | :--------------------------------------------------------------- | :---------- | :----------------------------------------------------- | :--------- |
+| **OP-01** | Order status transitions follow the state machine (see §3.1)     | Strict      | `OrderService` — status validation                     | FR-CHK-01  |
+| **OP-02** | Cart must not be empty to initiate checkout                      | Strict      | `CheckoutService` — throws `CartEmptyException`        | FR-CHK-02  |
+| **OP-03** | Inventory must be reserved before order creation                 | Strict      | `CheckoutService` → `InventoryService.reserve()`       | FR-INV-03  |
+| **OP-04** | Inventory reservation must be released on payment failure        | Strict      | `CheckoutService` — rollback logic                     | FR-CHK-05  |
+| **OP-05** | Stock deduction occurs only after payment confirmation           | Strict      | `CheckoutService` → `InventoryService.deductStock()`   | FR-INV-04  |
+| **OP-06** | Soft delete for users (set `is_deleted=true`, never hard delete) | Strict      | `AdminUserController` / `UserService`                  | FR-ADM-08  |
+| **OP-07** | Soft delete for orders (set `is_deleted=true`)                   | Strict      | `AdminOrderController`                                 | FR-ADM-03  |
+| **OP-08** | Concurrent inventory updates use optimistic locking              | Strict      | `Inventory.@Version` — `OptimisticLockException` retry | FR-INV-07  |
+| **OP-09** | API V1 sunset: deprecated endpoints add `Sunset` header          | Warning     | `@ApiSunset` annotation, `ApiSunsetConfig`             | FR-PROD-05 |
+| **OP-10** | Rate limiting on admin endpoints                                 | Strict      | `AdminRateLimitFilter`, `RateLimiterService`           | FR-AUTH-08 |
 
-Defines allowed transitions for an Order.
+### 3.1 Order Status State Machine
 
-- **Row:** Current State
-- **Column:** Target State
-- **Cell:** Trigger / Condition
-
-| Current \ Target | PENDING | CONFIRMED       | SHIPPED    | DELIVERED          | CANCELLED       |
-| :--------------- | :------ | :-------------- | :--------- | :----------------- | :-------------- |
-| **PENDING**      | -       | Payment Success | -          | -                  | User/Sys Cancel |
-| **CONFIRMED**    | -       | -               | Admin Ship | -                  | Admin Cancel    |
-| **SHIPPED**      | -       | -               | -          | Confirmed Delivery | -               |
-| **DELIVERED**    | -       | -               | -          | -                  | -               |
-| **CANCELLED**    | -       | -               | -          | -                  | -               |
-
-_(Derived from [SDD §4.9.1](SDD_IEEE_1016_2017.md))_
-
-### 3.2 Inventory Status Logic
-
-Defines how the system determines the status of a product based on quantity.
-
-| Quantity (Q)   | Threshold (T) | Status         | Action                                 |
-| :------------- | :------------ | :------------- | :------------------------------------- |
-| **Q > T**      | Any           | `IN_STOCK`     | User can buy.                          |
-| **0 < Q <= T** | Any           | `LOW_STOCK`    | User can buy. Admin alerted.           |
-| **Q = 0**      | Any           | `OUT_OF_STOCK` | Purchase disabled. "Notify Me" active. |
-
-_(Derived from [SDD §4.9.3](SDD_IEEE_1016_2017.md))_
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: Order Created
+    PENDING --> CONFIRMED: Payment Verified
+    PENDING --> CANCELLED: Payment Failed / Timeout
+    CONFIRMED --> SHIPPED: Admin Ships
+    SHIPPED --> DELIVERED: Delivery Confirmed
+    CONFIRMED --> CANCELLED: Admin Cancels
+    DELIVERED --> [*]
+    CANCELLED --> [*]
+```
 
 ---
 
-## 4. Traceability
+## 4. Data Validation Rules (DV)
 
-Mapping Business Rules to Functional Requirements (SRS).
+| Rule ID   | Field                           | Constraint                                            | Enforcement | Implementing Component                       | SRS Req    |
+| :-------- | :------------------------------ | :---------------------------------------------------- | :---------- | :------------------------------------------- | :--------- |
+| **DV-01** | `username`                      | Required, unique, 3-50 chars                          | Strict      | `User` entity + DB unique constraint         | FR-AUTH-05 |
+| **DV-02** | `email`                         | Required, unique, valid format                        | Strict      | `User` entity + bean validation              | FR-AUTH-05 |
+| **DV-03** | `password`                      | Min 8 chars, at least 1 uppercase, 1 digit, 1 special | Strict      | Custom password validator                    | FR-AUTH-10 |
+| **DV-04** | `product.price`                 | Positive value (`> 0.00`)                             | Strict      | Product entity validation                    | FR-PROD-01 |
+| **DV-05** | `product.sku`                   | Required, unique                                      | Strict      | `Product.sku` + DB unique constraint         | FR-PROD-01 |
+| **DV-06** | `review.rating`                 | Integer 1-5 inclusive                                 | Strict      | `@Min(1) @Max(5)` on `ProductReview.rating`  | FR-REV-01  |
+| **DV-07** | `review.comment`                | Max 2000 characters                                   | Strict      | `@Size(max=2000)` on `ProductReview.comment` | FR-REV-01  |
+| **DV-08** | `cart.quantity`                 | Positive integer (≥ 1)                                | Strict      | `CartService` validation                     | FR-CART-01 |
+| **DV-09** | `order.orderNumber`             | Auto-generated, unique                                | Strict      | `OrderService` + DB constraint               | FR-CHK-04  |
+| **DV-10** | `inventory.quantityInStock`     | Non-negative integer (≥ 0)                            | Strict      | `Inventory` entity validation                | FR-INV-01  |
+| **DV-11** | `inventory.minimumStockLevel`   | Required, non-negative                                | Strict      | `Inventory` entity                           | FR-INV-06  |
+| **DV-12** | `webhookSubscription.targetUrl` | Valid URL, max 500 chars                              | Strict      | `WebhookSubscription` entity                 | FR-NOT-03  |
+| **DV-13** | `address.*`                     | Required street, city, state, zip                     | Strict      | `Address` entity validation                  | FR-CHK-01  |
 
-| Business Rule  | Functional Requirement(s) |
-| :------------- | :------------------------ |
-| **BR-ACC-001** | FR-AUTH-09                |
-| **BR-ACC-002** | FR-AUTH-03, FR-AUTH-04    |
-| **BR-ACC-003** | FR-AUTH-10                |
-| **BR-ACC-004** | FR-AUTH-07                |
-| **BR-OPS-001** | FR-CART-06                |
-| **BR-OPS-002** | FR-CHK-06                 |
-| **BR-OPS-004** | FR-INV-06                 |
-| **BR-DAT-001** | FR-AUTH-01                |
-| **BR-PAY-001** | FR-PAY-02                 |
+---
+
+## 5. Financial Rules (FN)
+
+| Rule ID   | Description                                                            | Enforcement | Implementing Component              | SRS Req    |
+| :-------- | :--------------------------------------------------------------------- | :---------- | :---------------------------------- | :--------- |
+| **FN-01** | Order total = Σ(item.unitPrice × quantity) + tax + shipping - discount | Strict      | `CheckoutService` calculation       | FR-CHK-01  |
+| **FN-02** | Payment amount must match order total                                  | Strict      | `PaymentSignatureValidationService` | FR-PAY-02  |
+| **FN-03** | Razorpay signature must be verified via HMAC-SHA256                    | Strict      | `PaymentSignatureValidationService` | FR-PAY-02  |
+| **FN-04** | All monetary values stored as `DECIMAL` (2 decimal places)             | Strict      | Entity definitions                  | —          |
+| **FN-05** | Cart total calculated dynamically (not cached)                         | Strict      | `CartService.getCartTotal()`        | FR-CART-05 |
+
+---
+
+## 6. Inventory Rules (INV)
+
+| Rule ID    | Description                                                 | Enforcement | Implementing Component                                  | SRS Req   |
+| :--------- | :---------------------------------------------------------- | :---------- | :------------------------------------------------------ | :-------- |
+| **INV-01** | Available quantity = `quantityInStock - quantityReserved`   | Strict      | `Inventory.getAvailableQuantity()`                      | FR-INV-01 |
+| **INV-02** | Cannot reserve more than available quantity                 | Strict      | `InventoryService.reserve()` throws exception           | FR-INV-03 |
+| **INV-03** | Status transitions: `IN_STOCK → LOW_STOCK → OUT_OF_STOCK`   | Strict      | `InventoryService` / `InventoryMonitoringService`       | FR-INV-06 |
+| **INV-04** | Low stock alert when `quantityInStock <= minimumStockLevel` | Strict      | `InventoryMonitoringScheduler` → `LowStockWarningEvent` | FR-INV-06 |
+| **INV-05** | Threshold breach events recorded                            | Strict      | `InventoryThresholdBreachEvent` entity                  | FR-INV-06 |
+| **INV-06** | Category-level threshold override supported                 | Warning     | `Inventory.useCategoryThreshold` flag                   | FR-INV-06 |
+| **INV-07** | Restocking updates `lastRestocked` timestamp                | Strict      | `AdminInventoryController.addStock()`                   | FR-ADM-11 |
+
+---
+
+## 7. Review & Engagement Rules (RE)
+
+| Rule ID   | Description                                                         | Enforcement | Implementing Component                                         | SRS Req    |
+| :-------- | :------------------------------------------------------------------ | :---------- | :------------------------------------------------------------- | :--------- |
+| **RE-01** | Rating must be between 1 and 5                                      | Strict      | `@Min(1) @Max(5)` validation                                   | FR-REV-01  |
+| **RE-02** | Comment must not exceed 2000 characters                             | Strict      | `@Size(max=2000)` validation                                   | FR-REV-01  |
+| **RE-03** | `verifiedPurchase` auto-set if user has completed order for product | Strict      | `ProductReviewService` — order history check                   | FR-REV-01  |
+| **RE-04** | Helpful count increments atomically                                 | Strict      | `ProductReview.incrementHelpfulCount()`                        | FR-REV-04  |
+| **RE-05** | Review visibility controlled by `isVisible` flag                    | Strict      | Admin can hide inappropriate reviews                           | FR-REV-05  |
+| **RE-06** | One wishlist per user                                               | Strict      | `@UniqueConstraint(columnNames = "user_id")` on wishlist table | FR-WISH-01 |
+| **RE-07** | Duplicate products in wishlist silently ignored (Set semantics)     | Warning     | `Set<Product>` in `Wishlist.products`                          | FR-WISH-01 |
+
+---
+
+## 8. Notification Rules (NT)
+
+| Rule ID   | Description                                             | Enforcement | Implementing Component                        | SRS Req    |
+| :-------- | :------------------------------------------------------ | :---------- | :-------------------------------------------- | :--------- |
+| **NT-01** | Order confirmation email sent on `OrderPlacedEvent`     | Strict      | `DomainEventListener` → `NotificationService` | FR-NOT-01  |
+| **NT-02** | Low stock alert sent to admin on `LowStockWarningEvent` | Strict      | `DomainEventListener` → `NotificationService` | FR-NOT-02  |
+| **NT-03** | Password reset email contains time-limited token        | Strict      | `PasswordResetService` — 24h expiry           | FR-AUTH-11 |
+| **NT-04** | Webhook subscriptions can be activated/deactivated      | Strict      | `WebhookAdminController` — `isActive` toggle  | FR-NOT-03  |
+| **NT-05** | Failed webhook deliveries increment `failureCount`      | Strict      | `WebhookSubscription.failureCount`            | FR-NOT-04  |
+| **NT-06** | Webhook auto-disabled after failure threshold breach    | Warning     | `WebhookService` — configurable threshold     | FR-NOT-05  |
+
+---
+
+## 9. Rule Summary and Compliance
+
+| Category                | Total Rules | Strict | Warning |
+| :---------------------- | :---------: | :----: | :-----: |
+| **Access Control**      |     10      |   10   |    0    |
+| **Operational**         |     10      |   9    |    1    |
+| **Data Validation**     |     13      |   13   |    0    |
+| **Financial**           |      5      |   5    |    0    |
+| **Inventory**           |      7      |   6    |    1    |
+| **Review & Engagement** |      7      |   6    |    1    |
+| **Notification**        |      6      |   5    |    1    |
+| **Total**               |   **58**    | **54** |  **4**  |
+
+---
+
+## 10. Revision History
+
+| Version | Date       | Author       | Changes                                                                                                       |
+| :------ | :--------- | :----------- | :------------------------------------------------------------------------------------------------------------ |
+| 1.0     | 2026-02-10 | BuildNest BA | Initial — Auth, Order, basic inventory rules                                                                  |
+| 2.0     | 2026-02-11 | BuildNest BA | Added Wishlist, Review, Webhook, Inventory threshold rules; order state machine; expanded from 25 to 58 rules |
 
 ---
 

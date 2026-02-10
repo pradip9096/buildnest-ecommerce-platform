@@ -3,8 +3,8 @@
 ## BuildNest E-Commerce Platform
 
 **Document ID:** UCS-BUILDNEST-001
-**Version:** 1.0
-**Date:** 2026-02-10
+**Version:** 2.0
+**Date:** 2026-02-11
 **Standard:** ISO/IEC/IEEE 29148:2018
 
 ---
@@ -13,243 +13,398 @@
 
 ### 1.1 Purpose
 
-The purpose of this Use Case Specification is to capture the behavioral requirements of the **BuildNest E-Commerce Platform** by describing the interactions between users (actors) and the system. This document compliments the Software Requirements Specification (SRS) by providing a narrative, flow-based view of the functional requirements.
+This Use Case Specification defines **15 use cases** covering all functional modules of the BuildNest platform. Each use case describes actors, preconditions, main flow, alternative flows, error handling, and traceability.
 
-### 1.2 Scope
+### 1.2 Actors
 
-This document covers the core functional areas of the platform:
+| Actor               | Description                                       | Role         |
+| :------------------ | :------------------------------------------------ | :----------- |
+| **Customer**        | Registered user who browses, shops, and reviews   | `ROLE_USER`  |
+| **Guest**           | Unauthenticated visitor (limited to public pages) | None         |
+| **Administrator**   | Platform manager with elevated privileges         | `ROLE_ADMIN` |
+| **Payment Gateway** | Razorpay external system                          | External     |
+| **Email Service**   | SMTP notification provider                        | External     |
+| **Scheduler**       | System-triggered background jobs                  | System       |
 
-- User authentication and identity management.
-- Product catalog browsing and searching.
-- Shopping cart management.
-- Checkout and order processing.
-- Administrative operations (product, inventory, and user management).
-
-### 1.3 Definitions and Acronyms
-
-| Term                 | Definition                                                         |
-| :------------------- | :----------------------------------------------------------------- |
-| **Actor**            | An entity (human or system) that interacts with the system.        |
-| **Precondition**     | The state of the system required before the use case can start.    |
-| **Postcondition**    | The state of the system after the use case completes successfully. |
-| **Alternative Flow** | A path that varies from the main flow but still achieves the goal. |
-| **Exception Flow**   | A path where an error occurs or the goal is abandoned.             |
-| **JWT**              | JSON Web Token used for stateless authentication.                  |
-
-### 1.4 References
-
-1.  **ISO/IEC/IEEE 29148:2018** - _Systems and software engineering — Life cycle processes — Requirements engineering_.
-2.  **SRS-BUILDNEST-001** - _Software Requirements Specification for BuildNest_.
-3.  **SDD-BUILDNEST-001** - _Software Design Description for BuildNest_.
-
----
-
-## 2. Actors
-
-| Actor               | Type   | Description                                                                                 |
-| :------------------ | :----- | :------------------------------------------------------------------------------------------ |
-| **Guest**           | Human  | An unregistered or unauthenticated user who can browse products and view public pages.      |
-| **Registered User** | Human  | A customer who has authenticated into the system to perform shopping activities.            |
-| **Administrator**   | Human  | A privileged user responsible for site management, inventory control, and order processing. |
-| **System Timer**    | System | An internal trigger for scheduled tasks like token cleanup and inventory monitoring.        |
-| **Payment Gateway** | System | The external Razorpay service that processes payment transactions.                          |
-
----
-
-## 3. Use Case Diagrams
-
-### 3.1 Customer Use Cases
+### 1.3 Use Case Diagram
 
 ```mermaid
-usecaseDiagram
-    actor "Guest" as G
-    actor "Registered User" as U
-    actor "Payment Gateway" as PG
+graph TB
+    subgraph "Actors"
+        Guest([Guest])
+        Customer([Customer])
+        Admin([Administrator])
+        PG([Payment Gateway])
+        Sched([Scheduler])
+    end
 
-    package "BuildNest Storefront" {
-        usecase "UC-01: Register User" as UC1
-        usecase "UC-02: Login" as UC2
-        usecase "UC-03: Browse Products" as UC3
-        usecase "UC-04: Manage Cart" as UC4
-        usecase "UC-05: Checkout" as UC5
-        usecase "UC-06: View Order History" as UC6
-    }
+    subgraph "BuildNest Use Cases"
+        UC01[UC-01: Login]
+        UC02[UC-02: Register]
+        UC03[UC-03: Browse Products]
+        UC04[UC-04: Manage Cart]
+        UC05[UC-05: Checkout & Pay]
+        UC06[UC-06: View Orders]
+        UC07[UC-07: Manage Wishlist]
+        UC08[UC-08: Submit Review]
+        UC09[UC-09: Admin Products]
+        UC10[UC-10: Admin Orders]
+        UC11[UC-11: Admin Users]
+        UC12[UC-12: Password Reset]
+        UC13[UC-13: Admin Inventory]
+        UC14[UC-14: Admin Analytics]
+        UC15[UC-15: Webhook Mgmt]
+    end
 
-    G --> UC1
-    G --> UC2
-    G --> UC3
-
-    U --> UC2
-    U --> UC3
-    U --> UC4
-    U --> UC5
-    U --> UC6
-
-    UC5 ..> PG : Initiates Payment
+    Guest --> UC01 & UC02 & UC03 & UC12
+    Customer --> UC03 & UC04 & UC05 & UC06 & UC07 & UC08
+    Admin --> UC09 & UC10 & UC11 & UC13 & UC14 & UC15
+    PG --> UC05
+    Sched --> UC13
 ```
-
-### 3.2 Admin Use Cases
 
 ---
 
-## 4. Use Case Specifications
+## 2. Use Case Specifications
 
-### UC-01: Register User
+### UC-01: User Login
 
-| Field                 | Description                                                                                                                                                                                                                                                                                                                                                     |
-| :-------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Use Case ID**       | UC-01                                                                                                                                                                                                                                                                                                                                                           |
-| **Title**             | Register User                                                                                                                                                                                                                                                                                                                                                   |
-| **Primary Actor**     | Guest                                                                                                                                                                                                                                                                                                                                                           |
-| **Description**       | A guest user creates a new account to access registered features.                                                                                                                                                                                                                                                                                               |
-| **Preconditions**     | User is not logged in.                                                                                                                                                                                                                                                                                                                                          |
-| **Postconditions**    | A new user account is created in the database.                                                                                                                                                                                                                                                                                                                  |
-| **Main Flow**         | 1. User navigates to the Registration page.<br>2. User enters Name, Email, Username, and Password.<br>3. User submits the form.<br>4. System validates the input format (email regex, password strength).<br>5. System checks for existing email or username.<br>6. System creates the account.<br>7. System displays a success message and redirects to Login. |
-| **Alternative Flows** | **A1: Validation Error**<br>If input is invalid, system highlights errors and asks user to retry.<br>**A2: User Exists**<br>If email/username exists, system displays specific error message.                                                                                                                                                                   |
-| **Exceptions**        | **E1: Database Unavailable**<br>System displays a "Service Unavailable" message.                                                                                                                                                                                                                                                                                |
-| **Traceability**      | FR-AUTH-01, FR-AUTH-10                                                                                                                                                                                                                                                                                                                                          |
+| Attribute            | Value                                          |
+| :------------------- | :--------------------------------------------- |
+| **Actor**            | Guest / Customer                               |
+| **Preconditions**    | User has registered account, account is active |
+| **Trigger**          | User navigates to login page                   |
+| **SRS Requirements** | FR-AUTH-01, FR-AUTH-02, FR-AUTH-03, FR-AUTH-07 |
 
-### UC-02: Login
+**Main Flow:**
 
-| Field                 | Description                                                                                                                                                                                                                                                                                                  |
-| :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Use Case ID**       | UC-02                                                                                                                                                                                                                                                                                                        |
-| **Title**             | User Login                                                                                                                                                                                                                                                                                                   |
-| **Primary Actor**     | Guest, Registered User, Administrator                                                                                                                                                                                                                                                                        |
-| **Description**       | A user authenticates to access their account and protected features.                                                                                                                                                                                                                                         |
-| **Preconditions**     | User has an existing account.                                                                                                                                                                                                                                                                                |
-| **Postconditions**    | User is authenticated; JWT access and refresh tokens are issued.                                                                                                                                                                                                                                             |
-| **Main Flow**         | 1. User navigates to the Login page.<br>2. User enters Username and Password.<br>3. System validates credentials against stored hash.<br>4. System generates JWT Access Token and Refresh Token.<br>5. System returns tokens to the client.<br>6. Client stores tokens and redirects user to Home/Dashboard. |
-| **Alternative Flows** | **A1: Invalid Credentials**<br>System increments login attempt counter and displays "Invalid username or password".                                                                                                                                                                                          |
-| **Exceptions**        | **E1: Account Locked**<br>If logic attempts exceed threshold (e.g., 5), account is locked for a duration.<br>**E2: Service Down**<br>Authentication service timeout.                                                                                                                                         |
-| **Traceability**      | FR-AUTH-02, FR-AUTH-03, FR-AUTH-04, FR-AUTH-06                                                                                                                                                                                                                                                               |
+1. User enters username and password.
+2. System validates credentials against stored hash (BCrypt).
+3. System generates JWT access token and refresh token.
+4. Refresh token stored in Redis.
+5. System returns `{accessToken, refreshToken, tokenType}`.
+6. User is redirected to dashboard.
+
+**Alternative Flows:**
+
+- **A1:** Invalid credentials → 401 Unauthorized.
+- **A2:** Inactive account → 401 with message "Account is not active."
+- **A3:** Rate limit exceeded → 429 Too Many Requests.
+
+---
+
+### UC-02: User Registration
+
+| Attribute            | Value                                 |
+| :------------------- | :------------------------------------ |
+| **Actor**            | Guest                                 |
+| **Preconditions**    | Username and email not already in use |
+| **SRS Requirements** | FR-AUTH-05, FR-AUTH-06, FR-AUTH-10    |
+
+**Main Flow:**
+
+1. User provides username, email, password, first name, last name.
+2. System validates input (password complexity, email format).
+3. System checks uniqueness of username and email.
+4. Password hashed with BCrypt.
+5. User entity created with `ROLE_USER`.
+6. System publishes `UserRegisteredEvent`.
+7. System returns 201 Created.
+
+**Alternative Flows:**
+
+- **A1:** Duplicate username → 409 Conflict.
+- **A2:** Duplicate email → 409 Conflict.
+- **A3:** Weak password → 400 Bad Request with validation errors.
+
+---
 
 ### UC-03: Browse Products
 
-| Field                 | Description                                                                                                                                                                                                                                                              |
-| :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Use Case ID**       | UC-03                                                                                                                                                                                                                                                                    |
-| **Title**             | Browse and Search Products                                                                                                                                                                                                                                               |
-| **Primary Actor**     | Guest, Registered User                                                                                                                                                                                                                                                   |
-| **Description**       | User views the product catalog, filters by category, and searches by keyword.                                                                                                                                                                                            |
-| **Preconditions**     | System is online.                                                                                                                                                                                                                                                        |
-| **Postconditions**    | User sees list of products matching criteria.                                                                                                                                                                                                                            |
-| **Main Flow**         | 1. User views the Product List page.<br>2. System retrieves paginated list of products.<br>3. User applies filters (Category, Price Range) or enters Search keyword.<br>4. System queries database/Elasticsearch with criteria.<br>5. System displays matching products. |
-| **Alternative Flows** | **A1: No Results**<br>System displays "No products found" message.                                                                                                                                                                                                       |
-| **Traceability**      | FR-PROD-01, FR-PROD-02, FR-PROD-03, FR-PROD-06                                                                                                                                                                                                                           |
+| Attribute            | Value                                          |
+| :------------------- | :--------------------------------------------- |
+| **Actors**           | Guest, Customer                                |
+| **Preconditions**    | Products exist in catalog                      |
+| **SRS Requirements** | FR-PROD-01, FR-PROD-02, FR-PROD-03, FR-PROD-04 |
 
-### UC-04: Manage Cart
+**Main Flow:**
 
-| Field                 | Description                                                                                                                                                                                                                                                                                                                                             |
-| :-------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Use Case ID**       | UC-04                                                                                                                                                                                                                                                                                                                                                   |
-| **Title**             | Manage Ecosystem Cart                                                                                                                                                                                                                                                                                                                                   |
-| **Primary Actor**     | Registered User                                                                                                                                                                                                                                                                                                                                         |
-| **Description**       | User adds items to cart, updates quantities, or removes items.                                                                                                                                                                                                                                                                                          |
-| **Preconditions**     | User is logged in.                                                                                                                                                                                                                                                                                                                                      |
-| **Postconditions**    | Cart state is updated in the database.                                                                                                                                                                                                                                                                                                                  |
-| **Main Flow**         | 1. User views a Product Detail page.<br>2. User selects quantity and clicks "Add to Cart".<br>3. System validates stock availability.<br>4. System adds item to user's persistent cart.<br>5. User views Cart page.<br>6. System calculates total price.<br>7. User updates quantity or removes item.<br>8. System updates cart and recalculates total. |
-| **Alternative Flows** | **A1: Out of Stock**<br>System prevents adding item and displays "Out of Stock".<br>**A2: Max Quantity Exceeded**<br>System restricts quantity based on available stock.                                                                                                                                                                                |
-| **Traceability**      | FR-CART-01, FR-CART-02, FR-CART-03, FR-CART-04, FR-CART-05                                                                                                                                                                                                                                                                                              |
+1. User browses product listing (paginated).
+2. System returns products from V2 API with pagination metadata.
+3. User can filter by category.
+4. User can search by keyword.
+5. User selects a product to view details.
+6. System returns product detail including reviews summary.
 
-### UC-05: Checkout with Payment
+**Alternative Flows:**
 
-| Field                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| :-------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Use Case ID**       | UC-05                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **Title**             | Checkout with Payment                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **Primary Actor**     | Registered User                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| **Secondary Actor**   | Payment Gateway (Razorpay)                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| **Description**       | User completes a purchase by paying for items in their cart.                                                                                                                                                                                                                                                                                                                                                                                        |
-| **Preconditions**     | Cart is not empty; User is logged in.                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **Postconditions**    | Order is created; Inventory is deducted; Payment is recorded; Cart is cleared.                                                                                                                                                                                                                                                                                                                                                                      |
-| **Main Flow**         | 1. User clicks "Checkout" from Cart.<br>2. System validates cart inventory.<br>3. User confirms shipping details.<br>4. System creates Razorpay Order.<br>5. User completes payment on Razorpay modal.<br>6. Razorpay returns `payment_id` and `signature`.<br>7. Client submits payment details to backend.<br>8. System verifies signature.<br>9. System creates Order, deducts inventory, clears cart.<br>10. System returns Order Confirmation. |
-| **Alternative Flows** | **A1: Payment Failed**<br>Razorpay returns failure; System prompts user to retry.<br>**A2: Inventory Changed**<br>If item goes out of stock during checkout, system alerts user and prevents checkout.                                                                                                                                                                                                                                              |
-
-### UC-06: View Order History
-
-| Field              | Description                                                                                                                                                                                      |
-| :----------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Use Case ID**    | UC-06                                                                                                                                                                                            |
-| **Title**          | View Order History                                                                                                                                                                               |
-| **Primary Actor**  | Registered User                                                                                                                                                                                  |
-| **Description**    | User views a list of their past orders and order details.                                                                                                                                        |
-| **Preconditions**  | User is logged in.                                                                                                                                                                               |
-| **Postconditions** | User views order details.                                                                                                                                                                        |
-| **Main Flow**      | 1. User navigates to the Orders page.<br>2. System retrieves list of orders for the user.<br>3. User selects an order.<br>4. System displays order details (items, total, status, payment info). |
-| **Traceability**   | FR-CHK-07                                                                                                                                                                                        |
-
-### UC-07: Manage Products (Admin)
-
-| Field                 | Description                                                                                                                                                                                                                                                                                       |
-| :-------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Use Case ID**       | UC-07                                                                                                                                                                                                                                                                                             |
-| **Title**             | Manage Products                                                                                                                                                                                                                                                                                   |
-| **Primary Actor**     | Administrator                                                                                                                                                                                                                                                                                     |
-| **Description**       | Admin creates, updates, or deletes products in the catalog.                                                                                                                                                                                                                                       |
-| **Preconditions**     | User is logged in as ADMIN.                                                                                                                                                                                                                                                                       |
-| **Postconditions**    | Product catalog is updated.                                                                                                                                                                                                                                                                       |
-| **Main Flow**         | 1. Admin navigates to Product Management.<br>2. Admin clicks "Add Product".<br>3. Admin enters product details (name, price, stock, category).<br>4. Admin submits form.<br>5. System validates input.<br>6. System saves product to database.<br>7. System updates search index (if configured). |
-| **Alternative Flows** | **A1: Edit Product**<br>Admin selects existing product, modifies fields, and saves.<br>**A2: Delete Product**<br>Admin selects delete, system confirms, and product is soft-deleted.                                                                                                              |
-| **Traceability**      | FR-PROD-04, FR-ADM-08                                                                                                                                                                                                                                                                             |
-
-### UC-08: Manage Orders (Admin)
-
-| Field              | Description                                                                                                                                                                                                                                                       |
-| :----------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Use Case ID**    | UC-08                                                                                                                                                                                                                                                             |
-| **Title**          | Manage Orders                                                                                                                                                                                                                                                     |
-| **Primary Actor**  | Administrator                                                                                                                                                                                                                                                     |
-| **Description**    | Admin views all orders and changes their status (e.g., Ship, Cancel).                                                                                                                                                                                             |
-| **Preconditions**  | User is logged in as ADMIN.                                                                                                                                                                                                                                       |
-| **Postconditions** | Order status is updated.                                                                                                                                                                                                                                          |
-| **Main Flow**      | 1. Admin navigates to Order Management.<br>2. Admin views list of orders.<br>3. Admin selects an order with status `CONFIRMED`.<br>4. Admin clicks "Mark as Shipped".<br>5. System updates status to `SHIPPED`.<br>6. System triggers email notification to user. |
-| **Traceability**   | FR-CHK-08, FR-ADM-08                                                                                                                                                                                                                                              |
-
-### UC-09: Manage Inventory
-
-| Field              | Description                                                                                                                                                                                                      |
-| :----------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Use Case ID**    | UC-09                                                                                                                                                                                                            |
-| **Title**          | Manage Inventory                                                                                                                                                                                                 |
-| **Primary Actor**  | Administrator                                                                                                                                                                                                    |
-| **Description**    | Admin manually adjusts stock levels for products.                                                                                                                                                                |
-| **Preconditions**  | User is logged in as ADMIN.                                                                                                                                                                                      |
-| **Postconditions** | Product stock level is updated.                                                                                                                                                                                  |
-| **Main Flow**      | 1. Admin searches for a product.<br>2. Admin selects "Update Stock".<br>3. Admin enters new quantity or adjustment amount.<br>4. System updates inventory record.<br>5. System logs the adjustment in audit log. |
-| **Traceability**   | FR-INV-03, FR-INV-04, FR-ADM-04                                                                                                                                                                                  |
-
-### UC-10: View Analytics
-
-| Field              | Description                                                                                                                                                                              |
-| :----------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Use Case ID**    | UC-10                                                                                                                                                                                    |
-| **Title**          | View Analytics                                                                                                                                                                           |
-| **Primary Actor**  | Administrator                                                                                                                                                                            |
-| **Description**    | Admin views sales and inventory performance reports.                                                                                                                                     |
-| **Preconditions**  | User is logged in as ADMIN.                                                                                                                                                              |
-| **Postconditions** | Analytics dashboard is displayed.                                                                                                                                                        |
-| **Main Flow**      | 1. Admin navigates to Analytics Dashboard.<br>2. System aggregates sales data (total revenue, top products).<br>3. System displays charts and graphs.<br>4. Admin filters by date range. |
-| **Traceability**   | FR-ADM-01, FR-ADM-02, FR-ADM-05                                                                                                                                                          |
+- **A1:** No products match search → Empty results with 200.
+- **A2:** Product not found by ID → 404 Not Found.
+- **A3:** V1 API used → Product returned with `Sunset` header.
 
 ---
 
-## 5. Traceability Matrix
+### UC-04: Manage Shopping Cart
 
-The following table maps Use Cases to the Functional Requirements defined in the SRS (SRS-BUILDNEST-001).
+| Attribute            | Value                    |
+| :------------------- | :----------------------- |
+| **Actor**            | Customer                 |
+| **Preconditions**    | User is authenticated    |
+| **SRS Requirements** | FR-CART-01 to FR-CART-05 |
 
-| Use Case ID | Use Case Title     | Related Functional Requirements (SRS)                                            |
-| :---------- | :----------------- | :------------------------------------------------------------------------------- |
-| **UC-01**   | Register User      | FR-AUTH-01, FR-AUTH-10                                                           |
-| **UC-02**   | Login              | FR-AUTH-02, FR-AUTH-03, FR-AUTH-04, FR-AUTH-06, FR-AUTH-07, FR-AUTH-09           |
-| **UC-03**   | Browse Products    | FR-PROD-01, FR-PROD-02, FR-PROD-03, FR-PROD-06, FR-PROD-07                       |
-| **UC-04**   | Manage Cart        | FR-CART-01, FR-CART-02, FR-CART-03, FR-CART-04, FR-CART-05, FR-CART-06, FR-FE-02 |
-| **UC-05**   | Checkout           | FR-CHK-01 to FR-CHK-06, FR-PAY-01 to FR-PAY-03, FR-INV-06                        |
-| **UC-06**   | View Order History | FR-CHK-07, FR-REV-01                                                             |
-| **UC-07**   | Manage Products    | FR-PROD-04, FR-ADM-08, FR-ADM-04                                                 |
-| **UC-08**   | Manage Orders      | FR-CHK-08, FR-ADM-08, FR-ADM-04                                                  |
-| **UC-09**   | Manage Inventory   | FR-INV-03, FR-INV-04, FR-INV-05, FR-ADM-06                                       |
-| **UC-10**   | View Analytics     | FR-ADM-01, FR-ADM-02, FR-ADM-05                                                  |
+**Main Flow:**
+
+1. User adds product to cart with quantity.
+2. System creates/updates cart item, validates stock.
+3. User views cart with all items and total.
+4. User can update item quantity.
+5. User can remove individual items.
+6. User can clear entire cart.
+
+**Alternative Flows:**
+
+- **A1:** Product out of stock → Error message.
+- **A2:** Quantity exceeds available stock → Error message.
+
+---
+
+### UC-05: Checkout and Payment
+
+| Attribute            | Value                                               |
+| :------------------- | :-------------------------------------------------- |
+| **Actors**           | Customer, Payment Gateway                           |
+| **Preconditions**    | Cart not empty, user has address, products in stock |
+| **SRS Requirements** | FR-CHK-01 to FR-CHK-05, FR-PAY-01, FR-PAY-02        |
+
+**Main Flow:**
+
+1. User initiates checkout with shipping address.
+2. System validates cart is not empty.
+3. System reserves inventory for all cart items.
+4. System creates Razorpay order.
+5. User completes payment via Razorpay modal.
+6. Frontend sends `paymentId`, `orderId`, `signature` to backend.
+7. Backend verifies Razorpay signature (HMAC-SHA256).
+8. System creates order with status `CONFIRMED`.
+9. System deducts stock from inventory.
+10. System clears cart.
+11. System publishes `OrderPlacedEvent`.
+12. Event listener sends order confirmation email.
+
+**Error Flows:**
+
+- **E1:** Empty cart → 400 `CartEmptyException`.
+- **E2:** Insufficient stock → 409 with rollback.
+- **E3:** Payment verification fails → Inventory reservation released, status `CANCELLED`.
+- **E4:** Concurrent stock deduction conflict → `OptimisticLockException`, retry.
+
+---
+
+### UC-06: View Order History
+
+| Attribute            | Value                  |
+| :------------------- | :--------------------- |
+| **Actor**            | Customer               |
+| **Preconditions**    | User has placed orders |
+| **SRS Requirements** | FR-CHK-06              |
+
+**Main Flow:**
+
+1. User requests order history (paginated).
+2. System returns orders belonging to authenticated user only.
+3. User selects order to view detailed items.
+
+**Alternative Flows:**
+
+- **A1:** No orders → Empty list with 200.
+- **A2:** Order belongs to different user → 403 Forbidden.
+
+---
+
+### UC-07: Manage Wishlist
+
+| Attribute            | Value                    |
+| :------------------- | :----------------------- |
+| **Actor**            | Customer                 |
+| **Preconditions**    | User is authenticated    |
+| **SRS Requirements** | FR-WISH-01 to FR-WISH-05 |
+
+**Main Flow:**
+
+1. User adds product to wishlist.
+2. System creates wishlist if first addition (one per user).
+3. User views wishlist (product list).
+4. User checks if specific product is in wishlist.
+5. User removes product from wishlist.
+6. User checks wishlist count.
+7. User clears all wishlist items.
+
+**Alternative Flows:**
+
+- **A1:** Duplicate product add → Silently ignored (Set semantics).
+- **A2:** Product not found → 404.
+- **A3:** Remove product not in wishlist → No-op.
+
+---
+
+### UC-08: Submit Product Review
+
+| Attribute            | Value                                 |
+| :------------------- | :------------------------------------ |
+| **Actor**            | Customer                              |
+| **Preconditions**    | User is authenticated, product exists |
+| **SRS Requirements** | FR-REV-01 to FR-REV-05                |
+
+**Main Flow:**
+
+1. User submits review with rating (1-5) and optional comment.
+2. System validates rating range and comment length (≤2000).
+3. System checks if user has completed order for product → sets `verifiedPurchase`.
+4. Review created.
+5. User can view all reviews for a product.
+6. User can view rating summary (average, distribution).
+7. User can mark another review as helpful.
+8. User can update or delete their own review.
+
+**Alternative Flows:**
+
+- **A1:** Rating <1 or >5 → 400 validation error.
+- **A2:** Comment >2000 chars → 400 validation error.
+- **A3:** User tries to update/delete another user's review → 403 Forbidden.
+
+---
+
+### UC-09: Admin Product Management
+
+| Attribute            | Value                 |
+| :------------------- | :-------------------- |
+| **Actor**            | Administrator         |
+| **Preconditions**    | User has `ROLE_ADMIN` |
+| **SRS Requirements** | FR-ADM-01, FR-ADM-02  |
+
+**Main Flow:**
+
+1. Admin views all products (paginated).
+2. Admin creates a new product (name, price, SKU, category, image).
+3. Admin updates existing product.
+4. Admin deletes product.
+
+---
+
+### UC-10: Admin Order Management
+
+| Attribute            | Value         |
+| :------------------- | :------------ |
+| **Actor**            | Administrator |
+| **SRS Requirements** | FR-ADM-03     |
+
+**Main Flow:**
+
+1. Admin views all orders (paginated).
+2. Admin updates order status (following state machine rules).
+3. Admin deletes (soft) order.
+
+---
+
+### UC-11: Admin User Management
+
+| Attribute            | Value                           |
+| :------------------- | :------------------------------ |
+| **Actor**            | Administrator                   |
+| **SRS Requirements** | FR-ADM-06, FR-ADM-07, FR-ADM-08 |
+
+**Main Flow:**
+
+1. Admin views all users.
+2. Admin updates user details.
+3. Admin deactivates/soft-deletes user.
+
+---
+
+### UC-12: Password Reset
+
+| Attribute            | Value            |
+| :------------------- | :--------------- |
+| **Actor**            | Guest / Customer |
+| **SRS Requirements** | FR-AUTH-11       |
+
+**Main Flow:**
+
+1. User provides email address.
+2. System generates time-limited token (24h expiry).
+3. System sends reset link via email.
+4. User clicks link, provides new password.
+5. System validates token (not expired, not used).
+6. System updates password hash.
+7. System marks token as used.
+
+**Alternative Flows:**
+
+- **A1:** Email not found → 200 (no info leaked).
+- **A2:** Token expired → 400.
+- **A3:** Token already used → 400.
+
+---
+
+### UC-13: Admin Inventory Management
+
+| Attribute            | Value                                        |
+| :------------------- | :------------------------------------------- |
+| **Actors**           | Administrator, Scheduler                     |
+| **SRS Requirements** | FR-INV-01 to FR-INV-07, FR-ADM-10, FR-ADM-11 |
+
+**Main Flow:**
+
+1. Admin queries low-stock products (filtered by threshold).
+2. Admin queries out-of-stock products.
+3. Admin adds stock to a product.
+4. Admin checks available quantity.
+5. Scheduler periodically monitors thresholds.
+6. Scheduler triggers `LowStockWarningEvent` when `stock ≤ minimum`.
+
+---
+
+### UC-14: Admin Analytics
+
+| Attribute            | Value         |
+| :------------------- | :------------ |
+| **Actor**            | Administrator |
+| **SRS Requirements** | FR-ADM-12     |
+
+**Main Flow:**
+
+1. Admin views dashboard (aggregated metrics).
+2. Admin queries audit logs by user, action, or date range.
+3. Admin views performance metrics history.
+4. Admin views alert summary.
+5. Admin analyzes API errors by status code or endpoint.
+
+---
+
+### UC-15: Webhook Management
+
+| Attribute            | Value                  |
+| :------------------- | :--------------------- |
+| **Actor**            | Administrator          |
+| **SRS Requirements** | FR-NOT-03 to FR-NOT-05 |
+
+**Main Flow:**
+
+1. Admin creates webhook subscription (event type, target URL, secret).
+2. Admin lists all webhook subscriptions.
+3. Admin activates/deactivates subscription.
+4. System delivers events to target URL with HMAC signature.
+5. System tracks delivery status and failure count.
+6. System auto-disables subscription after failure threshold.
+
+---
+
+## 3. Revision History
+
+| Version | Date       | Author       | Changes                                                                                                                                   |
+| :------ | :--------- | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 2026-02-10 | BuildNest BA | Initial — 6 use cases (Auth, Catalog, Cart, Checkout, Order, Admin)                                                                       |
+| 2.0     | 2026-02-11 | BuildNest BA | Expanded to 15 use cases — added Wishlist, Review, Password Reset, Admin Inventory, Admin Analytics, Webhook Management; use case diagram |
 
 ---
 

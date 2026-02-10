@@ -3,9 +3,9 @@
 ## BuildNest E-Commerce Platform
 
 **Document ID:** CSD-BUILDNEST-001
-**Version:** 1.0
-**Date:** 2026-02-10
-**Standard:** ISO/IEC 25010:2011 — Systems and Software Quality Requirements and Evaluation (SQuaRE)
+**Version:** 2.0
+**Date:** 2026-02-11
+**Standard:** ISO/IEC 25010:2011 — Software Quality Model
 
 ---
 
@@ -13,204 +13,385 @@
 
 ### 1.1 Purpose
 
-This document defines the coding standards, conventions, and best practices for the **BuildNest E-Commerce Platform**. Each standard is mapped to the **ISO/IEC 25010:2011** quality characteristics to ensure that every coding practice directly contributes to measurable software quality.
+This document establishes coding standards, naming conventions, and quality patterns for the BuildNest E-Commerce Platform. All contributors must follow these standards to ensure **maintainability**, **consistency**, and **testability** across the codebase (28 controllers, 56 services, 19 repositories, 48 models, 38 config classes).
 
-### 1.2 ISO/IEC 25010 Quality Model
+### 1.2 Scope
 
-```mermaid
-mindmap
-  root(("ISO 25010 Quality"))
-    Functional Suitability
-    Reliability
-    Performance Efficiency
-    Usability
-    Security
-    Maintainability
-    Portability
-    Compatibility
-```
+| Layer             | Package                                                                                                                                     | Standards Covered |
+| :---------------- | :------------------------------------------------------------------------------------------------------------------------------------------ | :---------------- |
+| **Controllers**   | `controller.admin.*`, `controller.auth.*`, `controller.user.*`, `controller.monitoring.*`, `controller.public_.*`, `controller.inventory.*` | §3.1              |
+| **Services**      | `service.*` (56 files across 22 subpackages)                                                                                                | §3.2              |
+| **Repositories**  | `repository.*` (19 files)                                                                                                                   | §3.3              |
+| **Models**        | `model.entity.*`, `model.dto.*`, `model.payload.*`, `model.elasticsearch.*`                                                                 | §3.4              |
+| **Configuration** | `config.*` (38 files)                                                                                                                       | §3.5              |
+| **Security**      | `security.*` (8 files)                                                                                                                      | §3.6              |
+| **Cross-cutting** | `aspect.*`, `annotation.*`, `interceptor.*`, `validation.*`, `validator.*`                                                                  | §3.7              |
 
 ---
 
 ## 2. General Conventions
 
-### 2.1 Naming Conventions
+### 2.1 Code Formatting
 
-| Element              | Convention               | Example                 | Quality Attribute |
-| :------------------- | :----------------------- | :---------------------- | :---------------- |
-| **Java Classes**     | PascalCase               | `ProductService`        | Maintainability   |
-| **Java Methods**     | camelCase, verb-first    | `findByEmail()`         | Maintainability   |
-| **Java Constants**   | UPPER_SNAKE_CASE         | `MAX_RETRY_COUNT`       | Maintainability   |
-| **Java Packages**    | lowercase, dot-separated | `com.buildnest.service` | Maintainability   |
-| **React Components** | PascalCase               | `ProductCard.jsx`       | Maintainability   |
-| **React Hooks**      | camelCase, `use` prefix  | `useCart()`             | Maintainability   |
-| **CSS Classes**      | kebab-case               | `product-card-title`    | Usability         |
-| **DB Tables**        | snake_case, plural       | `order_items`           | Maintainability   |
-| **DB Columns**       | snake_case               | `created_at`            | Maintainability   |
-| **REST Endpoints**   | kebab-case, plural nouns | `/api/products`         | Compatibility     |
-| **Environment Vars** | UPPER_SNAKE_CASE         | `DB_PASSWORD`           | Portability       |
+| Rule             | Standard                                                    |
+| :--------------- | :---------------------------------------------------------- |
+| **Indentation**  | 4 spaces (no tabs)                                          |
+| **Line Length**  | Max 120 characters                                          |
+| **Brace Style**  | K&R (opening brace on same line)                            |
+| **Imports**      | No wildcards; organized: java._ → jakarta._ → org._ → com._ |
+| **Encoding**     | UTF-8                                                       |
+| **Line Endings** | LF (Unix-style)                                             |
 
-### 2.2 Formatting Rules
+### 2.2 Commenting
 
-| Rule                    | Standard                                     | Quality Attribute |
-| :---------------------- | :------------------------------------------- | :---------------- |
-| **Indentation**         | 4 spaces (Java), 2 spaces (JS/JSX)           | Maintainability   |
-| **Max Line Length**     | 120 characters                               | Maintainability   |
-| **Braces**              | Same-line opening brace (K&R style)          | Maintainability   |
-| **Imports**             | No wildcard imports (`*`); grouped by domain | Maintainability   |
-| **Trailing Whitespace** | Prohibited                                   | Maintainability   |
-| **File Encoding**       | UTF-8                                        | Portability       |
-| **Line Endings**        | LF (`\n`) via `.gitattributes`               | Portability       |
+| Type                 | When                              | Format                                           |
+| :------------------- | :-------------------------------- | :----------------------------------------------- |
+| **Javadoc**          | All public classes and methods    | `/** ... */` with `@param`, `@return`, `@throws` |
+| **Inline**           | Complex logic only                | `// Single line`                                 |
+| **TODO**             | Temporary markers for future work | `// TODO: [description] - [owner]`               |
+| **Section comments** | Service methods grouping          | `// --- Section Name ---`                        |
 
-### 2.3 Documentation Standards
+### 2.3 Naming Conventions
 
-| Rule                 | Standard                                                     | Quality Attribute |
-| :------------------- | :----------------------------------------------------------- | :---------------- |
-| **Public APIs**      | Must have Javadoc (`@param`, `@return`, `@throws`)           | Maintainability   |
-| **Complex Logic**    | Inline `//` comments explaining _why_, not _what_            | Maintainability   |
-| **React Components** | JSDoc on Props interface                                     | Maintainability   |
-| **TODO/FIXME**       | Must include author and ticket ID: `// TODO(pradip): BN-123` | Maintainability   |
+| Element       | Convention                                      | Example                                              |
+| :------------ | :---------------------------------------------- | :--------------------------------------------------- |
+| **Package**   | `lowercase.dotnotation`                         | `com.example.buildnest_ecommerce.service.cart`       |
+| **Class**     | `PascalCase`                                    | `CheckoutService`, `ProductReview`                   |
+| **Interface** | `PascalCase` (prefix `I` for service contracts) | `IAdminAnalyticsService`, `IRateLimiterService`      |
+| **Method**    | `camelCase` (verb-first)                        | `processCheckout()`, `validateToken()`               |
+| **Variable**  | `camelCase`                                     | `quantityInStock`, `orderNumber`                     |
+| **Constant**  | `UPPER_SNAKE_CASE`                              | `MAX_LOGIN_ATTEMPTS`, `TOKEN_EXPIRY_MS`              |
+| **Enum**      | `PascalCase` class, `UPPER_SNAKE_CASE` values   | `OrderStatus.CONFIRMED`, `InventoryStatus.LOW_STOCK` |
+| **DTO**       | `EntityNameDTO` or `ActionDTO`                  | `ProductDTO`, `LoginDTO`, `RegisterRequest`          |
+| **Event**     | `SubjectVerbEvent`                              | `OrderPlacedEvent`, `LowStockWarningEvent`           |
 
 ---
 
-## 3. Java / Spring Boot Standards
+## 3. Layer-Specific Standards
 
-### 3.1 Project Structure
+### 3.1 Controller Layer
 
-```text
-src/main/java/com/buildnest/
-├── config/           # @Configuration classes only
-├── controller/       # @RestController — thin, delegates to Service
-├── service/          # Business logic interfaces + implementations
-│   └── impl/         # @Service implementations
-├── repository/       # @Repository — Spring Data JPA interfaces
-├── model/
-│   ├── entity/       # @Entity — JPA entities, no business logic
-│   └── dto/          # Request/Response DTOs, immutable where possible
-├── exception/        # @ControllerAdvice, custom exceptions
-├── security/         # Filters, JWT provider, Security config
-└── util/             # Stateless helper/utility classes
+```java
+// PATTERN: Controllers must follow REST resource naming
+@RestController
+@RequestMapping("/api/user/reviews")  // Resource-based URL
+public class ProductReviewController {
+
+    @Autowired
+    private ProductReviewService reviewService;  // Single service injection
+
+    // RULE: Use appropriate HTTP methods
+    @PostMapping("/product/{productId}")   // Create
+    @GetMapping("/product/{productId}")    // Read
+    @PutMapping("/{reviewId}")            // Update
+    @DeleteMapping("/{reviewId}")          // Delete
+
+    // RULE: Return ResponseEntity with consistent wrapper
+    public ResponseEntity<?> submitReview(...) {
+        return ResponseEntity.ok(reviewService.submitReview(...));
+    }
+}
 ```
 
-### 3.2 Class Design Rules
+**Controller Rules:**
 
-| Rule                      | Standard                                                                                         | Quality Attribute |
-| :------------------------ | :----------------------------------------------------------------------------------------------- | :---------------- |
-| **Single Responsibility** | Each class has one reason to change                                                              | Maintainability   |
-| **Controller Thickness**  | Controllers only validate + delegate. No business logic.                                         | Maintainability   |
-| **Service Interface**     | All services defined via interfaces (`ProductService` → `ProductServiceImpl`)                    | Maintainability   |
-| **Entity Purity**         | `@Entity` classes contain only fields, JPA annotations, and `equals/hashCode`. No service calls. | Maintainability   |
-| **DTO Separation**        | Never expose `@Entity` directly in API responses. Always map to DTO.                             | Security          |
-| **Constructor Injection** | Use constructor injection (`@RequiredArgsConstructor`). Avoid `@Autowired` on fields.            | Maintainability   |
+| Rule                                      | Enforcement                                 |
+| :---------------------------------------- | :------------------------------------------ |
+| No business logic in controllers          | Service delegation only                     |
+| Input validation via `@Valid`             | Bean validation annotations on request DTOs |
+| Use `ResponseEntity` return type          | Consistent HTTP status codes                |
+| Admin controllers under `/api/admin/**`   | `@PreAuthorize("hasRole('ADMIN')")`         |
+| User controllers under `/api/user/**`     | Requires authentication                     |
+| Public controllers under `/api/public/**` | `permitAll()` in `SecurityConfig`           |
 
-### 3.3 Exception Handling
+### 3.2 Service Layer
 
-| Rule                  | Standard                                                                              | Quality Attribute      |
-| :-------------------- | :------------------------------------------------------------------------------------ | :--------------------- |
-| **Global Handler**    | Use `@ControllerAdvice` for all exception mapping                                     | Reliability            |
-| **Custom Exceptions** | Extend `RuntimeException` with meaningful names (`ProductNotFoundException`)          | Reliability            |
-| **No Swallowing**     | Never use empty `catch {}` blocks                                                     | Reliability            |
-| **HTTP Mapping**      | `404` for NotFound, `400` for Validation, `409` for Conflict, `500` for Server errors | Functional Suitability |
-| **Logging**           | Log at `ERROR` for 5xx, `WARN` for 4xx business errors, `DEBUG` for trace-level       | Reliability            |
+```java
+// PATTERN: Services implement business logic
+@Service
+@Transactional  // Applied at class level for write operations
+public class InventoryService {
 
-### 3.4 Logging Standards
+    // RULE: Interface-based contracts for testability
+    // Some services implement interfaces: IAdminAnalyticsService, IRateLimiterService
 
-| Rule                   | Standard                                                                      | Quality Attribute      |
-| :--------------------- | :---------------------------------------------------------------------------- | :--------------------- |
-| **Framework**          | SLF4J + Logback                                                               | Portability            |
-| **Logger Declaration** | `@Slf4j` (Lombok) or `LoggerFactory.getLogger(ClassName.class)`               | Maintainability        |
-| **Sensitive Data**     | Never log passwords, tokens, or PII                                           | Security               |
-| **Structured Format**  | Use placeholders: `log.info("Order {} created for user {}", orderId, userId)` | Performance Efficiency |
+    // RULE: Method names describe business action
+    public void reserveStock(Long productId, int quantity) { ... }
+    public void deductStock(Long productId, int quantity) { ... }
+    public void releaseReservation(Long productId, int quantity) { ... }
+
+    // RULE: Throw domain-specific exceptions
+    throw new InsufficientStockException(productId);
+    throw new ResourceNotFoundException("Product", productId);
+}
+```
+
+**Service Rules:**
+
+| Rule                                  | Pattern                                        |
+| :------------------------------------ | :--------------------------------------------- |
+| `@Transactional` for write operations | Class or method level                          |
+| Domain exceptions for business errors | Custom exceptions extending `RuntimeException` |
+| Event publishing for side effects     | `DomainEventPublisher.publish()`               |
+| No direct HTTP concerns               | No `HttpServletRequest`, no status codes       |
+
+### 3.3 Repository Layer
+
+```java
+// PATTERN: Spring Data JPA repositories
+@Repository
+public interface ProductRepository extends JpaRepository<Product, Long> {
+    // RULE: Method names follow Spring Data query derivation
+    List<Product> findByCategoryId(Long categoryId);
+    Optional<Product> findBySku(String sku);
+
+    // RULE: Custom queries use @Query annotation
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.stockQuantity > 0")
+    Page<Product> findActiveInStockProducts(Pageable pageable);
+}
+```
+
+### 3.4 Model Layer
+
+#### 3.4.1 Entities
+
+```java
+// PATTERN: JPA entities with Lombok annotations
+@Entity
+@Table(name = "product_review", indexes = {
+    @Index(name = "idx_product_id", columnList = "product_id"),
+    @Index(name = "idx_rating", columnList = "rating")
+})
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@EqualsAndHashCode(exclude = {"product", "user", "createdAt"})
+@ToString(exclude = {"product", "user"})
+public class ProductReview {
+    // RULE: Use @Id + @GeneratedValue(GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // RULE: @PrePersist / @PreUpdate for timestamps
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    // RULE: Bean validation on entity fields
+    @NotNull @Min(1) @Max(5)
+    private Integer rating;
+
+    @Size(max = 2000)
+    private String comment;
+}
+```
+
+**Entity Rules:**
+
+| Rule                                                      | Details                                                    |
+| :-------------------------------------------------------- | :--------------------------------------------------------- |
+| Exclude lazy associations from `equals/hashCode/toString` | Prevent N+1 and `LazyInitializationException`              |
+| Use `@Builder.Default` for default values                 | `private Boolean isActive = true;` with `@Builder.Default` |
+| Define indexes for frequently queried columns             | `@Index` annotation on `@Table`                            |
+| Use `@Version` for optimistic locking where needed        | `Inventory.version`                                        |
+
+#### 3.4.2 DTOs and Payloads
+
+```java
+// PATTERN: Separate DTO classes for API contracts
+public class ProductDTO {
+    private Long id;
+    private String name;
+    private BigDecimal price;
+    // No entity references — only primitive/serializable types
+}
+```
+
+#### 3.4.3 Elasticsearch Documents
+
+```java
+@Document(indexName = "buildnest-audit-logs")
+public class ElasticsearchAuditLog {
+    @Id private String id;
+    @Field(type = FieldType.Keyword) private String action;
+    @Field(type = FieldType.Date) private LocalDateTime timestamp;
+}
+```
+
+### 3.5 Configuration Layer
+
+```java
+// PATTERN: Spring @Configuration with descriptive names
+@Configuration
+public class CacheConfig {
+    // RULE: Use @Bean methods with clear return type
+    @Bean
+    public RedisCacheConfiguration redisCacheConfiguration() { ... }
+}
+```
+
+**Configuration Naming:**
+
+| Type           | Naming Pattern              | Examples                                                         |
+| :------------- | :-------------------------- | :--------------------------------------------------------------- |
+| Feature config | `FeatureNameConfig`         | `CacheConfig`, `SecurityConfig`, `ElasticsearchConfig`           |
+| Filter         | `FeatureNameFilter`         | `ChaosEngineeringFilter`, `AdminRateLimitFilter`                 |
+| Optimization   | `FeatureOptimizationConfig` | `DatabaseQueryOptimizationConfig`, `ContainerOptimizationConfig` |
+| Enhancement    | `FeatureEnhancementConfig`  | `InputValidationEnhancementConfig`                               |
+
+### 3.6 Security Standards
+
+| Standard                        | Implementation                                  |
+| :------------------------------ | :---------------------------------------------- |
+| BCrypt password hashing         | `BCryptPasswordEncoder` (strength 10)           |
+| JWT signing                     | HMAC-SHA512 with secret in environment variable |
+| HTTPS enforcement in production | `@PostConstruct` validation in `SecurityConfig` |
+| CORS whitelist                  | Only `buildnest.com` origins                    |
+| Security headers                | CSP, X-Frame-Options (DENY), HSTS               |
+| Method-level security           | `@PreAuthorize`, `@Secured`, `@RolesAllowed`    |
+| Input validation                | Bean validation + custom validators (9 files)   |
+
+### 3.7 Cross-Cutting Standards
+
+#### 3.7.1 Custom Annotations
+
+| Annotation          | Purpose                                | Example Usage                     |
+| :------------------ | :------------------------------------- | :-------------------------------- |
+| `@Auditable`        | Mark methods for AOP audit logging     | `@Auditable("CREATE_ORDER")`      |
+| `@ApiSunset`        | Mark deprecated API versions           | `@ApiSunset(date = "2026-03-01")` |
+| `@ServiceLayerOnly` | Restrict method calls to service layer | Methodological enforcement        |
+
+#### 3.7.2 Domain Events
+
+```java
+// PATTERN: Event naming and structure
+public class OrderPlacedEvent extends ApplicationEvent {
+    private final Long orderId;
+    private final String orderNumber;
+    private final BigDecimal totalAmount;
+    // Constructor passes source + fields
+}
+
+// PATTERN: Event listener
+@Component
+public class DomainEventListener {
+    @EventListener
+    public void handleOrderPlaced(OrderPlacedEvent event) { ... }
+}
+```
+
+#### 3.7.3 Exception Handling
+
+| Exception Type                 | HTTP Status | Usage                      |
+| :----------------------------- | :---------- | :------------------------- |
+| `ResourceNotFoundException`    | 404         | Entity not found           |
+| `UnauthorizedException`        | 401         | Authentication failure     |
+| `ValidationException`          | 400         | Input validation failure   |
+| `InsufficientStockException`   | 409         | Stock not available        |
+| `CartEmptyException`           | 400         | Checkout with empty cart   |
+| `PaymentVerificationException` | 402         | Payment signature mismatch |
+| `OutOfStockException`          | 409         | Product out of stock       |
 
 ---
 
-## 4. React / Frontend Standards
+## 4. Database Standards
 
-### 4.1 Component Rules
+### 4.1 Naming Conventions
 
-| Rule                      | Standard                                                                     | Quality Attribute |
-| :------------------------ | :--------------------------------------------------------------------------- | :---------------- |
-| **Functional Components** | Always use functional components with hooks. No class components.            | Maintainability   |
-| **File Naming**           | One component per file. Filename matches component name (`ProductCard.jsx`). | Maintainability   |
-| **Props Destructuring**   | Destructure props in function signature: `function Card({ title, price })`   | Maintainability   |
-| **Key Prop**              | Always use stable, unique `key` in lists. Never use array index.             | Reliability       |
-| **Conditional Rendering** | Use ternary or `&&` short-circuit. No nested ternaries.                      | Maintainability   |
+| Element               | Convention                            | Example                                      |
+| :-------------------- | :------------------------------------ | :------------------------------------------- |
+| **Table**             | `snake_case`, singular or descriptive | `product_review`, `wishlist_products`        |
+| **Column**            | `snake_case`                          | `quantity_in_stock`, `is_active`             |
+| **Index**             | `idx_` prefix + columns               | `idx_product_id`, `idx_rating`               |
+| **Unique Constraint** | Table-level `@UniqueConstraint`       | `@UniqueConstraint(columnNames = "user_id")` |
+| **Foreign Key**       | `entity_id` suffix                    | `user_id`, `product_id`, `order_id`          |
 
-### 4.2 State Management
+### 4.2 Migration Standards
 
-| Rule             | Standard                                                                    | Quality Attribute      |
-| :--------------- | :-------------------------------------------------------------------------- | :--------------------- |
-| **Local State**  | `useState` for component-scoped data                                        | Maintainability        |
-| **Global State** | Context API for Auth/Cart. Redux Toolkit for complex state.                 | Maintainability        |
-| **Side Effects** | All API calls inside `useEffect` with proper cleanup                        | Reliability            |
-| **Memoization**  | Use `useMemo`/`useCallback` for expensive computations or stable references | Performance Efficiency |
-
-### 4.3 API Integration
-
-| Rule               | Standard                                                   | Quality Attribute |
-| :----------------- | :--------------------------------------------------------- | :---------------- |
-| **HTTP Client**    | Axios with centralized instance (`apiClient.js`)           | Maintainability   |
-| **Interceptors**   | Auto-attach JWT token; auto-redirect on 401                | Security          |
-| **Error Handling** | Global error interceptor with user-friendly toast messages | Reliability       |
-| **Loading States** | Every API call must set `isLoading` state for UX feedback  | Usability         |
+| Rule                   | Standard                                                        |
+| :--------------------- | :-------------------------------------------------------------- |
+| Tool                   | Liquibase (YAML/XML changelogs)                                 |
+| File naming            | `NNN-description.xml` (e.g., `005-add-performance-indexes.xml`) |
+| Backward compatibility | All migrations must be additive (no destructive changes)        |
+| Rollback               | Each changeset must have a rollback section                     |
 
 ---
 
-## 5. Database & SQL Standards
+## 5. Testing Standards
 
-### 5.1 Schema Conventions
+### 5.1 Naming Conventions
 
-| Rule             | Standard                                                       | Quality Attribute      |
-| :--------------- | :------------------------------------------------------------- | :--------------------- |
-| **Table Names**  | Plural, snake_case (`users`, `order_items`)                    | Maintainability        |
-| **Primary Keys** | `id BIGINT AUTO_INCREMENT`                                     | Maintainability        |
-| **Foreign Keys** | Named `{referenced_table_singular}_id` (e.g., `user_id`)       | Maintainability        |
-| **Timestamps**   | Every table includes `created_at` and `updated_at`             | Reliability            |
-| **Soft Deletes** | Use `is_deleted BOOLEAN DEFAULT FALSE` instead of `DELETE`     | Reliability            |
-| **Indexes**      | Add indexes on all foreign keys and frequently queried columns | Performance Efficiency |
+```java
+// Test class: ServiceNameTest.java (same package as source)
+public class ProductReviewServiceTest {
 
-### 5.2 Query Practices
+    // Method naming: should_expectedBehavior_when_condition()
+    @Test
+    void should_submitReview_when_validRatingProvided() { ... }
 
-| Rule               | Standard                                                             | Quality Attribute      |
-| :----------------- | :------------------------------------------------------------------- | :--------------------- |
-| **N+1 Prevention** | Use `@EntityGraph` or `JOIN FETCH` for related entities              | Performance Efficiency |
-| **Pagination**     | All list endpoints must use `Pageable` (default page size: 20)       | Performance Efficiency |
-| **Raw SQL**        | Avoid raw SQL. Use Spring Data JPA derived queries or `@Query` JPQL. | Security               |
-| **Parameterized**  | Never concatenate user input into queries                            | Security               |
+    @Test
+    void should_throwException_when_ratingBelowMinimum() { ... }
+}
+```
+
+### 5.2 Test Organization
+
+| Annotation        | When to Use                     | Database             |
+| :---------------- | :------------------------------ | :------------------- |
+| `@SpringBootTest` | Full integration/system tests   | Full context with H2 |
+| `@WebMvcTest`     | Controller slice tests          | No DB, MockMvc       |
+| `@DataJpaTest`    | Repository tests                | H2 with rollback     |
+| Pure JUnit 5      | Service unit tests with Mockito | None (mocked)        |
+
+### 5.3 Test Data
+
+- Use builder pattern via entity `@Builder` annotations
+- Use `@Transactional` with auto-rollback in integration tests
+- Use `TestDataFactory` for shared test entities
+- Never rely on external services (mock Razorpay, SMTP)
 
 ---
 
-## 6. Quality Attribute Traceability Matrix
+## 6. Quality Attribute Traceability (ISO 25010)
 
-Mapping coding standards to ISO/IEC 25010:2011 quality characteristics.
-
-| Quality Characteristic     | Coding Standards Applied                                                |
-| :------------------------- | :---------------------------------------------------------------------- |
-| **Functional Suitability** | HTTP status code mapping, validation annotations                        |
-| **Reliability**            | Global exception handling, no swallowed exceptions, `key` prop          |
-| **Performance Efficiency** | N+1 prevention, pagination, memoization, structured logging             |
-| **Usability**              | Loading states, error toasts, self-documenting APIs                     |
-| **Security**               | DTO separation, parameterized queries, no PII in logs, JWT interceptors |
-| **Maintainability**        | Naming conventions, SRP, constructor injection, single file components  |
-| **Portability**            | UTF-8 encoding, externalized config, SLF4J abstraction, LF line endings |
-| **Compatibility**          | REST URI conventions, plural nouns, versioned APIs                      |
+| Quality Attribute          | Standard Applied                                      | Verification           |
+| :------------------------- | :---------------------------------------------------- | :--------------------- |
+| **Functional Suitability** | Complete API coverage (83+ endpoints)                 | Functional test cases  |
+| **Performance Efficiency** | DB indexes, Redis cache, query optimization           | Performance test cases |
+| **Compatibility**          | OpenAPI 3 spec, CORS, API versioning                  | Integration test cases |
+| **Usability**              | Consistent error messages, API envelope               | E2E test cases         |
+| **Reliability**            | Optimistic locking, retry, graceful shutdown          | Reliability test cases |
+| **Security**               | JWT, RBAC, BCrypt, input validation, HTTPS            | Security test cases    |
+| **Maintainability**        | Package-per-feature, AOP, DDD, DI                     | Code review checklist  |
+| **Portability**            | Container-first, external config, no hard-coded paths | Deployment tests       |
 
 ---
 
 ## 7. Code Review Checklist
 
-Pre-merge verification criteria for Pull Requests.
+|  #  | Check                                          | Pass Criteria                       |
+| :-: | :--------------------------------------------- | :---------------------------------- |
+|  1  | Follows naming conventions (§2.3)              | All names comply                    |
+|  2  | No business logic in controllers               | Service delegation only             |
+|  3  | `@Transactional` on write service methods      | Applied correctly                   |
+|  4  | Bean validation on request DTOs                | `@Valid` + constraints              |
+|  5  | Domain exceptions (not generic)                | Custom exception classes            |
+|  6  | Lombok exclusions for lazy collections         | `@EqualsAndHashCode(exclude=...)`   |
+|  7  | Audit logging on sensitive operations          | `@Auditable` annotation             |
+|  8  | No hardcoded credentials or URLs               | Config via `application.properties` |
+|  9  | Unit test coverage for new code                | ≥ 80% line coverage                 |
+| 10  | Security annotations on admin endpoints        | `@PreAuthorize("hasRole('ADMIN')")` |
+| 11  | API versioning for breaking changes            | New version, sunset old             |
+| 12  | Event publishing for cross-module side effects | `DomainEventPublisher`              |
 
-- [ ] **Naming:** Do all new classes, methods, and variables follow naming conventions?
-- [ ] **No Business Logic in Controllers:** Does the controller only validate and delegate?
-- [ ] **DTO Used:** Are entities never directly exposed in API responses?
-- [ ] **Exception Handling:** Are custom exceptions thrown (not generic `RuntimeException`)?
-- [ ] **Logging:** Are log statements present for key operations? No PII logged?
-- [ ] **Tests:** Are unit tests added for new service methods?
-- [ ] **SQL:** No N+1 queries? Pagination used for list endpoints?
-- [ ] **Security:** Input validated? No SQL injection vectors?
-- [ ] **Formatting:** Code passes linter/formatter checks?
-- [ ] **Documentation:** Public methods have Javadoc/JSDoc?
+---
+
+## 8. Revision History
+
+| Version | Date       | Author        | Changes                                                                                                                                                     |
+| :------ | :--------- | :------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 2026-02-10 | BuildNest Dev | Initial — general conventions                                                                                                                               |
+| 2.0     | 2026-02-11 | BuildNest Dev | Added 38 config class standards, custom annotations, domain event patterns, Elasticsearch doc patterns, exception hierarchy, 12-point code review checklist |
 
 ---
 
