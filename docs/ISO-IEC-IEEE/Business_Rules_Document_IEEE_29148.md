@@ -87,7 +87,7 @@ Defines allowed transitions for an Order.
 | **DELIVERED**    | -       | -               | -          | -                  | -               |
 | **CANCELLED**    | -       | -               | -          | -                  | -               |
 
-_(Derived from SDD §4.9.1)_
+_(Derived from [SDD §4.9.1](SDD_IEEE_1016_2017.md))_
 
 ### 3.2 Inventory Status Logic
 
@@ -99,7 +99,7 @@ Defines how the system determines the status of a product based on quantity.
 | **0 < Q <= T** | Any           | `LOW_STOCK`    | User can buy. Admin alerted.           |
 | **Q = 0**      | Any           | `OUT_OF_STOCK` | Purchase disabled. "Notify Me" active. |
 
-_(Derived from SDD §4.9.3)_
+_(Derived from [SDD §4.9.3](SDD_IEEE_1016_2017.md))_
 
 ---
 
