@@ -2,10 +2,39 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** RTM-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** ISO/IEC/IEEE 29148:2018
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                            |
+| :----------------------- | :------------------------------- |
+| **Document Title**       | Requirements Traceability Matrix |
+| **Document ID**          | RTM-BUILDNEST-001                |
+| **Version**              | 3.0                              |
+| **Date**                 | February 11, 2026                |
+| **Status**               | Baselined                        |
+| **Classification**       | Internal Use                     |
+| **Conformance Standard** | ISO/IEC/IEEE 29148:2018          |
+
+---
+
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author       | Changes                                                                                                        | Approval    |
+| :------ | :--------- | :----------- | :------------------------------------------------------------------------------------------------------------- | :---------- |
+| 1.0     | 2026-02-10 | BuildNest QA | Initial draft — Auth, Product, Cart, Checkout, Payment, Inventory                                              | ✅ Approved |
+| 2.0     | 2026-02-11 | BuildNest QA | Exhaustive update — Added Wishlist, Review, Admin, NFR traceability; 124 TC cross-references; coverage summary | ✅ Approved |
+| 3.0     | 2026-02-11 | BuildNest QA | ISO 29148 compliance: added Doc Control, Definitions, Conformance Statement                                    | ✅ Pending  |
+
+### Document Approval
+
+| Role                | Name         | Signature      | Date             |
+| :------------------ | :----------- | :------------- | :--------------- |
+| **QA Lead**         | QA Lead      | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Project Manager** | Project Lead | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Technical Lead**  | Dev Lead     | \***\*\_\*\*** | \***\*\_\_\*\*** |
 
 ---
 
@@ -15,15 +44,40 @@
 
 This Requirements Traceability Matrix (RTM) provides **bidirectional traceability** from stakeholder needs through functional requirements to design components, implementation artifacts, and test cases. It ensures that every requirement is implemented, tested, and can be traced to its origin.
 
-### 1.2 Referenced Documents
+### 1.2 Normative References
+
+| Reference                                    | Description                                   |
+| :------------------------------------------- | :-------------------------------------------- |
+| **ISO/IEC/IEEE 29148:2018**                  | Requirements Engineering (governing standard) |
+| [SRS](SRS_IEEE_29148_2018.md)                | Functional and non-functional requirements    |
+| [SDD](SDD_IEEE_1016_2017.md)                 | Design components                             |
+| [TCS](Test_Case_Specification_IEEE_29119.md) | Test case mappings                            |
+| [BRD](Business_Rules_Document_IEEE_29148.md) | Business rules                                |
+
+### 1.3 Definitions & Abbreviations
+
+| Term / Abbr | Definition                          |
+| :---------- | :---------------------------------- |
+| **FR**      | Functional Requirement              |
+| **NFR**     | Non-Functional Requirement          |
+| **SN**      | Stakeholder Need                    |
+| **UC**      | Use Case                            |
+| **TC**      | Test Case                           |
+| **RTM**     | Requirements Traceability Matrix    |
+| **SRS**     | Software Requirements Specification |
+| **SDD**     | Software Design Description         |
+
+### 1.4 Conformance Statement
+
+> This document conforms to **ISO/IEC/IEEE 29148:2018**, _Systems and Software Engineering — Life Cycle Processes — Requirements Engineering_. It implements bidirectional traceability as required by Clauses 6.2.3 (Requirements Traceability) and 6.3.3 (Requirements Verification), providing forward and backward trace from stakeholder needs to test cases.
+
+### 1.5 Referenced Documents
 
 1. **[SRS (Requirements)](SRS_IEEE_29148_2018.md)** — ISO/IEC/IEEE 29148:2018
 2. **[SDD (Design)](SDD_IEEE_1016_2017.md)** — ISO/IEC/IEEE 1016:2017
 3. **[SAD (Architecture)](Software_Architecture_Document_IEEE_42010.md)** — ISO/IEC/IEEE 42010:2022
 4. **[TCS (Test Cases)](Test_Case_Specification_IEEE_29119.md)** — ISO/IEC/IEEE 29119:2021
 5. **[BRD (Business Rules)](Business_Rules_Document_IEEE_29148.md)** — ISO/IEC/IEEE 29148:2018
-
----
 
 ## 2. Traceability Methodology
 
@@ -157,6 +211,16 @@ graph LR
 | **FR-ADM-12** (Analytics)          | UC-10    | `AdminAnalyticsController`            | TC-ADM-ANL-001                 |
 
 ---
+
+## 5. Revision History
+
+See [Document Control](#document-control) for full revision history and approvals.
+
+---
+
+**— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC/IEEE 29148:2018 for the BuildNest E-Commerce Platform._
 
 ## 5. Non-Functional Requirement Traceability
 

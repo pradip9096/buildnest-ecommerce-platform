@@ -2,10 +2,42 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** TP-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** ISO/IEC/IEEE 29119-3:2021
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                                                                      |
+| :----------------------- | :------------------------------------------------------------------------- |
+| **Document Title**       | Test Plan                                                                  |
+| **Document ID**          | TP-BUILDNEST-001                                                           |
+| **Version**              | 3.0                                                                        |
+| **Date**                 | February 11, 2026                                                          |
+| **Status**               | Baselined                                                                  |
+| **Classification**       | Internal Use                                                               |
+| **Prepared For**         | CDAC Project                                                               |
+| **Conformance Standard** | ISO/IEC/IEEE 29119-3:2021                                                  |
+| **Related Documents**    | TCS-BUILDNEST-001, TDS-BUILDNEST-001, TER-BUILDNEST-001, DBR-BUILDNEST-001 |
+
+---
+
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author       | Changes                                                                                                     | Approval    |
+| :------ | :--------- | :----------- | :---------------------------------------------------------------------------------------------------------- | :---------- |
+| 1.0     | 2026-02-10 | BuildNest QA | Initial draft — 27 TC scope                                                                                 | ✅ Approved |
+| 2.0     | 2026-02-11 | BuildNest QA | Expanded to 124 TCs, 22 categories, 12 modules; updated tools                                               | ✅ Approved |
+| 3.0     | 2026-02-11 | BuildNest QA | ISO 29119-3 compliance: added Conformance, Definitions, Responsibilities, Deliverables, Suspension criteria | ✅ Pending  |
+
+### Document Approval
+
+| Role                  | Name         | Signature  | Date         |
+| :-------------------- | :----------- | :--------- | :----------- |
+| **Test Manager**      | QA Lead      | ****\_**** | ****\_\_**** |
+| **Project Manager**   | Project Lead | ****\_**** | ****\_\_**** |
+| **Technical Lead**    | Dev Lead     | ****\_**** | ****\_\_**** |
+| **Quality Assurance** | QA Reviewer  | ****\_**** | ****\_\_**** |
 
 ---
 
@@ -32,7 +64,18 @@ This Test Plan defines the overall test strategy, scope, schedule, resource requ
 | **Notifications & Events**    | Domain event publishing, Email, Webhook delivery                           | Push notifications          |
 | **Security**                  | JWT, RBAC, Rate limiting, Input validation, XSS, SQLi, CSRF                | Pen test                    |
 
-### 1.3 Referenced Documents
+### 1.3 Normative References
+
+| Reference                     | Description                                           |
+| :---------------------------- | :---------------------------------------------------- |
+| **ISO/IEC/IEEE 29119-1:2022** | Concepts and Definitions for Software Testing         |
+| **ISO/IEC/IEEE 29119-2:2021** | Test Processes                                        |
+| **ISO/IEC/IEEE 29119-3:2021** | Test Documentation (governing standard for this plan) |
+| **ISO/IEC/IEEE 29119-4:2021** | Test Techniques                                       |
+| **ISO/IEC/IEEE 29148:2018**   | Requirements Engineering (SRS reference)              |
+| **OWASP Testing Guide v4.2**  | Security testing methodology                          |
+
+### 1.4 Related Project Documents
 
 | Document                                              | Standard   | Relationship             |
 | :---------------------------------------------------- | :--------- | :----------------------- |
@@ -40,7 +83,36 @@ This Test Plan defines the overall test strategy, scope, schedule, resource requ
 | [TCS](Test_Case_Specification_IEEE_29119.md)          | IEEE 29119 | Test case definitions    |
 | [TDS](Test_Data_Specification_IEEE_29119.md)          | IEEE 29119 | Test data sets           |
 | [TER](Test_Execution_Report_IEEE_29119.md)            | IEEE 29119 | Execution results        |
+| [DBR](Defect_Bug_Report_IEEE_29119.md)                | IEEE 29119 | Defect tracking          |
 | [RTM](Requirements_Traceability_Matrix_IEEE_29148.md) | IEEE 29148 | Requirement coverage     |
+
+### 1.5 Definitions & Abbreviations
+
+| Term / Abbr | Definition                                            |
+| :---------- | :---------------------------------------------------- |
+| **SUT**     | System Under Test — the BuildNest E-Commerce Platform |
+| **TC**      | Test Case                                             |
+| **TCS**     | Test Case Specification                               |
+| **TDS**     | Test Data Specification                               |
+| **TER**     | Test Execution Report                                 |
+| **DBR**     | Defect/Bug Report                                     |
+| **SRS**     | Software Requirements Specification                   |
+| **RTM**     | Requirements Traceability Matrix                      |
+| **JWT**     | JSON Web Token — stateless authentication mechanism   |
+| **RBAC**    | Role-Based Access Control                             |
+| **XSS**     | Cross-Site Scripting                                  |
+| **SQLi**    | SQL Injection                                         |
+| **CSRF**    | Cross-Site Request Forgery                            |
+| **E2E**     | End-to-End testing                                    |
+| **CI/CD**   | Continuous Integration / Continuous Delivery          |
+| **HPA**     | Horizontal Pod Autoscaler                             |
+| **OWASP**   | Open Web Application Security Project                 |
+| **PII**     | Personally Identifiable Information                   |
+| **SLA**     | Service Level Agreement                               |
+
+### 1.6 Conformance Statement
+
+> This document conforms to **ISO/IEC/IEEE 29119-3:2021**, _Software and Systems Engineering — Software Testing — Part 3: Test Documentation_. All mandatory ("shall") information elements defined in Clause 9 (Test Plan) of the standard have been addressed. Optional ("should"/"may") elements have been included where applicable to the BuildNest project scope.
 
 ---
 
@@ -140,9 +212,37 @@ This Test Plan defines the overall test strategy, scope, schedule, resource requ
 
 ---
 
-## 5. Entry / Exit Criteria
+## 5. Roles & Responsibilities
 
-### 5.1 Entry Criteria
+| Role                | Responsibilities                                                                       |
+| :------------------ | :------------------------------------------------------------------------------------- |
+| **Test Manager**    | Approve test plan, monitor progress, escalate risks, approve test completion           |
+| **Test Lead**       | Design test strategy, review TCS/TDS, assign test execution, produce TER               |
+| **Test Engineer**   | Execute test cases, log defects, verify fixes, maintain test data                      |
+| **Developer**       | Fix defects, provide unit tests, support integration testing, resolve S1/S2 within SLA |
+| **DevOps Engineer** | Maintain test environment, CI/CD pipeline, Docker containers, database provisioning    |
+| **Security Tester** | Execute TC-SEC test cases, validate OWASP compliance, conduct injection testing        |
+| **Product Owner**   | Validate acceptance criteria, approve release readiness, sign-off on UAT               |
+
+---
+
+## 6. Test Deliverables
+
+| Deliverable                                                                          | Owner         | Delivery Phase |
+| :----------------------------------------------------------------------------------- | :------------ | :------------- |
+| This Test Plan (TP-BUILDNEST-001)                                                    | Test Lead     | Phase 1        |
+| [Test Case Specification](Test_Case_Specification_IEEE_29119.md) (TCS-BUILDNEST-001) | Test Lead     | Phase 1        |
+| [Test Data Specification](Test_Data_Specification_IEEE_29119.md) (TDS-BUILDNEST-001) | Test Engineer | Phase 1        |
+| [Test Execution Report](Test_Execution_Report_IEEE_29119.md) (TER-BUILDNEST-001)     | Test Lead     | Phase 7        |
+| [Defect/Bug Reports](Defect_Bug_Report_IEEE_29119.md) (DBR-BUILDNEST-001)            | Test Engineer | Ongoing        |
+| Code Coverage Report (JaCoCo HTML)                                                   | CI Pipeline   | Phase 7        |
+| Release Readiness Report                                                             | Test Manager  | Phase 7        |
+
+---
+
+## 7. Entry / Exit Criteria
+
+### 7.1 Entry Criteria
 
 | Criterion                    | Measurement                                      |
 | :--------------------------- | :----------------------------------------------- |
@@ -152,7 +252,7 @@ This Test Plan defines the overall test strategy, scope, schedule, resource requ
 | All test cases reviewed      | TCS peer review sign-off                         |
 | Build compilable (no errors) | `mvn clean compile` succeeds                     |
 
-### 5.2 Exit Criteria
+### 7.2 Exit Criteria (Test Completion)
 
 | Criterion                  | Target                         | Current |
 | :------------------------- | :----------------------------- | :------ |
@@ -165,7 +265,35 @@ This Test Plan defines the overall test strategy, scope, schedule, resource requ
 
 ---
 
-## 6. Risk Analysis
+## 8. Suspension & Resumption Criteria
+
+### 8.1 Suspension Criteria
+
+Testing shall be suspended when any of the following conditions occur:
+
+| Condition                                      | Action                                                      |
+| :--------------------------------------------- | :---------------------------------------------------------- |
+| S1 defect blocks > 30% of remaining test cases | Suspend testing; escalate to development for hotfix         |
+| Test environment becomes unavailable           | Suspend testing; escalate to DevOps for restoration         |
+| Build has > 5 compilation errors               | Suspend testing; return build to development                |
+| Critical test data corruption                  | Suspend affected test suite; restore from backup or re-seed |
+| External dependency outage (Razorpay sandbox)  | Suspend affected TCs only; continue independent tests       |
+
+### 8.2 Resumption Criteria
+
+Testing shall resume when:
+
+| Condition                                 | Verification                                            |
+| :---------------------------------------- | :------------------------------------------------------ |
+| S1 defect is resolved and verified        | Re-run failed TC + regression suite for affected module |
+| Test environment is restored              | Health check passes for all infrastructure components   |
+| Build compiles and passes smoke tests     | `mvn clean test -Dtest=SmokeTest*` succeeds             |
+| Test data is restored to known-good state | Data seeding script completes without errors            |
+| External dependency is available          | Manual connectivity check + TC-CHK-001 passes           |
+
+---
+
+## 9. Risk Analysis
 
 |  #   | Risk                                           |  Impact  | Likelihood | Mitigation                                                        |
 | :--: | :--------------------------------------------- | :------: | :--------: | :---------------------------------------------------------------- |
@@ -179,9 +307,9 @@ This Test Plan defines the overall test strategy, scope, schedule, resource requ
 
 ---
 
-## 7. Defect Management
+## 10. Defect Management
 
-### 7.1 Severity Classification
+### 10.1 Severity Classification
 
 | Severity          | Description                                 | SLA (Resolution) | Example                   |
 | :---------------- | :------------------------------------------ | :--------------- | :------------------------ |
@@ -190,7 +318,7 @@ This Test Plan defines the overall test strategy, scope, schedule, resource requ
 | **S3 - Minor**    | Feature defect with workaround available    | 3 business days  | Incorrect error message   |
 | **S4 - Trivial**  | Cosmetic, typo, UI alignment                | Next sprint      | Misaligned button         |
 
-### 7.2 Defect Workflow
+### 10.2 Defect Workflow
 
 ```
 NEW → ASSIGNED → IN PROGRESS → FIXED → VERIFIED → CLOSED
@@ -201,13 +329,6 @@ NEW → ASSIGNED → IN PROGRESS → FIXED → VERIFIED → CLOSED
 
 ---
 
-## 8. Revision History
-
-| Version | Date       | Author       | Changes                                                                                                       |
-| :------ | :--------- | :----------- | :------------------------------------------------------------------------------------------------------------ |
-| 1.0     | 2026-02-10 | BuildNest QA | Initial draft — 27 TC scope                                                                                   |
-| 2.0     | 2026-02-11 | BuildNest QA | Expanded to 124 TCs, 22 categories, 12 modules; updated tools (MockMvc, not RestAssured); added risk analysis |
-
----
-
 **— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC/IEEE 29119-3:2021 for the BuildNest E-Commerce Platform._

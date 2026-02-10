@@ -2,14 +2,74 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** DBR-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** ISO/IEC/IEEE 29119:2021
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                                                   |
+| :----------------------- | :------------------------------------------------------ |
+| **Document Title**       | Defect / Bug Report                                     |
+| **Document ID**          | DBR-BUILDNEST-001                                       |
+| **Version**              | 3.0                                                     |
+| **Date**                 | February 11, 2026                                       |
+| **Status**               | Baselined                                               |
+| **Classification**       | Internal Use                                            |
+| **Conformance Standard** | ISO/IEC/IEEE 29119-3:2021                               |
+| **Parent Document**      | [Test Plan (TP-BUILDNEST-001)](Test_Plan_IEEE_29119.md) |
 
 ---
 
-## 1. Defect Dashboard
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author       | Changes                                                                                     | Approval    |
+| :------ | :--------- | :----------- | :------------------------------------------------------------------------------------------ | :---------- |
+| 1.0     | 2026-02-10 | BuildNest QA | Initial — 5 defects                                                                         | ✅ Approved |
+| 2.0     | 2026-02-11 | BuildNest QA | Updated with TC cross-references to 124 test suite; added code fix recommendations          | ✅ Approved |
+| 3.0     | 2026-02-11 | BuildNest QA | ISO 29119-3 compliance: added Doc Control, Definitions, Conformance, Environment, Lifecycle | ✅ Pending  |
+
+### Document Approval
+
+| Role             | Name         | Signature      | Date             |
+| :--------------- | :----------- | :------------- | :--------------- |
+| **Test Lead**    | QA Lead      | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Test Manager** | Test Manager | \***\*\_\*\*** | \***\*\_\_\*\*** |
+
+---
+
+## 1. Introduction
+
+### 1.1 Scope
+
+This Defect/Bug Report documents all defects identified during the test execution cycle for the BuildNest E-Commerce Platform. It covers defects found across all 22 test categories and 12 functional modules, with full traceability to the [Test Case Specification](Test_Case_Specification_IEEE_29119.md) and [SRS](SRS_IEEE_29148_2018.md).
+
+### 1.2 Normative References
+
+| Reference                                    | Description                             |
+| :------------------------------------------- | :-------------------------------------- |
+| **ISO/IEC/IEEE 29119-3:2021**                | Test Documentation (governing standard) |
+| [Test Plan](Test_Plan_IEEE_29119.md)         | Defect management process               |
+| [TCS](Test_Case_Specification_IEEE_29119.md) | Failing test cases                      |
+| [TER](Test_Execution_Report_IEEE_29119.md)   | Execution context                       |
+
+### 1.3 Definitions & Abbreviations
+
+| Term / Abbr | Definition                                                           |
+| :---------- | :------------------------------------------------------------------- |
+| **DEF**     | Defect identifier prefix                                             |
+| **S1–S4**   | Severity levels: S1 = Critical, S2 = Major, S3 = Minor, S4 = Trivial |
+| **P1–P4**   | Priority levels: P1 = Fix immediately, P2 = Fix for release          |
+| **XSS**     | Cross-Site Scripting                                                 |
+| **SLA**     | Service Level Agreement (per severity level)                         |
+
+### 1.4 Conformance Statement
+
+> This document conforms to **ISO/IEC/IEEE 29119-3:2021**, _Software and Systems Engineering — Software Testing — Part 3: Test Documentation_. All mandatory ("shall") information elements defined in Clause 13 (Test Incident/Defect Report) have been addressed, including: unique identifier, summary, severity, priority, status, environment, reproduction steps, and lifecycle dates.
+
+---
+
+## 2. Defect Dashboard
 
 | Metric                     | Value                             |
 | :------------------------- | :-------------------------------- |
@@ -263,11 +323,10 @@ public BigDecimal getCartTotal(Long userId) {
 
 ## 5. Revision History
 
-| Version | Date       | Author       | Changes                                                                            |
-| :------ | :--------- | :----------- | :--------------------------------------------------------------------------------- |
-| 1.0     | 2026-02-10 | BuildNest QA | Initial — 5 defects                                                                |
-| 2.0     | 2026-02-11 | BuildNest QA | Updated with TC cross-references to 124 test suite; added code fix recommendations |
+See [Document Control](#document-control) for full revision history and approvals.
 
 ---
 
 **— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC/IEEE 29119-3:2021 for the BuildNest E-Commerce Platform._

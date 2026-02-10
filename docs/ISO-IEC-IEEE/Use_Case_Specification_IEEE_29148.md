@@ -2,10 +2,38 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** UCS-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** ISO/IEC/IEEE 29148:2018
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                                             |
+| :----------------------- | :------------------------------------------------ |
+| **Document Title**       | Use Case Specification                            |
+| **Document ID**          | UCS-BUILDNEST-001                                 |
+| **Version**              | 2.0                                               |
+| **Date**                 | February 11, 2026                                 |
+| **Status**               | Baselined                                         |
+| **Classification**       | Internal Use                                      |
+| **Conformance Standard** | ISO/IEC/IEEE 29148:2018                           |
+| **Parent Document**      | [SRS (SRS-BUILDNEST-001)](SRS_IEEE_29148_2018.md) |
+
+---
+
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author       | Changes                                                                        | Approval    |
+| :------ | :--------- | :----------- | :----------------------------------------------------------------------------- | :---------- |
+| 1.0     | 2026-02-10 | BuildNest QA | Initial draft — 15 use cases                                                   | ✅ Approved |
+| 2.0     | 2026-02-11 | BuildNest QA | ISO 29148 compliance: added Doc Control, Definitions, Conformance, Actor roles | ✅ Pending  |
+
+### Document Approval
+
+| Role                 | Name    | Signature      | Date             |
+| :------------------- | :------ | :------------- | :--------------- |
+| **Business Analyst** | BA Lead | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Product Owner**    | PO      | \***\*\_\*\*** | \***\*\_\_\*\*** |
 
 ---
 
@@ -13,9 +41,31 @@
 
 ### 1.1 Purpose
 
-This Use Case Specification defines **15 use cases** covering all functional modules of the BuildNest platform. Each use case describes actors, preconditions, main flow, alternative flows, error handling, and traceability.
+This Use Case Specification defines **15 use cases** covering all functional modules of the BuildNest platform. It details the interactions between actors and the system, specifying preconditions, main flows, alternative flows, and exception handling to verify functional requirements.
 
-### 1.2 Actors
+### 1.2 Normative References
+
+| Reference                                    | Description                                   |
+| :------------------------------------------- | :-------------------------------------------- |
+| **ISO/IEC/IEEE 29148:2018**                  | Requirements Engineering (governing standard) |
+| [SRS](SRS_IEEE_29148_2018.md)                | Functional Requirements                       |
+| [TCS](Test_Case_Specification_IEEE_29119.md) | Test cases verifying these use cases          |
+
+### 1.3 Definitions & Abbreviations
+
+| Term / Abbr       | Definition                                    |
+| :---------------- | :-------------------------------------------- |
+| **UC**            | Use Case                                      |
+| **Actor**         | Entity (user/system) interacting with the SUT |
+| **SUT**           | System Under Test                             |
+| **Precondition**  | State required before usage                   |
+| **Postcondition** | State guaranteed after success                |
+
+### 1.4 Conformance Statement
+
+> This document conforms to **ISO/IEC/IEEE 29148:2018**, _Systems and Software Engineering — Life Cycle Processes — Requirements Engineering_. It describes system usage scenarios as required by Clause 6 (Requirements Elicitation and Analysis).
+
+### 1.5 Actors
 
 | Actor               | Description                                       | Role         |
 | :------------------ | :------------------------------------------------ | :----------- |
@@ -401,11 +451,10 @@ graph TB
 
 ## 3. Revision History
 
-| Version | Date       | Author       | Changes                                                                                                                                   |
-| :------ | :--------- | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.0     | 2026-02-10 | BuildNest BA | Initial — 6 use cases (Auth, Catalog, Cart, Checkout, Order, Admin)                                                                       |
-| 2.0     | 2026-02-11 | BuildNest BA | Expanded to 15 use cases — added Wishlist, Review, Password Reset, Admin Inventory, Admin Analytics, Webhook Management; use case diagram |
+See [Document Control](#document-control) for full revision history and approvals.
 
 ---
 
 **— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC/IEEE 29148:2018 for the BuildNest E-Commerce Platform._

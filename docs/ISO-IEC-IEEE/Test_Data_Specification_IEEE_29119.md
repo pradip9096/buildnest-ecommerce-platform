@@ -2,10 +2,39 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** TDS-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** ISO/IEC/IEEE 29119-3:2021
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                                                   |
+| :----------------------- | :------------------------------------------------------ |
+| **Document Title**       | Test Data Specification                                 |
+| **Document ID**          | TDS-BUILDNEST-001                                       |
+| **Version**              | 3.0                                                     |
+| **Date**                 | February 11, 2026                                       |
+| **Status**               | Baselined                                               |
+| **Classification**       | Internal Use                                            |
+| **Conformance Standard** | ISO/IEC/IEEE 29119-3:2021                               |
+| **Parent Document**      | [Test Plan (TP-BUILDNEST-001)](Test_Plan_IEEE_29119.md) |
+
+---
+
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author       | Changes                                                                                                             | Approval    |
+| :------ | :--------- | :----------- | :------------------------------------------------------------------------------------------------------------------ | :---------- |
+| 1.0     | 2026-02-10 | BuildNest QA | Initial — Auth, Product, Cart data                                                                                  | ✅ Approved |
+| 2.0     | 2026-02-11 | BuildNest QA | Added Wishlist, Review, Admin, Security payloads, boundary values, performance/stress data; 124 TC cross-references | ✅ Approved |
+| 3.0     | 2026-02-11 | BuildNest QA | ISO 29119-3 compliance: added Doc Control, Definitions, Conformance, Data Privacy, Data Lifecycle                   | ✅ Pending  |
+
+### Document Approval
+
+| Role             | Name         | Signature      | Date             |
+| :--------------- | :----------- | :------------- | :--------------- |
+| **Test Lead**    | QA Lead      | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Test Manager** | Test Manager | \***\*\_\*\*** | \***\*\_\_\*\*** |
 
 ---
 
@@ -15,7 +44,60 @@
 
 This document specifies all test data sets required to execute the **124 test cases** defined in the [Test Case Specification](Test_Case_Specification_IEEE_29119.md). It provides valid, invalid, and boundary data for every functional module.
 
-### 1.2 Data Categories
+### 1.2 Scope
+
+This TDS provides test data for all 22 test categories defined in the [Test Plan](Test_Plan_IEEE_29119.md). Data covers positive, negative, and boundary scenarios for functional, security, performance, and stress testing.
+
+### 1.3 Normative References
+
+| Reference                                    | Description                             |
+| :------------------------------------------- | :-------------------------------------- |
+| **ISO/IEC/IEEE 29119-3:2021**                | Test Documentation (governing standard) |
+| [Test Plan](Test_Plan_IEEE_29119.md)         | Parent test plan                        |
+| [TCS](Test_Case_Specification_IEEE_29119.md) | Test cases consuming this data          |
+| [SRS](SRS_IEEE_29148_2018.md)                | Requirements                            |
+
+### 1.4 Definitions & Abbreviations
+
+| Term / Abbr | Definition                                     |
+| :---------- | :--------------------------------------------- |
+| **TD**      | Test Data (prefix for data set IDs)            |
+| **PII**     | Personally Identifiable Information            |
+| **BCrypt**  | Password hashing algorithm used by the SUT     |
+| **JWT**     | JSON Web Token                                 |
+| **RBAC**    | Role-Based Access Control                      |
+| **SKU**     | Stock Keeping Unit — unique product identifier |
+| **XSS**     | Cross-Site Scripting                           |
+| **SQLi**    | SQL Injection                                  |
+
+### 1.5 Conformance Statement
+
+> This document conforms to **ISO/IEC/IEEE 29119-3:2021**, _Software and Systems Engineering — Software Testing — Part 3: Test Documentation_. All mandatory ("shall") information elements defined in Clause 11 (Test Data Specification) have been addressed.
+
+### 1.6 Data Privacy & Protection
+
+> [!IMPORTANT]
+> All test data containing PII (usernames, emails, passwords, addresses, phone numbers) in this document is **synthetic** and generated solely for testing purposes. No real customer data is used in any test environment.
+
+| Concern                 | Control                                                                |
+| :---------------------- | :--------------------------------------------------------------------- |
+| **Password Storage**    | All test passwords are hashed with BCrypt before database insertion    |
+| **Email Addresses**     | Use `@buildnest-test.example` domain — no real mailboxes               |
+| **Payment Credentials** | Razorpay test mode keys only (`key_test_*`)                            |
+| **Data Retention**      | Test data purged at end of each test run via `@Transactional` rollback |
+| **Access Control**      | Test database only accessible from CI/CD pipeline and dev machines     |
+
+### 1.7 Data Lifecycle
+
+| Phase           | Action                                        | Mechanism                                    |
+| :-------------- | :-------------------------------------------- | :------------------------------------------- |
+| **Creation**    | Seed data before test suite execution         | Liquibase changelogs + `@BeforeEach` methods |
+| **Usage**       | Consumed by test cases during execution       | Injected via test fixtures                   |
+| **Isolation**   | Each test runs in isolation                   | `@Transactional` with auto-rollback          |
+| **Destruction** | Cleaned up after test run                     | Transaction rollback / `@DirtiesContext`     |
+| **Refresh**     | Regenerated for each CI/CD pipeline execution | Fresh H2 database per run                    |
+
+### 1.8 Data Categories
 
 | Category                      | Sections    |
 | :---------------------------- | :---------- |
@@ -228,11 +310,10 @@ public class TestDataFactory {
 
 ## 5. Revision History
 
-| Version | Date       | Author       | Changes                                                                                                             |
-| :------ | :--------- | :----------- | :------------------------------------------------------------------------------------------------------------------ |
-| 1.0     | 2026-02-10 | BuildNest QA | Initial — Auth, Product, Cart data                                                                                  |
-| 2.0     | 2026-02-11 | BuildNest QA | Added Wishlist, Review, Admin, Security payloads, boundary values, performance/stress data; 124 TC cross-references |
+See [Document Control](#document-control) for full revision history and approvals.
 
 ---
 
 **— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC/IEEE 29119-3:2021 for the BuildNest E-Commerce Platform._

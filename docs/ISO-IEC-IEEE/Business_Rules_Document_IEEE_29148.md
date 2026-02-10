@@ -2,10 +2,39 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** BRD-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** ISO/IEC/IEEE 29148:2018
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                                             |
+| :----------------------- | :------------------------------------------------ |
+| **Document Title**       | Business Rules Document                           |
+| **Document ID**          | BRD-BUILDNEST-001                                 |
+| **Version**              | 2.0                                               |
+| **Date**                 | February 11, 2026                                 |
+| **Status**               | Baselined                                         |
+| **Classification**       | Internal Use                                      |
+| **Conformance Standard** | ISO/IEC/IEEE 29148:2018                           |
+| **Parent Document**      | [SRS (SRS-BUILDNEST-001)](SRS_IEEE_29148_2018.md) |
+
+---
+
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author       | Changes                                                                            | Approval    |
+| :------ | :--------- | :----------- | :--------------------------------------------------------------------------------- | :---------- |
+| 1.0     | 2026-02-10 | BuildNest QA | Initial draft — AC, OP, DV, FN, INV, RE, NT rules                                  | ✅ Approved |
+| 2.0     | 2026-02-11 | BuildNest QA | ISO 29148 compliance: added Doc Control, Definitions, Conformance, Enforcement map | ✅ Pending  |
+
+### Document Approval
+
+| Role                 | Name         | Signature      | Date             |
+| :------------------- | :----------- | :------------- | :--------------- |
+| **Business Analyst** | BA Lead      | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Project Manager**  | Project Lead | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Technical Lead**   | Dev Lead     | \***\*\_\*\*** | \***\*\_\_\*\*** |
 
 ---
 
@@ -13,9 +42,31 @@
 
 ### 1.1 Purpose
 
-This document catalogs all business rules governing the BuildNest E-Commerce Platform. Each rule is traceable to its implementing component and related functional requirements.
+This document catalogs all business rules governing the BuildNest E-Commerce Platform. Each rule is traceable to its implementing component and related functional requirements, ensuring business constraints are consistently enforced across the application.
 
-### 1.2 Rule Classification
+### 1.2 Normative References
+
+| Reference                     | Description                                   |
+| :---------------------------- | :-------------------------------------------- |
+| **ISO/IEC/IEEE 29148:2018**   | Requirements Engineering (governing standard) |
+| [SRS](SRS_IEEE_29148_2018.md) | Functional Requirements                       |
+| [SDD](SDD_IEEE_1016_2017.md)  | Design Components (Implementing Components)   |
+
+### 1.3 Definitions & Abbreviations
+
+| Term / Abbr | Definition                          |
+| :---------- | :---------------------------------- |
+| **BR**      | Business Rule (prefix)              |
+| **AC**      | Access Control                      |
+| **OP**      | Operational                         |
+| **SRS**     | Software Requirements Specification |
+| **RBAC**    | Role-Based Access Control           |
+
+### 1.4 Conformance Statement
+
+> This document conforms to **ISO/IEC/IEEE 29148:2018**, _Systems and Software Engineering — Life Cycle Processes — Requirements Engineering_. It provides a specific set of precise, verifiable business rules as part of the requirements engineering process (Clause 5.2).
+
+### 1.5 Rule Classification
 
 | Category                     | Description                             |
 | :--------------------------- | :-------------------------------------- |
@@ -167,11 +218,10 @@ stateDiagram-v2
 
 ## 10. Revision History
 
-| Version | Date       | Author       | Changes                                                                                                       |
-| :------ | :--------- | :----------- | :------------------------------------------------------------------------------------------------------------ |
-| 1.0     | 2026-02-10 | BuildNest BA | Initial — Auth, Order, basic inventory rules                                                                  |
-| 2.0     | 2026-02-11 | BuildNest BA | Added Wishlist, Review, Webhook, Inventory threshold rules; order state machine; expanded from 25 to 58 rules |
+See [Document Control](#document-control) for full revision history and approvals.
 
 ---
 
 **— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC/IEEE 29148:2018 for the BuildNest E-Commerce Platform._

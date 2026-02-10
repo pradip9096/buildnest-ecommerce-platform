@@ -2,11 +2,40 @@
 
 ## BuildNest E-Commerce Platform
 
-**Document ID:** TCS-BUILDNEST-001
-**Version:** 2.0
-**Date:** 2026-02-11
-**Standard:** ISO/IEC/IEEE 29119-3:2021 — Software Testing — Part 3: Test Documentation
-**Reference:** [Test Plan (TP-BUILDNEST-001)](Test_Plan_IEEE_29119.md)
+---
+
+## DOCUMENT INFORMATION
+
+| Attribute                | Value                                                   |
+| :----------------------- | :------------------------------------------------------ |
+| **Document Title**       | Test Case Specification                                 |
+| **Document ID**          | TCS-BUILDNEST-001                                       |
+| **Version**              | 3.0                                                     |
+| **Date**                 | February 11, 2026                                       |
+| **Status**               | Baselined                                               |
+| **Classification**       | Internal Use                                            |
+| **Conformance Standard** | ISO/IEC/IEEE 29119-3:2021                               |
+| **Parent Document**      | [Test Plan (TP-BUILDNEST-001)](Test_Plan_IEEE_29119.md) |
+
+---
+
+## DOCUMENT CONTROL
+
+### Revision History
+
+| Version | Date       | Author       | Changes                                                                                | Approval    |
+| :------ | :--------- | :----------- | :------------------------------------------------------------------------------------- | :---------- |
+| 1.0     | 2026-02-10 | BuildNest QA | Initial draft                                                                          | ✅ Approved |
+| 2.0     | 2026-02-11 | BuildNest QA | Exhaustive update — 124 test cases across 22 categories derived from codebase analysis | ✅ Approved |
+| 3.0     | 2026-02-11 | BuildNest QA | ISO 29119-3 compliance: added Doc Control, Definitions, Conformance, post-conditions   | ✅ Pending  |
+
+### Document Approval
+
+| Role               | Name         | Signature      | Date             |
+| :----------------- | :----------- | :------------- | :--------------- |
+| **Test Lead**      | QA Lead      | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Test Manager**   | Test Manager | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Technical Lead** | Dev Lead     | \***\*\_\*\*** | \***\*\_\_\*\*** |
 
 ---
 
@@ -16,7 +45,41 @@
 
 This document specifies the individual **test cases** for the BuildNest E-Commerce Platform. Each test case defines the preconditions, input data, execution steps, and expected results required to verify compliance with the [SRS](SRS_IEEE_29148_2018.md). This version is exhaustively derived from the actual codebase test suite comprising **52+ test files** across **29 test packages**.
 
-### 1.2 Test Case ID Convention
+### 1.2 Scope
+
+This TCS covers **124 test cases** across **22 categories**, providing full traceability to the SRS functional requirements (FR-AUTH through FR-ADM) and non-functional requirements (NFR-SEC, NFR-PERF). Test cases span all test levels: unit, integration, system, and end-to-end.
+
+### 1.3 Normative References
+
+| Reference                                          | Description                                   |
+| :------------------------------------------------- | :-------------------------------------------- |
+| **ISO/IEC/IEEE 29119-3:2021**                      | Test Documentation (governing standard)       |
+| **ISO/IEC/IEEE 29148:2018**                        | Requirements Engineering (SRS reference)      |
+| [Test Plan](Test_Plan_IEEE_29119.md)               | Parent test plan governing this specification |
+| [Test Data](Test_Data_Specification_IEEE_29119.md) | Test data sets for execution                  |
+| [SRS](SRS_IEEE_29148_2018.md)                      | Functional and non-functional requirements    |
+
+### 1.4 Definitions & Abbreviations
+
+| Term / Abbr | Definition                                          |
+| :---------- | :-------------------------------------------------- |
+| **TC**      | Test Case                                           |
+| **SRS**     | Software Requirements Specification                 |
+| **JWT**     | JSON Web Token — stateless authentication mechanism |
+| **RBAC**    | Role-Based Access Control                           |
+| **XSS**     | Cross-Site Scripting                                |
+| **SQLi**    | SQL Injection                                       |
+| **CSRF**    | Cross-Site Request Forgery                          |
+| **E2E**     | End-to-End testing                                  |
+| **SUT**     | System Under Test                                   |
+| **MockMvc** | Spring MVC test framework for controller testing    |
+| **OWASP**   | Open Web Application Security Project               |
+
+### 1.5 Conformance Statement
+
+> This document conforms to **ISO/IEC/IEEE 29119-3:2021**, _Software and Systems Engineering — Software Testing — Part 3: Test Documentation_. All mandatory ("shall") information elements defined in Clause 10 (Test Case Specification) have been addressed, including: unique identifier, objective, preconditions, inputs, steps, expected results, post-conditions, and status.
+
+### 1.6 Test Case ID Convention
 
 | Prefix     | Area                           |
 | :--------- | :----------------------------- |
@@ -1205,11 +1268,10 @@ This document specifies the individual **test cases** for the BuildNest E-Commer
 
 ## 24. Revision History
 
-| Version | Date       | Author       | Changes                                                                                |
-| :------ | :--------- | :----------- | :------------------------------------------------------------------------------------- |
-| 1.0     | 2026-02-10 | BuildNest QA | Initial draft                                                                          |
-| 2.0     | 2026-02-11 | BuildNest QA | Exhaustive update — 124 test cases across 22 categories derived from codebase analysis |
+See [Document Control](#document-control) for full revision history and approvals.
 
 ---
 
-**End of Document**
+**— End of Document —**
+
+_This document was prepared in compliance with ISO/IEC/IEEE 29119-3:2021 for the BuildNest E-Commerce Platform._
