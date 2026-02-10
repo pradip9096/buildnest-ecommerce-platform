@@ -3,8 +3,8 @@
 ## BuildNest E-Commerce Platform
 
 **Document ID:** ICD-BUILDNEST-001
-**Version:** 1.0
-**Date:** 2026-02-10
+**Version:** 2.0
+**Date:** 2026-02-11
 **Standard:** Aligned with ISO/IEC/IEEE 42010:2022 principles
 
 ---
@@ -13,147 +13,222 @@
 
 ### 1.1 Purpose
 
-The purpose of this Interface Control Document (ICD) is to formally define and catalog **every interface boundary** within the BuildNest platform. It specifies the protocol, data format, authentication mechanism, and error handling for each interface, serving as the definitive contract between communicating components.
+This Interface Control Document (ICD) defines every interface in the BuildNest platform — **internal** (module-to-module), **external** (third-party), **infrastructure** (data stores), and **event-based** (async domain events). Each interface is specified with its protocol, data format, error handling, and owning module.
 
 ### 1.2 Scope
 
-This document covers three categories of interfaces:
-
-1.  **Internal Interfaces:** Module-to-module communication within the monolith.
-2.  **External Interfaces:** Integrations with third-party services (Razorpay, SMTP).
-3.  **Infrastructure Interfaces:** Connections to data stores (MySQL, Redis, Elasticsearch).
+- **10 Internal Interfaces** (module-to-module method calls)
+- **6 Domain Event Interfaces** (async event-driven)
+- **4 External Interfaces** (Razorpay, SMTP, Webhook, Frontend)
+- **4 Infrastructure Interfaces** (MySQL, Redis, Elasticsearch, Actuator)
 
 ---
 
 ## 2. Interface Catalog
 
-Master registry of all system interfaces.
-
-| ID            | Interface Name                | Type           | Protocol           | Source        | Destination       | Auth                    |
-| :------------ | :---------------------------- | :------------- | :----------------- | :------------ | :---------------- | :---------------------- |
-| **IF-INT-01** | Auth Token Validation         | Internal       | Method Call        | Any Module    | Auth Service      | N/A (Internal)          |
-| **IF-INT-02** | Cart-to-Checkout Handoff      | Internal       | Method Call        | Cart Service  | Order Service     | N/A (Internal)          |
-| **IF-INT-03** | Order-to-Inventory Deduction  | Internal       | Method Call        | Order Service | Inventory Service | N/A (Internal)          |
-| **IF-INT-04** | Event Publishing              | Internal       | Spring Event Bus   | Order Service | Event Listeners   | N/A (Internal)          |
-| **IF-EXT-01** | Razorpay Order Creation       | External       | HTTPS/REST         | Backend API   | Razorpay API      | API Key + Secret        |
-| **IF-EXT-02** | Razorpay Payment Verification | External       | HTTPS/REST         | Backend API   | Razorpay API      | Signature (HMAC-SHA256) |
-| **IF-EXT-03** | Razorpay Webhook              | External       | HTTPS/POST         | Razorpay      | Backend API       | Webhook Secret          |
-| **IF-EXT-04** | Email Notification            | External       | SMTP/TLS           | Backend API   | SMTP Server       | Username + Password     |
-| **IF-INF-01** | MySQL Database                | Infrastructure | JDBC/TCP           | Backend API   | MySQL Server      | Username + Password     |
-| **IF-INF-02** | Redis Cache                   | Infrastructure | Redis Protocol/TCP | Backend API   | Redis Server      | Password (optional)     |
-| **IF-INF-03** | Elasticsearch                 | Infrastructure | HTTPS/REST         | Backend API   | ES Cluster        | API Key / Basic Auth    |
-| **IF-INF-04** | Frontend-to-Backend API       | Infrastructure | HTTPS/REST         | React SPA     | Backend API       | JWT Bearer Token        |
+| ID            | Interface Name                | Type           | Protocol           | Consumer               | Provider                | Auth                |
+| :------------ | :---------------------------- | :------------- | :----------------- | :--------------------- | :---------------------- | :------------------ |
+| **IF-INT-01** | Auth Token Validation         | Internal       | Method Call        | All Modules            | Auth Service            | N/A (Internal)      |
+| **IF-INT-02** | Cart-to-Checkout Handoff      | Internal       | Method Call        | Checkout Service       | Cart Service            | N/A                 |
+| **IF-INT-03** | Stock Reservation & Deduction | Internal       | Method Call        | Checkout Service       | Inventory Service       | N/A                 |
+| **IF-INT-04** | Wishlist Management           | Internal       | Method Call        | Wishlist Controller    | Wishlist Service        | JWT                 |
+| **IF-INT-05** | Review Submission             | Internal       | Method Call        | Review Controller      | Review Service          | JWT                 |
+| **IF-INT-06** | Admin User Management         | Internal       | Method Call        | Admin Controller       | Admin Service           | ROLE_ADMIN          |
+| **IF-INT-07** | Notification Dispatch         | Internal       | Method Call        | Event Listener         | Notification Service    | N/A                 |
+| **IF-INT-08** | Audit Logging (AOP)           | Internal       | AOP Aspect         | All @Auditable methods | Audit Service           | N/A                 |
+| **IF-INT-09** | Rate Limiting                 | Internal       | Servlet Filter     | All Requests           | RateLimiter Service     | N/A                 |
+| **IF-INT-10** | Performance Monitoring        | Internal       | Method Call        | Monitoring Controller  | Perf Monitoring Service | ROLE_ADMIN          |
+| **IF-EVT-01** | OrderPlacedEvent              | Event          | Spring Events      | Event Listener         | Checkout Service        | N/A                 |
+| **IF-EVT-02** | PaymentSuccessfulEvent        | Event          | Spring Events      | Event Listener         | Payment Service         | N/A                 |
+| **IF-EVT-03** | PaymentFailedEvent            | Event          | Spring Events      | Event Listener         | Payment Service         | N/A                 |
+| **IF-EVT-04** | LowStockWarningEvent          | Event          | Spring Events      | Event Listener         | Inventory Service       | N/A                 |
+| **IF-EVT-05** | UserRegisteredEvent           | Event          | Spring Events      | Event Listener         | Auth Service            | N/A                 |
+| **IF-EVT-06** | OrderStatusChangedEvent       | Event          | Spring Events      | Event Listener         | Order Service           | N/A                 |
+| **IF-EXT-01** | Razorpay Order Creation       | External       | HTTPS/REST         | Backend API            | Razorpay                | API Key             |
+| **IF-EXT-02** | Razorpay Payment Verification | External       | HTTPS/REST         | Backend API            | Razorpay                | API Key + HMAC      |
+| **IF-EXT-03** | Webhook Event Delivery        | External       | HTTPS/POST         | External Systems       | Webhook Service         | HMAC Signature      |
+| **IF-EXT-04** | Email Notification (SMTP)     | External       | SMTP/TLS           | Backend API            | Email Provider          | Username + Password |
+| **IF-INF-01** | MySQL Database                | Infrastructure | JDBC/TCP           | Backend API            | MySQL Server            | Username + Password |
+| **IF-INF-02** | Redis Cache                   | Infrastructure | Redis Protocol/TCP | Backend API            | Redis Server            | Password            |
+| **IF-INF-03** | Elasticsearch                 | Infrastructure | REST/HTTP          | Backend API            | ES Cluster              | Username + Password |
+| **IF-INF-04** | Frontend REST API             | Infrastructure | HTTPS/REST         | React SPA              | Backend API             | JWT Bearer          |
 
 ---
 
-## 3. Internal Interfaces
+## 3. Internal Interface Specifications
 
 ### 3.1 IF-INT-01: Auth Token Validation
 
-All secured endpoints depend on the Auth module for identity verification.
-
-| Attribute          | Value                                                               |
-| :----------------- | :------------------------------------------------------------------ |
-| **Caller**         | `JwtAuthenticationFilter` (intercepts every request)                |
-| **Provider**       | `JwtTokenProvider.validateToken(String token)`                      |
-| **Input**          | JWT Access Token (from `Authorization: Bearer <token>` header)      |
-| **Output**         | `UserDetails` object (username, roles) or `AuthenticationException` |
-| **Error Handling** | Returns HTTP `401 Unauthorized` with JSON error body                |
+| Attribute          | Value                                                                 |
+| :----------------- | :-------------------------------------------------------------------- |
+| **Mechanism**      | `JwtAuthenticationFilter` → `JwtProvider.validateToken(String token)` |
+| **Input**          | JWT access token from `Authorization: Bearer <token>` header          |
+| **Output**         | `Authentication` object set in `SecurityContextHolder`                |
+| **Error Handling** | Returns HTTP `401 Unauthorized` via `JwtAuthenticationEntryPoint`     |
+| **Concurrency**    | Stateless — each request independently validated                      |
 
 ### 3.2 IF-INT-02: Cart-to-Checkout Handoff
 
-When a user initiates checkout, the Cart module provides the current cart state to the Order module.
+| Attribute          | Value                                                         |
+| :----------------- | :------------------------------------------------------------ |
+| **Consumer**       | `CheckoutService.processCheckout()`                           |
+| **Provider**       | `CartService.getCart(Long userId)`                            |
+| **Input**          | User ID                                                       |
+| **Output**         | `Cart` object with `CartItem` list (product, quantity, price) |
+| **Error Handling** | Throws `CartEmptyException` if cart has no items              |
 
-| Attribute          | Value                                                                       |
-| :----------------- | :-------------------------------------------------------------------------- |
-| **Caller**         | `OrderService.placeOrder()`                                                 |
-| **Provider**       | `CartService.getCartByUser(Long userId)`                                    |
-| **Input**          | Authenticated User ID                                                       |
-| **Output**         | `CartDTO` containing list of `CartItemDTO` (productId, quantity, unitPrice) |
-| **Error Handling** | Throws `CartEmptyException` if cart has no items                            |
+### 3.3 IF-INT-03: Stock Reservation & Deduction
 
-### 3.3 IF-INT-03: Order-to-Inventory Deduction
+| Attribute       | Value                                                                                                   |
+| :-------------- | :------------------------------------------------------------------------------------------------------ |
+| **Provider**    | `InventoryService.reserve()`, `InventoryService.deductStock()`, `InventoryService.releaseReservation()` |
+| **Input**       | Product ID, Quantity                                                                                    |
+| **Output**      | `void` (success) or `InsufficientStockException` / `OutOfStockException`                                |
+| **Concurrency** | Uses `@Version` optimistic locking — `SELECT ... FOR UPDATE` semantics                                  |
+| **Rollback**    | `releaseReservation()` called on checkout failure                                                       |
 
-After successful payment, the Order module instructs Inventory to deduct stock.
+### 3.4 IF-INT-04: Wishlist Management
 
-| Attribute       | Value                                                        |
-| :-------------- | :----------------------------------------------------------- |
-| **Caller**      | `OrderService.confirmOrder()`                                |
-| **Provider**    | `InventoryService.deductStock(Long productId, int quantity)` |
-| **Input**       | Product ID, Quantity to deduct                               |
-| **Output**      | `void` (success) or `OutOfStockException`                    |
-| **Concurrency** | Uses `SELECT ... FOR UPDATE` row-level locking               |
+| Attribute       | Value                                                                                                     |
+| :-------------- | :-------------------------------------------------------------------------------------------------------- |
+| **Provider**    | `WishlistService`                                                                                         |
+| **Operations**  | `addToWishlist`, `removeFromWishlist`, `getWishlist`, `isInWishlist`, `clearWishlist`, `getWishlistCount` |
+| **Input**       | Product ID + authenticated `UserDetails`                                                                  |
+| **Output**      | Wishlist state or boolean/count                                                                           |
+| **Constraints** | One wishlist per user (`user_id` UNIQUE), M:N with products via `wishlist_products`                       |
 
-### 3.4 IF-INT-04: Async Event Publishing
+### 3.5 IF-INT-05: Review Submission
 
-Decoupled notification of domain events.
+| Attribute      | Value                                                                                           |
+| :------------- | :---------------------------------------------------------------------------------------------- |
+| **Provider**   | `ProductReviewService`                                                                          |
+| **Operations** | `submitReview`, `getReviews`, `getRatingSummary`, `markHelpful`, `updateReview`, `deleteReview` |
+| **Input**      | Product ID, `ReviewDTO` (rating 1-5, comment ≤2000 chars)                                       |
+| **Output**     | `ProductReview` entity or summary statistics                                                    |
+| **Validation** | `@Min(1) @Max(5)` rating, `@Size(max=2000)` comment, `verifiedPurchase` auto-set                |
 
-| Attribute       | Value                                                                |
-| :-------------- | :------------------------------------------------------------------- |
-| **Publisher**   | `OrderService` (via `ApplicationEventPublisher`)                     |
-| **Subscribers** | `InventoryEventListener`, `NotificationEventListener`                |
-| **Event Types** | `OrderCreatedEvent`, `PaymentConfirmedEvent`, `LowStockWarningEvent` |
-| **Delivery**    | In-process, Async (`@Async` thread pool)                             |
+### 3.6 IF-INT-08: Audit Logging (AOP)
+
+| Attribute       | Value                                                                         |
+| :-------------- | :---------------------------------------------------------------------------- |
+| **Mechanism**   | `AuditAspect` intercepts methods annotated with `@Auditable`                  |
+| **Captures**    | User ID, action type, entity type, entity ID, timestamp, IP address           |
+| **Storage**     | `AuditLogService` → MySQL `audit_log` table + `ElasticsearchIngestionService` |
+| **Performance** | Async processing to avoid latency impact on business methods                  |
 
 ---
 
-## 4. External Interfaces
+## 4. Domain Event Interface Specifications
 
-### 4.1 IF-EXT-01: Razorpay Order Creation
+### 4.1 Event Architecture
 
 ```mermaid
-sequenceDiagram
-    participant Backend as BuildNest API
-    participant RZP as Razorpay API
+graph LR
+    subgraph "Publishers"
+        CS[CheckoutService]
+        PS[PaymentService]
+        IS[InventoryService]
+        AS[AuthService]
+        OS[OrderService]
+    end
 
-    Backend->>RZP: POST /v1/orders
-    Note right of Backend: Headers: Authorization Basic(key:secret)
-    Note right of Backend: Body: {"amount": 150000, "currency": "INR"}
-    RZP-->>Backend: 200 OK {"id": "order_abc123", "status": "created"}
+    subgraph "Event Bus (Spring ApplicationEventPublisher)"
+        EP[DomainEventPublisher]
+    end
+
+    subgraph "Listeners"
+        EL[DomainEventListener]
+    end
+
+    subgraph "Side Effects"
+        NS[NotificationService]
+        ALS[AuditLogService]
+        WH[WebhookService]
+        INV[InventoryService]
+    end
+
+    CS -->|OrderPlacedEvent| EP
+    PS -->|PaymentSuccessful/FailedEvent| EP
+    IS -->|LowStockWarningEvent| EP
+    AS -->|UserRegisteredEvent| EP
+    OS -->|OrderStatusChangedEvent| EP
+    EP --> EL
+    EL --> NS & ALS & WH & INV
 ```
 
-| Attribute       | Value                                                                   |
-| :-------------- | :---------------------------------------------------------------------- |
-| **Endpoint**    | `https://api.razorpay.com/v1/orders`                                    |
-| **Method**      | `POST`                                                                  |
-| **Auth**        | HTTP Basic Auth (`key_id` : `key_secret`)                               |
-| **Request**     | `{ "amount": <paise>, "currency": "INR", "receipt": "<order_number>" }` |
-| **Response**    | `{ "id": "order_...", "amount": ..., "status": "created" }`             |
-| **Error Codes** | `400` (Bad Request), `401` (Unauthorized)                               |
+### 4.2 Event Payloads
 
-### 4.2 IF-EXT-02: Razorpay Payment Verification
-
-| Attribute        | Value                                                                                      |
-| :--------------- | :----------------------------------------------------------------------------------------- | ------------------------ |
-| **Trigger**      | Frontend sends `razorpay_payment_id`, `razorpay_order_id`, `razorpay_signature` to backend |
-| **Verification** | Backend computes `HMAC-SHA256(order_id + "                                                 | " + payment_id, secret)` |
-| **Match**        | If computed signature == received signature → Payment is authentic                         |
-| **Failure**      | Throws `PaymentVerificationException`, Order remains `PENDING`                             |
-
-### 4.3 IF-EXT-04: Email Notification (SMTP)
-
-| Attribute    | Value                                       |
-| :----------- | :------------------------------------------ |
-| **Protocol** | SMTP over TLS (Port 587)                    |
-| **Provider** | Configurable (Gmail, SendGrid, AWS SES)     |
-| **Trigger**  | `OrderConfirmedEvent`, `PasswordResetEvent` |
-| **Library**  | Spring `JavaMailSender`                     |
+| Event                     | Publisher          | Payload Fields                                               |
+| :------------------------ | :----------------- | :----------------------------------------------------------- |
+| `OrderPlacedEvent`        | `CheckoutService`  | `orderId`, `userId`, `orderNumber`, `totalAmount`, `items[]` |
+| `PaymentSuccessfulEvent`  | `PaymentService`   | `orderId`, `paymentId`, `amount`, `method`                   |
+| `PaymentFailedEvent`      | `PaymentService`   | `orderId`, `reason`, `failedAt`                              |
+| `LowStockWarningEvent`    | `InventoryService` | `productId`, `productName`, `currentStock`, `threshold`      |
+| `UserRegisteredEvent`     | `AuthService`      | `userId`, `username`, `email`, `registeredAt`                |
+| `OrderStatusChangedEvent` | `OrderService`     | `orderId`, `previousStatus`, `newStatus`, `changedBy`        |
 
 ---
 
-## 5. Infrastructure Interfaces
+## 5. External Interface Specifications
 
-### 5.1 IF-INF-01: MySQL Database
+### 5.1 IF-EXT-01: Razorpay Order Creation
 
-| Attribute           | Value                                         |
-| :------------------ | :-------------------------------------------- |
-| **Protocol**        | JDBC over TCP (Port 3306)                     |
-| **Driver**          | `com.mysql.cj.jdbc.Driver`                    |
-| **Connection Pool** | HikariCP (Max: 20, Min-Idle: 5, Timeout: 30s) |
-| **ORM**             | Spring Data JPA / Hibernate                   |
-| **Schema**          | `buildnest_db`                                |
+| Attribute    | Value                                                                    |
+| :----------- | :----------------------------------------------------------------------- |
+| **Endpoint** | `https://api.razorpay.com/v1/orders`                                     |
+| **Method**   | `POST`                                                                   |
+| **Auth**     | Basic Auth (Key ID + Key Secret)                                         |
+| **Request**  | `{"amount": 19998, "currency": "INR", "receipt": "ORD-20260211-ABC123"}` |
+| **Response** | `{"id": "order_xxx", "amount": 19998, "status": "created"}`              |
+| **Timeout**  | 30 seconds                                                               |
+| **Retry**    | 1 retry on network failure                                               |
 
-### 5.2 IF-INF-02: Redis Cache
+### 5.2 IF-EXT-02: Razorpay Payment Verification
+
+| Attribute     | Value                                                   |
+| :------------ | :------------------------------------------------------ | ------------------------ |
+| **Mechanism** | HMAC-SHA256 signature verification                      |
+| **Input**     | `razorpay_order_id + "                                  | " + razorpay_payment_id` |
+| **Secret**    | Razorpay Key Secret                                     |
+| **Provider**  | `PaymentSignatureValidationService`                     |
+| **Success**   | Order status → `CONFIRMED`                              |
+| **Failure**   | `PaymentVerificationException`, Order remains `PENDING` |
+
+### 5.3 IF-EXT-03: Webhook Event Delivery
+
+| Attribute      | Value                                                               |
+| :------------- | :------------------------------------------------------------------ |
+| **Management** | `WebhookAdminController`                                            |
+| **Entity**     | `WebhookSubscription` (event type, target URL, secret, active flag) |
+| **Delivery**   | HTTP POST to target URL with event payload                          |
+| **Security**   | HMAC signature in `X-Webhook-Signature` header                      |
+| **Retry**      | Increment `failure_count`, disable after threshold                  |
+
+### 5.4 IF-EXT-04: Email Notification (SMTP)
+
+| Attribute     | Value                                                 |
+| :------------ | :---------------------------------------------------- |
+| **Protocol**  | SMTP over TLS (Port 587)                              |
+| **Provider**  | Configurable (Gmail, SendGrid, AWS SES)               |
+| **Templates** | Order confirmation, Password reset, Low stock alert   |
+| **Async**     | Dispatched via `NotificationService` on domain events |
+
+---
+
+## 6. Infrastructure Interface Specifications
+
+### 6.1 IF-INF-01: MySQL Database
+
+| Attribute             | Value                                                  |
+| :-------------------- | :----------------------------------------------------- |
+| **Protocol**          | JDBC over TCP (Port 3306)                              |
+| **Driver**            | MySQL Connector/J (Spring Data JPA)                    |
+| **Connection Pool**   | HikariCP (default)                                     |
+| **Tables**            | 17+ (see [LLD §2](Low_Level_Design_IEEE_42010.md))     |
+| **Migrations**        | Liquibase (`db.changelog-master.yaml`)                 |
+| **Optimized Queries** | `DatabaseQueryOptimizationConfig`, performance indexes |
+
+### 6.2 IF-INF-02: Redis Cache
 
 | Attribute         | Value                                           |
 | :---------------- | :---------------------------------------------- |
@@ -162,56 +237,74 @@ sequenceDiagram
 | **Key Patterns**  | `product:view:{id}`, `auth:refresh:{username}`  |
 | **Serialization** | JSON (`GenericJackson2JsonRedisSerializer`)     |
 | **Default TTL**   | 1 Hour (Product Cache), 30 Days (Refresh Token) |
+| **Configuration** | `CacheConfig`                                   |
 
-### 5.3 IF-INF-03: Elasticsearch
+### 6.3 IF-INF-03: Elasticsearch
 
-| Attribute      | Value                                               |
-| :------------- | :-------------------------------------------------- |
-| **Protocol**   | HTTPS/REST (Port 9200)                              |
-| **Client**     | `RestHighLevelClient` (Elasticsearch Java API)      |
-| **Index**      | `buildnest-products`                                |
-| **Operations** | Full-text search, Product indexing on create/update |
+| Attribute         | Value                                                                      |
+| :---------------- | :------------------------------------------------------------------------- |
+| **Protocol**      | REST/HTTP (Port 9200)                                                      |
+| **Client**        | Spring Data Elasticsearch                                                  |
+| **Indexes**       | `buildnest-audit-logs`, `buildnest-metrics`                                |
+| **Documents**     | `ElasticsearchAuditLog`, `ElasticsearchMetrics`                            |
+| **Configuration** | `ElasticsearchConfig`                                                      |
+| **Services**      | Ingestion, Query Optimization, Alerting, Metrics Collector, Threshold Mgmt |
 
-### 5.4 IF-INF-04: Frontend-to-Backend API
+### 6.4 IF-INF-04: Frontend REST API
 
-| Attribute        | Value                                                             |
-| :--------------- | :---------------------------------------------------------------- |
-| **Protocol**     | HTTPS/REST (Port 443 / 8080 dev)                                  |
-| **Client**       | Axios (React SPA)                                                 |
-| **Auth**         | JWT Bearer Token in `Authorization` header                        |
-| **CORS**         | Allowed Origins: `https://buildnest.com`, `http://localhost:3000` |
-| **Content-Type** | `application/json`                                                |
-
----
-
-## 6. Interface Interaction Matrix
-
-Which modules communicate with each other.
-
-| Source ↓ / Dest →    | Auth | Catalog | Cart | Order | Payment | Inventory | Razorpay | MySQL | Redis |
-| :------------------- | :--: | :-----: | :--: | :---: | :-----: | :-------: | :------: | :---: | :---: |
-| **Frontend (React)** |  ✅  |   ✅    |  ✅  |  ✅   |   ✅    |     —     |    —     |   —   |   —   |
-| **Auth Module**      |  —   |    —    |  —   |   —   |    —    |     —     |    —     |  ✅   |  ✅   |
-| **Catalog Module**   |  ✅  |    —    |  —   |   —   |    —    |    ✅     |    —     |  ✅   |  ✅   |
-| **Cart Module**      |  ✅  |   ✅    |  —   |   —   |    —    |     —     |    —     |  ✅   |  ✅   |
-| **Order Module**     |  ✅  |    —    |  ✅  |   —   |   ✅    |    ✅     |    —     |  ✅   |   —   |
-| **Payment Module**   |  ✅  |    —    |  —   |  ✅   |    —    |     —     |    ✅    |  ✅   |   —   |
-| **Inventory Module** |  ✅  |    —    |  —   |   —   |    —    |     —     |    —     |  ✅   |   —   |
+| Attribute             | Value                                            |
+| :-------------------- | :----------------------------------------------- |
+| **Protocol**          | HTTPS/REST                                       |
+| **Format**            | JSON (`application/json`)                        |
+| **Auth**              | JWT Bearer token in `Authorization` header       |
+| **CORS**              | Origins: `buildnest.com`, `www.buildnest.com`    |
+| **Versioning**        | URI-based (`/api/v1/...`, `/api/v2/...`)         |
+| **Response Envelope** | `{"success": bool, "message": str, "data": ...}` |
 
 ---
 
-## 7. Traceability
+## 7. Interface Interaction Matrix
 
-Mapping Interfaces to SRS Requirements.
+| Source ↓ / Dest → | Auth | Catalog | Cart | Order | Payment | Inventory | Wishlist | Review | Notification | MySQL | Redis | ES  |
+| :---------------- | :--: | :-----: | :--: | :---: | :-----: | :-------: | :------: | :----: | :----------: | :---: | :---: | :-: |
+| **Auth**          |  —   |         |      |       |         |           |          |        |      ✓       |   ✓   |   ✓   |  ✓  |
+| **Catalog**       |  ✓   |    —    |      |       |         |     ✓     |          |        |              |   ✓   |   ✓   |  ✓  |
+| **Cart**          |  ✓   |    ✓    |  —   |       |         |           |          |        |              |   ✓   |       |     |
+| **Order**         |  ✓   |         |  ✓   |   —   |    ✓    |     ✓     |          |        |      ✓       |   ✓   |       |     |
+| **Payment**       |      |         |      |   ✓   |    —    |           |          |        |      ✓       |   ✓   |       |     |
+| **Inventory**     |      |    ✓    |      |       |         |     —     |          |        |      ✓       |   ✓   |       |     |
+| **Wishlist**      |  ✓   |    ✓    |      |       |         |           |    —     |        |              |   ✓   |       |     |
+| **Review**        |  ✓   |    ✓    |      |       |         |           |          |   —    |              |   ✓   |       |     |
+| **Admin**         |  ✓   |    ✓    |      |   ✓   |         |     ✓     |          |        |              |   ✓   |       |  ✓  |
+| **Monitoring**    |      |         |      |       |         |           |          |        |              |       |       |  ✓  |
+| **Frontend**      |  ✓   |    ✓    |  ✓   |   ✓   |         |           |    ✓     |   ✓    |              |       |       |     |
 
-| Interface                       | SRS Requirements                                   |
+---
+
+## 8. Traceability
+
+| Interface ID                    | SRS Requirements                                   |
 | :------------------------------ | :------------------------------------------------- |
 | **IF-INT-01** (Auth Validation) | [FR-AUTH-03, FR-AUTH-04](SRS_IEEE_29148_2018.md)   |
 | **IF-INT-02** (Cart Handoff)    | [FR-CART-01 to FR-CART-06](SRS_IEEE_29148_2018.md) |
 | **IF-INT-03** (Stock Deduction) | [FR-INV-01 to FR-INV-07](SRS_IEEE_29148_2018.md)   |
+| **IF-INT-04** (Wishlist)        | [FR-WISH-01 to FR-WISH-05](SRS_IEEE_29148_2018.md) |
+| **IF-INT-05** (Review)          | [FR-REV-01 to FR-REV-05](SRS_IEEE_29148_2018.md)   |
+| **IF-EVT-01** (OrderPlaced)     | [FR-CHK-01, FR-NOT-01](SRS_IEEE_29148_2018.md)     |
+| **IF-EVT-04** (LowStock)        | [FR-INV-06, FR-ADM-10](SRS_IEEE_29148_2018.md)     |
 | **IF-EXT-01** (Razorpay Order)  | [FR-PAY-01](SRS_IEEE_29148_2018.md)                |
 | **IF-EXT-02** (Payment Verify)  | [FR-PAY-02](SRS_IEEE_29148_2018.md)                |
-| **IF-INF-04** (Frontend API)    | [FR-FE-01 to FR-FE-10](SRS_IEEE_29148_2018.md)     |
+| **IF-EXT-03** (Webhook)         | [FR-NOT-03 to FR-NOT-05](SRS_IEEE_29148_2018.md)   |
+| **IF-INF-04** (Frontend API)    | [FR-FE-01 to FR-FE-25](SRS_IEEE_29148_2018.md)     |
+
+---
+
+## 9. Revision History
+
+| Version | Date       | Author         | Changes                                                                                                                    |
+| :------ | :--------- | :------------- | :------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 2026-02-10 | BuildNest Arch | Initial draft — 4 internal, 3 external, 3 infra                                                                            |
+| 2.0     | 2026-02-11 | BuildNest Arch | Exhaustive update — 10 internal, 6 event, 4 external, 4 infra interfaces; event architecture; 12-module interaction matrix |
 
 ---
 
