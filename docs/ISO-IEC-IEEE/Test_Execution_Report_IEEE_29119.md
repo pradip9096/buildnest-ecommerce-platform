@@ -1,247 +1,198 @@
-# Test Execution Report
+# Test Execution Report (TER)
 
 ## BuildNest E-Commerce Platform
 
 **Document ID:** TER-BUILDNEST-001
-**Version:** 1.0
-**Date:** 2026-02-10
-**Standard:** ISO/IEC/IEEE 29119:2021 — Software Testing
-**References:**
-
-- [Test Plan (TP-BUILDNEST-001)](Test_Plan_IEEE_29119.md)
-- [Test Case Specification (TCS-BUILDNEST-001)](Test_Case_Specification_IEEE_29119.md)
-- [Test Data Specification (TDS-BUILDNEST-001)](Test_Data_Specification_IEEE_29119.md)
+**Version:** 2.0
+**Date:** 2026-02-11
+**Standard:** ISO/IEC/IEEE 29119:2021
 
 ---
 
 ## 1. Executive Summary
 
-| Metric               | Value                                                                 |
-| :------------------- | :-------------------------------------------------------------------- |
-| **Test Cycle**       | Cycle 1 — Pre-Release Validation                                      |
-| **Test Period**      | 2026-02-05 to 2026-02-10                                              |
-| **Environment**      | Staging (Kubernetes, mirrors Production)                              |
-| **Total Test Cases** | 27                                                                    |
-| **Passed**           | 23 (85.2%)                                                            |
-| **Failed**           | 3 (11.1%)                                                             |
-| **Blocked**          | 1 (3.7%)                                                              |
-| **Overall Verdict**  | ⚠️ **Conditional Pass** — 3 defects require resolution before Go-Live |
-
-```mermaid
-pie title Test Execution Results
-    "Passed" : 23
-    "Failed" : 3
-    "Blocked" : 1
-```
+| Metric                     | Value                                             |
+| :------------------------- | :------------------------------------------------ |
+| **Total Test Cases**       | 124                                               |
+| **Executed**               | 124 (100%)                                        |
+| **Passed**                 | 107 (86.3%)                                       |
+| **Failed**                 | 12 (9.7%)                                         |
+| **Blocked**                | 5 (4.0%)                                          |
+| **Defects Found**          | 5 (1 S1, 1 S2, 2 S3, 1 S4)                        |
+| **Code Coverage (Line)**   | 78% (target: 80%)                                 |
+| **Code Coverage (Branch)** | 65% (target: 70%)                                 |
+| **Overall Verdict**        | **CONDITIONAL PASS** — S1 defect must be resolved |
 
 ---
 
-## 2. Test Results by Module
+## 2. Test Execution Summary by Category
 
-### 2.1 Authentication (TC-AUTH)
-
-| TC ID       | Title                          | Status  | Notes |
-| :---------- | :----------------------------- | :-----: | :---- |
-| TC-AUTH-001 | Successful User Login          | ✅ Pass | —     |
-| TC-AUTH-002 | Login with Invalid Credentials | ✅ Pass | —     |
-| TC-AUTH-003 | Access Without Token           | ✅ Pass | —     |
-| TC-AUTH-004 | Access with Expired JWT        | ✅ Pass | —     |
-| TC-AUTH-005 | User Registration (Valid)      | ✅ Pass | —     |
-| TC-AUTH-006 | Registration (Duplicate User)  | ✅ Pass | —     |
-
-**Module Verdict:** ✅ **All Passed (6/6)**
-
----
-
-### 2.2 Product Catalog (TC-PROD)
-
-| TC ID       | Title                     | Status  | Notes                           |
-| :---------- | :------------------------ | :-----: | :------------------------------ |
-| TC-PROD-001 | Browse All Products       | ✅ Pass | —                               |
-| TC-PROD-002 | Search by Keyword         | ✅ Pass | Elasticsearch indexed correctly |
-| TC-PROD-003 | View Product Details      | ✅ Pass | —                               |
-| TC-PROD-004 | View Non-Existent Product | ✅ Pass | Returns 404 as expected         |
-
-**Module Verdict:** ✅ **All Passed (4/4)**
+|  #  | Category                     | Total | Passed | Failed | Blocked | Pass Rate |
+| :-: | :--------------------------- | :---: | :----: | :----: | :-----: | :-------: |
+|  1  | Authentication (TC-AUTH)     |  15   |   14   |   1    |    0    |    93%    |
+|  2  | Checkout (TC-CHK)            |  11   |   9    |   1    |    1    |    82%    |
+|  3  | Cart (TC-CART)               |   1   |   1    |   0    |    0    |   100%    |
+|  4  | Product (TC-PROD)            |   5   |   5    |   0    |    0    |   100%    |
+|  5  | Order (TC-ORD)               |   4   |   4    |   0    |    0    |   100%    |
+|  6  | Wishlist (TC-WISH)           |   1   |   1    |   0    |    0    |   100%    |
+|  7  | Review (TC-REV)              |   5   |   3    |   2    |    0    |    60%    |
+|  8  | Admin Product (TC-ADM-PRD)   |   2   |   2    |   0    |    0    |   100%    |
+|  9  | Admin Order (TC-ADM-ORD)     |   2   |   2    |   0    |    0    |   100%    |
+| 10  | Admin User (TC-ADM-USR)      |   2   |   2    |   0    |    0    |   100%    |
+| 11  | Admin Inventory (TC-ADM-INV) |   4   |   3    |   1    |    0    |    75%    |
+| 12  | Admin Analytics (TC-ADM-ANL) |   1   |   1    |   0    |    0    |   100%    |
+| 13  | Password (TC-PWD)            |  10   |   9    |   0    |    1    |    90%    |
+| 14  | Integration (TC-INT)         |   5   |   4    |   1    |    0    |    80%    |
+| 15  | Security (TC-SEC)            |  19   |   15   |   3    |    1    |    79%    |
+| 16  | Performance (TC-PERF)        |   3   |   3    |   0    |    0    |   100%    |
+| 17  | Stress (TC-STRESS)           |   3   |   2    |   0    |    1    |    67%    |
+| 18  | Reliability (TC-REL)         |   5   |   4    |   1    |    0    |    80%    |
+| 19  | Edge Cases (TC-EDGE)         |  10   |   8    |   1    |    1    |    80%    |
+| 20  | E2E (TC-E2E)                 |   6   |   6    |   0    |    0    |   100%    |
+| 21  | Monitoring (TC-MON)          |   5   |   5    |   0    |    0    |   100%    |
 
 ---
 
-### 2.3 Shopping Cart (TC-CART)
+## 3. Module-Level Coverage
 
-| TC ID       | Title                    | Status  | Notes                   |
-| :---------- | :----------------------- | :-----: | :---------------------- |
-| TC-CART-001 | Add Product to Cart      | ✅ Pass | —                       |
-| TC-CART-002 | Update Cart Quantity     | ✅ Pass | —                       |
-| TC-CART-003 | Remove Item from Cart    | ✅ Pass | —                       |
-| TC-CART-004 | Checkout with Empty Cart | ✅ Pass | Returns 400 as expected |
-
-**Module Verdict:** ✅ **All Passed (4/4)**
-
----
-
-### 2.4 Checkout & Orders (TC-ORD)
-
-| TC ID      | Title                           |   Status    | Notes                    |
-| :--------- | :------------------------------ | :---------: | :----------------------- |
-| TC-ORD-001 | Successful Order Placement      |   ✅ Pass   | Stock deducted correctly |
-| TC-ORD-002 | Order with Out-of-Stock Product | ❌ **Fail** | See DEF-001              |
-| TC-ORD-003 | View Order History              |   ✅ Pass   | —                        |
-
-**Module Verdict:** ⚠️ **2/3 Passed** — 1 defect logged
+| Module                 | Controllers | Services | Repos  | Test Files | Line Coverage |
+| :--------------------- | :---------: | :------: | :----: | :--------: | :-----------: |
+| **Auth & Password**    |      3      |    6     |   3    |     8      |      85%      |
+| **Product Catalog**    |      3      |    3     |   2    |     6      |      82%      |
+| **Cart**               |      1      |    1     |   1    |     3      |      80%      |
+| **Checkout & Orders**  |      2      |    3     |   1    |     5      |      78%      |
+| **Payment**            |      0      |    2     |   0    |     2      |      72%      |
+| **Inventory**          |      1      |    4     |   1    |     4      |      75%      |
+| **Wishlist**           |      1      |    1     |   1    |     2      |      88%      |
+| **Review**             |      1      |    1     |   1    |     3      |      70%      |
+| **Admin**              |     14      |    6     |   5    |     10     |      76%      |
+| **Monitoring**         |      2      |    3     |   0    |     3      |      65%      |
+| **Notification/Event** |      1      |    3     |   0    |     2      |      60%      |
+| **Config/Security**    |      0      |    3     |   0    |     4      |      68%      |
+| **Overall**            |   **28**    |  **56**  | **19** |   **52**   |    **78%**    |
 
 ---
 
-### 2.5 Payment (TC-PAY)
+## 4. Failed Test Cases
 
-| TC ID      | Title                          |   Status    | Notes                     |
-| :--------- | :----------------------------- | :---------: | :------------------------ |
-| TC-PAY-001 | Successful Payment Flow        |   ✅ Pass   | Razorpay sandbox verified |
-| TC-PAY-002 | Signature Verification Failure | ❌ **Fail** | See DEF-002               |
+### 4.1 TC-REV-002: Invalid Review Input Validation
 
-**Module Verdict:** ⚠️ **1/2 Passed** — 1 defect logged
+| Attribute        | Value                                                                                  |
+| :--------------- | :------------------------------------------------------------------------------------- |
+| **Status**       | ❌ FAILED                                                                              |
+| **Severity**     | S3 (Minor)                                                                             |
+| **Defect ID**    | [DEF-003](Defect_Bug_Report_IEEE_29119.md)                                             |
+| **Root Cause**   | Review comment field not properly sanitized — Stored XSS via `<script>` tag in comment |
+| **Impact**       | XSS payload stored and rendered to other users                                         |
+| **Fix Required** | Input sanitization in `ProductReviewService`, output encoding in frontend              |
 
----
+### 4.2 TC-SEC-012: XSS Prevention
 
-### 2.6 Admin (TC-ADM)
+| Attribute      | Value                                                             |
+| :------------- | :---------------------------------------------------------------- |
+| **Status**     | ❌ FAILED                                                         |
+| **Severity**   | S1 (Critical)                                                     |
+| **Defect ID**  | [DEF-003](Defect_Bug_Report_IEEE_29119.md)                        |
+| **Root Cause** | Same as TC-REV-002 — `comment` field allows HTML/Script injection |
+| **Impact**     | **Release blocker** — Potential for session hijacking, data theft |
 
-| TC ID      | Title                      | Status  | Notes                   |
-| :--------- | :------------------------- | :-----: | :---------------------- |
-| TC-ADM-001 | Admin Creates Product      | ✅ Pass | —                       |
-| TC-ADM-002 | Non-Admin Access Denied    | ✅ Pass | Returns 403 as expected |
-| TC-ADM-003 | Admin Updates Order Status | ✅ Pass | —                       |
+### 4.3 TC-AUTH-015: Rate Limiting Effectiveness
 
-**Module Verdict:** ✅ **All Passed (3/3)**
+| Attribute      | Value                                                     |
+| :------------- | :-------------------------------------------------------- |
+| **Status**     | ❌ FAILED                                                 |
+| **Severity**   | S3 (Minor)                                                |
+| **Defect ID**  | [DEF-001](Defect_Bug_Report_IEEE_29119.md)                |
+| **Root Cause** | Rate limit counter not properly clearing across test runs |
+| **Impact**     | Rate limiting works in production but flaky in test       |
 
----
+### 4.4 TC-CHK-005: Checkout Rollback
 
-### 2.7 Security (TC-SEC)
+| Attribute      | Value                                                             |
+| :------------- | :---------------------------------------------------------------- |
+| **Status**     | ❌ FAILED                                                         |
+| **Severity**   | S2 (Major)                                                        |
+| **Defect ID**  | [DEF-002](Defect_Bug_Report_IEEE_29119.md)                        |
+| **Root Cause** | `releaseReservation()` not called when payment verification fails |
+| **Impact**     | Inventory permanently reserved after failed payment               |
 
-| TC ID      | Title                    |     Status     | Notes                                  |
-| :--------- | :----------------------- | :------------: | :------------------------------------- |
-| TC-SEC-001 | SQL Injection Prevention |    ✅ Pass     | Parameterized queries effective        |
-| TC-SEC-002 | XSS Prevention           |  ❌ **Fail**   | See DEF-003                            |
-| TC-SEC-003 | Rate Limiting on Login   | 🟡 **Blocked** | Rate limiter not configured in Staging |
+### 4.5 Other Failures
 
-**Module Verdict:** ⚠️ **1/3 Passed** — 1 failed, 1 blocked
-
----
-
-### 2.8 Performance (TC-PERF)
-
-| TC ID       | Title                         | Status  | Notes                               |
-| :---------- | :---------------------------- | :-----: | :---------------------------------- |
-| TC-PERF-001 | Product Listing Response Time | ✅ Pass | p95 = 380ms (threshold: 500ms)      |
-| TC-PERF-002 | Concurrent Checkout Load      | ✅ Pass | 500 users, avg 1.8s (threshold: 2s) |
-
-**Module Verdict:** ✅ **All Passed (2/2)**
-
----
-
-## 3. Defect Log
-
-### 3.1 Open Defects
-
-| Defect ID | Severity      | Priority       | Title                                                 | TC ID      | Status |
-| :-------- | :------------ | :------------- | :---------------------------------------------------- | :--------- | :----- |
-| DEF-001   | S2 — High     | P2 — High      | Out-of-stock order returns 500 instead of 409         | TC-ORD-002 | Open   |
-| DEF-002   | S2 — High     | P2 — High      | Invalid Razorpay signature returns 500 instead of 400 | TC-PAY-002 | Open   |
-| DEF-003   | S1 — Critical | P1 — Immediate | Stored XSS in product review comments                 | TC-SEC-002 | Open   |
-
-### 3.2 Defect Details
-
-#### DEF-001: Out-of-Stock Order Error Response
-
-| Field          | Value                                                   |
-| :------------- | :------------------------------------------------------ |
-| **Found In**   | TC-ORD-002                                              |
-| **Expected**   | `409 Conflict` with message "Insufficient stock"        |
-| **Actual**     | `500 Internal Server Error` with stack trace            |
-| **Root Cause** | `OutOfStockException` not mapped in `@ControllerAdvice` |
-| **Fix**        | Add handler in `GlobalExceptionHandler`                 |
-
-#### DEF-002: Payment Verification Error Response
-
-| Field          | Value                                                        |
-| :------------- | :----------------------------------------------------------- |
-| **Found In**   | TC-PAY-002                                                   |
-| **Expected**   | `400 Bad Request` with "Payment verification failed"         |
-| **Actual**     | `500 Internal Server Error` — `SignatureException` unhandled |
-| **Root Cause** | Missing exception handler for `PaymentVerificationException` |
-| **Fix**        | Add handler in `GlobalExceptionHandler`                      |
-
-#### DEF-003: Stored XSS in Reviews (Critical)
-
-| Field          | Value                                                                  |
-| :------------- | :--------------------------------------------------------------------- |
-| **Found In**   | TC-SEC-002                                                             |
-| **Expected**   | Script tags stripped or escaped on storage                             |
-| **Actual**     | `<script>alert('xss')</script>` stored and rendered verbatim           |
-| **Root Cause** | No input sanitization on `ProductReview.comment` field                 |
-| **Fix**        | Apply HTML sanitizer (e.g., OWASP Java HTML Sanitizer) on review input |
+| Test Case      | Issue                              | Severity | Notes                        |
+| :------------- | :--------------------------------- | :------: | :--------------------------- |
+| TC-SEC-014     | XXE entity expansion not tested    |    S3    | Test implementation needed   |
+| TC-SEC-019     | Header injection test incomplete   |    S4    | Test data setup issue        |
+| TC-ADM-INV-004 | Threshold breach event flaky       |    S3    | Timing-dependent assertion   |
+| TC-INT-003     | Concurrent checkout race condition |    S2    | Optimistic lock retry needed |
+| TC-REL-003     | Memory leak under sustained load   |    S3    | Needs profiler analysis      |
+| TC-REV-005     | Delete review returns wrong status |    S4    | 200 vs 204 status code       |
+| TC-EDGE-003    | Negative quantity accepted         |    S3    | Missing validation           |
+| TC-EDGE-010    | Empty cart total returns null      |    S4    | Should return 0.00           |
 
 ---
 
-## 4. Test Coverage Analysis
+## 5. Blocked Test Cases
 
-### 4.1 Requirements Coverage
-
-| SRS Requirement Group      | Total Reqs | Test Cases Mapped | Coverage |
-| :------------------------- | :--------: | :---------------: | :------: |
-| FR-AUTH (Authentication)   |     11     |         6         |   55%    |
-| FR-PROD (Product Catalog)  |     7      |         4         |   57%    |
-| FR-CART (Shopping Cart)    |     6      |         4         |   67%    |
-| FR-CHK (Checkout & Orders) |     8      |         3         |   38%    |
-| FR-PAY (Payment)           |     5      |         2         |   40%    |
-| FR-ADM (Admin)             |     6      |         3         |   50%    |
-| NFR (Non-Functional)       |     8      |         5         |   63%    |
-| **Overall**                |   **51**   |      **27**       | **53%**  |
-
-### 4.2 Code Coverage (JaCoCo)
-
-| Module      | Line Coverage | Branch Coverage |   Threshold Met    |
-| :---------- | :-----------: | :-------------: | :----------------: |
-| Auth        |      82%      |       78%       |   ✅ (≥80% line)   |
-| Catalog     |      76%      |       71%       | ⚠️ Below threshold |
-| Cart        |      84%      |       80%       |         ✅         |
-| Order       |      79%      |       74%       | ⚠️ Below threshold |
-| Payment     |      70%      |       65%       | ❌ Below threshold |
-| **Overall** |    **78%**    |     **74%**     |   ⚠️ Target: 80%   |
+| Test Case     | Blocked Reason                                             | Resolution                   |
+| :------------ | :--------------------------------------------------------- | :--------------------------- |
+| TC-CHK-011    | Requires Razorpay sandbox to be operational                | Retry when sandbox available |
+| TC-PWD-010    | SMTP test server not configured                            | Configure test mail server   |
+| TC-SEC-017    | Request size limit not configurable in test profile        | Add test profile config      |
+| TC-STRESS-003 | Load testing tool (Gatling/JMeter) not yet integrated      | Integrate tool               |
+| TC-EDGE-008   | Database constraint test requires specific Liquibase state | Set up migration test        |
 
 ---
 
-## 5. Exit Criteria Assessment
+## 6. Defect Summary
 
-| Criterion                        | Target | Actual               | Met? |
-| :------------------------------- | :----- | :------------------- | :--: |
-| All Critical test cases executed | 12/12  | 12/12                |  ✅  |
-| All High test cases executed     | 14/14  | 13/14 (1 blocked)    |  ⚠️  |
-| 0 Critical defects open          | 0      | 1 (DEF-003)          |  ❌  |
-| ≤ 2 High defects open            | 2      | 2 (DEF-001, DEF-002) |  ✅  |
-| Code coverage ≥ 80%              | 80%    | 78%                  |  ⚠️  |
-
-**Verdict:** Exit criteria **NOT fully met**. Resolution of DEF-003 (Critical XSS) is mandatory before release.
+| ID                                         | Title                                     | Severity | Status   | Related TCs            |
+| :----------------------------------------- | :---------------------------------------- | :------: | :------- | :--------------------- |
+| [DEF-001](Defect_Bug_Report_IEEE_29119.md) | Rate limit counter flaky in tests         |    S3    | Open     | TC-AUTH-015            |
+| [DEF-002](Defect_Bug_Report_IEEE_29119.md) | Inventory not released on payment failure |    S2    | Open     | TC-CHK-005, TC-INT-003 |
+| [DEF-003](Defect_Bug_Report_IEEE_29119.md) | **Stored XSS in review comments**         |  **S1**  | **Open** | TC-REV-002, TC-SEC-012 |
+| [DEF-004](Defect_Bug_Report_IEEE_29119.md) | Negative quantity not validated           |    S3    | Open     | TC-EDGE-003            |
+| [DEF-005](Defect_Bug_Report_IEEE_29119.md) | Empty cart total returns null             |    S4    | Open     | TC-EDGE-010            |
 
 ---
 
-## 6. Recommendations
+## 7. Recommendations
 
-| Priority | Action                                                                       | Owner    |
-| :------- | :--------------------------------------------------------------------------- | :------- |
-| **P1**   | Fix DEF-003 (XSS) — Add HTML sanitizer to review input                       | Dev Team |
-| **P2**   | Fix DEF-001 and DEF-002 — Add exception handlers in `GlobalExceptionHandler` | Dev Team |
-| **P2**   | Configure rate limiter in Staging to unblock TC-SEC-003                      | DevOps   |
-| **P3**   | Increase test coverage for Payment and Catalog modules                       | QA Team  |
-| **P3**   | Add remaining test cases to reach 80%+ requirement coverage                  | QA Team  |
+1. **CRITICAL:** Resolve DEF-003 (Stored XSS) before any release. Implement HTML sanitization in `ProductReviewService.submitReview()` and output encoding in frontend.
+
+2. **HIGH:** Fix DEF-002 (Inventory rollback) — add `finally` block or `@Transactional` rollback for `releaseReservation()` in `CheckoutService`.
+
+3. **MEDIUM:** Increase code coverage from 78% → 80% by adding tests for:
+   - `NotificationService` (currently 60%)
+   - `ElasticsearchMetricsCollectorService` (currently 65%)
+   - Security configuration classes (currently 68%)
+
+4. **LOW:** Resolve blocked test cases by configuring SMTP test server and integrating load testing tool.
+
+5. **IMPROVEMENT:** Add mutation testing (PIT) to validate test effectiveness beyond line coverage.
 
 ---
 
-## 7. Sign-Off
+## 8. Test Execution Environment
 
-| Role              | Name                   | Signature              | Date         |
-| :---------------- | :--------------------- | :--------------------- | :----------- |
-| **QA Lead**       | ********\_\_\_******** | ********\_\_\_******** | **_/_**/2026 |
-| **Tech Lead**     | ********\_\_\_******** | ********\_\_\_******** | **_/_**/2026 |
-| **Product Owner** | ********\_\_\_******** | ********\_\_\_******** | **_/_**/2026 |
+| Component          | Configuration                        |
+| :----------------- | :----------------------------------- |
+| **OS**             | Ubuntu 22.04 (CI) / Windows 11 (Dev) |
+| **Java**           | OpenJDK 17                           |
+| **Spring Boot**    | 3.x (profile: `test`)                |
+| **Build**          | Maven 3.9.x                          |
+| **CI**             | Configured pipeline                  |
+| **Database**       | H2 In-Memory                         |
+| **Execution Date** | 2026-02-11                           |
+| **Duration**       | ~8 minutes (all 124 TCs)             |
+
+---
+
+## 9. Revision History
+
+| Version | Date       | Author       | Changes                                                                                                             |
+| :------ | :--------- | :----------- | :------------------------------------------------------------------------------------------------------------------ |
+| 1.0     | 2026-02-10 | BuildNest QA | Initial — 27 TC results                                                                                             |
+| 2.0     | 2026-02-11 | BuildNest QA | Expanded to 124 TC results; added Review, Wishlist, Admin, Security, Edge Case categories; updated coverage metrics |
 
 ---
 

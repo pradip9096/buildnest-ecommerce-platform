@@ -3,9 +3,9 @@
 ## BuildNest E-Commerce Platform
 
 **Document ID:** TP-BUILDNEST-001
-**Version:** 1.0
-**Date:** 2026-02-10
-**Standard:** ISO/IEC/IEEE 29119-3:2021 — Software and Systems Engineering — Software Testing — Part 3: Test Documentation
+**Version:** 2.0
+**Date:** 2026-02-11
+**Standard:** ISO/IEC/IEEE 29119-3:2021
 
 ---
 
@@ -13,15 +13,34 @@
 
 ### 1.1 Purpose
 
-This Test Plan defines the **strategy, scope, schedule, risks, and criteria** for testing the BuildNest E-Commerce Platform. It ensures systematic verification that all [SRS](SRS_IEEE_29148_2018.md) requirements are met before production release.
+This Test Plan defines the overall test strategy, scope, schedule, resource requirements, and risk analysis for the BuildNest E-Commerce Platform. It governs the execution of **124 test cases** documented in the [Test Case Specification (TCS)](Test_Case_Specification_IEEE_29119.md) across **22 test categories**.
 
-### 1.2 Normative References
+### 1.2 Scope
 
-| Standard                  | Title                                 |
-| :------------------------ | :------------------------------------ |
-| ISO/IEC/IEEE 29119-3:2021 | Software Testing — Test Documentation |
-| ISO/IEC/IEEE 29148:2018   | Requirements Engineering              |
-| ISO/IEC 25010:2011        | Software Product Quality              |
+| Module                        | In Scope                                                                   | Out of Scope                |
+| :---------------------------- | :------------------------------------------------------------------------- | :-------------------------- |
+| **Authentication & Password** | Login, Register, JWT lifecycle, Password Reset/Change, Rate limiting       | OAuth/SSO (not implemented) |
+| **Product Catalog**           | Product CRUD, Search, Categories, API Versioning (V1/V2 sunset)            | Media CDN upload            |
+| **Shopping Cart**             | Add/Remove/Update/Clear/Total                                              | Cross-device cart sync      |
+| **Checkout & Orders**         | Order creation, Inventory reservation/deduction, Rollback, Order history   | Coupon/discount engine      |
+| **Payment**                   | Razorpay integration, Signature verification                               | Multi-gateway               |
+| **Inventory**                 | Stock tracking, Threshold monitoring, Optimistic locking, Analytics        | Warehouse management        |
+| **Wishlist**                  | Add/Remove/Check/Clear/Count                                               | Wishlist sharing            |
+| **Product Reviews**           | Submit/View/Update/Delete, Ratings (1-5), Helpful votes, Verified purchase | Image attachment            |
+| **Admin**                     | Product/Order/User/Inventory/Analytics management                          | Role creation UI            |
+| **Monitoring**                | Performance metrics, Pool metrics, Health indicators                       | APM tool integration        |
+| **Notifications & Events**    | Domain event publishing, Email, Webhook delivery                           | Push notifications          |
+| **Security**                  | JWT, RBAC, Rate limiting, Input validation, XSS, SQLi, CSRF                | Pen test                    |
+
+### 1.3 Referenced Documents
+
+| Document                                              | Standard   | Relationship             |
+| :---------------------------------------------------- | :--------- | :----------------------- |
+| [SRS](SRS_IEEE_29148_2018.md)                         | IEEE 29148 | Test requirements source |
+| [TCS](Test_Case_Specification_IEEE_29119.md)          | IEEE 29119 | Test case definitions    |
+| [TDS](Test_Data_Specification_IEEE_29119.md)          | IEEE 29119 | Test data sets           |
+| [TER](Test_Execution_Report_IEEE_29119.md)            | IEEE 29119 | Execution results        |
+| [RTM](Requirements_Traceability_Matrix_IEEE_29148.md) | IEEE 29148 | Requirement coverage     |
 
 ---
 
@@ -29,206 +48,165 @@ This Test Plan defines the **strategy, scope, schedule, risks, and criteria** fo
 
 ### 2.1 Test Levels
 
-| Level                             | Scope                              | Responsibility               | Tools                                 |
-| :-------------------------------- | :--------------------------------- | :--------------------------- | :------------------------------------ |
-| **Unit Testing**                  | Individual methods and classes     | Developers                   | JUnit 5, Mockito                      |
-| **Integration Testing**           | Module interactions, API endpoints | Developers + QA              | Spring Boot Test, RestAssured, TestNG |
-| **System Testing**                | End-to-end business flows          | QA Team                      | Selenium, Postman                     |
-| **User Acceptance Testing (UAT)** | Business requirement validation    | Product Owner / Stakeholders | Manual scripts                        |
+| Level           | Description                                    | Tools                                                    | Target Count |
+| :-------------- | :--------------------------------------------- | :------------------------------------------------------- | :----------- |
+| **Unit**        | Individual class/method testing in isolation   | JUnit 5, Mockito                                         | ~200+        |
+| **Integration** | Module interaction and persistence layer tests | `@SpringBootTest`, `@DataJpaTest`, `MockMvc`             | ~80          |
+| **System**      | Full-stack API flow testing                    | `@SpringBootTest(webEnvironment=RANDOM_PORT)`, `MockMvc` | ~30          |
+| **E2E**         | Browser-based user journey testing             | Selenium WebDriver                                       | 6            |
 
 ### 2.2 Test Types
 
-| Type                    | Purpose                                           | Applied At          |
-| :---------------------- | :------------------------------------------------ | :------------------ |
-| **Functional Testing**  | Verify features work per SRS requirements         | All levels          |
-| **Performance Testing** | Validate response times and throughput under load | System              |
-| **Security Testing**    | Identify vulnerabilities (OWASP Top 10)           | Integration, System |
-| **Regression Testing**  | Ensure new changes do not break existing features | Integration, System |
-| **Usability Testing**   | Validate user experience and accessibility        | UAT                 |
+| Type                   | Focus Area                                                              | Test Cases                                                                 |
+| :--------------------- | :---------------------------------------------------------------------- | :------------------------------------------------------------------------- |
+| **Functional**         | Feature correctness for all 12 modules                                  | TC-AUTH, TC-PROD, TC-CART, TC-CHK, TC-ORD, TC-WISH, TC-REV, TC-ADM, TC-PWD |
+| **Security**           | Authentication bypass, injection, XSS, RBAC violations                  | TC-SEC-001 to TC-SEC-019                                                   |
+| **Performance**        | Response time, throughput under load                                    | TC-PERF-001 to TC-PERF-003                                                 |
+| **Stress**             | Behavior under extreme load, 2x/3x capacity                             | TC-STRESS-001 to TC-STRESS-003                                             |
+| **Reliability**        | Flakiness prevention, concurrent safety, failover, data integrity       | TC-REL-001 to TC-REL-005                                                   |
+| **Edge Case**          | Boundary values, race conditions, error recovery, Unicode, empty states | TC-EDGE-001 to TC-EDGE-010                                                 |
+| **End-to-End**         | Full user journeys through browser                                      | TC-E2E-001 to TC-E2E-006                                                   |
+| **Integration (Cart)** | Cart-Order-Inventory flow                                               | TC-INT-001 to TC-INT-005                                                   |
 
-### 2.3 Test Techniques
+### 2.3 Test Case Distribution
 
-| Technique                    | Description                              | Applied To                    |
-| :--------------------------- | :--------------------------------------- | :---------------------------- |
-| **Equivalence Partitioning** | Divide inputs into valid/invalid classes | Login, Registration, Search   |
-| **Boundary Value Analysis**  | Test at edges of input ranges            | Price fields, Quantity fields |
-| **State Transition Testing** | Verify state machine correctness         | Order Status, Payment Status  |
-| **Exploratory Testing**      | Unscripted testing to find edge cases    | UI flows, Error scenarios     |
-
----
-
-## 3. Test Scope
-
-### 3.1 Features In Scope
-
-| Feature Group            | SRS Reference            | Priority |
-| :----------------------- | :----------------------- | :------- |
-| **User Authentication**  | FR-AUTH-01 to FR-AUTH-11 | Critical |
-| **Product Catalog**      | FR-PROD-01 to FR-PROD-07 | High     |
-| **Shopping Cart**        | FR-CART-01 to FR-CART-06 | High     |
-| **Checkout & Orders**    | FR-CHK-01 to FR-CHK-08   | Critical |
-| **Payment Processing**   | FR-PAY-01 to FR-PAY-05   | Critical |
-| **Inventory Management** | FR-INV-01 to FR-INV-07   | High     |
-| **Admin Dashboard**      | FR-ADM-01 to FR-ADM-06   | Medium   |
-| **Frontend UI**          | FR-FE-01 to FR-FE-10     | High     |
-
-### 3.2 Features Out of Scope
-
-| Feature                        | Reason                             |
-| :----------------------------- | :--------------------------------- |
-| Third-party Razorpay internals | External system — tested via mocks |
-| Mobile native apps             | Not in current release scope       |
-| Internationalization (i18n)    | Deferred to v2.0                   |
+| Category        | ID Range                         | Count   |
+| :-------------- | :------------------------------- | :------ |
+| Authentication  | TC-AUTH-001 to TC-AUTH-015       | 15      |
+| Checkout        | TC-CHK-001 to TC-CHK-011         | 11      |
+| Cart            | TC-CART-001                      | 1       |
+| Product         | TC-PROD-001 to TC-PROD-005       | 5       |
+| Order           | TC-ORD-001 to TC-ORD-004         | 4       |
+| Wishlist        | TC-WISH-001                      | 1       |
+| Review          | TC-REV-001 to TC-REV-005         | 5       |
+| Admin Product   | TC-ADM-PRD-001 to TC-ADM-PRD-002 | 2       |
+| Admin Order     | TC-ADM-ORD-001 to TC-ADM-ORD-002 | 2       |
+| Admin User      | TC-ADM-USR-001 to TC-ADM-USR-002 | 2       |
+| Admin Inventory | TC-ADM-INV-001 to TC-ADM-INV-004 | 4       |
+| Admin Analytics | TC-ADM-ANL-001                   | 1       |
+| Password        | TC-PWD-001 to TC-PWD-010         | 10      |
+| Integration     | TC-INT-001 to TC-INT-005         | 5       |
+| Security        | TC-SEC-001 to TC-SEC-019         | 19      |
+| Performance     | TC-PERF-001 to TC-PERF-003       | 3       |
+| Stress          | TC-STRESS-001 to TC-STRESS-003   | 3       |
+| Reliability     | TC-REL-001 to TC-REL-005         | 5       |
+| Edge Cases      | TC-EDGE-001 to TC-EDGE-010       | 10      |
+| E2E             | TC-E2E-001 to TC-E2E-006         | 6       |
+| Monitoring      | TC-MON-001 to TC-MON-005         | 5       |
+| **Total**       |                                  | **124** |
 
 ---
 
-## 4. Test Schedule & Resources
+## 3. Test Schedule
 
-### 4.1 Phase Timeline
+| Phase                     | Activities                                 | Duration | Dependencies               |
+| :------------------------ | :----------------------------------------- | :------- | :------------------------- |
+| **Phase 1: Planning**     | Finalize TC, TD, environment setup         | 3 days   | SRS approved               |
+| **Phase 2: Unit Testing** | Execute unit tests, fix failures           | 5 days   | Codebase stable            |
+| **Phase 3: Integration**  | Cart-Order-Inventory flows, DB integration | 4 days   | Phase 2 complete           |
+| **Phase 4: Security**     | Injection, AuthZ bypass, rate limit tests  | 3 days   | Phase 2 complete           |
+| **Phase 5: Performance**  | Load testing, stress, reliability          | 3 days   | Phase 3 complete           |
+| **Phase 6: E2E**          | Selenium browser tests, user journeys      | 3 days   | Phase 3 complete           |
+| **Phase 7: Regression**   | Full regression after bug fixes            | 2 days   | Phase 4-6 defects resolved |
 
-```mermaid
-gantt
-    title Test Execution Timeline
-    dateFormat YYYY-MM-DD
-    section Unit Testing
-        Unit Tests           :ut, 2026-02-15, 14d
-    section Integration Testing
-        API Integration      :it, after ut, 10d
-    section System Testing
-        E2E Functional       :st, after it, 10d
-        Performance          :pt, after it, 7d
-        Security             :sec, after it, 7d
-    section UAT
-        User Acceptance      :uat, after st, 7d
-    section Release
-        Go/No-Go Decision    :milestone, after uat, 0d
+---
+
+## 4. Test Environment
+
+### 4.1 Infrastructure
+
+| Component       | Test Configuration                 | Production Configuration            |
+| :-------------- | :--------------------------------- | :---------------------------------- |
+| **Application** | Spring Boot (profile: `test`)      | Spring Boot (profile: `production`) |
+| **Database**    | H2 In-Memory / MySQL testcontainer | MySQL 8.x                           |
+| **Cache**       | Disabled / Embedded Redis          | Redis 7.x                           |
+| **Search**      | Mocked / Testcontainer             | Elasticsearch 8.x                   |
+| **Payment**     | Razorpay Test Mode (`key_test_*`)  | Razorpay Live Mode                  |
+
+### 4.2 Test Tools
+
+| Tool                   | Purpose                  | Used In               |
+| :--------------------- | :----------------------- | :-------------------- |
+| **JUnit 5**            | Test framework           | All test levels       |
+| **Mockito**            | Mocking dependencies     | Unit tests            |
+| **Spring MockMvc**     | Controller testing       | Integration, System   |
+| **@SpringBootTest**    | Full context loading     | System tests          |
+| **@DataJpaTest**       | Repository testing       | Persistence tests     |
+| **@WebMvcTest**        | Controller slice testing | Controller unit tests |
+| **Selenium WebDriver** | Browser automation       | E2E tests             |
+| **Maven Surefire**     | Test execution           | CI/CD pipeline        |
+| **JaCoCo**             | Code coverage            | All tests             |
+| **Custom assertions**  | Domain-specific          | All levels            |
+
+---
+
+## 5. Entry / Exit Criteria
+
+### 5.1 Entry Criteria
+
+| Criterion                    | Measurement                                      |
+| :--------------------------- | :----------------------------------------------- |
+| SRS and SDD approved         | Documented approval                              |
+| Test environment operational | Health check passes                              |
+| Test data seeded             | See [TDS](Test_Data_Specification_IEEE_29119.md) |
+| All test cases reviewed      | TCS peer review sign-off                         |
+| Build compilable (no errors) | `mvn clean compile` succeeds                     |
+
+### 5.2 Exit Criteria
+
+| Criterion                  | Target                         | Current |
+| :------------------------- | :----------------------------- | :------ |
+| All P1 TCs executed        | 100%                           | —       |
+| All S1/S2 defects resolved | 0 open                         | —       |
+| Code coverage (line)       | ≥ 80%                          | 78%     |
+| Code coverage (branch)     | ≥ 70%                          | —       |
+| Pass rate                  | ≥ 95%                          | —       |
+| Performance thresholds met | < 500ms for API, < 2s checkout | —       |
+
+---
+
+## 6. Risk Analysis
+
+|  #   | Risk                                           |  Impact  | Likelihood | Mitigation                                                        |
+| :--: | :--------------------------------------------- | :------: | :--------: | :---------------------------------------------------------------- |
+| R-01 | Razorpay sandbox flakiness                     |   High   |   Medium   | Use test mode keys, mock for unit tests                           |
+| R-02 | Concurrent stock deduction race conditions     |   High   |   Medium   | Optimistic locking via `@Version`, retry logic                    |
+| R-03 | Elasticsearch cluster unavailability           |  Medium  |    Low     | Graceful degradation, skip analytics tests                        |
+| R-04 | Test data corruption between runs              |  Medium  |   Medium   | `@Transactional` with rollback, `@DirtiesContext`                 |
+| R-05 | XSS vulnerability in review comments (DEF-003) | Critical |    High    | Input sanitization, output encoding — **must fix before release** |
+| R-06 | JWT token expiry timing in parallel tests      |   Low    |   Medium   | Use long-lived tokens in test profile                             |
+| R-07 | Selenium E2E flakiness                         |  Medium  |    High    | Implicit waits, retry on stale element exceptions                 |
+
+---
+
+## 7. Defect Management
+
+### 7.1 Severity Classification
+
+| Severity          | Description                                 | SLA (Resolution) | Example                   |
+| :---------------- | :------------------------------------------ | :--------------- | :------------------------ |
+| **S1 - Critical** | System unusable, data loss, security breach | 4 hours          | XSS in reviews            |
+| **S2 - Major**    | Major feature broken, no workaround         | 1 business day   | Checkout rollback failure |
+| **S3 - Minor**    | Feature defect with workaround available    | 3 business days  | Incorrect error message   |
+| **S4 - Trivial**  | Cosmetic, typo, UI alignment                | Next sprint      | Misaligned button         |
+
+### 7.2 Defect Workflow
+
 ```
-
-### 4.2 Test Environments
-
-| Environment  | Purpose                      | Configuration               |
-| :----------- | :--------------------------- | :-------------------------- |
-| **Dev**      | Unit + Integration testing   | Local Docker Compose        |
-| **Staging**  | System + Performance testing | Kubernetes (mirrors Prod)   |
-| **Pre-Prod** | UAT and final validation     | Production-identical config |
-
-### 4.3 Roles & Responsibilities
-
-| Role              | Responsibility                                          |
-| :---------------- | :------------------------------------------------------ |
-| **Developer**     | Write and maintain unit/integration tests               |
-| **QA Engineer**   | Design test cases, execute system tests, report defects |
-| **Tech Lead**     | Review test coverage, approve Go/No-Go                  |
-| **Product Owner** | Execute UAT, sign off on release                        |
-
----
-
-## 5. Risk Analysis
-
-### 5.1 Product Risks
-
-| ID    | Risk                        | Likelihood |  Impact  | Mitigation                                         |
-| :---- | :-------------------------- | :--------: | :------: | :------------------------------------------------- |
-| PR-01 | Payment gateway failures    |   Medium   | Critical | Mock tests + Razorpay sandbox environment          |
-| PR-02 | Data loss during checkout   |    Low     | Critical | Transaction rollback + DB backup verification      |
-| PR-03 | Incorrect inventory counts  |   Medium   |   High   | Concurrent stock deduction tests with `FOR UPDATE` |
-| PR-04 | XSS/SQL injection           |    Low     | Critical | OWASP ZAP scans + parameterized query enforcement  |
-| PR-05 | Poor performance under load |   Medium   |   High   | JMeter load tests (500 concurrent users target)    |
-
-### 5.2 Project Risks
-
-| ID    | Risk                       | Likelihood | Impact | Mitigation                                     |
-| :---- | :------------------------- | :--------: | :----: | :--------------------------------------------- |
-| PJ-01 | Schedule slippage          |   Medium   | Medium | Prioritize Critical tests; automate regression |
-| PJ-02 | Insufficient test data     |    Low     | Medium | Seed scripts for test databases                |
-| PJ-03 | Environment unavailability |    Low     |  High  | Docker Compose fallback for local testing      |
-
----
-
-## 6. Entry / Exit Criteria
-
-### 6.1 Entry Criteria (Per Level)
-
-| Test Level      | Entry Criteria                                           |
-| :-------------- | :------------------------------------------------------- |
-| **Unit**        | Code compiles; developer marks feature as "dev complete" |
-| **Integration** | All unit tests pass; API endpoints deployed to Dev       |
-| **System**      | Integration tests pass; Staging environment available    |
-| **UAT**         | System tests pass; 0 Critical defects open               |
-
-### 6.2 Exit Criteria (Per Level)
-
-| Test Level      | Exit Criteria                                             |
-| :-------------- | :-------------------------------------------------------- |
-| **Unit**        | ≥ 80% branch coverage; 0 test failures                    |
-| **Integration** | All API contracts verified; 0 Critical/High defects       |
-| **System**      | All in-scope test cases executed; ≤ 2 Medium defects open |
-| **UAT**         | Product Owner sign-off; 0 Critical/High defects           |
-
----
-
-## 7. Test Deliverables
-
-| Deliverable               | Description                                 | Produced At       |
-| :------------------------ | :------------------------------------------ | :---------------- |
-| **Test Cases**            | Detailed step-by-step cases per feature     | Before each level |
-| **Test Execution Report** | Pass/Fail summary per test run              | After each level  |
-| **Defect Log**            | All defects with severity, priority, status | Continuous        |
-| **Coverage Report**       | JaCoCo code coverage output                 | Unit, Integration |
-| **Performance Report**    | JMeter results (response times, throughput) | System            |
-| **Security Scan Report**  | OWASP ZAP / Dependency-Check output         | System            |
-| **UAT Sign-Off**          | Formal approval document                    | UAT               |
-
----
-
-## 8. Defect Management
-
-### 8.1 Severity Classification
-
-| Severity          | Definition                               | Example                        |
-| :---------------- | :--------------------------------------- | :----------------------------- |
-| **S1 — Critical** | System crash, data loss, security breach | Payment double-charge          |
-| **S2 — High**     | Major feature broken, no workaround      | Cannot complete checkout       |
-| **S3 — Medium**   | Feature issue with workaround            | Sorting not working on catalog |
-| **S4 — Low**      | Cosmetic or minor UI issue               | Misaligned button on mobile    |
-
-### 8.2 Priority Classification
-
-| Priority           | Response Time        | Resolution Target |
-| :----------------- | :------------------- | :---------------- |
-| **P1 — Immediate** | < 1 hour             | < 4 hours         |
-| **P2 — High**      | < 4 hours            | < 24 hours        |
-| **P3 — Normal**    | < 24 hours           | Next sprint       |
-| **P4 — Low**       | Next sprint planning | Backlog           |
-
-### 8.3 Defect Lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> New
-    New --> Assigned : Triaged
-    Assigned --> InProgress : Developer picks up
-    InProgress --> Resolved : Fix committed
-    Resolved --> Verified : QA re-tests
-    Verified --> Closed : Confirmed fixed
-    Resolved --> Reopened : QA rejects fix
-    Reopened --> InProgress : Developer re-works
+NEW → ASSIGNED → IN PROGRESS → FIXED → VERIFIED → CLOSED
+                      │                     │
+                      └─── REJECTED ◄───────┘
+                                            └─── REOPENED
 ```
 
 ---
 
-## 9. Traceability
+## 8. Revision History
 
-| SRS Requirement Group    | Test Level                | Test Type               |
-| :----------------------- | :------------------------ | :---------------------- |
-| FR-AUTH (Authentication) | Unit, Integration         | Functional, Security    |
-| FR-PROD (Products)       | Unit, Integration         | Functional              |
-| FR-CART (Cart)           | Unit, Integration         | Functional              |
-| FR-CHK (Checkout)        | Unit, Integration, System | Functional, Performance |
-| FR-PAY (Payment)         | Integration, System       | Functional, Security    |
-| FR-INV (Inventory)       | Unit, Integration         | Functional              |
-| NFR (Performance)        | System                    | Performance             |
-| NFR (Security)           | Integration, System       | Security                |
+| Version | Date       | Author       | Changes                                                                                                       |
+| :------ | :--------- | :----------- | :------------------------------------------------------------------------------------------------------------ |
+| 1.0     | 2026-02-10 | BuildNest QA | Initial draft — 27 TC scope                                                                                   |
+| 2.0     | 2026-02-11 | BuildNest QA | Expanded to 124 TCs, 22 categories, 12 modules; updated tools (MockMvc, not RestAssured); added risk analysis |
 
 ---
 
