@@ -1,0 +1,285 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< com.example:buildnest-ecommerce >-------------------
+[INFO] Building buildnest-ecommerce 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.11:prepare-agent (prepare-agent) @ buildnest-ecommerce ---
+[INFO] jacoco.argLine set to -javaagent:C:\\Users\\Pradip_Ghadge\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.11\\org.jacoco.agent-0.8.11-runtime.jar=destfile=D:\\Development\\Projects\\Personal\\BuildNest\\buildnest-ecommerce-platform\\target\\jacoco.exec,excludes=**/model/dto/**:**/model/payload/**:**/config/**:**/*Application.class
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ buildnest-ecommerce ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 9 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ buildnest-ecommerce ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ buildnest-ecommerce ---
+[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ buildnest-ecommerce ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.4:test (default-test) @ buildnest-ecommerce ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.example.buildnest_ecommerce.e2e.product.ProductApiTest
+16:52:22.914 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.buildnest_ecommerce.e2e.product.ProductApiTest]: ProductApiTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+16:52:23.653 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.buildnest_ecommerce.CivilEcommerceApplication for test class com.example.buildnest_ecommerce.e2e.product.ProductApiTest
+16:52:28,630 |-WARN in ch.qos.logback.core.model.processor.AppenderModelHandler - Appender named [LOGSTASH] not referenced. Skipping further processing.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.10)
+
+{"@timestamp":"2026-02-11T11:22:29.3927924Z","level":"INFO","logger":"com.example.buildnest_ecommerce.e2e.product.ProductApiTest","thread":"main","message":"Starting ProductApiTest using Java 21.0.9 with PID 8752 (started by Pradip in D:\\Development\\Projects\\Personal\\BuildNest\\buildnest-ecommerce-platform)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:29.4183135Z","level":"INFO","logger":"com.example.buildnest_ecommerce.e2e.product.ProductApiTest","thread":"main","message":"The following 1 profile is active: \"test\"","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.9550727Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"??????????????????????????????????????????????????????????????","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.9572327Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? GRACEFUL SHUTDOWN CONFIGURED                               ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.958226Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? ?????????????????????????????????????????????????????????? ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.959235Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? Shutdown Mode:                    GRACEFUL                  ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.9597509Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? Maximum Shutdown Timeout:         30 seconds                ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.9679904Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? Connection Draining:              ENABLED                   ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.96899Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? In-Flight Request Completion:     ALLOWED                   ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.9699902Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? Database Connection Draining:     ENABLED                   ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.9709864Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? Webhook Task Completion:          BEST-EFFORT               ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.9719904Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? ?????????????????????????????????????????????????????????? ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.9729808Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? Behavior:                                                   ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.9739807Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? 1. No new connections/requests accepted                    ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.9739807Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? 2. Existing requests allowed to complete                   ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.9749901Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? 3. Active DB connections drained                           ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.97599Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? 4. Thread pools shutdown cleanly                           ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.97699Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? 5. Force shutdown if timeout exceeded                      ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:22:43.9779905Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"??????????????????????????????????????????????????????????????","app":"civil-ecommerce-test","traceId":"","spanId":""}
+Java HotSpot(TM) 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+{"@timestamp":"2026-02-11T11:23:05.6670993Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.addresses cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.6721028Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.audit_logs cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.6740751Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.cart_items cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.6750757Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.carts cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.6760766Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.categories cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.6770836Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.inventory cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.6867627Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.inventory_threshold_breach_events cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.6877615Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.order_items cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.6887617Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.orders cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.6947949Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.password_reset_tokens cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.695804Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.payments cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.6978004Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.permissions cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.6987947Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.product_review cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.6998038Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.products cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7008002Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.refresh_tokens cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7028001Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.role_permissions cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7038003Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.roles cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7043143Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.user_roles cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7068636Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.users cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7111007Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.webhook_subscription cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7131012Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.wishlist cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7146186Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    drop table if exists PUBLIC.wishlist_products cascade ","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7358541Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.addresses (\r\n        is_default boolean,\r\n        created_at timestamp(6),\r\n        id bigint generated by default as identity,\r\n        user_id bigint not null,\r\n        address_type varchar(255),\r\n        city varchar(255) not null,\r\n        country varchar(255) not null,\r\n        postal_code varchar(255) not null,\r\n        state varchar(255) not null,\r\n        street_address varchar(255) not null,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7408974Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.audit_logs (\r\n        http_status_code INT DEFAULT 200 not null,\r\n        entity_id bigint,\r\n        id bigint generated by default as identity,\r\n        timestamp timestamp(6) not null,\r\n        user_id bigint not null,\r\n        error_category VARCHAR(50) DEFAULT 'SUCCESS',\r\n        ip_address varchar(50),\r\n        action varchar(100) not null,\r\n        entity_type varchar(100) not null,\r\n        user_agent varchar(500),\r\n        new_value TEXT,\r\n        old_value TEXT,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7468939Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.cart_items (\r\n        price numeric(38,2) not null,\r\n        quantity integer not null,\r\n        cart_id bigint not null,\r\n        id bigint generated by default as identity,\r\n        product_id bigint not null,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.750894Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.carts (\r\n        id bigint generated by default as identity,\r\n        user_id bigint unique,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7544083Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.categories (\r\n        is_active boolean,\r\n        minimum_stock_threshold integer,\r\n        created_at timestamp(6),\r\n        id bigint generated by default as identity,\r\n        updated_at timestamp(6),\r\n        description TEXT,\r\n        image_url varchar(255),\r\n        name varchar(255) not null unique,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.767725Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.inventory (\r\n        minimum_stock_level integer not null,\r\n        quantity_in_stock integer not null,\r\n        quantity_reserved integer not null,\r\n        use_category_threshold boolean,\r\n        id bigint generated by default as identity,\r\n        last_restocked timestamp(6),\r\n        last_threshold_breach timestamp(6),\r\n        product_id bigint not null unique,\r\n        updated_at timestamp(6),\r\n        version bigint,\r\n        status enum ('IN_STOCK','LOW_STOCK','OUT_OF_STOCK') not null,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7734425Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.inventory_threshold_breach_events (\r\n        current_quantity integer not null,\r\n        threshold_level integer not null,\r\n        created_at timestamp(6),\r\n        id bigint generated by default as identity,\r\n        inventory_id bigint not null,\r\n        product_id bigint not null,\r\n        details TEXT,\r\n        breach_type enum ('BACK_IN_STOCK','OUT_OF_STOCK','THRESHOLD_BREACH','THRESHOLD_RESTORED') not null,\r\n        new_status enum ('IN_STOCK','LOW_STOCK','OUT_OF_STOCK') not null,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7774868Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.order_items (\r\n        discount_amount numeric(38,2),\r\n        price numeric(38,2) not null,\r\n        quantity integer not null,\r\n        subtotal numeric(38,2) not null,\r\n        id bigint generated by default as identity,\r\n        order_id bigint not null,\r\n        product_id bigint not null,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.782487Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.orders (\r\n        discount_amount numeric(38,2),\r\n        is_deleted boolean,\r\n        shipping_amount numeric(38,2),\r\n        tax_amount numeric(38,2),\r\n        total_amount numeric(38,2) not null,\r\n        created_at timestamp(6),\r\n        deleted_at timestamp(6),\r\n        id bigint generated by default as identity,\r\n        shipping_address_id bigint,\r\n        updated_at timestamp(6),\r\n        user_id bigint not null,\r\n        order_number varchar(255) not null unique,\r\n        tracking_number varchar(255),\r\n        status enum ('CANCELLED','CONFIRMED','DELIVERED','PENDING','SHIPPED') not null,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7864869Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.password_reset_tokens (\r\n        used boolean not null,\r\n        created_at timestamp(6) not null,\r\n        expiry_date timestamp(6) not null,\r\n        id bigint generated by default as identity,\r\n        used_at timestamp(6),\r\n        user_id bigint not null,\r\n        token varchar(500) not null unique,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7915039Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.payments (\r\n        amount float(53) not null,\r\n        created_at timestamp(6) not null,\r\n        id bigint generated by default as identity,\r\n        order_id bigint not null,\r\n        updated_at timestamp(6),\r\n        status varchar(50) not null,\r\n        razorpay_order_id varchar(255),\r\n        razorpay_payment_id varchar(255),\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.7945216Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.permissions (\r\n        id bigint generated by default as identity,\r\n        description varchar(500),\r\n        name varchar(255) not null unique,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.799521Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.product_review (\r\n        helpful_count INTEGER DEFAULT 0,\r\n        is_visible boolean,\r\n        rating integer not null check ((rating>=1) and (rating<=5)),\r\n        verified_purchase boolean,\r\n        created_at timestamp(6) not null,\r\n        id bigint generated by default as identity,\r\n        product_id bigint not null,\r\n        updated_at timestamp(6),\r\n        user_id bigint not null,\r\n        comment varchar(2000),\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8050367Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.products (\r\n        discount_price numeric(38,2),\r\n        expiry_date date,\r\n        is_active boolean,\r\n        price numeric(38,2) not null,\r\n        stock_quantity integer,\r\n        category_id bigint,\r\n        created_at timestamp(6),\r\n        id bigint generated by default as identity,\r\n        updated_at timestamp(6),\r\n        description TEXT,\r\n        image_url varchar(255),\r\n        name varchar(255) not null,\r\n        sku varchar(255) unique,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8096203Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.refresh_tokens (\r\n        revoked boolean not null,\r\n        created_at timestamp(6) not null,\r\n        expiry_date timestamp(6) not null,\r\n        id bigint generated by default as identity,\r\n        revoked_at timestamp(6),\r\n        user_id bigint not null,\r\n        token varchar(500) not null unique,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.813173Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.role_permissions (\r\n        permission_id bigint not null,\r\n        role_id bigint not null,\r\n        primary key (permission_id, role_id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8167314Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.roles (\r\n        id bigint generated by default as identity,\r\n        description varchar(500),\r\n        name varchar(255) not null unique,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8213719Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.user_roles (\r\n        role_id bigint not null,\r\n        user_id bigint not null,\r\n        primary key (role_id, user_id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8243668Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.users (\r\n        is_active boolean,\r\n        is_deleted boolean,\r\n        created_at timestamp(6),\r\n        deleted_at timestamp(6),\r\n        id bigint generated by default as identity,\r\n        last_login timestamp(6),\r\n        updated_at timestamp(6),\r\n        email varchar(255) not null unique,\r\n        first_name varchar(255),\r\n        last_name varchar(255),\r\n        password varchar(255) not null,\r\n        phone_number varchar(255),\r\n        username varchar(255) not null unique,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8303918Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.webhook_subscription (\r\n        failure_count integer,\r\n        is_active boolean,\r\n        created_at timestamp(6),\r\n        id bigint generated by default as identity,\r\n        updated_at timestamp(6),\r\n        last_delivery_status varchar(50),\r\n        event_type varchar(100) not null,\r\n        target_url varchar(500) not null,\r\n        secret varchar(255),\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8343876Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.wishlist (\r\n        created_at timestamp(6) not null,\r\n        id bigint generated by default as identity,\r\n        updated_at timestamp(6),\r\n        user_id bigint not null unique,\r\n        primary key (id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8383675Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create table PUBLIC.wishlist_products (\r\n        product_id bigint not null,\r\n        wishlist_id bigint not null,\r\n        primary key (product_id, wishlist_id)\r\n    )","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8403882Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create index PUBLIC.idx_audit_user_id \r\n       on PUBLIC.audit_logs (user_id)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8423919Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create index PUBLIC.idx_audit_action \r\n       on PUBLIC.audit_logs (action)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8443972Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create index PUBLIC.idx_audit_timestamp \r\n       on PUBLIC.audit_logs (timestamp)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8463959Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create index PUBLIC.idx_product_id \r\n       on PUBLIC.product_review (product_id)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8483923Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create index PUBLIC.idx_product_review_user_id \r\n       on PUBLIC.product_review (user_id)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8503945Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create index PUBLIC.idx_rating \r\n       on PUBLIC.product_review (rating)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8523822Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    create index PUBLIC.idx_created_at \r\n       on PUBLIC.product_review (created_at)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.854924Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.addresses \r\n       add constraint FK1fa36y2oqhao3wgg2rw1pi459 \r\n       foreign key (user_id) \r\n       references PUBLIC.users","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8581365Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.cart_items \r\n       add constraint FKpcttvuq4mxppo8sxggjtn5i2c \r\n       foreign key (cart_id) \r\n       references PUBLIC.carts","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8642544Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.cart_items \r\n       add constraint FK1re40cjegsfvw58xrkdp6bac6 \r\n       foreign key (product_id) \r\n       references PUBLIC.products","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8699141Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.carts \r\n       add constraint FKb5o626f86h46m4s7ms6ginnop \r\n       foreign key (user_id) \r\n       references PUBLIC.users","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8729053Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.inventory \r\n       add constraint FKq2yge7ebtfuvwufr6lwfwqy9l \r\n       foreign key (product_id) \r\n       references PUBLIC.products","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8769132Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.inventory_threshold_breach_events \r\n       add constraint FKsx2kj7tdqblg1vgw3voemr5v1 \r\n       foreign key (inventory_id) \r\n       references PUBLIC.inventory","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8809409Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.inventory_threshold_breach_events \r\n       add constraint FK2oafq4qmh1e7req68132f1e0e \r\n       foreign key (product_id) \r\n       references PUBLIC.products","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8849307Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.order_items \r\n       add constraint FKbioxgbv59vetrxe0ejfubep1w \r\n       foreign key (order_id) \r\n       references PUBLIC.orders","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8899732Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.order_items \r\n       add constraint FKocimc7dtr037rh4ls4l95nlfi \r\n       foreign key (product_id) \r\n       references PUBLIC.products","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.8949701Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.orders \r\n       add constraint FKmk6q95x8ffidq82wlqjaq7sqc \r\n       foreign key (shipping_address_id) \r\n       references PUBLIC.addresses","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.9009477Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.orders \r\n       add constraint FK32ql8ubntj5uh44ph9659tiih \r\n       foreign key (user_id) \r\n       references PUBLIC.users","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.9060225Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.product_review \r\n       add constraint FKlkf2n9dkjx32vcqqmds9v62 \r\n       foreign key (product_id) \r\n       references PUBLIC.products","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.9080621Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.product_review \r\n       add constraint FKib6mkfaqaj0beph37y4qxmu9x \r\n       foreign key (user_id) \r\n       references PUBLIC.users","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.9126479Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.products \r\n       add constraint FKog2rp4qthbtt2lfyhfo32lsw9 \r\n       foreign key (category_id) \r\n       references PUBLIC.categories","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.9180263Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.role_permissions \r\n       add constraint FKegdk29eiy7mdtefy5c7eirr6e \r\n       foreign key (permission_id) \r\n       references PUBLIC.permissions","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.9220212Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.role_permissions \r\n       add constraint FKn5fotdgk8d1xvo8nav9uv3muc \r\n       foreign key (role_id) \r\n       references PUBLIC.roles","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.9260041Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.user_roles \r\n       add constraint FKh8ciramu9cc9q3qcqiv4ue8a6 \r\n       foreign key (role_id) \r\n       references PUBLIC.roles","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.9299974Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.user_roles \r\n       add constraint FKhfh9dx7w3ubf1co1vdev94g3f \r\n       foreign key (user_id) \r\n       references PUBLIC.users","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.9350152Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.wishlist \r\n       add constraint FKtrd6335blsefl2gxpb8lr0gr7 \r\n       foreign key (user_id) \r\n       references PUBLIC.users","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.9390289Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.wishlist_products \r\n       add constraint FKpj5y3q6hyu53f8q4pd6n7rndc \r\n       foreign key (product_id) \r\n       references PUBLIC.products","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:05.9430261Z","level":"DEBUG","logger":"org.hibernate.SQL","thread":"main","message":"\r\n    alter table if exists PUBLIC.wishlist_products \r\n       add constraint FKhlq0ylq5sxd70s0pembuumc1d \r\n       foreign key (wishlist_id) \r\n       references PUBLIC.wishlist","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:13.5018017Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.TestProfilePropertyValidator","thread":"main","message":"Test profile configuration validation passed.","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:28.187846Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.ResilienceConfig","thread":"main","message":"CircuitBreaker created: redis-circuit-breaker","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:28.2415056Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.ResilienceConfig","thread":"main","message":"CircuitBreaker created: database-circuit-breaker","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:34.5550811Z","level":"INFO","logger":"com.example.buildnest_ecommerce.e2e.product.ProductApiTest","thread":"main","message":"Started ProductApiTest in 69.96 seconds (process running for 75.069)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:34.5734021Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.monitoring.PerformanceMonitoringService","thread":"scheduling-1","message":"PERFORMANCE_METRICS: {status=NO_DATA}","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:34.7142693Z","level":"INFO","logger":"com.example.buildnest_ecommerce.monitoring.MonitoringInitializer","thread":"main","message":"Starting monitoring and observability initialization...","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:34.7735425Z","level":"INFO","logger":"com.example.buildnest_ecommerce.monitoring.BusinessMetricsService","thread":"main","message":"? Business metrics initialized and ready for collection","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:34.7750971Z","level":"INFO","logger":"com.example.buildnest_ecommerce.monitoring.MonitoringInitializer","thread":"main","message":"? Monitoring initialization complete","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:34.7750971Z","level":"INFO","logger":"com.example.buildnest_ecommerce.monitoring.MonitoringInitializer","thread":"main","message":"\uD83D\uDCCA Prometheus metrics available at: /actuator/prometheus","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:34.7750971Z","level":"INFO","logger":"com.example.buildnest_ecommerce.monitoring.MonitoringInitializer","thread":"main","message":"\uD83D\uDCC8 Grafana dashboard: http://localhost:3000/d/buildnest-ecommerce","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:34.7766836Z","level":"INFO","logger":"com.example.buildnest_ecommerce.startup.ApplicationStartupValidator","thread":"main","message":"Starting application startup validation checks...","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:34.7766836Z","level":"INFO","logger":"com.example.buildnest_ecommerce.security.JwtKeyValidator","thread":"main","message":"? JWT Secret Key validation successful (key length: 512 bits)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T11:23:34.7766836Z","level":"INFO","logger":"com.example.buildnest_ecommerce.startup.ApplicationStartupValidator","thread":"main","message":"? All startup validation checks passed","app":"civil-ecommerce-test","traceId":"","spanId":""}
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 75.72 s <<< FAILURE! -- in com.example.buildnest_ecommerce.e2e.product.ProductApiTest
+[ERROR] com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testGetAllProductsV2 -- Time elapsed: 2.993 s <<< FAILURE!
+java.lang.AssertionError: 
+1 expectation failed.
+Expected status code <201> but was <400>.
+
+	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)
+	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)
+	at org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:73)
+	at org.codehaus.groovy.runtime.callsite.ConstructorSite$ConstructorSiteNoUnwrapNoCoerce.callConstructor(ConstructorSite.java:108)
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallConstructor(CallSiteArray.java:57)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callConstructor(AbstractCallSite.java:263)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callConstructor(AbstractCallSite.java:277)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure.validate(ResponseSpecificationImpl.groovy:512)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure$validate$1.call(Unknown Source)
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCall(CallSiteArray.java:45)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:125)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:139)
+	at io.restassured.internal.ResponseSpecificationImpl.validateResponseIfRequired(ResponseSpecificationImpl.groovy:696)
+	at io.restassured.internal.ResponseSpecificationImpl.this$2$validateResponseIfRequired(ResponseSpecificationImpl.groovy)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.codehaus.groovy.runtime.callsite.PlainObjectMetaMethodSite.doInvoke(PlainObjectMetaMethodSite.java:43)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite$PogoCachedMethodSiteNoUnwrapNoCoerce.invoke(PogoMetaMethodSite.java:198)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite.callCurrent(PogoMetaMethodSite.java:62)
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallCurrent(CallSiteArray.java:49)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:171)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:185)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:135)
+	at io.restassured.specification.ResponseSpecification$statusCode$0.callCurrent(Unknown Source)
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallCurrent(CallSiteArray.java:49)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:171)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:185)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:143)
+	at io.restassured.internal.ValidatableResponseOptionsImpl.statusCode(ValidatableResponseOptionsImpl.java:89)
+	at com.example.buildnest_ecommerce.e2e.BaseApiTest.getAuthToken(BaseApiTest.java:43)
+	at com.example.buildnest_ecommerce.e2e.product.ProductApiTest.setupToken(ProductApiTest.java:22)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testSearchProducts -- Time elapsed: 0.052 s <<< FAILURE!
+java.lang.AssertionError: 
+1 expectation failed.
+Expected status code <201> but was <400>.
+
+	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)
+	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)
+	at org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:73)
+	at org.codehaus.groovy.runtime.callsite.ConstructorSite$ConstructorSiteNoUnwrapNoCoerce.callConstructor(ConstructorSite.java:108)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callConstructor(AbstractCallSite.java:277)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure.validate(ResponseSpecificationImpl.groovy:512)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure$validate$1.call(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.validateResponseIfRequired(ResponseSpecificationImpl.groovy:696)
+	at io.restassured.internal.ResponseSpecificationImpl.this$2$validateResponseIfRequired(ResponseSpecificationImpl.groovy)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.codehaus.groovy.runtime.callsite.PlainObjectMetaMethodSite.doInvoke(PlainObjectMetaMethodSite.java:43)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite$PogoCachedMethodSiteNoUnwrapNoCoerce.invoke(PogoMetaMethodSite.java:198)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite.callCurrent(PogoMetaMethodSite.java:62)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:185)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:135)
+	at io.restassured.specification.ResponseSpecification$statusCode$0.callCurrent(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:143)
+	at io.restassured.internal.ValidatableResponseOptionsImpl.statusCode(ValidatableResponseOptionsImpl.java:89)
+	at com.example.buildnest_ecommerce.e2e.BaseApiTest.getAuthToken(BaseApiTest.java:43)
+	at com.example.buildnest_ecommerce.e2e.product.ProductApiTest.setupToken(ProductApiTest.java:22)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testGetDeprecatedV1Products -- Time elapsed: 0.048 s <<< FAILURE!
+java.lang.AssertionError: 
+1 expectation failed.
+Expected status code <201> but was <400>.
+
+	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)
+	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)
+	at org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:73)
+	at org.codehaus.groovy.runtime.callsite.ConstructorSite$ConstructorSiteNoUnwrapNoCoerce.callConstructor(ConstructorSite.java:108)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callConstructor(AbstractCallSite.java:277)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure.validate(ResponseSpecificationImpl.groovy:512)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure$validate$1.call(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.validateResponseIfRequired(ResponseSpecificationImpl.groovy:696)
+	at io.restassured.internal.ResponseSpecificationImpl.this$2$validateResponseIfRequired(ResponseSpecificationImpl.groovy)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.codehaus.groovy.runtime.callsite.PlainObjectMetaMethodSite.doInvoke(PlainObjectMetaMethodSite.java:43)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite$PogoCachedMethodSiteNoUnwrapNoCoerce.invoke(PogoMetaMethodSite.java:198)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite.callCurrent(PogoMetaMethodSite.java:62)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:185)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:135)
+	at io.restassured.specification.ResponseSpecification$statusCode$0.callCurrent(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:143)
+	at io.restassured.internal.ValidatableResponseOptionsImpl.statusCode(ValidatableResponseOptionsImpl.java:89)
+	at com.example.buildnest_ecommerce.e2e.BaseApiTest.getAuthToken(BaseApiTest.java:43)
+	at com.example.buildnest_ecommerce.e2e.product.ProductApiTest.setupToken(ProductApiTest.java:22)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   ProductApiTest.setupToken:22->BaseApiTest.getAuthToken:43 1 expectation failed.
+Expected status code <201> but was <400>.
+
+[ERROR]   ProductApiTest.setupToken:22->BaseApiTest.getAuthToken:43 1 expectation failed.
+Expected status code <201> but was <400>.
+
+[ERROR]   ProductApiTest.setupToken:22->BaseApiTest.getAuthToken:43 1 expectation failed.
+Expected status code <201> but was <400>.
+
+[INFO] 
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:26 min
+[INFO] Finished at: 2026-02-11T16:53:39+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.4:test (default-test) on project buildnest-ecommerce: There are test failures.
+[ERROR] 
+[ERROR] See D:\Development\Projects\Personal\BuildNest\buildnest-ecommerce-platform\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

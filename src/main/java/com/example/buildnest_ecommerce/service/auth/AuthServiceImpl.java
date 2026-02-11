@@ -5,6 +5,7 @@ import com.example.buildnest_ecommerce.model.entity.Role;
 import com.example.buildnest_ecommerce.model.entity.User;
 import com.example.buildnest_ecommerce.model.payload.AuthResponse;
 import com.example.buildnest_ecommerce.model.payload.RegisterRequest;
+import com.example.buildnest_ecommerce.repository.RoleRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import com.example.buildnest_ecommerce.security.Jwt.JwtTokenProvider;
 import com.example.buildnest_ecommerce.service.audit.AuditLogService;
@@ -43,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
     private final AuditLogService auditLogService;
@@ -103,6 +105,7 @@ public class AuthServiceImpl implements AuthService {
      * @see com.example.buildnest_ecommerce.util.ValidationUtil#validatePassword(String)
      */
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public void register(RegisterRequest registerRequest) {
         log.info("User registration attempt: {}", registerRequest.getUsername());
 
@@ -132,9 +135,13 @@ public class AuthServiceImpl implements AuthService {
 
         // Assign default USER role
         Set<Role> roles = new HashSet<>();
-        Role userRole = new Role();
-        userRole.setName("ROLE_USER");
-        userRole.setDescription("Default user role");
+        Role userRole = roleRepository.findByName("ROLE_USER")
+                .orElseGet(() -> {
+                    Role role = new Role();
+                    role.setName("ROLE_USER");
+                    role.setDescription("Default user role");
+                    return roleRepository.save(role);
+                });
         roles.add(userRole);
         newUser.setRoles(roles);
 
