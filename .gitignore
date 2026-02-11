@@ -39,3 +39,9 @@ pit-reports-download/
 ### Logs ###
 logs/
 *_IS_UNDEFINED
+
+
+### Environment / Secrets ###
+.env
+.env.*
+!.env.example
