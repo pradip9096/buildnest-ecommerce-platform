@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    // Custom query methods can be added here
+    java.util.Optional<com.example.buildnest_ecommerce.model.entity.Category> findByName(String name);
 }

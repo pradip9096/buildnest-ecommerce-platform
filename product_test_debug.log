@@ -1,0 +1,315 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< com.example:buildnest-ecommerce >-------------------
+[INFO] Building buildnest-ecommerce 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.11:prepare-agent (prepare-agent) @ buildnest-ecommerce ---
+[INFO] jacoco.argLine set to -javaagent:C:\\Users\\Pradip_Ghadge\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.11\\org.jacoco.agent-0.8.11-runtime.jar=destfile=D:\\Development\\Projects\\Personal\\BuildNest\\buildnest-ecommerce-platform\\target\\jacoco.exec,excludes=**/model/dto/**:**/model/payload/**:**/config/**:**/*Application.class
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ buildnest-ecommerce ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 9 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ buildnest-ecommerce ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ buildnest-ecommerce ---
+[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ buildnest-ecommerce ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.4:test (default-test) @ buildnest-ecommerce ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.example.buildnest_ecommerce.e2e.product.ProductApiTest
+18:43:58.600 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.buildnest_ecommerce.e2e.product.ProductApiTest]: ProductApiTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+18:43:59.401 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.buildnest_ecommerce.CivilEcommerceApplication for test class com.example.buildnest_ecommerce.e2e.product.ProductApiTest
+18:44:03,622 |-WARN in ch.qos.logback.core.model.processor.AppenderModelHandler - Appender named [LOGSTASH] not referenced. Skipping further processing.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.10)
+
+{"@timestamp":"2026-02-11T13:14:04.1768581Z","level":"INFO","logger":"com.example.buildnest_ecommerce.e2e.product.ProductApiTest","thread":"main","message":"Starting ProductApiTest using Java 21.0.9 with PID 4464 (started by Pradip in D:\\Development\\Projects\\Personal\\BuildNest\\buildnest-ecommerce-platform)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:04.2032084Z","level":"INFO","logger":"com.example.buildnest_ecommerce.e2e.product.ProductApiTest","thread":"main","message":"The following 1 profile is active: \"test\"","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0625672Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"??????????????????????????????????????????????????????????????","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0648223Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? GRACEFUL SHUTDOWN CONFIGURED                               ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0658445Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? ?????????????????????????????????????????????????????????? ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0668428Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? Shutdown Mode:                    GRACEFUL                  ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0678431Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? Maximum Shutdown Timeout:         30 seconds                ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0748419Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? Connection Draining:              ENABLED                   ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0768441Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? In-Flight Request Completion:     ALLOWED                   ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.077842Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? Database Connection Draining:     ENABLED                   ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0785778Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? Webhook Task Completion:          BEST-EFFORT               ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0795986Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? ?????????????????????????????????????????????????????????? ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0805987Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? Behavior:                                                   ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0816045Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? 1. No new connections/requests accepted                    ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0826064Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? 2. Existing requests allowed to complete                   ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0836031Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? 3. Active DB connections drained                           ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0846015Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? 4. Thread pools shutdown cleanly                           ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0856025Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"? 5. Force shutdown if timeout exceeded                      ?","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:14:19.0856025Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.GracefulShutdownConfig","thread":"main","message":"??????????????????????????????????????????????????????????????","app":"civil-ecommerce-test","traceId":"","spanId":""}
+Java HotSpot(TM) 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+{"@timestamp":"2026-02-11T13:14:49.0200265Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.TestProfilePropertyValidator","thread":"main","message":"Test profile configuration validation passed.","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:03.7859011Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.ResilienceConfig","thread":"main","message":"CircuitBreaker created: redis-circuit-breaker","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:03.8202984Z","level":"INFO","logger":"com.example.buildnest_ecommerce.config.ResilienceConfig","thread":"main","message":"CircuitBreaker created: database-circuit-breaker","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:11.8593586Z","level":"INFO","logger":"com.example.buildnest_ecommerce.e2e.product.ProductApiTest","thread":"main","message":"Started ProductApiTest in 71.501 seconds (process running for 76.986)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:11.8843583Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.monitoring.PerformanceMonitoringService","thread":"scheduling-1","message":"PERFORMANCE_METRICS: {status=NO_DATA}","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:12.0695119Z","level":"INFO","logger":"com.example.buildnest_ecommerce.monitoring.MonitoringInitializer","thread":"main","message":"Starting monitoring and observability initialization...","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:12.1476692Z","level":"INFO","logger":"com.example.buildnest_ecommerce.monitoring.BusinessMetricsService","thread":"main","message":"? Business metrics initialized and ready for collection","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:12.1486665Z","level":"INFO","logger":"com.example.buildnest_ecommerce.monitoring.MonitoringInitializer","thread":"main","message":"? Monitoring initialization complete","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:12.1496654Z","level":"INFO","logger":"com.example.buildnest_ecommerce.monitoring.MonitoringInitializer","thread":"main","message":"\uD83D\uDCCA Prometheus metrics available at: /actuator/prometheus","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:12.1496654Z","level":"INFO","logger":"com.example.buildnest_ecommerce.monitoring.MonitoringInitializer","thread":"main","message":"\uD83D\uDCC8 Grafana dashboard: http://localhost:3000/d/buildnest-ecommerce","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:12.1506731Z","level":"INFO","logger":"com.example.buildnest_ecommerce.startup.ApplicationStartupValidator","thread":"main","message":"Starting application startup validation checks...","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:12.1516622Z","level":"INFO","logger":"com.example.buildnest_ecommerce.security.JwtKeyValidator","thread":"main","message":"? JWT Secret Key validation successful (key length: 512 bits)","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:12.1526582Z","level":"INFO","logger":"com.example.buildnest_ecommerce.startup.ApplicationStartupValidator","thread":"main","message":"? All startup validation checks passed","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:15.2761012Z","level":"INFO","logger":"org.springframework.web.servlet.DispatcherServlet","thread":"http-nio-auto-1-exec-1","message":"Initializing Servlet 'dispatcherServlet'","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:15.2830944Z","level":"INFO","logger":"org.springframework.web.servlet.DispatcherServlet","thread":"http-nio-auto-1-exec-1","message":"Completed initialization in 6 ms","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:15.9265813Z","level":"INFO","logger":"com.example.buildnest_ecommerce.controller.auth.AuthController","thread":"http-nio-auto-1-exec-1","message":"Registration attempt for user: user_d8816e24","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:15.9561647Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-1","message":"User registration attempt: user_d8816e24","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:16.8390333Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-1","message":"User registered successfully: user_d8816e24","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:17.2167144Z","level":"INFO","logger":"com.example.buildnest_ecommerce.controller.auth.AuthController","thread":"http-nio-auto-1-exec-2","message":"Login attempt for user: user_d8816e24","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:17.2187084Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-2","message":"User login attempt: user_d8816e24","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:17.3955473Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.CustomUserDetailsService","thread":"http-nio-auto-1-exec-2","message":"Loading user by username: user_d8816e24","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:18.0529543Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.token.RefreshTokenService","thread":"http-nio-auto-1-exec-2","message":"Created refresh token for user ID: 1","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:20.3229179Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.CustomUserDetailsService","thread":"http-nio-auto-1-exec-3","message":"Loading user by username: user_d8816e24","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:20.3734333Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.product.ProductServiceImpl","thread":"http-nio-auto-1-exec-3","message":"Fetching all products with pagination","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:20.7352585Z","level":"INFO","logger":"com.example.buildnest_ecommerce.controller.auth.AuthController","thread":"http-nio-auto-1-exec-6","message":"Registration attempt for user: user_dfcd6cd8","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:20.7372723Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-6","message":"User registration attempt: user_dfcd6cd8","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:20.9138985Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-6","message":"User registered successfully: user_dfcd6cd8","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:20.9579702Z","level":"INFO","logger":"com.example.buildnest_ecommerce.controller.auth.AuthController","thread":"http-nio-auto-1-exec-7","message":"Login attempt for user: user_dfcd6cd8","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:20.959518Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-7","message":"User login attempt: user_dfcd6cd8","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:20.9605713Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.CustomUserDetailsService","thread":"http-nio-auto-1-exec-7","message":"Loading user by username: user_dfcd6cd8","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.1437737Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.token.RefreshTokenService","thread":"http-nio-auto-1-exec-7","message":"Created refresh token for user ID: 2","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.2527099Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.CustomUserDetailsService","thread":"http-nio-auto-1-exec-8","message":"Loading user by username: user_dfcd6cd8","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.2806652Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.product.ProductServiceImpl","thread":"http-nio-auto-1-exec-8","message":"Advanced search - query: Test, categoryId: null, priceRange: null - null","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.3623601Z","level":"INFO","logger":"com.example.buildnest_ecommerce.controller.auth.AuthController","thread":"http-nio-auto-1-exec-9","message":"Registration attempt for user: user_cc304cf3","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.3649244Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-9","message":"User registration attempt: user_cc304cf3","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.5419805Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-9","message":"User registered successfully: user_cc304cf3","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.5841308Z","level":"INFO","logger":"com.example.buildnest_ecommerce.controller.auth.AuthController","thread":"http-nio-auto-1-exec-10","message":"Login attempt for user: user_cc304cf3","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.5851214Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-10","message":"User login attempt: user_cc304cf3","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.5861228Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.CustomUserDetailsService","thread":"http-nio-auto-1-exec-10","message":"Loading user by username: user_cc304cf3","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.7608146Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.token.RefreshTokenService","thread":"http-nio-auto-1-exec-10","message":"Created refresh token for user ID: 3","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.8603026Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.CustomUserDetailsService","thread":"http-nio-auto-1-exec-1","message":"Loading user by username: user_cc304cf3","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.8799066Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.product.ProductServiceImpl","thread":"http-nio-auto-1-exec-1","message":"Fetching product with id: 4","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.9757972Z","level":"INFO","logger":"com.example.buildnest_ecommerce.controller.auth.AuthController","thread":"http-nio-auto-1-exec-2","message":"Registration attempt for user: user_9e705fc7","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:21.9778003Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-2","message":"User registration attempt: user_9e705fc7","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.1526439Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-2","message":"User registered successfully: user_9e705fc7","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.1918205Z","level":"INFO","logger":"com.example.buildnest_ecommerce.controller.auth.AuthController","thread":"http-nio-auto-1-exec-3","message":"Login attempt for user: user_9e705fc7","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.1928298Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-3","message":"User login attempt: user_9e705fc7","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.1938205Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.CustomUserDetailsService","thread":"http-nio-auto-1-exec-3","message":"Loading user by username: user_9e705fc7","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.3760132Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.token.RefreshTokenService","thread":"http-nio-auto-1-exec-3","message":"Created refresh token for user ID: 4","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.4762532Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.CustomUserDetailsService","thread":"http-nio-auto-1-exec-4","message":"Loading user by username: user_9e705fc7","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.4963293Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.product.ProductServiceImpl","thread":"http-nio-auto-1-exec-4","message":"Fetching product with id: 6","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.5599932Z","level":"INFO","logger":"com.example.buildnest_ecommerce.controller.auth.AuthController","thread":"http-nio-auto-1-exec-5","message":"Registration attempt for user: user_18e5990f","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.5610361Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-5","message":"User registration attempt: user_18e5990f","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.7377628Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-5","message":"User registered successfully: user_18e5990f","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.7697949Z","level":"INFO","logger":"com.example.buildnest_ecommerce.controller.auth.AuthController","thread":"http-nio-auto-1-exec-6","message":"Login attempt for user: user_18e5990f","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.7707939Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.auth.AuthServiceImpl","thread":"http-nio-auto-1-exec-6","message":"User login attempt: user_18e5990f","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.7718027Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.CustomUserDetailsService","thread":"http-nio-auto-1-exec-6","message":"Loading user by username: user_18e5990f","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:22.9550813Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.token.RefreshTokenService","thread":"http-nio-auto-1-exec-6","message":"Created refresh token for user ID: 5","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:23.0326477Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.CustomUserDetailsService","thread":"http-nio-auto-1-exec-7","message":"Loading user by username: user_18e5990f","app":"civil-ecommerce-test","traceId":"","spanId":""}
+{"@timestamp":"2026-02-11T13:15:23.0523806Z","level":"INFO","logger":"com.example.buildnest_ecommerce.service.product.ProductServiceImpl","thread":"http-nio-auto-1-exec-7","message":"Fetching all products with pagination","app":"civil-ecommerce-test","traceId":"","spanId":""}
+[ERROR] Tests run: 5, Failures: 5, Errors: 0, Skipped: 0, Time elapsed: 85.38 s <<< FAILURE! -- in com.example.buildnest_ecommerce.e2e.product.ProductApiTest
+[ERROR] com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testGetAllProductsV2 -- Time elapsed: 8.501 s <<< FAILURE!
+java.lang.AssertionError: 
+1 expectation failed.
+Expected status code <200> but was <500>.
+
+	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)
+	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)
+	at org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:73)
+	at org.codehaus.groovy.runtime.callsite.ConstructorSite$ConstructorSiteNoUnwrapNoCoerce.callConstructor(ConstructorSite.java:108)
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallConstructor(CallSiteArray.java:57)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callConstructor(AbstractCallSite.java:263)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callConstructor(AbstractCallSite.java:277)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure.validate(ResponseSpecificationImpl.groovy:512)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure$validate$1.call(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.validateResponseIfRequired(ResponseSpecificationImpl.groovy:696)
+	at io.restassured.internal.ResponseSpecificationImpl.this$2$validateResponseIfRequired(ResponseSpecificationImpl.groovy)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.codehaus.groovy.runtime.callsite.PlainObjectMetaMethodSite.doInvoke(PlainObjectMetaMethodSite.java:43)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite$PogoCachedMethodSiteNoUnwrapNoCoerce.invoke(PogoMetaMethodSite.java:198)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite.callCurrent(PogoMetaMethodSite.java:62)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:185)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:135)
+	at io.restassured.specification.ResponseSpecification$statusCode$0.callCurrent(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:143)
+	at io.restassured.internal.ValidatableResponseOptionsImpl.statusCode(ValidatableResponseOptionsImpl.java:89)
+	at com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testGetAllProductsV2(ProductApiTest.java:35)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testSearchProducts -- Time elapsed: 0.628 s <<< FAILURE!
+java.lang.AssertionError: 
+1 expectation failed.
+Expected status code <200> but was <500>.
+
+	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)
+	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)
+	at org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:73)
+	at org.codehaus.groovy.runtime.callsite.ConstructorSite$ConstructorSiteNoUnwrapNoCoerce.callConstructor(ConstructorSite.java:108)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callConstructor(AbstractCallSite.java:277)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure.validate(ResponseSpecificationImpl.groovy:512)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure$validate$1.call(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.validateResponseIfRequired(ResponseSpecificationImpl.groovy:696)
+	at io.restassured.internal.ResponseSpecificationImpl.this$2$validateResponseIfRequired(ResponseSpecificationImpl.groovy)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.codehaus.groovy.runtime.callsite.PlainObjectMetaMethodSite.doInvoke(PlainObjectMetaMethodSite.java:43)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite$PogoCachedMethodSiteNoUnwrapNoCoerce.invoke(PogoMetaMethodSite.java:198)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite.callCurrent(PogoMetaMethodSite.java:62)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:185)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:135)
+	at io.restassured.specification.ResponseSpecification$statusCode$0.callCurrent(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:143)
+	at io.restassured.internal.ValidatableResponseOptionsImpl.statusCode(ValidatableResponseOptionsImpl.java:89)
+	at com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testSearchProducts(ProductApiTest.java:53)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testGetProductDetails -- Time elapsed: 0.613 s <<< FAILURE!
+java.lang.AssertionError: 
+1 expectation failed.
+Expected status code <200> but was <500>.
+
+	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)
+	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)
+	at org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:73)
+	at org.codehaus.groovy.runtime.callsite.ConstructorSite$ConstructorSiteNoUnwrapNoCoerce.callConstructor(ConstructorSite.java:108)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callConstructor(AbstractCallSite.java:277)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure.validate(ResponseSpecificationImpl.groovy:512)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure$validate$1.call(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.validateResponseIfRequired(ResponseSpecificationImpl.groovy:696)
+	at io.restassured.internal.ResponseSpecificationImpl.this$2$validateResponseIfRequired(ResponseSpecificationImpl.groovy)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.codehaus.groovy.runtime.callsite.PlainObjectMetaMethodSite.doInvoke(PlainObjectMetaMethodSite.java:43)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite$PogoCachedMethodSiteNoUnwrapNoCoerce.invoke(PogoMetaMethodSite.java:198)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite.callCurrent(PogoMetaMethodSite.java:62)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:185)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:135)
+	at io.restassured.specification.ResponseSpecification$statusCode$0.callCurrent(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:143)
+	at io.restassured.internal.ValidatableResponseOptionsImpl.statusCode(ValidatableResponseOptionsImpl.java:89)
+	at com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testGetProductDetails(ProductApiTest.java:69)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testGetProductsByCategory -- Time elapsed: 0.586 s <<< FAILURE!
+java.lang.AssertionError: 
+1 expectation failed.
+Expected status code <200> but was <500>.
+
+	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)
+	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)
+	at org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:73)
+	at org.codehaus.groovy.runtime.callsite.ConstructorSite$ConstructorSiteNoUnwrapNoCoerce.callConstructor(ConstructorSite.java:108)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callConstructor(AbstractCallSite.java:277)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure.validate(ResponseSpecificationImpl.groovy:512)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure$validate$1.call(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.validateResponseIfRequired(ResponseSpecificationImpl.groovy:696)
+	at io.restassured.internal.ResponseSpecificationImpl.this$2$validateResponseIfRequired(ResponseSpecificationImpl.groovy)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.codehaus.groovy.runtime.callsite.PlainObjectMetaMethodSite.doInvoke(PlainObjectMetaMethodSite.java:43)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite$PogoCachedMethodSiteNoUnwrapNoCoerce.invoke(PogoMetaMethodSite.java:198)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite.callCurrent(PogoMetaMethodSite.java:62)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:185)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:135)
+	at io.restassured.specification.ResponseSpecification$statusCode$0.callCurrent(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:143)
+	at io.restassured.internal.ValidatableResponseOptionsImpl.statusCode(ValidatableResponseOptionsImpl.java:89)
+	at com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testGetProductsByCategory(ProductApiTest.java:85)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testGetDeprecatedV1Products -- Time elapsed: 0.602 s <<< FAILURE!
+java.lang.AssertionError: 
+1 expectation failed.
+Expected status code <200> but was <500>.
+
+	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)
+	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)
+	at org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:73)
+	at org.codehaus.groovy.runtime.callsite.ConstructorSite$ConstructorSiteNoUnwrapNoCoerce.callConstructor(ConstructorSite.java:108)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callConstructor(AbstractCallSite.java:277)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure.validate(ResponseSpecificationImpl.groovy:512)
+	at io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure$validate$1.call(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.validateResponseIfRequired(ResponseSpecificationImpl.groovy:696)
+	at io.restassured.internal.ResponseSpecificationImpl.this$2$validateResponseIfRequired(ResponseSpecificationImpl.groovy)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.codehaus.groovy.runtime.callsite.PlainObjectMetaMethodSite.doInvoke(PlainObjectMetaMethodSite.java:43)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite$PogoCachedMethodSiteNoUnwrapNoCoerce.invoke(PogoMetaMethodSite.java:198)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaMethodSite.callCurrent(PogoMetaMethodSite.java:62)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:185)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:135)
+	at io.restassured.specification.ResponseSpecification$statusCode$0.callCurrent(Unknown Source)
+	at io.restassured.internal.ResponseSpecificationImpl.statusCode(ResponseSpecificationImpl.groovy:143)
+	at io.restassured.internal.ValidatableResponseOptionsImpl.statusCode(ValidatableResponseOptionsImpl.java:89)
+	at com.example.buildnest_ecommerce.e2e.product.ProductApiTest.testGetDeprecatedV1Products(ProductApiTest.java:113)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   ProductApiTest.testGetAllProductsV2:35 1 expectation failed.
+Expected status code <200> but was <500>.
+
+[ERROR]   ProductApiTest.testGetDeprecatedV1Products:113 1 expectation failed.
+Expected status code <200> but was <500>.
+
+[ERROR]   ProductApiTest.testGetProductDetails:69 1 expectation failed.
+Expected status code <200> but was <500>.
+
+[ERROR]   ProductApiTest.testGetProductsByCategory:85 1 expectation failed.
+Expected status code <200> but was <500>.
+
+[ERROR]   ProductApiTest.testSearchProducts:53 1 expectation failed.
+Expected status code <200> but was <500>.
+
+[INFO] 
+[ERROR] Tests run: 5, Failures: 5, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:37 min
+[INFO] Finished at: 2026-02-11T18:45:25+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.4:test (default-test) on project buildnest-ecommerce: There are test failures.
+[ERROR] 
+[ERROR] See D:\Development\Projects\Personal\BuildNest\buildnest-ecommerce-platform\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

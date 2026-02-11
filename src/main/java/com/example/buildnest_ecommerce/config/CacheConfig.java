@@ -66,6 +66,7 @@ public class CacheConfig {
          * @return Configured RedisCacheManager with externalized TTL values
          */
         @Bean
+        @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis")
         public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
                 RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                                 .entryTtl(Duration.ofMinutes(10))

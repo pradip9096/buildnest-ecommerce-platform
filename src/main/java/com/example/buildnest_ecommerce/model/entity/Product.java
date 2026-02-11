@@ -1,5 +1,6 @@
 package com.example.buildnest_ecommerce.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 @Entity
 @Table(name = "products")
 @Getter
@@ -46,6 +48,7 @@ public class Product implements AggregateRoot {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @JsonIgnoreProperties({ "product", "hibernateLazyInitializer", "handler" })
     @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, fetch = jakarta.persistence.FetchType.LAZY)
     private Inventory inventory;
 

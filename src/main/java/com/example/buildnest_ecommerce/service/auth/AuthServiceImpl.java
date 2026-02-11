@@ -105,6 +105,7 @@ public class AuthServiceImpl implements AuthService {
      * @see com.example.buildnest_ecommerce.util.ValidationUtil#validatePassword(String)
      */
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public void register(RegisterRequest registerRequest) {
         log.info("User registration attempt: {}", registerRequest.getUsername());
 

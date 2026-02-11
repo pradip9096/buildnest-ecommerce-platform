@@ -104,7 +104,11 @@ public class InventoryServiceImpl implements InventoryService {
                                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
                 Inventory inventory = inventoryRepository.findByProduct(product)
-                                .orElse(new Inventory());
+                                .orElse(null);
+
+                if (inventory == null || inventory.getQuantityInStock() == null) {
+                        return false;
+                }
 
                 return inventory.getQuantityInStock() >= quantity;
         }

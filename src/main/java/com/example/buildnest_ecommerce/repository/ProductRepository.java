@@ -109,6 +109,12 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                 return findExpiringSoonByDate(LocalDate.now().plusDays(safeDays));
         }
 
+        @EntityGraph(attributePaths = { "category", "inventory" })
+        Page<Product> findAll(Pageable pageable);
+
+        @EntityGraph(attributePaths = { "category", "inventory" })
+        List<Product> findAll();
+
         /**
          * Calculate total revenue by product (sales optimization)
          */
