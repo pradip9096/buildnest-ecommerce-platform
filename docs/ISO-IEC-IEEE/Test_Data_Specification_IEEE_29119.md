@@ -95,6 +95,7 @@ This TDS provides test data for all 22 test categories defined in the [Test Plan
 | **Usage**       | Consumed by test cases during execution       | Injected via test fixtures                   |
 | **Isolation**   | Each test runs in isolation                   | `@Transactional` with auto-rollback          |
 | **Destruction** | Cleaned up after test run                     | Transaction rollback / `@DirtiesContext`     |
+| **Dynamic Gen** | Unique params (email, username) per test      | `UUID.randomUUID()` / timestamp suffixes     |
 | **Refresh**     | Regenerated for each CI/CD pipeline execution | Fresh H2 database per run                    |
 
 ### 1.8 Data Categories

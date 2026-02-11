@@ -29,12 +29,12 @@
 
 ### Document Approval
 
-| Role                  | Name         | Signature  | Date         |
-| :-------------------- | :----------- | :--------- | :----------- |
-| **Project Manager**   | Project Lead | ****\_**** | ****\_\_**** |
-| **Quality Manager**   | QA Manager   | ****\_**** | ****\_\_**** |
-| **Technical Lead**    | Dev Lead     | ****\_**** | ****\_\_**** |
-| **Configuration Mgr** | CM Lead      | ****\_**** | ****\_\_**** |
+| Role                  | Name         | Signature      | Date             |
+| :-------------------- | :----------- | :------------- | :--------------- |
+| **Project Manager**   | Project Lead | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Quality Manager**   | QA Manager   | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Technical Lead**    | Dev Lead     | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Configuration Mgr** | CM Lead      | \***\*\_\*\*** | \***\*\_\_\*\*** |
 
 ### Change Procedure
 
@@ -471,6 +471,7 @@ This measurement strategy aligns with ISO/IEC/IEEE 12207:2017, §6.3.7 (Measurem
 | Tool                     | Version | Purpose                     | Maven Command                 | Profile      |
 | :----------------------- | :------ | :-------------------------- | :---------------------------- | :----------- |
 | **JUnit 5**              | Latest  | Unit + Integration tests    | `mvn test`                    | `unit-tests` |
+| **RestAssured**          | 5.3.x   | API E2E testing             | `mvn test`                    | `e2e-tests`  |
 | **Mockito**              | Latest  | Service layer mocking       | Embedded in JUnit tests       | All          |
 | **Spring Boot Test**     | 3.5.10  | Integration testing         | `mvn test -Pall-tests`        | `all-tests`  |
 | **Selenium WebDriver**   | 4.16.1  | E2E browser testing         | `mvn test -Pe2e-tests`        | `e2e-tests`  |

@@ -79,6 +79,13 @@ This TCS covers **124 test cases** across **22 categories**, providing full trac
 
 > This document conforms to **ISO/IEC/IEEE 29119-3:2021**, _Software and Systems Engineering — Software Testing — Part 3: Test Documentation_. All mandatory ("shall") information elements defined in Clause 10 (Test Case Specification) have been addressed, including: unique identifier, objective, preconditions, inputs, steps, expected results, post-conditions, and status.
 
+### 1.7 Automated Execution
+
+| Test Category      | Automation Class                              | Framework   | Status       |
+| :----------------- | :-------------------------------------------- | :---------- | :----------- |
+| **Authentication** | `src/test/java/.../e2e/auth/AuthApiTest.java` | RestAssured | ✅ Automated |
+| **User Profile**   | `src/test/java/.../e2e/user/UserApiTest.java` | RestAssured | ✅ Automated |
+
 ### 1.6 Test Case ID Convention
 
 | Prefix     | Area                           |

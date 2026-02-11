@@ -29,11 +29,11 @@
 
 ### Document Approval
 
-| Role                | Name         | Signature  | Date         |
-| :------------------ | :----------- | :--------- | :----------- |
-| **Quality Manager** | QA Manager   | ****\_**** | ****\_\_**** |
-| **Technical Lead**  | Dev Lead     | ****\_**** | ****\_\_**** |
-| **Project Manager** | Project Lead | ****\_**** | ****\_\_**** |
+| Role                | Name         | Signature      | Date             |
+| :------------------ | :----------- | :------------- | :--------------- |
+| **Quality Manager** | QA Manager   | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Technical Lead**  | Dev Lead     | \***\*\_\*\*** | \***\*\_\_\*\*** |
+| **Project Manager** | Project Lead | \***\*\_\*\*** | \***\*\_\_\*\*** |
 
 ---
 
@@ -193,6 +193,7 @@ graph LR
 | API versioning support               | `ApiSunsetConfig.java` — V1/V2 sunset strategy documented                                                                  | ✅ Conformant |
 | Search functionality                 | Elasticsearch integration (`ElasticsearchConfig.java`, `model/elasticsearch/*`)                                            | ✅ Conformant |
 | Payment gateway integration          | Razorpay (`RazorpayProperties.java`, `PaymentService`)                                                                     | ✅ Conformant |
+| API Test Coverage                    | Automated E2E tests (`AuthApiTest.java`, `UserApiTest.java`) using RestAssured                                             | ✅ Conformant |
 
 **Metric:** 124/124 test cases mapped to SRS requirements → **100% functional completeness**
 
