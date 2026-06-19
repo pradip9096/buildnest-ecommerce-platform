@@ -526,4 +526,66 @@ class ProductServiceImplTest {
         Page<Product> page = productService.findByCategory(1L, PageRequest.of(0, 5));
         assertEquals(1, page.getTotalElements());
     }
+
+    @Test
+    void testCreateProductCategoryNotFound() {
+        when(categoryRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> productService.createProduct(createRequest));
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+    @Test
+    void testUpdateProductNotFound() {
+        when(productRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> productService.updateProduct(999L, createRequest));
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+    @Test
+    void testSearchProductsNoMatch() {
+        when(productRepository.findAll()).thenReturn(List.of(testProduct));
+
+        List<Product> result = productService.searchProducts("nonexistentkeyword");
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void testAdvancedSearchIgnoresProductsWithNullCategoryWhenCategoryFilterSet() {
+        Product withCategory = new Product();
+        withCategory.setId(1L);
+        withCategory.setName("Cement");
+        withCategory.setDescription("desc");
+        withCategory.setPrice(new BigDecimal("100"));
+        withCategory.setStockQuantity(5);
+        withCategory.setCategory(testCategory);
+
+        Product withoutCategory = new Product();
+        withoutCategory.setId(2L);
+        withoutCategory.setName("Cement Bag");
+        withoutCategory.setDescription("desc");
+        withoutCategory.setPrice(new BigDecimal("100"));
+        withoutCategory.setStockQuantity(5);
+        withoutCategory.setCategory(null);
+
+        when(productRepository.findAll()).thenReturn(List.of(withCategory, withoutCategory));
+
+        Page<Product> result = productService.advancedSearch(null, 1L, null, null, null, PageRequest.of(0, 10));
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1L, result.getContent().get(0).getId());
+    }
+
+    @Test
+    void testFindByCategoryPageOffsetBeyondResults() {
+        when(productRepository.findAll()).thenReturn(List.of(testProduct));
+
+        Page<Product> page = productService.findByCategory(1L, PageRequest.of(5, 10));
+
+        assertEquals(1, page.getTotalElements());
+        assertTrue(page.getContent().isEmpty());
+    }
 }

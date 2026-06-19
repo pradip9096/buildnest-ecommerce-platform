@@ -204,6 +204,9 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
 
         int start = (int) pageable.getOffset();
+        if (start >= filtered.size()) {
+            return new PageImpl<>(List.of(), pageable, filtered.size());
+        }
         int end = Math.min(start + pageable.getPageSize(), filtered.size());
 
         return new PageImpl<>(filtered.subList(start, end), pageable, filtered.size());
@@ -218,6 +221,9 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
 
         int start = (int) pageable.getOffset();
+        if (start >= categoryProducts.size()) {
+            return new PageImpl<>(List.of(), pageable, categoryProducts.size());
+        }
         int end = Math.min(start + pageable.getPageSize(), categoryProducts.size());
 
         return new PageImpl<>(categoryProducts.subList(start, end), pageable, categoryProducts.size());
