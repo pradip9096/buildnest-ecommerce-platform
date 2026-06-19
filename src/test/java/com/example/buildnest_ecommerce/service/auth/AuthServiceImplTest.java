@@ -1,9 +1,11 @@
 package com.example.buildnest_ecommerce.service.auth;
 
 import com.example.buildnest_ecommerce.model.entity.RefreshToken;
+import com.example.buildnest_ecommerce.model.entity.Role;
 import com.example.buildnest_ecommerce.model.entity.User;
 import com.example.buildnest_ecommerce.model.payload.AuthResponse;
 import com.example.buildnest_ecommerce.model.payload.RegisterRequest;
+import com.example.buildnest_ecommerce.repository.RoleRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import com.example.buildnest_ecommerce.security.Jwt.JwtTokenProvider;
 import com.example.buildnest_ecommerce.service.audit.AuditLogService;
@@ -35,6 +37,9 @@ class AuthServiceImplTest {
     private AuthenticationManager authenticationManager;
 
     @Mock
+    private RoleRepository roleRepository;
+
+    @Mock
     private UserRepository userRepository;
 
     @Mock
@@ -63,6 +68,10 @@ class AuthServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        Role defaultRole = new Role();
+        defaultRole.setName("ROLE_USER");
+        lenient().when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.of(defaultRole));
+
         testUser = new User();
         testUser.setId(1L);
         testUser.setUsername("testuser");
