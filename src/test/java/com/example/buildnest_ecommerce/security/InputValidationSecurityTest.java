@@ -292,13 +292,11 @@ class InputValidationSecurityTest {
                                 "application/javascript",
                                 "console.log('test');".getBytes());
 
-                // JWT token validation may fail in test context, returns 401 instead of 415
-                // In production with valid token, unsupported media type would be properly
-                // rejected
+                // Admin token is valid; multipart request with non-JSON content type → 415
                 mockMvc.perform(multipart("/api/admin/products")
                                 .file(scriptFile)
                                 .header("Authorization", "Bearer " + adminToken))
-                                .andExpect(status().isUnauthorized());
+                                .andExpect(status().isUnsupportedMediaType());
 
                 // Test 2: Executable file upload prevention
                 MockMultipartFile executableFile = new MockMultipartFile(
@@ -307,12 +305,11 @@ class InputValidationSecurityTest {
                                 "application/x-msdownload",
                                 "MZ executable header".getBytes());
 
-                // JWT token validation may fail in test context, returns 401
-                // In production with valid token, executable files would be rejected
+                // Admin token is valid; multipart request with non-JSON content type → 415
                 mockMvc.perform(multipart("/api/admin/products")
                                 .file(executableFile)
                                 .header("Authorization", "Bearer " + adminToken))
-                                .andExpect(status().isUnauthorized());
+                                .andExpect(status().isUnsupportedMediaType());
 
                 // Test 3: File size validation
                 byte[] largeFile = new byte[11 * 1024 * 1024]; // 11MB (exceeds typical 10MB limit)
@@ -322,11 +319,10 @@ class InputValidationSecurityTest {
                                 "image/jpeg",
                                 largeFile);
 
-                // JWT token validation may fail in test context, returns 401
-                // In production with valid token, oversized files would be rejected
+                // Admin token is valid; multipart request with non-JSON content type → 415
                 mockMvc.perform(multipart("/api/admin/products")
                                 .file(oversizedFile)
                                 .header("Authorization", "Bearer " + adminToken))
-                                .andExpect(status().isUnauthorized());
+                                .andExpect(status().isUnsupportedMediaType());
         }
 }
