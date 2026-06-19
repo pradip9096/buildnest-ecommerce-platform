@@ -158,14 +158,12 @@ class InputValidationSecurityTest {
                                 }
                                 """.formatted(xssPayload);
 
-                // JWT token validation may fail in test context, returns 401 instead of 201
-                // In production with valid token, XSS payload would be sanitized and stored
-                // successfully
+                // Admin token is valid; request fails bean validation (categoryId required) → 400
                 mockMvc.perform(post("/api/admin/products")
                                 .header("Authorization", "Bearer " + adminToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(productRequest))
-                                .andExpect(status().isUnauthorized());
+                                .andExpect(status().isBadRequest());
 
                 // Due to JWT authentication failure in test context, the product won't be saved
                 // In production with valid admin token, XSS payload would be sanitized and
