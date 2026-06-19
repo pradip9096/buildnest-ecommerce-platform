@@ -320,4 +320,41 @@ class AuthServiceImplTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.refreshAccessToken("valid"));
         assertTrue(ex.getMessage().contains("User not found"));
     }
+
+    @Test
+    void testRegisterWithExistingEmail() {
+        User existingUser = new User();
+        existingUser.setId(2L);
+        existingUser.setUsername("differentuser");
+        existingUser.setEmail("new@example.com"); // same email as registerRequest
+
+        when(userRepository.findAll()).thenReturn(java.util.List.of(existingUser));
+
+        assertThrows(RuntimeException.class, () -> authService.register(registerRequest));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testRegisterCreatesRoleWhenNotFound() {
+        when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.empty());
+        Role savedRole = new Role();
+        savedRole.setName("ROLE_USER");
+        when(roleRepository.save(any(Role.class))).thenReturn(savedRole);
+        when(userRepository.findAll()).thenReturn(new java.util.ArrayList<>());
+        when(passwordEncoder.encode("Password@123")).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        authService.register(registerRequest);
+
+        verify(roleRepository).save(any(Role.class));
+    }
+
+    @Test
+    void testLogoutWithInvalidTokenThrows() {
+        when(refreshTokenService.findByToken("invalid")).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.logout("invalid"));
+        assertTrue(ex.getMessage().contains("Refresh token not found"));
+        verify(refreshTokenService, never()).revokeRefreshToken(anyString());
+    }
 }
