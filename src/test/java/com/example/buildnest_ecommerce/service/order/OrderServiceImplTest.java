@@ -162,4 +162,86 @@ class OrderServiceImplTest {
 
         assertThrows(IllegalAccessException.class, () -> orderService.getUserOrderById(8L, 100L));
     }
+
+    @Test
+    @DisplayName("Should throw when deleting non-existent order")
+    void testDeleteOrderNotFound() {
+        when(orderRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> orderService.deleteOrder(999L));
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw when updating non-existent order")
+    void testUpdateOrderNotFound() {
+        when(orderRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> orderService.updateOrder(999L, order));
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw when updating status of non-existent order")
+    void testUpdateOrderStatusNotFound() {
+        when(orderRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> orderService.updateOrderStatus(999L, "SHIPPED"));
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should filter orders belonging to other users")
+    void testGetOrdersByUserIdFiltersOtherUsers() {
+        User otherUser = new User();
+        otherUser.setId(99L);
+        Order otherOrder = new Order();
+        otherOrder.setUser(otherUser);
+        otherOrder.setIsDeleted(false);
+
+        when(orderRepository.findAll()).thenReturn(List.of(order, otherOrder));
+
+        List<OrderResponseDTO> responses = orderService.getOrderResponsesByUserId(7L);
+
+        assertEquals(1, responses.size());
+        assertEquals(7L, responses.get(0).getUserId());
+    }
+
+    @Test
+    @DisplayName("Should accept status in any case")
+    void testUpdateOrderStatusCaseInsensitive() {
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        Order updated = orderService.updateOrderStatus(100L, "shipped");
+
+        assertEquals(Order.OrderStatus.SHIPPED, updated.getStatus());
+        verify(domainEventPublisher).publish(any());
+    }
+
+    @Test
+    @DisplayName("Should set defaults on order creation")
+    void testCreateOrderSetsDefaults() {
+        Order newOrder = new Order();
+        newOrder.setUser(user);
+        newOrder.setTotalAmount(new BigDecimal("50.00"));
+        when(orderRepository.save(any(Order.class))).thenReturn(newOrder);
+
+        Order created = orderService.createOrder(newOrder);
+
+        assertEquals(Order.OrderStatus.PENDING, created.getStatus());
+        assertFalse(created.getIsDeleted());
+        assertNotNull(created.getCreatedAt());
+    }
+
+    @Test
+    @DisplayName("Should return empty list when no orders exist")
+    void testGetAllOrdersEmpty() {
+        when(orderRepository.findAll()).thenReturn(List.of());
+
+        List<Order> result = orderService.getAllOrders();
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
 }
