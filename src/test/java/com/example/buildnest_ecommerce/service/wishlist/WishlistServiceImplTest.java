@@ -124,4 +124,106 @@ class WishlistServiceImplTest {
 
         assertThrows(ResourceNotFoundException.class, () -> wishlistService.getWishlist(1L));
     }
+
+    @Test
+    @DisplayName("Should return existing wishlist when product already present")
+    void testAddProductAlreadyInWishlist() {
+        User user = new User();
+        user.setId(1L);
+        Product product = new Product();
+        product.setId(2L);
+
+        Wishlist wishlist = Wishlist.builder().user(user).build();
+        wishlist.addProduct(product);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(wishlistRepository.findByUserId(1L)).thenReturn(Optional.of(wishlist));
+
+        Wishlist result = wishlistService.addProduct(1L, 2L);
+
+        assertTrue(result.containsProduct(product));
+        verify(wishlistRepository, never()).save(wishlist);
+    }
+
+    @Test
+    @DisplayName("Should create wishlist when none exists for user")
+    void testAddProductCreatesWishlistWhenMissing() {
+        User user = new User();
+        user.setId(1L);
+        Product product = new Product();
+        product.setId(2L);
+
+        Wishlist newWishlist = Wishlist.builder().user(user).build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(wishlistRepository.findByUserId(1L)).thenReturn(Optional.empty());
+        when(wishlistRepository.save(any(Wishlist.class))).thenReturn(newWishlist);
+
+        Wishlist result = wishlistService.addProduct(1L, 2L);
+
+        assertNotNull(result);
+        verify(wishlistRepository, atLeast(1)).save(any(Wishlist.class));
+    }
+
+    @Test
+    @DisplayName("Should throw when user not found on addProduct")
+    void testAddProductUserNotFound() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> wishlistService.addProduct(99L, 2L));
+        verify(productRepository, never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("Should throw when product not found on addProduct")
+    void testAddProductProductNotFound() {
+        User user = new User();
+        user.setId(1L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> wishlistService.addProduct(1L, 99L));
+    }
+
+    @Test
+    @DisplayName("Should throw when wishlist not found on removeProduct")
+    void testRemoveProductWishlistNotFound() {
+        when(wishlistRepository.findByUserId(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> wishlistService.removeProduct(1L, 2L));
+        verify(productRepository, never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("Should throw when product not found on removeProduct")
+    void testRemoveProductProductNotFound() {
+        User user = new User();
+        user.setId(1L);
+        Wishlist wishlist = Wishlist.builder().user(user).build();
+
+        when(wishlistRepository.findByUserId(1L)).thenReturn(Optional.of(wishlist));
+        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> wishlistService.removeProduct(1L, 99L));
+    }
+
+    @Test
+    @DisplayName("Should throw when wishlist not found on getWishlistProducts")
+    void testGetWishlistProductsWishlistNotFound() {
+        when(wishlistRepository.findByUserId(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> wishlistService.getWishlistProducts(1L));
+    }
+
+    @Test
+    @DisplayName("Should throw when wishlist not found on clearWishlist")
+    void testClearWishlistNotFound() {
+        when(wishlistRepository.findByUserId(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> wishlistService.clearWishlist(1L));
+        verify(wishlistRepository, never()).save(any());
+    }
 }

@@ -270,4 +270,21 @@ class CartServiceImplTest {
         assertTrue(ex.getMessage().contains("Cart not found"));
         verify(cartItemRepository, never()).deleteAll(any());
     }
+
+    @Test
+    void testGetCartByUserIdEmptyCart() {
+        Cart emptyCart = new Cart();
+        emptyCart.setId(2L);
+        emptyCart.setUser(testUser);
+        emptyCart.setItems(new ArrayList<>());
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(cartRepository.findByUser(testUser)).thenReturn(Optional.of(emptyCart));
+
+        CartResponseDTO result = cartService.getCartByUserId(1L);
+
+        assertNotNull(result);
+        assertEquals(0.0, result.getTotalAmount());
+        assertTrue(result.getItems().isEmpty());
+    }
 }
