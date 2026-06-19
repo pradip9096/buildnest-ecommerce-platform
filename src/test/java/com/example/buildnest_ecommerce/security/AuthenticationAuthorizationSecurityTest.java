@@ -243,13 +243,12 @@ class AuthenticationAuthorizationSecurityTest {
                 // authenticated but unauthorized
                 mockMvc.perform(get("/api/admin/users")
                                 .header("Authorization", "Bearer " + validToken))
-                                .andExpect(status().isUnauthorized());
+                                .andExpect(status().isForbidden());
 
-                // Admin token - also returns 401 in test context due to JWT validation
-                // In production with valid tokens, this would return 200
+                // Admin token with valid JWT and ROLE_ADMIN — returns 200
                 mockMvc.perform(get("/api/admin/users")
                                 .header("Authorization", "Bearer " + adminToken))
-                                .andExpect(status().isUnauthorized());
+                                .andExpect(status().isOk());
         }
 
         // TC-SEC-006: Cross-user access prevention
