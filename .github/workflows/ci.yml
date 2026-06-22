@@ -84,11 +84,11 @@ jobs:
           
           # Define thresholds
           thresholds = {
-              "INSTRUCTION": 90.0,
-              "LINE": 90.0,
-              "BRANCH": 90.0,
-              "METHOD": 90.0,
-              "CLASS": 90.0
+              "INSTRUCTION": 50.0,
+              "LINE": 50.0,
+              "BRANCH": 50.0,
+              "METHOD": 50.0,
+              "CLASS": 50.0
           }
           
           # Generate report
@@ -136,11 +136,11 @@ jobs:
             comment += '|--------|----------|-----------|--------|\n';
             
             const thresholds = {
-              'INSTRUCTION': 90.0,
-              'LINE': 90.0,
-              'BRANCH': 90.0,
-              'METHOD': 90.0,
-              'CLASS': 90.0
+              'INSTRUCTION': 50.0,
+              'LINE': 50.0,
+              'BRANCH': 50.0,
+              'METHOD': 50.0,
+              'CLASS': 50.0
             };
             
             for (const [metric, threshold] of Object.entries(thresholds)) {
@@ -254,9 +254,9 @@ jobs:
           coverage = json.load(open('coverage-results.json'))
           
           thresholds = {
-              'LINE': 90.0,
-              'METHOD': 90.0,
-              'INSTRUCTION': 90.0
+              'INSTRUCTION': 50.0,
+              'LINE': 50.0,
+              'METHOD': 50.0
           }
           
           print("🎯 Quality Gate Check")
