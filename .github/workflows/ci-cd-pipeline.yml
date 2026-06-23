@@ -19,6 +19,10 @@ env:
   JAVA_VERSION: '21'
   JAVA_DISTRIBUTION: 'temurin'
 
+defaults:
+  run:
+    working-directory: backend
+
 jobs:
   # Job 1: Unit Tests (Fast Feedback)
   unit-tests:
@@ -48,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
-          path: target/surefire-reports/
+          path: backend/target/surefire-reports/
 
   # Job 2: Integration Tests with Coverage
   integration-tests:
@@ -95,9 +99,9 @@ jobs:
         with:
           name: pit-reports
           path: |
-            target/pit-reports/
-            target/pit-reports/*.hprof
-            target/pit-reports/hs_err_pid*.log
+            backend/target/pit-reports/
+            backend/target/pit-reports/*.hprof
+            backend/target/pit-reports/hs_err_pid*.log
       
       - name: Generate coverage report
         run: ./mvnw jacoco:report
@@ -105,7 +109,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./target/site/jacoco/jacoco.xml
+          files: ./backend/target/site/jacoco/jacoco.xml
           flags: integration
           name: integration-coverage
       
@@ -113,7 +117,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: target/site/jacoco/
+          path: backend/target/site/jacoco/
       
       - name: Check coverage threshold
         run: |
@@ -153,7 +157,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: reliability-test-results
-          path: target/surefire-reports/
+          path: backend/target/surefire-reports/
 
   # Job 4: E2E Tests
   e2e-tests:
@@ -190,14 +194,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
-          path: target/surefire-reports/
+          path: backend/target/surefire-reports/
       
       - name: Upload E2E screenshots (if any)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-screenshots
-          path: target/screenshots/
+          path: backend/target/screenshots/
 
   # Job 5: Security Scan
   security-scan:
@@ -229,7 +233,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: owasp-report
-          path: target/dependency-check-report.html
+          path: backend/target/dependency-check-report.html
 
   # Job 6: Load Tests (Main branch only)
   load-tests:
@@ -262,7 +266,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gatling-reports
-          path: target/gatling/
+          path: backend/target/gatling/
 
   # Job 7: Stress Tests (Scheduled only)
   stress-tests:
@@ -294,7 +298,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: stress-test-results
-          path: target/surefire-reports/
+          path: backend/target/surefire-reports/
 
   # Job 8: Build Docker Image and Push to Registry (HIGH #7)
   build:
@@ -326,7 +330,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: application-jar
-          path: target/*.jar
+          path: backend/target/*.jar
       
       # Docker build and push
       - name: Set up Docker Buildx
@@ -355,8 +359,8 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./backend
+          file: ./backend/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

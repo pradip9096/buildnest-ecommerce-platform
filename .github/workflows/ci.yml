@@ -28,7 +28,10 @@ jobs:
   build:
     name: Build & Test
     runs-on: ubuntu-latest
-    
+    defaults:
+      run:
+        working-directory: backend
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -58,16 +61,15 @@ jobs:
           import xml.etree.ElementTree as ET
           import json
           from pathlib import Path
-          
+
           report_file = Path("target/site/jacoco/jacoco.xml")
           if not report_file.exists():
               print("ERROR: JaCoCo report not found!")
               exit(1)
-          
+
           tree = ET.parse(report_file)
           root = tree.getroot()
-          
-          # Extract counters
+
           counters = {}
           for counter in root.findall(".//counter"):
               counter_type = counter.get("type")
@@ -81,8 +83,7 @@ jobs:
                   "total": total,
                   "percentage": round(percentage, 2)
               }
-          
-          # Define thresholds
+
           thresholds = {
               "INSTRUCTION": 50.0,
               "LINE": 50.0,
@@ -90,12 +91,11 @@ jobs:
               "METHOD": 50.0,
               "CLASS": 50.0
           }
-          
-          # Generate report
+
           report = "## 📊 Code Coverage Report\n\n"
           report += "| Metric | Coverage | Threshold | Status |\n"
           report += "|--------|----------|-----------|--------|\n"
-          
+
           all_pass = True
           for metric, threshold in thresholds.items():
               if metric in counters:
@@ -104,20 +104,16 @@ jobs:
                   if cov["percentage"] < threshold:
                       all_pass = False
                   report += f"| {metric} | {cov['percentage']}% | {threshold}% | {status} |\n"
-          
+
           report += "\n### Detailed Metrics\n\n"
           for metric in ["INSTRUCTION", "LINE", "BRANCH", "METHOD", "CLASS"]:
               if metric in counters:
                   cov = counters[metric]
                   report += f"**{metric}**: {cov['covered']}/{cov['total']} = {cov['percentage']}%\n"
-          
-          # Write to summary
-          Path("GITHUB_STEP_SUMMARY").write_text(report)
-          
-          # Export for next steps
+
           with open("coverage-results.json", "w") as f:
               json.dump(counters, f)
-          
+
           print(report)
           if not all_pass:
               print("\n⚠️  Some coverage thresholds not met!")
@@ -129,12 +125,12 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const coverage = JSON.parse(fs.readFileSync('coverage-results.json', 'utf8'));
-            
+            const coverage = JSON.parse(fs.readFileSync('backend/coverage-results.json', 'utf8'));
+
             let comment = '## 📊 Coverage Analysis\n\n';
             comment += '| Metric | Coverage | Threshold | Status |\n';
             comment += '|--------|----------|-----------|--------|\n';
-            
+
             const thresholds = {
               'INSTRUCTION': 50.0,
               'LINE': 50.0,
@@ -142,7 +138,7 @@ jobs:
               'METHOD': 50.0,
               'CLASS': 50.0
             };
-            
+
             for (const [metric, threshold] of Object.entries(thresholds)) {
               if (coverage[metric]) {
                 const pct = coverage[metric].percentage;
@@ -150,7 +146,7 @@ jobs:
                 comment += `| ${metric} | ${pct}% | ${threshold}% | ${status} |\n`;
               }
             }
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -162,7 +158,7 @@ jobs:
         if: always()
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          files: target/surefire-reports/**/*.xml
+          files: backend/target/surefire-reports/**/*.xml
           check_name: Test Results
 
       - name: Upload Coverage Reports
@@ -171,8 +167,8 @@ jobs:
         with:
           name: coverage-reports
           path: |
-            target/site/jacoco/
-            coverage-results.json
+            backend/target/site/jacoco/
+            backend/coverage-results.json
           retention-days: 30
 
       - name: Upload Test Reports
@@ -180,7 +176,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
-          path: target/surefire-reports/
+          path: backend/target/surefire-reports/
           retention-days: 30
 
       - name: Upload Jacoco XML
@@ -188,13 +184,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-xml
-          path: target/site/jacoco/jacoco.xml
+          path: backend/target/site/jacoco/jacoco.xml
 
       - name: Publish Coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v3
         with:
-          files: ./target/site/jacoco/jacoco.xml
+          files: ./backend/target/site/jacoco/jacoco.xml
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
@@ -217,15 +213,15 @@ jobs:
             const title = `❌ CI Pipeline Failed: ${context.workflow} #${context.runNumber}`;
             const body = `
             ## Build Failure Details
-            
+
             **Workflow**: ${context.workflow}
             **Run**: [View Run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
             **Commit**: ${context.sha}
             **Branch**: ${context.ref}
-            
+
             Please review the logs for details.
             `;
-            
+
             github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -238,7 +234,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: always()
-    
+
     steps:
       - name: Download Coverage Results
         uses: actions/download-artifact@v4
@@ -249,19 +245,18 @@ jobs:
         run: |
           python - <<'PY'
           import json
-          from pathlib import Path
-          
+
           coverage = json.load(open('coverage-results.json'))
-          
+
           thresholds = {
               'INSTRUCTION': 50.0,
               'LINE': 50.0,
               'METHOD': 50.0
           }
-          
+
           print("🎯 Quality Gate Check")
           print("=" * 50)
-          
+
           all_pass = True
           for metric, threshold in thresholds.items():
               if metric in coverage:
@@ -270,13 +265,13 @@ jobs:
                   print(f"{metric}: {actual}% (target: {threshold}%) - {status}")
                   if actual < threshold:
                       all_pass = False
-          
+
           print("=" * 50)
           if all_pass:
               print("✅ All quality gates passed!")
           else:
               print("⚠️  Some quality gates failed!")
-          
+
           exit(0 if all_pass else 1)
           PY
 
@@ -284,6 +279,9 @@ jobs:
     name: OWASP Dependency-Check
     runs-on: ubuntu-latest
     needs: build
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
       - name: Checkout Code
@@ -313,7 +311,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
-          path: target/dependency-check-report.html
+          path: backend/target/dependency-check-report.html
           retention-days: 30
 
   notify:

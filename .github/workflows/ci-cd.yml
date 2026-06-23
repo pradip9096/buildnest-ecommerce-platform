@@ -10,6 +10,10 @@ on:
       - main
       - develop
 
+defaults:
+  run:
+    working-directory: backend
+
 jobs:
   # Job 1: Build and Test
   build-and-test:
@@ -89,7 +93,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: buildnest-jar
-          path: target/buildnest-ecommerce-*.jar
+          path: backend/target/buildnest-ecommerce-*.jar
           retention-days: 30
 
       # Step 10: Check code quality with PMD
@@ -132,7 +136,7 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./backend
           push: false
           tags: |
             pradipghadge/buildnest-ecommerce:tagname
@@ -215,7 +219,7 @@ jobs:
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ./target/site/jacoco/jacoco.xml
+          files: ./backend/target/site/jacoco/jacoco.xml
           fail_ci_if_error: false
         continue-on-error: true
 

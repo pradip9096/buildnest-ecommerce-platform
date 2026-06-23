@@ -19,6 +19,10 @@ permissions:
   security-events: write
   checks: write
 
+defaults:
+  run:
+    working-directory: backend
+
 jobs:
   dependency-check:
     name: Check Dependencies

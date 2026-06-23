@@ -18,6 +18,10 @@ on:
           - staging
           - production
 
+defaults:
+  run:
+    working-directory: backend
+
 jobs:
   deploy:
     name: Deploy Application

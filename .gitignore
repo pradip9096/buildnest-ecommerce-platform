@@ -1,47 +1,82 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+# -------------------------------------------------------
+# AI agent directories and system prompt files
+# -------------------------------------------------------
+.agents/
+.claude/
+.gemini/
+.codex/
+.opencode/
+.aider/
+.cursor/
+.cline/
+.continue/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# Agent system prompt files (local use only, not committed)
+CLAUDE.md
+GEMINI.md
+AGENT.md
+AGENTS.md
+MASTER_SPEC.md
+.cursorrules
+.clinerules
+.aider.conf.yml
 
-### IntelliJ IDEA ###
-.idea
-*.iws
+# -------------------------------------------------------
+# Assets (local use only)
+# -------------------------------------------------------
+assets/
+
+# -------------------------------------------------------
+# Docs — exclude legacy / generated sub-directories
+# -------------------------------------------------------
+docs/archive/
+docs/ISO-IEC-IEEE/
+
+# -------------------------------------------------------
+# Java / Spring Boot (backend/)
+# -------------------------------------------------------
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+*.class
+*.war
+
+# -------------------------------------------------------
+# Node / React (frontend/)
+# -------------------------------------------------------
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+.npm/
+
+# -------------------------------------------------------
+# Environment & Secrets
+# -------------------------------------------------------
+.env
+.env.local
+.env.*.local
+
+# -------------------------------------------------------
+# Log and build output files
+# -------------------------------------------------------
+*.log
+logs/
+logs_extracted/
+*.zip
+build*.log
+test*.log
+phase1*.log
+
+# -------------------------------------------------------
+# IDE
+# -------------------------------------------------------
+.idea/
+.vscode/
 *.iml
+*.iws
 *.ipr
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
-
-### Test artifacts ###
-artifacts/
-pit-reports-download/
-
-### Logs ###
-logs/
-*_IS_UNDEFINED
-
-
-### Environment / Secrets ###
-.env
-.env.*
-!.env.example
+# -------------------------------------------------------
+# OS
+# -------------------------------------------------------
+.DS_Store
+Thumbs.db
