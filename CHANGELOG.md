@@ -13,6 +13,12 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Order management admin endpoints at `GET/PATCH /api/v1/admin/orders` — list with status/userId/dateFrom/dateTo filters + pagination, full detail with nested items, forward-only status transitions (PENDING→CONFIRMED→SHIPPED→DELIVERED; any→CANCELLED) enforced server-side; `PATCH` is `@Auditable`; customer notification dispatched on each transition (ADM-03, #69)
+- `OrderSpecification` — composable `JpaSpecificationExecutor`-based filter for admin order listing (#69)
+- `AdminOrderDetailDTO` + `OrderItemDTO` — full admin order view with nested item lines (#69)
+- `UpdateOrderStatusRequest` — validated request payload for status transitions (`@NotBlank status`, optional `cancellationReason`) (#69)
+- `NotificationServiceImpl` — stub implementation of `INotificationService`; logs all calls; real email delivery wired in #62 (#69)
+- `AdminOrderControllerIntegrationTest` — 13 integration tests covering list, filter, detail, valid/invalid transitions, and role enforcement (ADM-03, #69)
 - Product CRUD admin endpoints at `POST/GET/PUT/DELETE /api/v1/admin/products` — all `@PreAuthorize("hasRole('ADMIN')")`, all `@Auditable`; image upload via `POST /api/v1/admin/products/{id}/images` (multipart/form-data, 10 MB cap, JPEG/PNG/WebP/GIF only) (ADM-01, #67)
 - `StorageService` interface + `LocalStorageService` implementation (UUID-keyed filenames, configurable `app.storage.location`, static serving via `/uploads/**`) (#67)
 - `StorageConfig` (`WebMvcConfigurer`) serving uploaded files from the configured storage directory (#67)
@@ -22,6 +28,9 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 - Liquibase XML master orchestrator (`db.changelog-master.xml`) replacing direct SQL master reference; enables per-entity XML changeset files and clean include-based composition (#104)
 
 ### Changed
+- `AdminOrderController` rewritten at `/api/v1/admin/orders` (was `/api/admin/orders`); removed try/catch anti-pattern; delegates all error handling to `GlobalExceptionHandler` (ADM-03, #69)
+- `OrderRepository` extended with `JpaSpecificationExecutor<Order>` for specification-based admin queries (#69)
+- `OrderServiceImpl` extended with `adminUpdateOrderStatus` (transition validation + notification) and `getAdminOrders` / `getAdminOrderDetail` admin methods (#69)
 - `AdminProductController` base path corrected from `/api/admin/products` to `/api/v1/admin/products` (ADM-01, #67)
 - `deleteProduct` changed from hard delete (`deleteById`) to soft delete (`isActive = false`) (ADM-01, #67)
 - `AuditAspectIntegrationTest` and `InputValidationSecurityTest` URL references updated to `/api/v1/admin/products` (#67)
