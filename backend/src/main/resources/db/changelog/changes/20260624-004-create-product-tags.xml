@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #104 / #83 (PROD-03): Product tagging and filtering -->
+    <changeSet id="20260624-004-create-product-tags" author="buildnest-team">
+        <comment>Create product_tags and product_tag_map tables for tagging and filtering (PROD-03, #83)</comment>
+
+        <createTable tableName="product_tags">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_tag_name"/>
+            </column>
+            <column name="slug" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_tag_slug"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Join table: many products ↔ many tags -->
+        <createTable tableName="product_tag_map">
+            <column name="product_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+            tableName="product_tag_map"
+            columnNames="product_id,tag_id"
+            constraintName="pk_product_tag_map"/>
+
+        <addForeignKeyConstraint
+            constraintName="fk_tag_map_product"
+            baseTableName="product_tag_map" baseColumnNames="product_id"
+            referencedTableName="product" referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+            constraintName="fk_tag_map_tag"
+            baseTableName="product_tag_map" baseColumnNames="tag_id"
+            referencedTableName="product_tags" referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <createIndex tableName="product_tag_map" indexName="idx_tag_map_tag_id">
+            <column name="tag_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="product_tag_map"/>
+            <dropTable tableName="product_tags"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

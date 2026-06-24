@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #104 / #82 (PROD-02): Product image management -->
+    <changeSet id="20260624-003-create-product-images" author="buildnest-team">
+        <comment>Create product_images table for multiple product images (PROD-02, #82)</comment>
+
+        <createTable tableName="product_images">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="product_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alt_text" type="VARCHAR(255)"/>
+            <column name="display_order" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_primary" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            constraintName="fk_images_product"
+            baseTableName="product_images" baseColumnNames="product_id"
+            referencedTableName="product" referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <createIndex tableName="product_images" indexName="idx_images_product_id">
+            <column name="product_id"/>
+        </createIndex>
+
+        <createIndex tableName="product_images" indexName="idx_images_product_order">
+            <column name="product_id"/>
+            <column name="display_order"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="product_images"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

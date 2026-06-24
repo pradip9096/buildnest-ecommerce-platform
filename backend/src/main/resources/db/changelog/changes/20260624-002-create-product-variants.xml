@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #104 / #81 (PROD-01): Product variant support (size, colour) -->
+    <changeSet id="20260624-002-create-product-variants" author="buildnest-team">
+        <comment>Create product_variants table for size/colour variants (PROD-01, #81)</comment>
+
+        <createTable tableName="product_variants">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="product_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sku" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_variant_sku"/>
+            </column>
+            <column name="size" type="VARCHAR(50)"/>
+            <column name="colour" type="VARCHAR(50)"/>
+            <column name="price_adjustment" type="DECIMAL(19,2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stock_quantity" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            constraintName="fk_variants_product"
+            baseTableName="product_variants" baseColumnNames="product_id"
+            referencedTableName="product" referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <createIndex tableName="product_variants" indexName="idx_variants_product_id">
+            <column name="product_id"/>
+        </createIndex>
+
+        <createIndex tableName="product_variants" indexName="idx_variants_product_active">
+            <column name="product_id"/>
+            <column name="is_active"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="product_variants"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

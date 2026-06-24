@@ -10,6 +10,21 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ---
 
+## [Unreleased] — M4: Feature Development
+
+### Added
+- Liquibase XML master orchestrator (`db.changelog-master.xml`) replacing direct SQL master reference; enables per-entity XML changeset files and clean include-based composition (#104)
+- Liquibase changeset `addresses` table: user address book with user FK, default-flag, address-type, and covering indexes (USR-01, #78, #104)
+- Liquibase changeset `product_variants` table: size/colour variants per product with SKU uniqueness, price adjustment, and stock quantity (PROD-01, #81, #104)
+- Liquibase changeset `product_images` table: multiple ordered images per product with primary-flag (PROD-02, #82, #104)
+- Liquibase changeset `product_tags` + `product_tag_map` join table: many-to-many product tagging with slug uniqueness (PROD-03, #83, #104)
+- Liquibase changeset `coupons` table: PERCENTAGE/FIXED_AMOUNT discount codes with usage limits, validity windows, and min-order threshold (CHK-02, #77, #104)
+- Liquibase changeset `shipping_methods` table: base cost, per-kg cost, and estimated delivery day range (SHIP-01, #87, #104)
+- Liquibase changeset `return_requests` table: order return/refund flow with status lifecycle (PENDING → APPROVED/REJECTED → REFUNDED) and admin notes (RET-01, #88, #104)
+- Liquibase changeset `inventory_audit_log` table: full inventory change audit trail with change type, before/after quantities, reference type/ID, and actor FK (ADM-06/INV-01, #72, #73, #104)
+
+---
+
 ## [0.4.0] — 2026-06-24 (M3: Technical Debt Reduction)
 
 ### Changed

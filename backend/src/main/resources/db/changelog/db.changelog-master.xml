@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Legacy SQL master — changesets 001–005 already applied; preserved for DATABASECHANGELOG continuity -->
+    <include file="db/changelog/db.changelog-master.sql" relativeToChangelogFile="false"/>
+
+    <!-- M4 entity changesets -->
+    <include file="db/changelog/changes/20260624-001-create-addresses.xml"         relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260624-002-create-product-variants.xml"  relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260624-003-create-product-images.xml"    relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260624-004-create-product-tags.xml"      relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260624-005-create-coupons.xml"           relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260624-006-create-shipping-methods.xml"  relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260624-007-create-return-requests.xml"   relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260624-008-create-inventory-audit-log.xml" relativeToChangelogFile="false"/>
+
+</databaseChangeLog>

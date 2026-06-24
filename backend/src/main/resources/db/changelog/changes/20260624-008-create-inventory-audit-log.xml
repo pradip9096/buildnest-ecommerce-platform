@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #104 / #72 (ADM-06) / #73 (INV-01): Inventory audit trail -->
+    <changeSet id="20260624-008-create-inventory-audit-log" author="buildnest-team">
+        <comment>Create inventory_audit_log table for inventory change audit trail (ADM-06/INV-01, #72/#73)</comment>
+
+        <createTable tableName="inventory_audit_log">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="inventory_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by_user_id" type="BIGINT"/>
+            <column name="change_type" type="VARCHAR(50)">
+                <!-- RESERVATION | RELEASE | RESTOCK | ADJUSTMENT | SALE -->
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity_before" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity_change" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity_after" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reference_type" type="VARCHAR(50)"/>
+            <!-- e.g. ORDER, MANUAL, SYSTEM -->
+            <column name="reference_id" type="BIGINT"/>
+            <column name="notes" type="VARCHAR(500)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            constraintName="fk_inv_audit_inventory"
+            baseTableName="inventory_audit_log" baseColumnNames="inventory_id"
+            referencedTableName="inventory" referencedColumnNames="id"
+            onDelete="RESTRICT"/>
+
+        <addForeignKeyConstraint
+            constraintName="fk_inv_audit_product"
+            baseTableName="inventory_audit_log" baseColumnNames="product_id"
+            referencedTableName="product" referencedColumnNames="id"
+            onDelete="RESTRICT"/>
+
+        <addForeignKeyConstraint
+            constraintName="fk_inv_audit_user"
+            baseTableName="inventory_audit_log" baseColumnNames="changed_by_user_id"
+            referencedTableName="users" referencedColumnNames="id"
+            onDelete="SET NULL"/>
+
+        <createIndex tableName="inventory_audit_log" indexName="idx_inv_audit_inventory_id">
+            <column name="inventory_id"/>
+        </createIndex>
+
+        <createIndex tableName="inventory_audit_log" indexName="idx_inv_audit_product_id">
+            <column name="product_id"/>
+        </createIndex>
+
+        <createIndex tableName="inventory_audit_log" indexName="idx_inv_audit_change_type">
+            <column name="change_type"/>
+        </createIndex>
+
+        <createIndex tableName="inventory_audit_log" indexName="idx_inv_audit_created_at">
+            <column name="created_at"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="inventory_audit_log"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
