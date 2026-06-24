@@ -1,10 +1,13 @@
 package com.example.buildnest_ecommerce.service.order;
 
 import com.example.buildnest_ecommerce.event.DomainEventPublisher;
+import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
+import com.example.buildnest_ecommerce.model.dto.AdminOrderDetailDTO;
 import com.example.buildnest_ecommerce.model.dto.OrderResponseDTO;
 import com.example.buildnest_ecommerce.model.entity.Order;
 import com.example.buildnest_ecommerce.model.entity.User;
 import com.example.buildnest_ecommerce.repository.OrderRepository;
+import com.example.buildnest_ecommerce.service.notification.INotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +34,9 @@ class OrderServiceImplTest {
 
     @Mock
     private DomainEventPublisher domainEventPublisher;
+
+    @Mock
+    private INotificationService notificationService;
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -243,5 +249,123 @@ class OrderServiceImplTest {
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
+    }
+
+    // ── adminUpdateOrderStatus ──────────────────────────────────────────────
+
+    @Test
+    @DisplayName("adminUpdateOrderStatus – PENDING→CONFIRMED – sends confirmation notification")
+    void adminUpdateOrderStatus_pendingToConfirmed_sendsConfirmation() {
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        orderService.adminUpdateOrderStatus(100L, "CONFIRMED", null);
+
+        assertEquals(Order.OrderStatus.CONFIRMED, order.getStatus());
+        verify(notificationService).sendOrderConfirmation(order);
+        verify(domainEventPublisher).publish(any());
+    }
+
+    @Test
+    @DisplayName("adminUpdateOrderStatus – CONFIRMED→SHIPPED – sends shipment notification")
+    void adminUpdateOrderStatus_confirmedToShipped_sendsShipment() {
+        order.setStatus(Order.OrderStatus.CONFIRMED);
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        orderService.adminUpdateOrderStatus(100L, "SHIPPED", null);
+
+        assertEquals(Order.OrderStatus.SHIPPED, order.getStatus());
+        verify(notificationService).sendShipmentNotification(eq(100L), any());
+    }
+
+    @Test
+    @DisplayName("adminUpdateOrderStatus – SHIPPED→DELIVERED – sends delivery notification")
+    void adminUpdateOrderStatus_shippedToDelivered_sendsDelivery() {
+        order.setStatus(Order.OrderStatus.SHIPPED);
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        orderService.adminUpdateOrderStatus(100L, "DELIVERED", null);
+
+        assertEquals(Order.OrderStatus.DELIVERED, order.getStatus());
+        verify(notificationService).sendDeliveryNotification(100L);
+    }
+
+    @Test
+    @DisplayName("adminUpdateOrderStatus – PENDING→CANCELLED – no backward violation")
+    void adminUpdateOrderStatus_pendingToCancelled_succeeds() {
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        orderService.adminUpdateOrderStatus(100L, "CANCELLED", "Customer requested");
+
+        assertEquals(Order.OrderStatus.CANCELLED, order.getStatus());
+        verifyNoInteractions(notificationService);
+    }
+
+    @Test
+    @DisplayName("adminUpdateOrderStatus – invalid backward transition – throws IllegalArgumentException")
+    void adminUpdateOrderStatus_backwardTransition_throwsException() {
+        order.setStatus(Order.OrderStatus.DELIVERED);
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> orderService.adminUpdateOrderStatus(100L, "PENDING", null));
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("adminUpdateOrderStatus – DELIVERED is terminal – any transition throws")
+    void adminUpdateOrderStatus_deliveredIsTerminal_throwsException() {
+        order.setStatus(Order.OrderStatus.DELIVERED);
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> orderService.adminUpdateOrderStatus(100L, "CANCELLED", null));
+    }
+
+    @Test
+    @DisplayName("adminUpdateOrderStatus – unknown status string – throws IllegalArgumentException")
+    void adminUpdateOrderStatus_unknownStatus_throwsException() {
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> orderService.adminUpdateOrderStatus(100L, "FLYING", null));
+    }
+
+    @Test
+    @DisplayName("adminUpdateOrderStatus – order not found – throws ResourceNotFoundException")
+    void adminUpdateOrderStatus_notFound_throwsResourceNotFoundException() {
+        when(orderRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> orderService.adminUpdateOrderStatus(999L, "CONFIRMED", null));
+    }
+
+    @Test
+    @DisplayName("getAdminOrderDetail – not found – throws ResourceNotFoundException")
+    void getAdminOrderDetail_notFound_throwsResourceNotFoundException() {
+        when(orderRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> orderService.getAdminOrderDetail(999L));
+    }
+
+    @Test
+    @DisplayName("getAdminOrderDetail – found – returns DTO with user info")
+    void getAdminOrderDetail_found_returnsDTOWithUserInfo() {
+        user.setEmail("customer@example.com");
+        order.setOrderNumber("ORD-001");
+        order.setOrderItems(java.util.Collections.emptySet());
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+
+        AdminOrderDetailDTO dto = orderService.getAdminOrderDetail(100L);
+
+        assertEquals(100L, dto.getId());
+        assertEquals("ORD-001", dto.getOrderNumber());
+        assertEquals(7L, dto.getUserId());
+        assertEquals("customer@example.com", dto.getUserEmail());
+        assertEquals("PENDING", dto.getStatus());
     }
 }

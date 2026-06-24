@@ -1,64 +1,66 @@
 package com.example.buildnest_ecommerce.controller.admin;
 
+import com.example.buildnest_ecommerce.aspect.Auditable;
+import com.example.buildnest_ecommerce.model.dto.AdminOrderDetailDTO;
 import com.example.buildnest_ecommerce.model.entity.Order;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
+import com.example.buildnest_ecommerce.model.payload.UpdateOrderStatusRequest;
 import com.example.buildnest_ecommerce.service.order.OrderService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+
+import java.time.LocalDateTime;
 
 @RestController
-@RequestMapping("/api/admin/orders")
+@RequestMapping("/api/v1/admin/orders")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class AdminOrderController {
-    
+
     private final OrderService orderService;
-    
+
     @GetMapping
-    public ResponseEntity<ApiResponse> getAllOrders() {
-        try {
-            List<Order> orders = orderService.getAllOrders();
-            return ResponseEntity.ok(new ApiResponse(true, "Orders retrieved successfully", orders));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse(false, "Error retrieving orders", null));
+    public ResponseEntity<ApiResponse> getAdminOrders(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTo,
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+
+        Order.OrderStatus parsedStatus = null;
+        if (status != null && !status.isBlank()) {
+            try {
+                parsedStatus = Order.OrderStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse(false, "Invalid status value: " + status, null));
+            }
         }
-    }
-    
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> getOrderById(@PathVariable Long id) {
-        try {
-            Order order = orderService.getOrderById(id);
-            return ResponseEntity.ok(new ApiResponse(true, "Order retrieved successfully", order));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse(false, "Order not found", null));
-        }
-    }
-    
-    @PutMapping("/{id}/status")
-    public ResponseEntity<ApiResponse> updateOrderStatus(@PathVariable Long id, @RequestParam String status) {
-        try {
-            Order order = orderService.updateOrderStatus(id, status);
-            return ResponseEntity.ok(new ApiResponse(true, "Order status updated successfully", order));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse(false, "Error updating order status", null));
-        }
+
+        Page<AdminOrderDetailDTO> page = orderService.getAdminOrders(parsedStatus, userId, dateFrom, dateTo, pageable);
+        return ResponseEntity.ok(new ApiResponse(true, "Orders retrieved successfully", page));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse> deleteOrder(@PathVariable Long id) {
-        try {
-            orderService.deleteOrder(id);
-            return ResponseEntity.ok(new ApiResponse(true, "Order deleted successfully", null));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse(false, "Error deleting order", null));
-        }
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse> getAdminOrderDetail(@PathVariable Long id) {
+        AdminOrderDetailDTO detail = orderService.getAdminOrderDetail(id);
+        return ResponseEntity.ok(new ApiResponse(true, "Order retrieved successfully", detail));
+    }
+
+    @PatchMapping("/{id}/status")
+    @Auditable(action = "ADMIN_UPDATE_ORDER_STATUS", entityType = "Order")
+    public ResponseEntity<ApiResponse> updateOrderStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateOrderStatusRequest request) {
+
+        Order updated = orderService.adminUpdateOrderStatus(id, request.getStatus(), request.getCancellationReason());
+        return ResponseEntity.ok(new ApiResponse(true, "Order status updated successfully", updated.getStatus().name()));
     }
 }

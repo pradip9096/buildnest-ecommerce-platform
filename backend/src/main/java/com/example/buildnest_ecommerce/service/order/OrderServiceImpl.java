@@ -1,17 +1,29 @@
 package com.example.buildnest_ecommerce.service.order;
 
+import com.example.buildnest_ecommerce.model.dto.AdminOrderDetailDTO;
+import com.example.buildnest_ecommerce.model.dto.OrderItemDTO;
 import com.example.buildnest_ecommerce.model.dto.OrderResponseDTO;
 import com.example.buildnest_ecommerce.model.entity.Order;
+import com.example.buildnest_ecommerce.model.entity.Order.OrderStatus;
 import com.example.buildnest_ecommerce.event.DomainEventPublisher;
 import com.example.buildnest_ecommerce.event.OrderPlacedEvent;
 import com.example.buildnest_ecommerce.event.OrderStatusChangedEvent;
+import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import com.example.buildnest_ecommerce.repository.OrderRepository;
+import com.example.buildnest_ecommerce.service.notification.INotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -32,8 +44,18 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 @SuppressWarnings("null")
 public class OrderServiceImpl implements OrderService {
+
+    private static final Map<OrderStatus, Set<OrderStatus>> VALID_TRANSITIONS = Map.of(
+            OrderStatus.PENDING,   EnumSet.of(OrderStatus.CONFIRMED, OrderStatus.CANCELLED),
+            OrderStatus.CONFIRMED, EnumSet.of(OrderStatus.SHIPPED,   OrderStatus.CANCELLED),
+            OrderStatus.SHIPPED,   EnumSet.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED),
+            OrderStatus.DELIVERED, Collections.emptySet(),
+            OrderStatus.CANCELLED, Collections.emptySet()
+    );
+
     private final OrderRepository orderRepository;
     private final DomainEventPublisher domainEventPublisher;
+    private final INotificationService notificationService;
 
     /**
      * Retrieves all active (non-deleted) orders.
@@ -197,6 +219,92 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return mapToResponseDTO(order);
+    }
+
+    @Override
+    public Page<AdminOrderDetailDTO> getAdminOrders(OrderStatus status, Long userId,
+            LocalDateTime dateFrom, LocalDateTime dateTo, Pageable pageable) {
+        log.info("Admin: listing orders status={}, userId={}, dateFrom={}, dateTo={}", status, userId, dateFrom, dateTo);
+        return orderRepository
+                .findAll(OrderSpecification.withFilters(status, userId, dateFrom, dateTo), pageable)
+                .map(this::mapToAdminDetailDTO);
+    }
+
+    @Override
+    public AdminOrderDetailDTO getAdminOrderDetail(Long orderId) {
+        log.info("Admin: fetching order detail for id={}", orderId);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        return mapToAdminDetailDTO(order);
+    }
+
+    @Override
+    @Transactional
+    public Order adminUpdateOrderStatus(Long orderId, String newStatus, String cancellationReason) {
+        log.info("Admin: updating order id={} to status={}", orderId, newStatus);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+
+        OrderStatus targetStatus;
+        try {
+            targetStatus = OrderStatus.valueOf(newStatus.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid order status: " + newStatus);
+        }
+
+        Set<OrderStatus> allowed = VALID_TRANSITIONS.get(order.getStatus());
+        if (!allowed.contains(targetStatus)) {
+            throw new IllegalArgumentException(
+                    "Cannot transition order from " + order.getStatus() + " to " + targetStatus);
+        }
+
+        String previousStatus = order.getStatus().name();
+        order.setStatus(targetStatus);
+        order.setUpdatedAt(LocalDateTime.now());
+        Order saved = orderRepository.save(order);
+
+        domainEventPublisher.publish(
+                new OrderStatusChangedEvent(this, saved.getId(), previousStatus, saved.getStatus().name()));
+
+        switch (targetStatus) {
+            case CONFIRMED -> notificationService.sendOrderConfirmation(saved);
+            case SHIPPED   -> notificationService.sendShipmentNotification(saved.getId(), saved.getTrackingNumber());
+            case DELIVERED -> notificationService.sendDeliveryNotification(saved.getId());
+            case CANCELLED -> log.info("Order {} cancelled. Reason: {}", saved.getId(), cancellationReason);
+            default        -> { /* no notification for other transitions */ }
+        }
+
+        return saved;
+    }
+
+    private AdminOrderDetailDTO mapToAdminDetailDTO(Order order) {
+        List<OrderItemDTO> items = order.getOrderItems() == null
+                ? Collections.emptyList()
+                : order.getOrderItems().stream()
+                        .map(item -> new OrderItemDTO(
+                                item.getId(),
+                                item.getProduct().getId(),
+                                item.getProduct().getName(),
+                                item.getQuantity(),
+                                item.getPrice(),
+                                item.getDiscountAmount(),
+                                item.getSubtotal()))
+                        .collect(Collectors.toList());
+
+        return new AdminOrderDetailDTO(
+                order.getId(),
+                order.getOrderNumber(),
+                order.getStatus().name(),
+                order.getTotalAmount(),
+                order.getDiscountAmount(),
+                order.getTaxAmount(),
+                order.getShippingAmount(),
+                order.getTrackingNumber(),
+                order.getUser().getId(),
+                order.getUser().getEmail(),
+                items,
+                order.getCreatedAt(),
+                order.getUpdatedAt());
     }
 
     private OrderResponseDTO mapToResponseDTO(Order order) {
