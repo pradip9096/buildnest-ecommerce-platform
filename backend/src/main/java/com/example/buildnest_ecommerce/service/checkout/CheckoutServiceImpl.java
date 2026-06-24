@@ -2,21 +2,27 @@ package com.example.buildnest_ecommerce.service.checkout;
 
 import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import com.example.buildnest_ecommerce.model.dto.CheckoutRequestDTO;
+import com.example.buildnest_ecommerce.model.dto.CheckoutSessionDTO;
 import com.example.buildnest_ecommerce.model.entity.*;
+import com.example.buildnest_ecommerce.repository.AddressRepository;
 import com.example.buildnest_ecommerce.repository.CartRepository;
 import com.example.buildnest_ecommerce.repository.OrderRepository;
+import com.example.buildnest_ecommerce.repository.ShippingMethodRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import com.example.buildnest_ecommerce.service.cart.CartService;
 import com.example.buildnest_ecommerce.service.inventory.InventoryService;
-// import com.example.buildnest_ecommerce.service.order.OrderService;
+import com.example.buildnest_ecommerce.service.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,6 +37,176 @@ public class CheckoutServiceImpl implements CheckoutService {
     private final CartRepository cartRepository;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final AddressRepository addressRepository;
+    private final ShippingMethodRepository shippingMethodRepository;
+    private final PaymentService paymentService;
+    private final CheckoutSessionStore checkoutSessionStore;
+
+    // ─── Multi-step checkout (CHK-01, #76) ───────────────────────────────────
+
+    @Override
+    @Transactional
+    public CheckoutSessionDTO setAddress(Long userId, Long addressId) {
+        log.info("Checkout step 1/4 — setAddress: user={}, address={}", userId, addressId);
+
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found: " + addressId));
+        if (!address.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Address not found: " + addressId);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+        Cart cart = cartRepository.findByUser(user)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user: " + userId));
+
+        if (cart.getItems() == null || cart.getItems().isEmpty()) {
+            throw new IllegalArgumentException("Cart is empty — cannot start checkout");
+        }
+
+        CheckoutSession session = CheckoutSession.builder()
+                .userId(userId)
+                .cartId(cart.getId())
+                .step(CheckoutStep.PENDING_SHIPPING)
+                .addressId(addressId)
+                .build();
+        checkoutSessionStore.save(userId, session);
+
+        log.info("Checkout session created for user={}, cartId={}", userId, cart.getId());
+        return toDTO(session);
+    }
+
+    @Override
+    @Transactional
+    public CheckoutSessionDTO selectShipping(Long userId, Long shippingMethodId) {
+        log.info("Checkout step 2/4 — selectShipping: user={}, method={}", userId, shippingMethodId);
+
+        CheckoutSession session = requireSession(userId, CheckoutStep.PENDING_SHIPPING);
+
+        ShippingMethod method = shippingMethodRepository.findById(shippingMethodId)
+                .filter(m -> Boolean.TRUE.equals(m.getIsActive()))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Shipping method not found or inactive: " + shippingMethodId));
+
+        session.setShippingMethodId(shippingMethodId);
+        session.setShippingCost(method.getBaseCost());
+        session.setStep(CheckoutStep.PENDING_PAYMENT);
+        checkoutSessionStore.save(userId, session);
+
+        log.info("Shipping selected for user={}: method={}, cost={}", userId, method.getName(), method.getBaseCost());
+        return toDTO(session);
+    }
+
+    @Override
+    @Transactional
+    public CheckoutSessionDTO initiatePayment(Long userId) {
+        log.info("Checkout step 3/4 — initiatePayment: user={}", userId);
+
+        CheckoutSession session = requireSession(userId, CheckoutStep.PENDING_PAYMENT);
+
+        if (!validateCheckout(userId, session.getCartId())) {
+            throw new IllegalArgumentException("Cart is no longer valid for checkout");
+        }
+
+        Cart cart = cartRepository.findById(session.getCartId())
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found: " + session.getCartId()));
+
+        Order order = buildOrderFromCart(cart, session.getShippingCost());
+        Order savedOrder = orderRepository.save(order);
+
+        deductInventoryFromCart(cart);
+        cartService.clearCart(userId);
+
+        Payment payment = paymentService.initiatePayment(
+                savedOrder.getId(), savedOrder.getTotalAmount().doubleValue());
+
+        session.setOrderId(savedOrder.getId());
+        session.setRazorpayOrderId(payment.getRazorpayOrderId());
+        session.setStep(CheckoutStep.PENDING_CONFIRM);
+        checkoutSessionStore.save(userId, session);
+
+        log.info("Payment initiated for user={}, orderId={}", userId, savedOrder.getId());
+        return toDTO(session);
+    }
+
+    @Override
+    @Transactional
+    public Order confirmCheckout(Long userId) {
+        log.info("Checkout step 4/4 — confirmCheckout: user={}", userId);
+
+        CheckoutSession session = requireSession(userId, CheckoutStep.PENDING_CONFIRM);
+
+        Order order = orderRepository.findById(session.getOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + session.getOrderId()));
+
+        order.setStatus(Order.OrderStatus.CONFIRMED);
+        order.setUpdatedAt(LocalDateTime.now());
+        Order confirmed = orderRepository.save(order);
+
+        checkoutSessionStore.delete(userId);
+
+        log.info("Checkout confirmed for user={}, orderId={}", userId, confirmed.getId());
+        return confirmed;
+    }
+
+    private CheckoutSession requireSession(Long userId, CheckoutStep expectedStep) {
+        Optional<CheckoutSession> opt = checkoutSessionStore.find(userId);
+        if (opt.isEmpty() || opt.get().getStep() != expectedStep) {
+            String current = opt.map(s -> s.getStep().name()).orElse("NONE");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Invalid checkout step. Expected " + expectedStep + " but session is " + current);
+        }
+        return opt.get();
+    }
+
+    private Order buildOrderFromCart(Cart cart, BigDecimal shippingCost) {
+        BigDecimal cartTotal = cart.getItems().stream()
+                .map(CartItem::getTotalPrice)
+                .map(price -> new BigDecimal(price.toString()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal taxAmount = cartTotal.multiply(new BigDecimal("0.05"));
+        BigDecimal shipping = shippingCost != null ? shippingCost : new BigDecimal("50");
+        BigDecimal finalAmount = cartTotal.add(taxAmount).add(shipping);
+
+        Order order = new Order();
+        order.setUser(cart.getUser());
+        order.setOrderNumber(generateOrderNumber());
+        order.setCreatedAt(LocalDateTime.now());
+        order.setStatus(Order.OrderStatus.PENDING);
+        order.setTotalAmount(finalAmount);
+        order.setTaxAmount(taxAmount);
+        order.setShippingAmount(shipping);
+
+        Set<OrderItem> orderItems = new HashSet<>();
+        for (CartItem cartItem : cart.getItems()) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setProduct(cartItem.getProduct());
+            orderItem.setQuantity(cartItem.getQuantity());
+            BigDecimal price = new BigDecimal(cartItem.getPrice().toString());
+            orderItem.setPrice(price);
+            orderItem.setSubtotal(price.multiply(new BigDecimal(cartItem.getQuantity())));
+            orderItems.add(orderItem);
+        }
+        order.setOrderItems(orderItems);
+
+        return order;
+    }
+
+    private CheckoutSessionDTO toDTO(CheckoutSession session) {
+        return new CheckoutSessionDTO(
+                session.getUserId(),
+                session.getCartId(),
+                session.getStep(),
+                session.getAddressId(),
+                session.getShippingMethodId(),
+                session.getShippingCost(),
+                session.getOrderId(),
+                session.getRazorpayOrderId());
+    }
+
+    // ─── Legacy single-step checkout ─────────────────────────────────────────
 
     @Override
     @Transactional

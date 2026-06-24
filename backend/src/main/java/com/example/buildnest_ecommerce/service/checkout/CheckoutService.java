@@ -1,9 +1,22 @@
 package com.example.buildnest_ecommerce.service.checkout;
 
 import com.example.buildnest_ecommerce.model.dto.CheckoutRequestDTO;
+import com.example.buildnest_ecommerce.model.dto.CheckoutSessionDTO;
 import com.example.buildnest_ecommerce.model.entity.Order;
 
 public interface CheckoutService {
+
+    // ─── Multi-step checkout (CHK-01, #76) ───────────────────────────────────
+
+    CheckoutSessionDTO setAddress(Long userId, Long addressId);
+
+    CheckoutSessionDTO selectShipping(Long userId, Long shippingMethodId);
+
+    CheckoutSessionDTO initiatePayment(Long userId);
+
+    Order confirmCheckout(Long userId);
+
+    // ─── Legacy single-step checkout ─────────────────────────────────────────
     /**
      * Process checkout and create order from cart
      * @param userId User performing checkout
