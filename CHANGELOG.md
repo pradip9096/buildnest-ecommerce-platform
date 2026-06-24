@@ -1,0 +1,68 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+Versioning follows milestone boundaries; issue numbers reference the [GitHub issue tracker](https://github.com/pradip9096/buildnest-ecommerce-platform/issues).
+
+---
+
+## [Unreleased] — M3: Technical Debt Reduction (target 2026-08-01)
+
+### Changed
+- Upgrade Elasticsearch, Kibana, and Logstash Docker images from 8.10.2 to 8.17.6 (#236)
+- Relocate git repository root from `backend/` to `BuildNest/` project root to bring frontend and CI/CD files under version control (#233)
+
+### Fixed
+- `ElasticsearchConfig.clientConfiguration()` now passes injected credentials via `.withBasicAuth()` — previously credentials were declared but never forwarded to the client builder, causing HTTP 401 against any secured cluster (#236)
+- Add explicit `FetchType.LAZY` to `Category.products` and `Order.orderItems` associations to eliminate N+1 query risk (DC-08, #54)
+
+---
+
+## [M2] — Quality Foundation (completed 2026-06-22)
+
+### Added
+- OWASP Dependency-Check Maven plugin (`owasp` profile, CVSS ≥ 7.0 fails build) (#53)
+- Integration tests for rate-limiting behaviour using Bucket4j/Redis (#51)
+- Comprehensive unit tests for `CartService` and `WishlistService` — 15 and 14 tests respectively (#50)
+- Comprehensive unit tests for `OrderServiceImpl` including edge cases (#49)
+- Comprehensive unit tests for `ProductServiceImpl` including pagination edge cases (#48)
+- Edge-case unit tests for `AuthServiceImpl` (#47)
+- All 62 required environment variables documented across 16 sections in `.env.example` (#52)
+
+### Changed
+- Raise JaCoCo instruction coverage gate from 40% to 50% (#46)
+
+### Fixed
+- `ProductServiceImpl.advancedSearch()` and `findByCategory()` pagination bug corrected as part of test expansion (#48)
+
+---
+
+## [M1] — Stabilisation (completed 2026-06-14)
+
+### Fixed
+- Add missing `RoleRepository` mock in `AuthServiceImplTest` — test context failed to load (#38)
+- Add `@Tag("e2e")` to `OrderApiTest` so it is correctly excluded from the unit-test profile (#40)
+- Correct HTTP status assertions in `testRoleHierarchyEnforcement` — expected 403, was asserting 200 (#41)
+- Correct XSS test assertion in `InputValidationSecurityTest`: 401 → 400 (#42)
+- Correct file-upload test assertions in `InputValidationSecurityTest`: 401 → 415 (#43)
+
+---
+
+## [Pre-M1] — Foundation (2026-06 and earlier)
+
+### Added
+- Spring Boot 3.5 / Java 21 backend: REST API, JWT auth (access + refresh tokens), Spring Security RBAC with `Permission` entities
+- JPA entities: `User`, `Product`, `Category`, `Order`, `OrderItem`, `Cart`, `CartItem`, `Wishlist`, `Inventory`, `Payment`, `ProductReview`, `AuditLog`, `Role`, `Permission`, `RefreshToken`, `PasswordResetToken`, `WebhookSubscription`
+- Liquibase-managed schema migrations (DDL auto = `validate`)
+- Redis-backed rate limiting (Bucket4j) and caching (`@Cacheable`)
+- Elasticsearch 8.x integration for audit log ingestion, metrics collection, and alerting
+- `@Auditable` AOP aspect for declarative audit logging
+- `ApiSunsetInterceptor` adding deprecation headers to v1 product endpoints
+- Dual API versioning: `ProductControllerV1` and `ProductControllerV2`
+- Docker Compose stack: MySQL 8.2, Redis 7, Elasticsearch, Kibana, Logstash, Prometheus
+- GitHub Actions CI/CD: build, test, JaCoCo coverage, CodeQL, OWASP Dependency-Check
+- Structured Logback/Logstash JSON logging pipeline to Elasticsearch
+- Resilience4j circuit breaker configuration
+- SDLC documentation suite: SRS (ISO/IEC/IEEE 29148), SDD (IEEE 1016), RTM, Test Plan (ISO 29119-3), SDP, V&V Report, BRD, ICD, CSD, metrics and quality reports
+- React 19 / Vite frontend scaffold (stub; real UI not yet built)
