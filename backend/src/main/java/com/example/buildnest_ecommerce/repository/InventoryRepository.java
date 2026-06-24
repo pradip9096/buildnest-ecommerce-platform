@@ -3,6 +3,7 @@ package com.example.buildnest_ecommerce.repository;
 import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -11,6 +12,9 @@ import java.util.Optional;
 
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
+    @EntityGraph(attributePaths = {"product"})
+    java.util.List<Inventory> findAll();
+
     Optional<Inventory> findByProduct(Product product);
 
     /**

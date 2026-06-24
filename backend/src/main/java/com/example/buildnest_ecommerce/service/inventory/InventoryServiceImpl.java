@@ -1,8 +1,12 @@
 package com.example.buildnest_ecommerce.service.inventory;
 
+import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
+import com.example.buildnest_ecommerce.model.dto.InventoryDTO;
 import com.example.buildnest_ecommerce.model.entity.Inventory;
+import com.example.buildnest_ecommerce.model.entity.InventoryAuditLog;
 import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.repository.InventoryAuditLogRepository;
 import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.event.DomainEventPublisher;
@@ -21,6 +25,7 @@ import java.util.List;
 public class InventoryServiceImpl implements InventoryService {
 
         private final InventoryRepository inventoryRepository;
+        private final InventoryAuditLogRepository inventoryAuditLogRepository;
         private final ProductRepository productRepository;
         private final DomainEventPublisher domainEventPublisher;
 
@@ -138,6 +143,66 @@ public class InventoryServiceImpl implements InventoryService {
         public boolean isBelowThreshold(Long productId) {
                 Inventory inventory = getInventoryByProductId(productId);
                 return inventory.getQuantityInStock() <= inventory.getMinimumStockLevel();
+        }
+
+        @Override
+        public List<InventoryDTO> getAllInventorySummary() {
+                log.info("Fetching all inventory summaries");
+                return inventoryRepository.findAll().stream()
+                                .map(inv -> new InventoryDTO(
+                                                inv.getId(),
+                                                inv.getProduct().getId(),
+                                                inv.getProduct().getName(),
+                                                inv.getQuantityInStock(),
+                                                inv.getQuantityReserved(),
+                                                inv.getAvailableQuantity(),
+                                                inv.getMinimumStockLevel(),
+                                                inv.getStatus().name(),
+                                                inv.getUpdatedAt()))
+                                .toList();
+        }
+
+        @Override
+        @Transactional
+        public Inventory adjustStock(Long productId, int delta, String reason, Long changedByUserId) {
+                log.info("Admin adjusting stock for product {} by delta={}", productId, delta);
+
+                Product product = productRepository.findById(productId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Product not found with id: " + productId));
+
+                Inventory inventory = inventoryRepository.findByProduct(product)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Inventory not found for product: " + productId));
+
+                int quantityBefore = inventory.getQuantityInStock();
+                int quantityAfter = quantityBefore + delta;
+
+                if (quantityAfter < 0) {
+                        throw new IllegalArgumentException(
+                                "Adjustment would result in negative stock. Current: "
+                                        + quantityBefore + ", delta: " + delta);
+                }
+
+                inventory.setQuantityInStock(quantityAfter);
+                inventory.setUpdatedAt(LocalDateTime.now());
+                updateStatusBasedOnQuantity(inventory);
+                Inventory saved = inventoryRepository.save(inventory);
+
+                inventoryAuditLogRepository.save(InventoryAuditLog.builder()
+                                .inventory(saved)
+                                .product(product)
+                                .changedByUserId(changedByUserId)
+                                .changeType("ADJUSTMENT")
+                                .quantityBefore(quantityBefore)
+                                .quantityChange(delta)
+                                .quantityAfter(quantityAfter)
+                                .referenceType("MANUAL")
+                                .notes(reason)
+                                .createdAt(LocalDateTime.now())
+                                .build());
+
+                return saved;
         }
 
         /**

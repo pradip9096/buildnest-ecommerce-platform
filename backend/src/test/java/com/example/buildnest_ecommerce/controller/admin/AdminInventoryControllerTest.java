@@ -86,7 +86,7 @@ class AdminInventoryControllerTest {
         when(inventoryService.getInventoryByProductId(anyLong())).thenReturn(inv1);
 
         // TestSecurityConfig enables authentication, admin user can access
-        mockMvc.perform(get("/api/admin/inventory/product/1")
+        mockMvc.perform(get("/api/v1/admin/inventory/product/1")
                 .with(user(adminDetails)))
                 .andExpect(status().isOk());
     }
@@ -101,7 +101,7 @@ class AdminInventoryControllerTest {
         when(inventoryService.getInventoryByProductId(anyLong())).thenReturn(inv1);
 
         // TestSecurityConfig enables authentication, admin user can access
-        mockMvc.perform(get("/api/admin/inventory/product/2")
+        mockMvc.perform(get("/api/v1/admin/inventory/product/2")
                 .with(user(adminDetails)))
                 .andExpect(status().isOk());
     }
@@ -116,7 +116,7 @@ class AdminInventoryControllerTest {
         when(inventoryService.addStock(anyLong(), anyInt())).thenReturn(updatedInventory);
 
         // TestSecurityConfig enables authentication, admin user can access
-        mockMvc.perform(post("/api/admin/inventory/add-stock/1")
+        mockMvc.perform(post("/api/v1/admin/inventory/add-stock/1")
                 .with(user(adminDetails))
                 .param("quantity", "50")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -128,7 +128,7 @@ class AdminInventoryControllerTest {
     void testAddStockError() throws Exception {
         doThrow(new RuntimeException("bad")).when(inventoryService).addStock(eq(1L), eq(50));
 
-        mockMvc.perform(post("/api/admin/inventory/add-stock/1")
+        mockMvc.perform(post("/api/v1/admin/inventory/add-stock/1")
                 .with(user(adminDetails))
                 .param("quantity", "50")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -144,7 +144,7 @@ class AdminInventoryControllerTest {
 
         when(inventoryService.updateStock(anyLong(), anyInt())).thenReturn(updatedInventory);
 
-        mockMvc.perform(post("/api/admin/inventory/update-stock/1")
+        mockMvc.perform(post("/api/v1/admin/inventory/update-stock/1")
                 .with(user(adminDetails))
                 .param("quantity", "20")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -152,7 +152,7 @@ class AdminInventoryControllerTest {
 
         doThrow(new RuntimeException("bad")).when(inventoryService).updateStock(eq(1L), eq(20));
 
-        mockMvc.perform(post("/api/admin/inventory/update-stock/1")
+        mockMvc.perform(post("/api/v1/admin/inventory/update-stock/1")
                 .with(user(adminDetails))
                 .param("quantity", "20")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -162,7 +162,7 @@ class AdminInventoryControllerTest {
     @Test
     @DisplayName("TC-ADMIN-INV-004: Regular user cannot access admin inventory endpoints")
     void testUserCannotAccessAdminEndpoints() throws Exception {
-        mockMvc.perform(get("/api/admin/inventory/low-stock")
+        mockMvc.perform(get("/api/v1/admin/inventory/low-stock")
                 .with(user(userDetails)))
                 .andExpect(status().isForbidden());
     }
@@ -173,7 +173,7 @@ class AdminInventoryControllerTest {
         when(inventoryService.hasStock(anyLong(), anyInt())).thenReturn(true);
 
         // TestSecurityConfig enables authentication, admin user can access
-        mockMvc.perform(get("/api/admin/inventory/check-availability/1")
+        mockMvc.perform(get("/api/v1/admin/inventory/check-availability/1")
                 .with(user(adminDetails))
                 .param("quantity", "10"))
                 .andExpect(status().isOk());
@@ -184,7 +184,7 @@ class AdminInventoryControllerTest {
     void testCheckProductAvailabilityUnavailable() throws Exception {
         when(inventoryService.hasStock(anyLong(), anyInt())).thenReturn(false);
 
-        mockMvc.perform(get("/api/admin/inventory/check-availability/2")
+        mockMvc.perform(get("/api/v1/admin/inventory/check-availability/2")
                 .with(user(adminDetails))
                 .param("quantity", "99"))
                 .andExpect(status().isOk());
@@ -195,7 +195,7 @@ class AdminInventoryControllerTest {
     void testCheckAvailabilityError() throws Exception {
         doThrow(new RuntimeException("bad")).when(inventoryService).hasStock(eq(1L), eq(10));
 
-        mockMvc.perform(get("/api/admin/inventory/check-availability/1")
+        mockMvc.perform(get("/api/v1/admin/inventory/check-availability/1")
                 .with(user(adminDetails))
                 .param("quantity", "10"))
                 .andExpect(status().isBadRequest());
@@ -211,7 +211,7 @@ class AdminInventoryControllerTest {
         when(inventoryService.getInventoryByProductId(anyLong())).thenReturn(inv);
 
         // TestSecurityConfig enables authentication, admin user can access
-        mockMvc.perform(get("/api/admin/inventory/product/1")
+        mockMvc.perform(get("/api/v1/admin/inventory/product/1")
                 .with(user(adminDetails)))
                 .andExpect(status().isOk());
     }
@@ -221,7 +221,7 @@ class AdminInventoryControllerTest {
     void testGetInventoryNotFound() throws Exception {
         doThrow(new RuntimeException("missing")).when(inventoryService).getInventoryByProductId(eq(99L));
 
-        mockMvc.perform(get("/api/admin/inventory/product/99")
+        mockMvc.perform(get("/api/v1/admin/inventory/product/99")
                 .with(user(adminDetails)))
                 .andExpect(status().isNotFound());
     }
