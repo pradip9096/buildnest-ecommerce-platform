@@ -1,5 +1,6 @@
 package com.example.buildnest_ecommerce.service.ratelimit;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,11 +34,12 @@ public class RateLimiterService implements IRateLimiterService {
      */
     public boolean isAllowed(String key, int limit, Duration window) {
         try {
-            // Apply circuit breaker protection
             return redisCircuitBreaker.executeSupplier(() -> performRateLimitCheck(key, limit, window));
+        } catch (CallNotPermittedException e) {
+            log.debug("Redis circuit breaker OPEN, allowing request as graceful degradation for key {}", key);
+            return true;
         } catch (Exception e) {
-            // Graceful degradation: allow request if Redis is unavailable
-            log.warn("Rate limit check failed for key {}, allowing request due to Redis unavailability", key, e);
+            log.warn("Rate limit check failed for key {}, allowing request", key, e);
             return true;
         }
     }
@@ -76,11 +78,13 @@ public class RateLimiterService implements IRateLimiterService {
      */
     public long getRetryAfterSeconds(String key) {
         try {
-            // Apply circuit breaker protection
             return redisCircuitBreaker.executeSupplier(() -> {
                 Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
                 return ttl != null && ttl > 0 ? ttl : 0;
             });
+        } catch (CallNotPermittedException e) {
+            log.debug("Redis circuit breaker OPEN, returning 0 retry-after for key {}", key);
+            return 0;
         } catch (Exception e) {
             log.warn("Failed to retrieve retry-after for key {}", key, e);
             return 0;
@@ -101,14 +105,16 @@ public class RateLimiterService implements IRateLimiterService {
             return redisCircuitBreaker.executeSupplier(() -> {
                 Long current = (Long) redisTemplate.opsForValue().get(key);
                 if (current == null) {
-                    return limit; // No requests yet, all tokens available
+                    return limit;
                 }
-                int remaining = (int) (limit - current);
-                return Math.max(0, remaining); // Never return negative
+                return Math.max(0, (int) (limit - current));
             });
+        } catch (CallNotPermittedException e) {
+            log.debug("Redis circuit breaker OPEN, returning full token count for key {}", key);
+            return limit;
         } catch (Exception e) {
             log.warn("Failed to retrieve remaining tokens for key {}", key, e);
-            return limit; // Graceful degradation: assume all tokens available
+            return limit;
         }
     }
 
@@ -125,6 +131,8 @@ public class RateLimiterService implements IRateLimiterService {
                 log.info("Rate limit reset for key: {}", key);
                 return null;
             });
+        } catch (CallNotPermittedException e) {
+            log.debug("Redis circuit breaker OPEN, rate limit reset skipped for key {}", key);
         } catch (Exception e) {
             log.error("Failed to reset rate limit for key {}", key, e);
         }

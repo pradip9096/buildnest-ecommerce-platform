@@ -4,6 +4,7 @@ import com.example.buildnest_ecommerce.model.elasticsearch.ElasticsearchAuditLog
 import com.example.buildnest_ecommerce.model.elasticsearch.ElasticsearchMetrics;
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchAuditLogRepository;
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchMetricsRepository;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,8 @@ class ElasticsearchIngestionServiceTest {
 
     @BeforeEach
     void setUp() {
-        ingestionService = new ElasticsearchIngestionService(auditLogRepository, metricsRepository);
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("elasticsearch-circuit-breaker-test");
+        ingestionService = new ElasticsearchIngestionService(auditLogRepository, metricsRepository, circuitBreaker);
     }
 
     @Test

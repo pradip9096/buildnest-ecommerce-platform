@@ -4,12 +4,15 @@ import com.example.buildnest_ecommerce.model.elasticsearch.ElasticsearchAuditLog
 import com.example.buildnest_ecommerce.model.elasticsearch.ElasticsearchMetrics;
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchAuditLogRepository;
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchMetricsRepository;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +31,7 @@ public class ElasticsearchIngestionService {
 
     private final ElasticsearchAuditLogRepository auditLogRepository;
     private final ElasticsearchMetricsRepository metricsRepository;
+    private final CircuitBreaker elasticsearchCircuitBreaker;
 
     /**
      * Index audit log in Elasticsearch asynchronously (RQ-ES-LOG-04, RQ-ES-ING-04).
@@ -79,11 +83,12 @@ public class ElasticsearchIngestionService {
                     .endpoint(endpoint)
                     .build();
 
-            auditLogRepository.save(esLog);
+            elasticsearchCircuitBreaker.executeRunnable(() -> auditLogRepository.save(esLog));
             log.debug("Audit log indexed in Elasticsearch: {} - {} (Status: {})", action, userId, httpStatusCode);
+        } catch (CallNotPermittedException e) {
+            log.debug("Elasticsearch circuit breaker OPEN, skipping audit log ingestion (graceful degradation)");
         } catch (Exception e) {
             log.error("Failed to index audit log in Elasticsearch", e);
-            // Graceful degradation - application continues even if Elasticsearch fails
         }
     }
 
@@ -92,7 +97,13 @@ public class ElasticsearchIngestionService {
      * Retrieves all API error events with specific HTTP status codes.
      */
     public List<ElasticsearchAuditLog> getErrorsByHttpStatusCode(Integer httpStatusCode) {
-        return auditLogRepository.findByHttpStatusCode(httpStatusCode);
+        try {
+            return elasticsearchCircuitBreaker.executeSupplier(
+                    () -> auditLogRepository.findByHttpStatusCode(httpStatusCode));
+        } catch (CallNotPermittedException e) {
+            log.debug("Elasticsearch circuit breaker OPEN, returning empty result for getErrorsByHttpStatusCode");
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -100,7 +111,13 @@ public class ElasticsearchIngestionService {
      * Retrieves errors categorized by CLIENT_ERROR, SERVER_ERROR, etc.
      */
     public List<ElasticsearchAuditLog> getErrorsByCategory(String errorCategory) {
-        return auditLogRepository.findByErrorCategory(errorCategory);
+        try {
+            return elasticsearchCircuitBreaker.executeSupplier(
+                    () -> auditLogRepository.findByErrorCategory(errorCategory));
+        } catch (CallNotPermittedException e) {
+            log.debug("Elasticsearch circuit breaker OPEN, returning empty result for getErrorsByCategory");
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -108,7 +125,13 @@ public class ElasticsearchIngestionService {
      */
     public List<ElasticsearchAuditLog> getErrorsByStatusCodeAndTimeRange(Integer httpStatusCode, LocalDateTime start,
             LocalDateTime end) {
-        return auditLogRepository.findByHttpStatusCodeAndTimestampBetween(httpStatusCode, start, end);
+        try {
+            return elasticsearchCircuitBreaker.executeSupplier(
+                    () -> auditLogRepository.findByHttpStatusCodeAndTimestampBetween(httpStatusCode, start, end));
+        } catch (CallNotPermittedException e) {
+            log.debug("Elasticsearch circuit breaker OPEN, returning empty result for getErrorsByStatusCodeAndTimeRange");
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -130,8 +153,10 @@ public class ElasticsearchIngestionService {
                     .environment(environment)
                     .build();
 
-            metricsRepository.save(metrics);
+            elasticsearchCircuitBreaker.executeRunnable(() -> metricsRepository.save(metrics));
             log.debug("Metric indexed in Elasticsearch: {} = {}", metricName, value);
+        } catch (CallNotPermittedException e) {
+            log.debug("Elasticsearch circuit breaker OPEN, skipping metrics ingestion (graceful degradation)");
         } catch (Exception e) {
             log.error("Failed to index metrics in Elasticsearch", e);
         }
@@ -141,28 +166,50 @@ public class ElasticsearchIngestionService {
      * Query audit logs by user (RQ-ES-EL-02, RQ-ES-EL-04).
      */
     public List<ElasticsearchAuditLog> getAuditLogsByUser(Long userId) {
-        return auditLogRepository.findByUserId(userId);
+        try {
+            return elasticsearchCircuitBreaker.executeSupplier(() -> auditLogRepository.findByUserId(userId));
+        } catch (CallNotPermittedException e) {
+            log.debug("Elasticsearch circuit breaker OPEN, returning empty result for getAuditLogsByUser");
+            return Collections.emptyList();
+        }
     }
 
     /**
      * Query audit logs by time range for historical analysis (RQ-ES-EL-04).
      */
     public List<ElasticsearchAuditLog> getAuditLogsByTimeRange(LocalDateTime start, LocalDateTime end) {
-        return auditLogRepository.findByTimestampBetween(start, end);
+        try {
+            return elasticsearchCircuitBreaker.executeSupplier(
+                    () -> auditLogRepository.findByTimestampBetween(start, end));
+        } catch (CallNotPermittedException e) {
+            log.debug("Elasticsearch circuit breaker OPEN, returning empty result for getAuditLogsByTimeRange");
+            return Collections.emptyList();
+        }
     }
 
     /**
      * Query audit logs by action for security investigation.
      */
     public List<ElasticsearchAuditLog> getAuditLogsByAction(String action) {
-        return auditLogRepository.findByAction(action);
+        try {
+            return elasticsearchCircuitBreaker.executeSupplier(() -> auditLogRepository.findByAction(action));
+        } catch (CallNotPermittedException e) {
+            log.debug("Elasticsearch circuit breaker OPEN, returning empty result for getAuditLogsByAction");
+            return Collections.emptyList();
+        }
     }
 
     /**
      * Query metrics by time range for trend analysis (RQ-ES-MON-03).
      */
     public List<ElasticsearchMetrics> getMetricsByTimeRange(LocalDateTime start, LocalDateTime end) {
-        return metricsRepository.findByTimestampBetween(start, end);
+        try {
+            return elasticsearchCircuitBreaker.executeSupplier(
+                    () -> metricsRepository.findByTimestampBetween(start, end));
+        } catch (CallNotPermittedException e) {
+            log.debug("Elasticsearch circuit breaker OPEN, returning empty result for getMetricsByTimeRange");
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -170,7 +217,12 @@ public class ElasticsearchIngestionService {
      */
     public List<ElasticsearchMetrics> getRecentMetrics(int minutesBack) {
         LocalDateTime since = LocalDateTime.now().minusMinutes(minutesBack);
-        return metricsRepository.findByTimestampAfter(since);
+        try {
+            return elasticsearchCircuitBreaker.executeSupplier(() -> metricsRepository.findByTimestampAfter(since));
+        } catch (CallNotPermittedException e) {
+            log.debug("Elasticsearch circuit breaker OPEN, returning empty result for getRecentMetrics");
+            return Collections.emptyList();
+        }
     }
 
     /**

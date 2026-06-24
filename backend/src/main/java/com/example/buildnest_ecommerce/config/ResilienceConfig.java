@@ -133,7 +133,7 @@ public class ResilienceConfig {
 
     /**
      * Time limiter for Redis operations with 3-second timeout.
-     * 
+     *
      * @param timeLimiterRegistry The time limiter registry
      * @return TimeLimiter configured for Redis
      */
@@ -143,6 +143,30 @@ public class ResilienceConfig {
                 TimeLimiterConfig.custom()
                         .timeoutDuration(Duration.ofSeconds(3))
                         .cancelRunningFuture(true)
+                        .build());
+    }
+
+    /**
+     * Circuit breaker for Elasticsearch operations (RQ-ES-02, RQ-NFR-02).
+     * Tuned for fast failure detection: Elasticsearch is an analytics write-target
+     * that typically restarts within seconds, so the open-state wait is shorter
+     * than the database circuit breaker. When OPEN, async ingestion calls are
+     * skipped entirely rather than piling up against a known-dead endpoint.
+     *
+     * @param circuitBreakerRegistry The circuit breaker registry
+     * @return CircuitBreaker configured for Elasticsearch
+     */
+    @Bean
+    public CircuitBreaker elasticsearchCircuitBreaker(CircuitBreakerRegistry circuitBreakerRegistry) {
+        return circuitBreakerRegistry.circuitBreaker("elasticsearch-circuit-breaker",
+                CircuitBreakerConfig.custom()
+                        .failureRateThreshold(50)
+                        .slowCallRateThreshold(50)
+                        .slowCallDurationThreshold(Duration.ofSeconds(3))
+                        .waitDurationInOpenState(Duration.ofSeconds(20))
+                        .minimumNumberOfCalls(3)
+                        .automaticTransitionFromOpenToHalfOpenEnabled(true)
+                        .recordExceptions(Exception.class)
                         .build());
     }
 }
