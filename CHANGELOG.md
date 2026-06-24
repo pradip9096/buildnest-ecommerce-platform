@@ -13,6 +13,11 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Inventory management admin endpoints: `GET /api/v1/admin/inventory` (list all with `InventoryDTO` — productId, productName, qty, reservedQty, availableQty, status) and `PATCH /api/v1/admin/inventory/{productId}` (delta-based adjustment with required reason; validates result ≥ 0; `@Auditable`) (ADM-06, #72)
+- `InventoryAuditLog` JPA entity + `InventoryAuditLogRepository` mapping the `inventory_audit_log` table (created in #104); every `PATCH` adjustment writes a record with before/change/after quantities, reason, actor, and `referenceType=MANUAL` (#72)
+- `InventoryDTO` — list-view DTO for admin inventory endpoint (#72)
+- `AdjustInventoryRequest` — `{ @NotNull Integer delta, @NotBlank String reason }` request payload (#72)
+- `AdminInventoryControllerIntegrationTest` — 9 integration tests covering list, positive/negative delta, below-zero guard (400), missing reason (400), 404, role enforcement (403), and audit log record verification (ADM-06, #72)
 - Order management admin endpoints at `GET/PATCH /api/v1/admin/orders` — list with status/userId/dateFrom/dateTo filters + pagination, full detail with nested items, forward-only status transitions (PENDING→CONFIRMED→SHIPPED→DELIVERED; any→CANCELLED) enforced server-side; `PATCH` is `@Auditable`; customer notification dispatched on each transition (ADM-03, #69)
 - `OrderSpecification` — composable `JpaSpecificationExecutor`-based filter for admin order listing (#69)
 - `AdminOrderDetailDTO` + `OrderItemDTO` — full admin order view with nested item lines (#69)
@@ -28,6 +33,10 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 - Liquibase XML master orchestrator (`db.changelog-master.xml`) replacing direct SQL master reference; enables per-entity XML changeset files and clean include-based composition (#104)
 
 ### Changed
+- `AdminInventoryController` migrated from `/api/admin/inventory` to `/api/v1/admin/inventory`; `GET /` and `PATCH /{productId}` added; legacy sub-path endpoints retained for backward compatibility (ADM-06, #72)
+- `InventoryRepository` extended with `@EntityGraph({"product"}) findAll()` to prevent N+1 queries on admin list (#72)
+- `InventoryServiceImpl` extended with `getAllInventorySummary()` and `adjustStock()` (delta validation, audit write, status recalculation, `LowStockWarningEvent` if threshold crossed) (#72)
+- `AdminInventoryControllerTest` URL references updated from `/api/admin/inventory` to `/api/v1/admin/inventory` (#72)
 - `AdminOrderController` rewritten at `/api/v1/admin/orders` (was `/api/admin/orders`); removed try/catch anti-pattern; delegates all error handling to `GlobalExceptionHandler` (ADM-03, #69)
 - `OrderRepository` extended with `JpaSpecificationExecutor<Order>` for specification-based admin queries (#69)
 - `OrderServiceImpl` extended with `adminUpdateOrderStatus` (transition validation + notification) and `getAdminOrders` / `getAdminOrderDetail` admin methods (#69)
