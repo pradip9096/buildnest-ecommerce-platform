@@ -13,6 +13,14 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Multi-step checkout flow at `POST /api/v1/checkout/{address,shipping,payment,confirm}`: address selection → shipping method → payment initiation (delegates to `PaymentService`) → order confirmation; session stored in Redis with 30-minute TTL; out-of-order step returns 409 Conflict (CHK-01, #76)
+- `CheckoutSessionStore` interface + `RedisCheckoutSessionStore` implementation (`StringRedisTemplate` + Jackson; key `checkout:session:{userId}`; 30-min TTL) for Redis-backed checkout session management (#76)
+- `CheckoutSession` / `CheckoutStep` — serializable session POJO and step enum (`PENDING_SHIPPING → PENDING_PAYMENT → PENDING_CONFIRM`) (#76)
+- `ShippingMethod` JPA entity + `ShippingMethodRepository` mapping the `shipping_methods` table (created in #104/#87): name, baseCost, costPerKg, estimatedDaysMin/Max, isActive (#76)
+- `AddressRepository` — for checkout address ownership validation (#76)
+- `SetAddressRequest` + `SelectShippingRequest` — validated request payloads for checkout step 1 and step 2 (#76)
+- `CheckoutSessionDTO` — response DTO exposing current session step, addressId, shippingMethodId, shippingCost, orderId, razorpayOrderId (#76)
+- `CheckoutFlowIntegrationTest` — 11 integration tests covering happy paths, invalid step transitions (409), wrong-owner address (404), inactive shipping method (404), and unauthenticated access (401); `@MockBean CheckoutSessionStore` and `@MockBean PaymentService` used to avoid Redis/Razorpay in tests (CHK-01, #76)
 - Inventory management admin endpoints: `GET /api/v1/admin/inventory` (list all with `InventoryDTO` — productId, productName, qty, reservedQty, availableQty, status) and `PATCH /api/v1/admin/inventory/{productId}` (delta-based adjustment with required reason; validates result ≥ 0; `@Auditable`) (ADM-06, #72)
 - `InventoryAuditLog` JPA entity + `InventoryAuditLogRepository` mapping the `inventory_audit_log` table (created in #104); every `PATCH` adjustment writes a record with before/change/after quantities, reason, actor, and `referenceType=MANUAL` (#72)
 - `InventoryDTO` — list-view DTO for admin inventory endpoint (#72)
@@ -33,6 +41,7 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 - Liquibase XML master orchestrator (`db.changelog-master.xml`) replacing direct SQL master reference; enables per-entity XML changeset files and clean include-based composition (#104)
 
 ### Changed
+- `CheckoutService` extended with 4 new methods (`setAddress`, `selectShipping`, `initiatePayment`, `confirmCheckout`); `CheckoutServiceImpl` extended with implementations + `AddressRepository`, `ShippingMethodRepository`, `PaymentService`, `CheckoutSessionStore` injected via constructor (#76)
 - `AdminInventoryController` migrated from `/api/admin/inventory` to `/api/v1/admin/inventory`; `GET /` and `PATCH /{productId}` added; legacy sub-path endpoints retained for backward compatibility (ADM-06, #72)
 - `InventoryRepository` extended with `@EntityGraph({"product"}) findAll()` to prevent N+1 queries on admin list (#72)
 - `InventoryServiceImpl` extended with `getAllInventorySummary()` and `adjustStock()` (delta validation, audit write, status recalculation, `LowStockWarningEvent` if threshold crossed) (#72)
