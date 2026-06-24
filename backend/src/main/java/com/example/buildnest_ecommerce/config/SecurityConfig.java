@@ -23,6 +23,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import jakarta.annotation.PostConstruct;
+import org.springframework.core.annotation.Order;
 
 import java.util.Arrays;
 
@@ -93,7 +94,29 @@ public class SecurityConfig {
         return authenticationManagerBuilder.build();
     }
 
+    /**
+     * Dedicated security chain for Swagger UI paths (SEC-14).
+     * Retains 'unsafe-inline' scoped exclusively to documentation endpoints,
+     * which SpringDoc requires to render its bundled inline scripts and styles.
+     * All API paths are handled by the main chain below with a strict CSP.
+     */
     @Bean
+    @Order(1)
+    public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'self'; script-src 'self' 'unsafe-inline'; " +
+                                "style-src 'self' 'unsafe-inline'; img-src 'self' data:"))
+                        .frameOptions(frameOptions -> frameOptions.deny()))
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .csrf(csrf -> csrf.disable());
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // Check if running in test profile
         boolean isTestProfile = Arrays.asList(environment.getActiveProfiles()).contains("test");
@@ -106,7 +129,8 @@ public class SecurityConfig {
                 // Security headers for OWASP compliance
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp.policyDirectives(
-                                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"))
+                                "default-src 'self'; script-src 'self'; style-src 'self'; " +
+                                "frame-ancestors 'none'; form-action 'self'"))
                         .frameOptions(frameOptions -> frameOptions.deny())
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)

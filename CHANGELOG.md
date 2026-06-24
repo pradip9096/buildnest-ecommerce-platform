@@ -15,6 +15,7 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ### Changed
 - Upgrade Elasticsearch, Kibana, and Logstash Docker images from 8.10.2 to 8.17.6 (#236)
 - Relocate git repository root from `backend/` to `BuildNest/` project root to bring frontend and CI/CD files under version control (#233)
+- Harden Content Security Policy: remove `'unsafe-inline'` from `script-src` and `style-src` on all API paths; introduce dedicated `@Order(1)` `SecurityFilterChain` scoping `'unsafe-inline'` to Swagger UI documentation paths only; add `frame-ancestors 'none'` and `form-action 'self'` to main chain (SEC-14, #237)
 
 ### Fixed
 - `ElasticsearchConfig.clientConfiguration()` now passes injected credentials via `.withBasicAuth()` — previously credentials were declared but never forwarded to the client builder, causing HTTP 401 against any secured cluster (#236)
