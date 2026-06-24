@@ -60,11 +60,14 @@ class UptimeMonitoringServiceTest {
     }
 
     @Test
-    void uptimeMetricsFailSlaWhenDowntimeHigh() throws InterruptedException {
+    void uptimeMetricsFailSlaWhenDowntimeHigh() {
         UptimeMonitoringService service = new UptimeMonitoringService();
         ReflectionTestUtils.setField(service, "totalDowntimeSeconds", 10_000L);
+        // Back-date startTime so totalUptimeSeconds is deterministic (avoids Thread.sleep
+        // which is unreliable under load on truncated-second clocks, e.g. WSL2).
+        ReflectionTestUtils.setField(service, "applicationStartTime",
+                java.time.LocalDateTime.now().minusSeconds(30));
 
-        Thread.sleep(1100);
         Map<String, Object> metrics = service.getUptimeMetrics();
         assertEquals("\u2717 FAIL", metrics.get("slaCompliance"));
     }
