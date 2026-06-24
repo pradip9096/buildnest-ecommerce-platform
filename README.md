@@ -48,30 +48,21 @@ BuildNest is a full-stack e-commerce platform targeting the home construction an
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   React 19 Frontend                  │  :5173 (dev)
-└──────────────────────────┬──────────────────────────┘
-                           │ HTTP / REST
-┌──────────────────────────▼──────────────────────────┐
-│             Spring Boot 3.5 REST API                 │  :8080
-│  Controllers → Services → Repositories               │
-│  JWT Auth · Rate Limiting · AOP Audit · Resilience4j │
-└────────┬───────────────┬───────────────┬────────────┘
-         │               │               │
-    ┌────▼────┐    ┌──────▼──────┐  ┌───▼───────────┐
-    │ MySQL   │    │    Redis     │  │ Elasticsearch  │
-    │  8.2    │    │   7-alpine   │  │    8.17.6      │
-    │ (JPA +  │    │ (Rate limit  │  │ (Audit logs,   │
-    │Liquibase│    │  + Cache)    │  │  metrics,      │
-    └─────────┘    └─────────────┘  │  alerting)     │
-                                    └────────────────┘
-                                           │
-                                    ┌──────▼──────┐
-                                    │  Logstash   │
-                                    │  + Kibana   │
-                                    │   8.17.6    │
-                                    └─────────────┘
+```mermaid
+graph TD
+    FE["⚛️ React 19 Frontend\n:5173 (dev)"]
+    API["🍃 Spring Boot 3.5 REST API · :8080\nControllers → Services → Repositories\nJWT Auth · Rate Limiting · AOP Audit · Resilience4j"]
+
+    FE -->|HTTP / REST| API
+
+    API -->|JPA + Liquibase| DB[("🐬 MySQL 8.2")]
+    API -->|Rate limiting\n+ Cache| REDIS[("🔴 Redis 7")]
+    API -->|Audit logs\nMetrics · Alerting| ES[("🔍 Elasticsearch 8.17.6")]
+
+    ES --> LS["📦 Logstash 8.17.6"]
+    LS --> KB["📊 Kibana 8.17.6"]
+
+    API -->|Metrics scrape| PROM["📈 Prometheus"]
 ```
 
 Schema changes are managed exclusively through **Liquibase** changesets (`backend/db/changelog/`). DDL auto is set to `validate` — no schema changes via Hibernate.
