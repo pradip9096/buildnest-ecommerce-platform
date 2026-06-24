@@ -7,6 +7,7 @@ import com.example.buildnest_ecommerce.model.payload.SelectShippingRequest;
 import com.example.buildnest_ecommerce.model.payload.SetAddressRequest;
 import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import com.example.buildnest_ecommerce.service.checkout.CheckoutService;
+import com.example.buildnest_ecommerce.service.shipping.ShippingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,16 @@ import org.springframework.web.bind.annotation.*;
 public class MultiStepCheckoutController {
 
     private final CheckoutService checkoutService;
+    private final ShippingService shippingService;
+
+    @GetMapping("/shipping-options")
+    public ResponseEntity<ApiResponse> getShippingOptions(
+            @RequestParam(required = false) String postalCode,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        return ResponseEntity.ok(new ApiResponse(true, "Shipping options retrieved",
+                shippingService.getShippingOptions(currentUser.getId(), postalCode)));
+    }
 
     @PostMapping("/address")
     public ResponseEntity<ApiResponse> setAddress(
