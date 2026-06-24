@@ -41,6 +41,7 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
     public ClientConfiguration clientConfiguration() {
         return ClientConfiguration.builder()
                 .connectedTo(new InetSocketAddress(elasticsearchHost, elasticsearchPort))
+                .withBasicAuth(username, password)
                 .withConnectTimeout(5000)
                 .withSocketTimeout(60000)
                 .build();
