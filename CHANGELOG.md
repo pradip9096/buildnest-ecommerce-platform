@@ -3,11 +3,14 @@
 All notable changes to this project are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-Versioning follows milestone boundaries; issue numbers reference the [GitHub issue tracker](https://github.com/pradip9096/buildnest-ecommerce-platform/issues).
+Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Issue numbers reference the [GitHub issue tracker](https://github.com/pradip9096/buildnest-ecommerce-platform/issues).
+
+Pre-1.0 convention: MINOR increments represent completed milestones; PATCH increments represent hotfixes within a milestone. `1.0.0` will mark the first production-ready release (end of M5).
 
 ---
 
-## [Unreleased] — M3: Technical Debt Reduction (target 2026-08-01)
+## [Unreleased] — 0.4.0 (M3: Technical Debt Reduction, target 2026-08-01)
 
 ### Changed
 - Upgrade Elasticsearch, Kibana, and Logstash Docker images from 8.10.2 to 8.17.6 (#236)
@@ -19,7 +22,7 @@ Versioning follows milestone boundaries; issue numbers reference the [GitHub iss
 
 ---
 
-## [M2] — Quality Foundation (completed 2026-06-22)
+## [0.3.0] — 2026-06-22 (M2: Quality Foundation)
 
 ### Added
 - OWASP Dependency-Check Maven plugin (`owasp` profile, CVSS ≥ 7.0 fails build) (#53)
@@ -38,7 +41,7 @@ Versioning follows milestone boundaries; issue numbers reference the [GitHub iss
 
 ---
 
-## [M1] — Stabilisation (completed 2026-06-14)
+## [0.2.0] — 2026-06-14 (M1: Stabilisation)
 
 ### Fixed
 - Add missing `RoleRepository` mock in `AuthServiceImplTest` — test context failed to load (#38)
@@ -49,7 +52,7 @@ Versioning follows milestone boundaries; issue numbers reference the [GitHub iss
 
 ---
 
-## [Pre-M1] — Foundation (2026-06 and earlier)
+## [0.1.0] — 2026-06 (Pre-M1: Foundation)
 
 ### Added
 - Spring Boot 3.5 / Java 21 backend: REST API, JWT auth (access + refresh tokens), Spring Security RBAC with `Permission` entities
