@@ -5,6 +5,7 @@ import com.example.buildnest_ecommerce.model.elasticsearch.ElasticsearchMetrics;
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchAuditLogRepository;
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchMetricsRepository;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,12 +40,53 @@ class ElasticsearchIngestionServiceTest {
     private ArgumentCaptor<ElasticsearchMetrics> metricsCaptor;
 
     private ElasticsearchIngestionService ingestionService;
+    private CircuitBreaker closedCircuitBreaker;
 
     @BeforeEach
     void setUp() {
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("elasticsearch-circuit-breaker-test");
-        ingestionService = new ElasticsearchIngestionService(auditLogRepository, metricsRepository, circuitBreaker);
+        closedCircuitBreaker = CircuitBreaker.ofDefaults("elasticsearch-circuit-breaker-test");
+        ingestionService = new ElasticsearchIngestionService(auditLogRepository, metricsRepository, closedCircuitBreaker);
     }
+
+    private ElasticsearchIngestionService withOpenCircuitBreaker() {
+        CircuitBreaker openCb = CircuitBreaker.of("open-cb-test",
+                CircuitBreakerConfig.custom()
+                        .minimumNumberOfCalls(1)
+                        .failureRateThreshold(1)
+                        .build());
+        openCb.transitionToOpenState();
+        return new ElasticsearchIngestionService(auditLogRepository, metricsRepository, openCb);
+    }
+
+    private ElasticsearchAuditLog sampleAuditLog() {
+        return ElasticsearchAuditLog.builder()
+                .id("test-id")
+                .userId(1L)
+                .action("TEST_ACTION")
+                .entityType("TEST")
+                .entityId(1L)
+                .timestamp(LocalDateTime.now())
+                .severity("INFO")
+                .httpStatusCode(200)
+                .errorCategory("SUCCESS")
+                .endpoint("/api/test")
+                .build();
+    }
+
+    private ElasticsearchMetrics sampleMetric() {
+        return ElasticsearchMetrics.builder()
+                .id("metric-id")
+                .metricName("cpu.usage")
+                .value(50.0)
+                .unit("%")
+                .service("test-service")
+                .host("host-1")
+                .environment("test")
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    // ===== indexAuditLogWithStatus — HTTP status category mapping =====
 
     @Test
     @DisplayName("Should map 2xx status to SUCCESS category")
@@ -63,6 +105,78 @@ class ElasticsearchIngestionServiceTest {
         assertEquals(201, saved.getHttpStatusCode());
         assertEquals("/api/login", saved.getEndpoint());
         assertNotNull(saved.getTimestamp());
+    }
+
+    @Test
+    @DisplayName("Should map boundary 200 to SUCCESS")
+    void testIndexAuditLogStatusBoundary200() {
+        ingestionService.indexAuditLogWithStatus(1L, "LOGIN", "AUTH", 1L,
+                "127.0.0.1", "agent", null, null, 200, "/api/login", null);
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        assertEquals("SUCCESS", auditLogCaptor.getValue().getErrorCategory());
+    }
+
+    @Test
+    @DisplayName("Should map 199 to null category (below 200 boundary)")
+    void testIndexAuditLogStatusBoundary199() {
+        ingestionService.indexAuditLogWithStatus(1L, "LOGIN", "AUTH", 1L,
+                "127.0.0.1", "agent", null, null, 199, "/api/login", null);
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        assertNull(auditLogCaptor.getValue().getErrorCategory());
+    }
+
+    @Test
+    @DisplayName("Should map boundary 300 to REDIRECT")
+    void testIndexAuditLogStatusBoundary300() {
+        ingestionService.indexAuditLogWithStatus(1L, "ACCESS", "RESOURCE", 1L,
+                "127.0.0.1", "agent", null, null, 300, "/api/resource", null);
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        assertEquals("REDIRECT", auditLogCaptor.getValue().getErrorCategory());
+    }
+
+    @Test
+    @DisplayName("Should map 299 to SUCCESS (below 300 boundary)")
+    void testIndexAuditLogStatusBoundary299() {
+        ingestionService.indexAuditLogWithStatus(1L, "LOGIN", "AUTH", 1L,
+                "127.0.0.1", "agent", null, null, 299, "/api/login", null);
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        assertEquals("SUCCESS", auditLogCaptor.getValue().getErrorCategory());
+    }
+
+    @Test
+    @DisplayName("Should map boundary 400 to CLIENT_ERROR")
+    void testIndexAuditLogStatusBoundary400() {
+        ingestionService.indexAuditLogWithStatus(1L, "LOGIN", "AUTH", 1L,
+                "127.0.0.1", "agent", null, null, 400, "/api/login", null);
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        assertEquals("CLIENT_ERROR", auditLogCaptor.getValue().getErrorCategory());
+    }
+
+    @Test
+    @DisplayName("Should map 399 to REDIRECT (below 400 boundary)")
+    void testIndexAuditLogStatusBoundary399() {
+        ingestionService.indexAuditLogWithStatus(1L, "LOGIN", "AUTH", 1L,
+                "127.0.0.1", "agent", null, null, 399, "/api/login", null);
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        assertEquals("REDIRECT", auditLogCaptor.getValue().getErrorCategory());
+    }
+
+    @Test
+    @DisplayName("Should map boundary 500 to SERVER_ERROR")
+    void testIndexAuditLogStatusBoundary500() {
+        ingestionService.indexAuditLogWithStatus(1L, "ORDER_UPDATE", "ORDER", 1L,
+                "127.0.0.1", "agent", null, null, 500, "/api/orders", null);
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        assertEquals("SERVER_ERROR", auditLogCaptor.getValue().getErrorCategory());
+    }
+
+    @Test
+    @DisplayName("Should map 499 to CLIENT_ERROR (below 500 boundary)")
+    void testIndexAuditLogStatusBoundary499() {
+        ingestionService.indexAuditLogWithStatus(1L, "LOGIN", "AUTH", 1L,
+                "127.0.0.1", "agent", null, null, 499, "/api/login", null);
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        assertEquals("CLIENT_ERROR", auditLogCaptor.getValue().getErrorCategory());
     }
 
     @Test
@@ -141,9 +255,34 @@ class ElasticsearchIngestionServiceTest {
                 "10.0.0.4", "agent", null, null, 200, "/api/users/2/reset", null);
 
         verify(auditLogRepository).save(auditLogCaptor.capture());
-        ElasticsearchAuditLog saved = auditLogCaptor.getValue();
+        assertEquals("WARN", auditLogCaptor.getValue().getSeverity());
+    }
 
-        assertEquals("WARN", saved.getSeverity());
+    @Test
+    @DisplayName("Should set CRITICAL severity for REVOKE action")
+    void testIndexAuditLogCriticalSeverityForRevoke() {
+        ingestionService.indexAuditLogWithStatus(33L, "TOKEN_REVOKE", "TOKEN", 3L,
+                "10.0.0.5", "agent", null, null, 200, "/api/token/revoke", null);
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        assertEquals("CRITICAL", auditLogCaptor.getValue().getSeverity());
+    }
+
+    @Test
+    @DisplayName("Should set INFO severity for LOGIN action")
+    void testIndexAuditLogInfoSeverityForLogin() {
+        ingestionService.indexAuditLogWithStatus(34L, "USER_LOGIN", "AUTH", 4L,
+                "10.0.0.6", "agent", null, null, 200, "/api/auth/login", null);
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        assertEquals("INFO", auditLogCaptor.getValue().getSeverity());
+    }
+
+    @Test
+    @DisplayName("Should set INFO severity for ACCESS action")
+    void testIndexAuditLogInfoSeverityForAccess() {
+        ingestionService.indexAuditLogWithStatus(35L, "RESOURCE_ACCESS", "RESOURCE", 5L,
+                "10.0.0.7", "agent", null, null, 200, "/api/resource", null);
+        verify(auditLogRepository).save(auditLogCaptor.capture());
+        assertEquals("INFO", auditLogCaptor.getValue().getSeverity());
     }
 
     @Test
@@ -154,6 +293,19 @@ class ElasticsearchIngestionServiceTest {
         assertDoesNotThrow(() -> ingestionService.indexAuditLogWithStatus(40L, "LOGIN", "AUTH", 3L,
                 "10.0.0.5", "agent", null, null, 200, "/api/login", null));
     }
+
+    @Test
+    @DisplayName("Should skip audit log write when circuit breaker is OPEN")
+    void testIndexAuditLogSkipsWhenCircuitBreakerOpen() {
+        ElasticsearchIngestionService openService = withOpenCircuitBreaker();
+
+        assertDoesNotThrow(() -> openService.indexAuditLogWithStatus(50L, "LOGIN", "AUTH", 1L,
+                "127.0.0.1", "agent", null, null, 200, "/api/login", null));
+
+        verifyNoInteractions(auditLogRepository);
+    }
+
+    // ===== indexMetrics =====
 
     @Test
     @DisplayName("Should index metrics in Elasticsearch")
@@ -182,77 +334,196 @@ class ElasticsearchIngestionServiceTest {
     }
 
     @Test
-    @DisplayName("Should query audit logs by status code")
+    @DisplayName("Should skip metrics write when circuit breaker is OPEN")
+    void testIndexMetricsSkipsWhenCircuitBreakerOpen() {
+        ElasticsearchIngestionService openService = withOpenCircuitBreaker();
+
+        assertDoesNotThrow(() -> openService.indexMetrics("cpu", 90.0, "%", "svc", "host", "test"));
+
+        verifyNoInteractions(metricsRepository);
+    }
+
+    // ===== Read operations — happy path returns non-empty, CB-OPEN returns empty =====
+
+    @Test
+    @DisplayName("Should query audit logs by status code and return repository result")
     void testGetErrorsByHttpStatusCode() {
-        when(auditLogRepository.findByHttpStatusCode(500)).thenReturn(List.of());
+        ElasticsearchAuditLog log = sampleAuditLog();
+        when(auditLogRepository.findByHttpStatusCode(500)).thenReturn(List.of(log));
 
         List<ElasticsearchAuditLog> result = ingestionService.getErrorsByHttpStatusCode(500);
 
-        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertSame(log, result.get(0));
         verify(auditLogRepository).findByHttpStatusCode(500);
     }
 
     @Test
-    @DisplayName("Should query errors by category")
+    @DisplayName("Should return empty list for getErrorsByHttpStatusCode when circuit breaker OPEN")
+    void testGetErrorsByHttpStatusCodeCircuitBreakerOpen() {
+        List<ElasticsearchAuditLog> result = withOpenCircuitBreaker().getErrorsByHttpStatusCode(500);
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(auditLogRepository);
+    }
+
+    @Test
+    @DisplayName("Should query errors by category and return repository result")
     void testGetErrorsByCategory() {
-        when(auditLogRepository.findByErrorCategory("SERVER_ERROR")).thenReturn(List.of());
+        ElasticsearchAuditLog log = sampleAuditLog();
+        when(auditLogRepository.findByErrorCategory("SERVER_ERROR")).thenReturn(List.of(log));
 
         List<ElasticsearchAuditLog> result = ingestionService.getErrorsByCategory("SERVER_ERROR");
 
-        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertSame(log, result.get(0));
         verify(auditLogRepository).findByErrorCategory("SERVER_ERROR");
     }
 
     @Test
-    @DisplayName("Should query errors by status code and time range")
+    @DisplayName("Should return empty list for getErrorsByCategory when circuit breaker OPEN")
+    void testGetErrorsByCategoryCircuitBreakerOpen() {
+        List<ElasticsearchAuditLog> result = withOpenCircuitBreaker().getErrorsByCategory("SERVER_ERROR");
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(auditLogRepository);
+    }
+
+    @Test
+    @DisplayName("Should query errors by status code and time range and return repository result")
     void testGetErrorsByStatusCodeAndTimeRange() {
+        ElasticsearchAuditLog log = sampleAuditLog();
         LocalDateTime start = LocalDateTime.now().minusHours(1);
         LocalDateTime end = LocalDateTime.now();
         when(auditLogRepository.findByHttpStatusCodeAndTimestampBetween(eq(400), eq(start), eq(end)))
-                .thenReturn(List.of());
+                .thenReturn(List.of(log));
 
         List<ElasticsearchAuditLog> result = ingestionService.getErrorsByStatusCodeAndTimeRange(400, start, end);
 
-        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertSame(log, result.get(0));
         verify(auditLogRepository).findByHttpStatusCodeAndTimestampBetween(400, start, end);
     }
 
     @Test
-    @DisplayName("Should query audit logs by user and action")
-    void testGetAuditLogsByUserAndAction() {
-        when(auditLogRepository.findByUserId(42L)).thenReturn(List.of());
-        when(auditLogRepository.findByAction("USER_LOGIN")).thenReturn(List.of());
+    @DisplayName("Should return empty list for getErrorsByStatusCodeAndTimeRange when circuit breaker OPEN")
+    void testGetErrorsByStatusCodeAndTimeRangeCircuitBreakerOpen() {
+        LocalDateTime start = LocalDateTime.now().minusHours(1);
+        LocalDateTime end = LocalDateTime.now();
+        List<ElasticsearchAuditLog> result = withOpenCircuitBreaker()
+                .getErrorsByStatusCodeAndTimeRange(400, start, end);
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(auditLogRepository);
+    }
 
-        assertNotNull(ingestionService.getAuditLogsByUser(42L));
-        assertNotNull(ingestionService.getAuditLogsByAction("USER_LOGIN"));
+    @Test
+    @DisplayName("Should query audit logs by user and return repository result")
+    void testGetAuditLogsByUser() {
+        ElasticsearchAuditLog log = sampleAuditLog();
+        when(auditLogRepository.findByUserId(42L)).thenReturn(List.of(log));
 
+        List<ElasticsearchAuditLog> result = ingestionService.getAuditLogsByUser(42L);
+
+        assertEquals(1, result.size());
+        assertSame(log, result.get(0));
         verify(auditLogRepository).findByUserId(42L);
+    }
+
+    @Test
+    @DisplayName("Should return empty list for getAuditLogsByUser when circuit breaker OPEN")
+    void testGetAuditLogsByUserCircuitBreakerOpen() {
+        List<ElasticsearchAuditLog> result = withOpenCircuitBreaker().getAuditLogsByUser(42L);
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(auditLogRepository);
+    }
+
+    @Test
+    @DisplayName("Should query audit logs by action and return repository result")
+    void testGetAuditLogsByAction() {
+        ElasticsearchAuditLog log = sampleAuditLog();
+        when(auditLogRepository.findByAction("USER_LOGIN")).thenReturn(List.of(log));
+
+        List<ElasticsearchAuditLog> result = ingestionService.getAuditLogsByAction("USER_LOGIN");
+
+        assertEquals(1, result.size());
+        assertSame(log, result.get(0));
         verify(auditLogRepository).findByAction("USER_LOGIN");
     }
 
     @Test
-    @DisplayName("Should query audit logs and metrics by time range")
-    void testTimeRangeQueries() {
+    @DisplayName("Should return empty list for getAuditLogsByAction when circuit breaker OPEN")
+    void testGetAuditLogsByActionCircuitBreakerOpen() {
+        List<ElasticsearchAuditLog> result = withOpenCircuitBreaker().getAuditLogsByAction("USER_LOGIN");
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(auditLogRepository);
+    }
+
+    @Test
+    @DisplayName("Should query audit logs by time range and return repository result")
+    void testGetAuditLogsByTimeRange() {
+        ElasticsearchAuditLog log = sampleAuditLog();
         LocalDateTime start = LocalDateTime.now().minusHours(2);
         LocalDateTime end = LocalDateTime.now();
-        when(auditLogRepository.findByTimestampBetween(eq(start), eq(end))).thenReturn(List.of());
-        when(metricsRepository.findByTimestampBetween(eq(start), eq(end))).thenReturn(List.of());
+        when(auditLogRepository.findByTimestampBetween(eq(start), eq(end))).thenReturn(List.of(log));
 
-        assertNotNull(ingestionService.getAuditLogsByTimeRange(start, end));
-        assertNotNull(ingestionService.getMetricsByTimeRange(start, end));
+        List<ElasticsearchAuditLog> result = ingestionService.getAuditLogsByTimeRange(start, end);
 
+        assertEquals(1, result.size());
+        assertSame(log, result.get(0));
         verify(auditLogRepository).findByTimestampBetween(start, end);
+    }
+
+    @Test
+    @DisplayName("Should return empty list for getAuditLogsByTimeRange when circuit breaker OPEN")
+    void testGetAuditLogsByTimeRangeCircuitBreakerOpen() {
+        LocalDateTime start = LocalDateTime.now().minusHours(2);
+        LocalDateTime end = LocalDateTime.now();
+        List<ElasticsearchAuditLog> result = withOpenCircuitBreaker().getAuditLogsByTimeRange(start, end);
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(auditLogRepository);
+    }
+
+    @Test
+    @DisplayName("Should query metrics by time range and return repository result")
+    void testGetMetricsByTimeRange() {
+        ElasticsearchMetrics metric = sampleMetric();
+        LocalDateTime start = LocalDateTime.now().minusHours(2);
+        LocalDateTime end = LocalDateTime.now();
+        when(metricsRepository.findByTimestampBetween(eq(start), eq(end))).thenReturn(List.of(metric));
+
+        List<ElasticsearchMetrics> result = ingestionService.getMetricsByTimeRange(start, end);
+
+        assertEquals(1, result.size());
+        assertSame(metric, result.get(0));
         verify(metricsRepository).findByTimestampBetween(start, end);
     }
 
     @Test
-    @DisplayName("Should query recent metrics")
+    @DisplayName("Should return empty list for getMetricsByTimeRange when circuit breaker OPEN")
+    void testGetMetricsByTimeRangeCircuitBreakerOpen() {
+        LocalDateTime start = LocalDateTime.now().minusHours(2);
+        LocalDateTime end = LocalDateTime.now();
+        List<ElasticsearchMetrics> result = withOpenCircuitBreaker().getMetricsByTimeRange(start, end);
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(metricsRepository);
+    }
+
+    @Test
+    @DisplayName("Should query recent metrics and return repository result")
     void testGetRecentMetrics() {
-        when(metricsRepository.findByTimestampAfter(any(LocalDateTime.class))).thenReturn(List.of());
+        ElasticsearchMetrics metric = sampleMetric();
+        when(metricsRepository.findByTimestampAfter(any(LocalDateTime.class))).thenReturn(List.of(metric));
 
         List<ElasticsearchMetrics> result = ingestionService.getRecentMetrics(30);
 
-        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertSame(metric, result.get(0));
         verify(metricsRepository).findByTimestampAfter(any(LocalDateTime.class));
+    }
+
+    @Test
+    @DisplayName("Should return empty list for getRecentMetrics when circuit breaker OPEN")
+    void testGetRecentMetricsCircuitBreakerOpen() {
+        List<ElasticsearchMetrics> result = withOpenCircuitBreaker().getRecentMetrics(30);
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(metricsRepository);
     }
 }
