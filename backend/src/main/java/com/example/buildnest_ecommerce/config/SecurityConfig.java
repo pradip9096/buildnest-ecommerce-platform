@@ -163,11 +163,15 @@ public class SecurityConfig {
                         // RQ-ES-SEC-02)
                         .requestMatchers("/actuator/health/**").permitAll()
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
-                        // Admin endpoints
+                        // Admin endpoints (legacy /api/admin/** and versioned /api/v1/admin/**)
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/admin/**").hasRole("ADMIN")
                         // User endpoints
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
                         // Any other request

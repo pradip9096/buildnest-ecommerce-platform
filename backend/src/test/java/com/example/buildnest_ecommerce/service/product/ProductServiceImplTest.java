@@ -240,11 +240,22 @@ class ProductServiceImplTest {
 
     @Test
     void testDeleteProduct() {
-        // Act
+        // Soft delete: loads product, sets isActive=false, saves
+        when(productRepository.findById(1L)).thenReturn(java.util.Optional.of(testProduct));
+        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+
         productService.deleteProduct(1L);
 
-        // Assert
-        verify(productRepository).deleteById(1L);
+        verify(productRepository).findById(1L);
+        verify(productRepository).save(testProduct);
+        org.junit.jupiter.api.Assertions.assertFalse(testProduct.getIsActive());
+    }
+
+    @Test
+    void testDeleteProduct_notFound() {
+        when(productRepository.findById(99L)).thenReturn(java.util.Optional.empty());
+        org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
+                () -> productService.deleteProduct(99L));
     }
 
     @Test

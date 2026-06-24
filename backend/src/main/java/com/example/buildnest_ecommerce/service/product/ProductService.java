@@ -32,4 +32,6 @@ public interface ProductService {
             Boolean inStock, Pageable pageable);
 
     Page<Product> findByCategory(Long categoryId, Pageable pageable);
+
+    Product updateProductImage(Long productId, String imageUrl);
 }

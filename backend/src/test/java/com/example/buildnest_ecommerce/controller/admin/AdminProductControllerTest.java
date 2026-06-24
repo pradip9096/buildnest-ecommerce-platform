@@ -4,9 +4,13 @@ import com.example.buildnest_ecommerce.model.dto.CreateProductRequest;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.service.product.ProductService;
+import com.example.buildnest_ecommerce.service.storage.StorageException;
+import com.example.buildnest_ecommerce.service.storage.StorageService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -16,45 +20,66 @@ import static org.mockito.Mockito.*;
 
 class AdminProductControllerTest {
 
+    private ProductService productService;
+    private StorageService storageService;
+    private AdminProductController controller;
+
+    @BeforeEach
+    void setUp() {
+        productService = mock(ProductService.class);
+        storageService = mock(StorageService.class);
+        controller = new AdminProductController(productService, storageService);
+    }
+
     @Test
     void getAllProductsSuccessAndFailure() {
-        ProductService productService = mock(ProductService.class);
         when(productService.getAllProducts()).thenReturn(Collections.singletonList(new Product()));
-
-        AdminProductController controller = new AdminProductController(productService);
-        ResponseEntity<ApiResponse> ok = controller.getAllProducts();
-        assertEquals(HttpStatus.OK, ok.getStatusCode());
+        assertEquals(HttpStatus.OK, controller.getAllProducts().getStatusCode());
 
         when(productService.getAllProducts()).thenThrow(new RuntimeException("fail"));
-        ResponseEntity<ApiResponse> bad = controller.getAllProducts();
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, bad.getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, controller.getAllProducts().getStatusCode());
     }
 
     @Test
     void getProductByIdSuccessAndFailure() {
-        ProductService productService = mock(ProductService.class);
         when(productService.getProductById(1L)).thenReturn(new Product());
         when(productService.getProductById(2L)).thenThrow(new RuntimeException("not found"));
 
-        AdminProductController controller = new AdminProductController(productService);
         assertEquals(HttpStatus.OK, controller.getProductById(1L).getStatusCode());
         assertEquals(HttpStatus.NOT_FOUND, controller.getProductById(2L).getStatusCode());
     }
 
     @Test
-    void createAndUpdateAndDeleteProduct() {
-        ProductService productService = mock(ProductService.class);
+    void createUpdateDeleteProduct() {
         CreateProductRequest request = new CreateProductRequest("name", "desc desc", BigDecimal.TEN,
                 BigDecimal.ONE, 1, "SKU", 1L, "http://image");
         when(productService.createProduct(any(CreateProductRequest.class))).thenReturn(new Product());
         when(productService.updateProduct(eq(1L), any(CreateProductRequest.class))).thenReturn(new Product());
 
-        AdminProductController controller = new AdminProductController(productService);
         assertEquals(HttpStatus.CREATED, controller.createProduct(request).getStatusCode());
         assertEquals(HttpStatus.OK, controller.updateProduct(1L, request).getStatusCode());
 
         doThrow(new RuntimeException("bad")).when(productService).deleteProduct(2L);
         assertEquals(HttpStatus.OK, controller.deleteProduct(1L).getStatusCode());
         assertEquals(HttpStatus.BAD_REQUEST, controller.deleteProduct(2L).getStatusCode());
+    }
+
+    @Test
+    void uploadProductImageSuccess() {
+        MockMultipartFile file = new MockMultipartFile("file", "img.jpg", "image/jpeg", new byte[]{1, 2, 3});
+        when(storageService.store(file)).thenReturn("/uploads/img.jpg");
+        when(productService.updateProductImage(1L, "/uploads/img.jpg")).thenReturn(new Product());
+
+        ResponseEntity<ApiResponse> response = controller.uploadProductImage(1L, file);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void uploadProductImageStorageFailure() {
+        MockMultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", new byte[]{1});
+        when(storageService.store(file)).thenThrow(new StorageException("Unsupported file type"));
+
+        ResponseEntity<ApiResponse> response = controller.uploadProductImage(1L, file);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 }

@@ -159,7 +159,7 @@ class InputValidationSecurityTest {
                                 """.formatted(xssPayload);
 
                 // Admin token is valid; request fails bean validation (categoryId required) → 400
-                mockMvc.perform(post("/api/admin/products")
+                mockMvc.perform(post("/api/v1/admin/products")
                                 .header("Authorization", "Bearer " + adminToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(productRequest))
@@ -293,7 +293,7 @@ class InputValidationSecurityTest {
                                 "console.log('test');".getBytes());
 
                 // Admin token is valid; multipart request with non-JSON content type → 415
-                mockMvc.perform(multipart("/api/admin/products")
+                mockMvc.perform(multipart("/api/v1/admin/products")
                                 .file(scriptFile)
                                 .header("Authorization", "Bearer " + adminToken))
                                 .andExpect(status().isUnsupportedMediaType());
@@ -306,7 +306,7 @@ class InputValidationSecurityTest {
                                 "MZ executable header".getBytes());
 
                 // Admin token is valid; multipart request with non-JSON content type → 415
-                mockMvc.perform(multipart("/api/admin/products")
+                mockMvc.perform(multipart("/api/v1/admin/products")
                                 .file(executableFile)
                                 .header("Authorization", "Bearer " + adminToken))
                                 .andExpect(status().isUnsupportedMediaType());
@@ -320,7 +320,7 @@ class InputValidationSecurityTest {
                                 largeFile);
 
                 // Admin token is valid; multipart request with non-JSON content type → 415
-                mockMvc.perform(multipart("/api/admin/products")
+                mockMvc.perform(multipart("/api/v1/admin/products")
                                 .file(oversizedFile)
                                 .header("Authorization", "Bearer " + adminToken))
                                 .andExpect(status().isUnsupportedMediaType());

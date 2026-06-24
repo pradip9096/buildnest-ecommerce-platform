@@ -128,7 +128,7 @@ class AuditAspectIntegrationTest {
     }
 
     @Test
-    @DisplayName("TC-AUDIT-001: POST /api/admin/products fires ADMIN_CREATE_PRODUCT audit log with required fields")
+    @DisplayName("TC-AUDIT-001: POST /api/v1/admin/products fires ADMIN_CREATE_PRODUCT audit log with required fields")
     void createProduct_triggersAuditLogWithRequiredFields() throws Exception {
         Product stub = new Product();
         stub.setName("Test Product");
@@ -144,7 +144,7 @@ class AuditAspectIntegrationTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/admin/products")
+        mockMvc.perform(post("/api/v1/admin/products")
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -166,7 +166,7 @@ class AuditAspectIntegrationTest {
     }
 
     @Test
-    @DisplayName("TC-AUDIT-002: PUT /api/admin/products/{id} fires ADMIN_UPDATE_PRODUCT audit log with old-value capture")
+    @DisplayName("TC-AUDIT-002: PUT /api/v1/admin/products/{id} fires ADMIN_UPDATE_PRODUCT audit log with old-value capture")
     void updateProduct_triggersAuditLogWithOldValueCapture() throws Exception {
         Product stub = new Product();
         stub.setName("Updated Product");
@@ -182,7 +182,7 @@ class AuditAspectIntegrationTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/admin/products/1")
+        mockMvc.perform(put("/api/v1/admin/products/1")
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -200,11 +200,11 @@ class AuditAspectIntegrationTest {
     }
 
     @Test
-    @DisplayName("TC-AUDIT-003: DELETE /api/admin/products/{id} fires ADMIN_DELETE_PRODUCT audit log")
+    @DisplayName("TC-AUDIT-003: DELETE /api/v1/admin/products/{id} fires ADMIN_DELETE_PRODUCT audit log")
     void deleteProduct_triggersAuditLog() throws Exception {
         doNothing().when(productService).deleteProduct(1L);
 
-        mockMvc.perform(delete("/api/admin/products/1")
+        mockMvc.perform(delete("/api/v1/admin/products/1")
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk());
 
@@ -269,7 +269,7 @@ class AuditAspectIntegrationTest {
     @Test
     @DisplayName("TC-AUDIT-006: Unauthenticated request to admin endpoint does not trigger audit log")
     void unauthenticatedRequest_doesNotTriggerAuditLog() throws Exception {
-        mockMvc.perform(get("/api/admin/products"))
+        mockMvc.perform(get("/api/v1/admin/products"))
                 .andExpect(status().isUnauthorized());
 
         verify(auditLogService, never()).logAction(any(), any(), any(), any(), any(), any(), any(), any());

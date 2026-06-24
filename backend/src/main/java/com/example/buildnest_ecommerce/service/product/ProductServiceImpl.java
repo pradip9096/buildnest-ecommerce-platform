@@ -141,10 +141,25 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     @CacheEvict(key = "#productId")
-    @SuppressWarnings("null")
     public void deleteProduct(Long productId) {
-        log.info("Deleting product with id: {}", productId);
-        productRepository.deleteById(productId);
+        log.info("Soft-deleting product with id: {}", productId);
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+        product.setIsActive(false);
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(key = "#productId")
+    public Product updateProductImage(Long productId, String imageUrl) {
+        log.info("Updating image for product id: {}", productId);
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+        product.setImageUrl(imageUrl);
+        product.setUpdatedAt(LocalDateTime.now());
+        return productRepository.save(product);
     }
 
     @Override

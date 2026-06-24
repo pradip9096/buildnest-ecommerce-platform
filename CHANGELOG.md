@@ -13,7 +13,18 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Product CRUD admin endpoints at `POST/GET/PUT/DELETE /api/v1/admin/products` — all `@PreAuthorize("hasRole('ADMIN')")`, all `@Auditable`; image upload via `POST /api/v1/admin/products/{id}/images` (multipart/form-data, 10 MB cap, JPEG/PNG/WebP/GIF only) (ADM-01, #67)
+- `StorageService` interface + `LocalStorageService` implementation (UUID-keyed filenames, configurable `app.storage.location`, static serving via `/uploads/**`) (#67)
+- `StorageConfig` (`WebMvcConfigurer`) serving uploaded files from the configured storage directory (#67)
+- `Product.updateProductImage` service method for atomic image URL updates (#67)
+- `AdminProductControllerIntegrationTest` — 11 integration tests covering create, read, update, soft-delete, image upload, and role-enforcement (403/401) (ADM-01, #67)
+- `/api/v1/admin/**` URL-level `hasRole("ADMIN")` rules added to `SecurityConfig` and `TestSecurityConfig` (was missing; only `/api/admin/**` was covered) (#67)
 - Liquibase XML master orchestrator (`db.changelog-master.xml`) replacing direct SQL master reference; enables per-entity XML changeset files and clean include-based composition (#104)
+
+### Changed
+- `AdminProductController` base path corrected from `/api/admin/products` to `/api/v1/admin/products` (ADM-01, #67)
+- `deleteProduct` changed from hard delete (`deleteById`) to soft delete (`isActive = false`) (ADM-01, #67)
+- `AuditAspectIntegrationTest` and `InputValidationSecurityTest` URL references updated to `/api/v1/admin/products` (#67)
 - Liquibase changeset `addresses` table: user address book with user FK, default-flag, address-type, and covering indexes (USR-01, #78, #104)
 - Liquibase changeset `product_variants` table: size/colour variants per product with SKU uniqueness, price adjustment, and stock quantity (PROD-01, #81, #104)
 - Liquibase changeset `product_images` table: multiple ordered images per product with primary-flag (PROD-02, #82, #104)
