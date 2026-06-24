@@ -17,6 +17,7 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 - Relocate git repository root from `backend/` to `BuildNest/` project root to bring frontend and CI/CD files under version control (#233)
 - Harden Content Security Policy: remove `'unsafe-inline'` from `script-src` and `style-src` on all API paths; introduce dedicated `@Order(1)` `SecurityFilterChain` scoping `'unsafe-inline'` to Swagger UI documentation paths only; add `frame-ancestors 'none'` and `form-action 'self'` to main chain (SEC-14, #237)
 - Implement explicit circuit breaker fallbacks: add `elasticsearchCircuitBreaker` bean; protect all ES repository calls in `ElasticsearchIngestionService` (async writes skip silently on CB OPEN; reads return empty list); distinguish `CallNotPermittedException` from transient failures in `RateLimiterService` — CB OPEN logged at DEBUG, not WARN (#238)
+- Raise JaCoCo instruction coverage gate from 50% to 55% — actual coverage 94.57%, no package below 55% (#239)
 
 ### Fixed
 - `ElasticsearchConfig.clientConfiguration()` now passes injected credentials via `.withBasicAuth()` — previously credentials were declared but never forwarded to the client builder, causing HTTP 401 against any secured cluster (#236)
