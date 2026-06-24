@@ -13,6 +13,11 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Shipping method and cost calculation service: `GET /api/v1/checkout/shipping-options?postalCode=` returns all active methods with `calculatedCost = baseCost + (costPerKg × totalWeightKg × zoneMultiplier)`; zone derived from postal code prefix hash into configurable `app.shipping.zone-multipliers` list (SHIP-01, #87)
+- `ShippingConfig` (`@ConfigurationProperties("app.shipping")`): `defaultWeightPerItemKg` (default 0.5 kg/unit) and `zoneMultipliers` (default [1.0, 1.5, 2.0]) — fully configurable without code changes (#87)
+- `AdminShippingController` at `GET/POST/PUT/DELETE /api/v1/admin/shipping-methods`: full CRUD with `@Auditable` on all mutating operations; DELETE is a soft-deactivate (`isActive=false`) (#87)
+- `ShippingServiceImplTest` — 16 unit tests covering cost formula, zone resolver boundary cases (null/blank postal, short postal, hash consistency), empty-cart guard, and admin CRUD (#87)
+- `AdminShippingControllerIntegrationTest` — 9 integration tests covering list, create (201 + isActive assertion), update, soft-delete (DB `isActive=false` verified), validation (400), role enforcement (403), and 404 (#87)
 - Multi-step checkout flow at `POST /api/v1/checkout/{address,shipping,payment,confirm}`: address selection → shipping method → payment initiation (delegates to `PaymentService`) → order confirmation; session stored in Redis with 30-minute TTL; out-of-order step returns 409 Conflict (CHK-01, #76)
 - `CheckoutSessionStore` interface + `RedisCheckoutSessionStore` implementation (`StringRedisTemplate` + Jackson; key `checkout:session:{userId}`; 30-min TTL) for Redis-backed checkout session management (#76)
 - `CheckoutSession` / `CheckoutStep` — serializable session POJO and step enum (`PENDING_SHIPPING → PENDING_PAYMENT → PENDING_CONFIRM`) (#76)
@@ -41,6 +46,7 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 - Liquibase XML master orchestrator (`db.changelog-master.xml`) replacing direct SQL master reference; enables per-entity XML changeset files and clean include-based composition (#104)
 
 ### Changed
+- `MultiStepCheckoutController` extended with `GET /api/v1/checkout/shipping-options` delegating to `ShippingService` (#87)
 - `CheckoutService` extended with 4 new methods (`setAddress`, `selectShipping`, `initiatePayment`, `confirmCheckout`); `CheckoutServiceImpl` extended with implementations + `AddressRepository`, `ShippingMethodRepository`, `PaymentService`, `CheckoutSessionStore` injected via constructor (#76)
 - `AdminInventoryController` migrated from `/api/admin/inventory` to `/api/v1/admin/inventory`; `GET /` and `PATCH /{productId}` added; legacy sub-path endpoints retained for backward compatibility (ADM-06, #72)
 - `InventoryRepository` extended with `@EntityGraph({"product"}) findAll()` to prevent N+1 queries on admin list (#72)
