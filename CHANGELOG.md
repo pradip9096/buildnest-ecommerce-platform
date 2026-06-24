@@ -10,7 +10,7 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ---
 
-## [Unreleased] — 0.4.0 (M3: Technical Debt Reduction, target 2026-08-01)
+## [0.4.0] — 2026-06-24 (M3: Technical Debt Reduction)
 
 ### Changed
 - Upgrade Elasticsearch, Kibana, and Logstash Docker images from 8.10.2 to 8.17.6 (#236)
