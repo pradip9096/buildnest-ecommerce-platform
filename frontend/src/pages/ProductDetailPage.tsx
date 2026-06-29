@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useProduct } from '../hooks/useProduct';
 import { useReviews } from '../hooks/useReviews';
+import { useAuth } from '../hooks/useAuth';
 import { fetchProducts } from '../api/products';
+import { addToCart } from '../api/cart';
 import { ImageGallery } from '../components/product/ImageGallery';
 import type { Product } from '../types';
 import { StarRating } from '../components/product/StarRating';
@@ -46,8 +48,10 @@ export function ProductDetailPage() {
     fetchProducts().then(setAllProducts).catch(() => {});
   }, []);
 
+  const { user, token, isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
+  const [cartAdding, setCartAdding] = useState(false);
 
   useEffect(() => {
     if (product) {
@@ -68,9 +72,23 @@ export function ProductDetailPage() {
     return () => { document.title = 'BuildNest'; };
   }, [product]);
 
-  function handleAddToCart() {
-    setCartMessage('Please sign in to add items to your cart.');
-    setTimeout(() => setCartMessage(null), 4000);
+  async function handleAddToCart() {
+    if (!isAuthenticated || !user || !token) {
+      setCartMessage('Please sign in to add items to your cart.');
+      setTimeout(() => setCartMessage(null), 4000);
+      return;
+    }
+    setCartAdding(true);
+    try {
+      await addToCart(user.id, product!.id, quantity, token);
+      setCartMessage(`Added ${quantity} item${quantity > 1 ? 's' : ''} to your cart.`);
+      setTimeout(() => setCartMessage(null), 4000);
+    } catch {
+      setCartMessage('Failed to add to cart. Please try again.');
+      setTimeout(() => setCartMessage(null), 4000);
+    } finally {
+      setCartAdding(false);
+    }
   }
 
   if (productLoading) return <ProductDetailSkeleton />;
@@ -171,14 +189,22 @@ export function ProductDetailPage() {
 
                 <button
                   onClick={handleAddToCart}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+                  disabled={cartAdding}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-60 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
                 >
-                  Add to Cart
+                  {cartAdding ? 'Adding…' : 'Add to Cart'}
                 </button>
 
                 {cartMessage && (
-                  <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 text-center">
+                  <p className={`text-sm rounded-lg px-4 py-2 text-center ${
+                    cartMessage.startsWith('Added')
+                      ? 'text-green-700 bg-green-50 border border-green-200'
+                      : 'text-amber-600 bg-amber-50 border border-amber-200'
+                  }`}>
                     {cartMessage}
+                    {cartMessage.startsWith('Added') && (
+                      <Link to="/cart" className="ml-2 underline font-medium">View Cart →</Link>
+                    )}
                   </p>
                 )}
               </div>

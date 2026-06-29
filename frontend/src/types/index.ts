@@ -63,3 +63,59 @@ export interface PagedResponse<T> {
   number: number;
   size: number;
 }
+
+export interface CartItem {
+  cartItemId: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  price: number;
+  itemTotal: number;
+}
+
+export interface Cart {
+  cartId: number;
+  userId: number;
+  items: CartItem[];
+  totalAmount: number;
+}
+
+export interface ShippingOption {
+  id: number;
+  name: string;
+  description?: string;
+  baseCost: number;
+  calculatedCost: number;
+  estimatedDaysMin: number;
+  estimatedDaysMax: number;
+}
+
+export type CheckoutStep = 'PENDING_SHIPPING' | 'PENDING_PAYMENT' | 'PENDING_CONFIRM';
+
+export interface CheckoutSession {
+  userId: number;
+  cartId: number;
+  step: CheckoutStep;
+  addressId?: number;
+  shippingMethodId?: number;
+  shippingCost?: number;
+  orderId?: number;
+  razorpayOrderId?: string;
+}
+
+export interface OrderItem {
+  productId: number;
+  productName: string;
+  quantity: number;
+  price: number;
+  itemTotal: number;
+}
+
+export interface Order {
+  id: number;
+  userId: number;
+  status: string;
+  totalAmount: number;
+  orderItems?: OrderItem[];
+  createdAt: string;
+}
