@@ -1,0 +1,146 @@
+package com.example.buildnest_ecommerce.service.product;
+
+import com.example.buildnest_ecommerce.model.elasticsearch.ProductDocument;
+import com.example.buildnest_ecommerce.model.entity.Category;
+import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.repository.ProductRepository;
+import com.example.buildnest_ecommerce.repository.elasticsearch.ProductElasticsearchRepository;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+/**
+ * Unit tests for {@link ProductSearchServiceImpl} (SRCH-01/SRCH-02, #74/#75).
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("ProductSearchServiceImpl unit tests")
+class ProductSearchServiceTest {
+
+    @Mock private ProductElasticsearchRepository esRepository;
+    @Mock private ProductRepository productRepository;
+
+    private ProductSearchServiceImpl service;
+
+    @BeforeEach
+    void setUp() {
+        CircuitBreaker cb = CircuitBreaker.of("test", CircuitBreakerConfig.ofDefaults());
+        service = new ProductSearchServiceImpl(esRepository, productRepository, cb);
+    }
+
+    private ProductDocument doc(String id, String name) {
+        return ProductDocument.builder()
+                .id(id).name(name).price(100.0).isActive(true).inStock(true).build();
+    }
+
+    private Product product(Long id, String name) {
+        Product p = new Product();
+        p.setId(id); p.setName(name); p.setPrice(new BigDecimal("100.00"));
+        p.setStockQuantity(10); p.setIsActive(true); p.setCreatedAt(LocalDateTime.now());
+        return p;
+    }
+
+    @Test
+    @DisplayName("search with query — delegates to fullTextSearch")
+    void search_withQuery_delegatesToFullText() {
+        PageRequest pr = PageRequest.of(0, 10);
+        Page<ProductDocument> expected = new PageImpl<>(List.of(doc("1", "cement")));
+        when(esRepository.fullTextSearch("cement", pr)).thenReturn(expected);
+
+        Page<ProductDocument> result = service.search("cement", null, null, null, null, pr);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        verify(esRepository).fullTextSearch("cement", pr);
+    }
+
+    @Test
+    @DisplayName("search without query — delegates to findByIsActiveTrue")
+    void search_noQuery_returnsAllActive() {
+        PageRequest pr = PageRequest.of(0, 10);
+        Page<ProductDocument> expected = new PageImpl<>(List.of(doc("1", "tiles"), doc("2", "paint")));
+        when(esRepository.findByIsActiveTrue(pr)).thenReturn(expected);
+
+        Page<ProductDocument> result = service.search(null, null, null, null, null, pr);
+
+        assertThat(result.getTotalElements()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("search with categoryId — delegates to findByCategoryId")
+    void search_withCategory_filtersByCategory() {
+        PageRequest pr = PageRequest.of(0, 10);
+        when(esRepository.findByCategoryIdAndIsActiveTrue(5L, pr))
+                .thenReturn(new PageImpl<>(List.of(doc("3", "tile"))));
+
+        Page<ProductDocument> result = service.search(null, 5L, null, null, null, pr);
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(esRepository).findByCategoryIdAndIsActiveTrue(5L, pr);
+    }
+
+    @Test
+    @DisplayName("price filter applied post-query")
+    void search_withPriceRange_filtersDocuments() {
+        PageRequest pr = PageRequest.of(0, 10);
+        ProductDocument cheap = ProductDocument.builder().id("1").price(50.0).isActive(true).inStock(true).build();
+        ProductDocument expensive = ProductDocument.builder().id("2").price(500.0).isActive(true).inStock(true).build();
+        when(esRepository.fullTextSearch("paint", pr))
+                .thenReturn(new PageImpl<>(List.of(cheap, expensive)));
+
+        Page<ProductDocument> result = service.search("paint", null,
+                new BigDecimal("100"), new BigDecimal("1000"), null, pr);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getId()).isEqualTo("2");
+    }
+
+    @Test
+    @DisplayName("indexProduct — saves document to ES repository")
+    void indexProduct_savesDocument() {
+        Product p = product(10L, "bricks");
+        Category cat = new Category(); cat.setId(1L); cat.setName("Materials");
+        p.setCategory(cat);
+
+        service.indexProduct(p);
+
+        verify(esRepository).save(argThat(d ->
+                "10".equals(d.getId()) && "bricks".equals(d.getName()) && "Materials".equals(d.getCategoryName())));
+    }
+
+    @Test
+    @DisplayName("deleteFromIndex — deletes by string id")
+    void deleteFromIndex_deletesById() {
+        service.deleteFromIndex(42L);
+        verify(esRepository).deleteById("42");
+    }
+
+    @Test
+    @DisplayName("reindexAll — clears index and re-saves all active products")
+    void reindexAll_clearsAndReindexes() {
+        Product p1 = product(1L, "cement"); Product p2 = product(2L, "tile");
+        when(productRepository.findByIsActiveTrue()).thenReturn(List.of(p1, p2));
+
+        service.reindexAll();
+
+        verify(esRepository).deleteAll();
+        verify(esRepository).saveAll(argThat(docs -> {
+            List<ProductDocument> list = (List<ProductDocument>) docs;
+            return list.size() == 2;
+        }));
+    }
+}

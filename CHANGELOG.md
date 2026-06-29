@@ -13,6 +13,16 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Full-text product search at `GET /api/v2/products/search`: delegates to Elasticsearch when `elasticsearch.enabled=true` (multi-field match across name^3, description, categoryName with fuzziness; category/price/stock filters applied); falls back to JPA `advancedSearch` when ES is disabled (SRCH-01, #74)
+- `ProductSearchService` interface + `ProductSearchServiceImpl` (`@ConditionalOnProperty("elasticsearch.enabled","true")`): `search`, `indexProduct`, `deleteFromIndex`, `reindexAll` with Resilience4j circuit-breaker protection and graceful degradation on `CallNotPermittedException` (SRCH-01/SRCH-02, #74/#75)
+- `ProductDocument` Elasticsearch document (`@Document(indexName="products")`): name (Text, standard analyzer, boost×3), description (Text), categoryId/categoryName (Keyword), price/discountPrice (Double), inStock/isActive (Boolean), sku/imageUrl (Keyword), createdAt (Date) (#74)
+- `ProductElasticsearchRepository`: `fullTextSearch` (multi_match native query), `findByCategoryIdAndIsActiveTrue`, `findByIsActiveTrue` (#74)
+- `ProductCreatedEvent`, `ProductUpdatedEvent`, `ProductDeletedEvent` — Spring `ApplicationEvent` subclasses carrying the affected `Product` or `productId` (SRCH-02, #75)
+- `ProductIndexEventListener` (`@ConditionalOnProperty("elasticsearch.enabled","true")`): `@Async @EventListener` handlers for all three product events; calls `ProductSearchService.indexProduct` / `deleteFromIndex` (#75)
+- `POST /api/v1/admin/search/reindex` (admin only): triggers `ProductSearchService.reindexAll()`; returns 503 if Elasticsearch is disabled (SRCH-02, #75)
+- `ProductSearchServiceTest` — 7 unit tests: full-text query routing, category routing, all-active routing, price-range post-filter, indexProduct mapping, deleteFromIndex, reindexAll (#74/#75)
+- `ProductIndexEventListenerTest` — 3 unit tests: created/updated/deleted event dispatch (#75)
+- `AdminSearchControllerIntegrationTest` — 4 integration tests: admin 200, 403, 401, service-exception 500 (#75)
 - Payment refund endpoint `POST /api/v1/admin/orders/{id}/refund` (admin only): accepts `{ amount, reason }`, validates amount ≤ original payment, calls Razorpay refund API, sets Payment status to `REFUNDED` (full) or `PARTIALLY_REFUNDED` (partial), auditable (PAY-02, #61)
 - `PaymentServiceImpl.processRefund`: find-by-order-id → SUCCESS-status guard → amount guard → gateway call → status + `refundedAmount` + `refundReason` + `refundInitiatedAt` update (#61)
 - `RefundRequest` payload — `@NotNull @DecimalMin("0.01") Double amount`, optional `String reason` (#61)
@@ -59,6 +69,10 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 - Liquibase XML master orchestrator (`db.changelog-master.xml`) replacing direct SQL master reference; enables per-entity XML changeset files and clean include-based composition (#104)
 
 ### Changed
+- `ProductControllerV2.searchProducts` now routes to `ProductSearchService` (ES) when the bean is present, falling back to `ProductService.advancedSearch` (JPA) when absent; uses `Optional<ProductSearchService>` injection (#74)
+- `ProductServiceImpl.advancedSearch` replaced in-memory stream filter with proper JPA `ProductRepository.advancedSearch` query (fixes O(n) memory load and incorrect pagination); `findByCategory` and `getProductsByCategory` likewise replaced with repository-level queries (#74)
+- `ProductServiceImpl` now publishes `ProductCreatedEvent`, `ProductUpdatedEvent`, `ProductDeletedEvent` from `createProduct`, `updateProduct`, `deleteProduct` via `DomainEventPublisher` (#75)
+- `TestElasticsearchConfig` extended with `ProductSearchService` and `ProductElasticsearchRepository` mocks so integration tests remain ES-free (#74/#75)
 - `Payment` entity extended with `refundedAmount`, `refundReason`, `refundInitiatedAt` fields; status comment updated to include `PARTIALLY_REFUNDED` (#61)
 - `AdminOrderController` now injects `PaymentService` and exposes `POST /{id}/refund` (#61)
 - `RazorpayClientAdapter.refundPayment` throws `PaymentProcessingException` instead of generic `RuntimeException` (#61)

@@ -2,12 +2,13 @@ package com.example.buildnest_ecommerce.controller.user;
 
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.service.product.ProductSearchService;
 import com.example.buildnest_ecommerce.service.product.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,23 +17,30 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 /**
  * Product API - Version 2 (Current)
- * 
+ *
  * Latest product endpoints with improved response wrapping and consistency.
  * All responses wrapped in ApiResponse&lt;T&gt; format.
- * 
- * Section 2.5.2: API Versioning - Version 2 Current Implementation
- * Section 2.2.3: Consistent response wrapping
+ * When Elasticsearch is enabled, the /search endpoint delegates to
+ * {@link ProductSearchService} for full-text relevance search (SRCH-01, #74).
  */
 @RestController
 @RequestMapping("/api/v2/products")
-@RequiredArgsConstructor
 @Tag(name = "Products V2", description = "Current product management endpoints")
 public class ProductControllerV2 {
 
         private final ProductService productService;
+        private final Optional<ProductSearchService> productSearchService;
+
+        @Autowired
+        public ProductControllerV2(ProductService productService,
+                Optional<ProductSearchService> productSearchService) {
+                this.productService = productService;
+                this.productSearchService = productSearchService;
+        }
 
         @Operation(summary = "Get all products with pagination", description = "Returns paginated list of products with full details wrapped in ApiResponse")
         @ApiResponses({
@@ -68,32 +76,31 @@ public class ProductControllerV2 {
                                 new ApiResponse(true, "Product retrieved successfully", product));
         }
 
-        @Operation(summary = "Search products with advanced filters", description = "Search products by name, category, price range, and availability")
+        @Operation(summary = "Search products with advanced filters",
+                   description = "Full-text search via Elasticsearch when enabled; falls back to JPA otherwise.")
         @GetMapping("/search")
         public ResponseEntity<ApiResponse> searchProducts(
                         @Parameter(description = "Search query", example = "cement") @RequestParam(required = false) String query,
-
                         @Parameter(description = "Category ID", example = "5") @RequestParam(required = false) Long categoryId,
-
                         @Parameter(description = "Minimum price", example = "100") @RequestParam(required = false) BigDecimal minPrice,
-
                         @Parameter(description = "Maximum price", example = "5000") @RequestParam(required = false) BigDecimal maxPrice,
-
                         @Parameter(description = "In stock only", example = "true") @RequestParam(required = false) Boolean inStock,
-
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-
                         @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
-
                         @Parameter(description = "Sort by field", example = "price") @RequestParam(defaultValue = "id") String sortBy,
-
                         @Parameter(description = "Sort direction", example = "ASC") @RequestParam(defaultValue = "ASC") Sort.Direction direction) {
+
                 Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+                if (productSearchService.isPresent()) {
+                        Page<?> results = productSearchService.get()
+                                        .search(query, categoryId, minPrice, maxPrice, inStock, pageable);
+                        return ResponseEntity.ok(new ApiResponse(true, "Products search completed", results));
+                }
+
                 Page<Product> results = productService.advancedSearch(
                                 query, categoryId, minPrice, maxPrice, inStock, pageable);
-
-                return ResponseEntity.ok(
-                                new ApiResponse(true, "Products search completed", results));
+                return ResponseEntity.ok(new ApiResponse(true, "Products search completed", results));
         }
 
         @Operation(summary = "Get products by category", description = "Retrieves all products in a specific category")

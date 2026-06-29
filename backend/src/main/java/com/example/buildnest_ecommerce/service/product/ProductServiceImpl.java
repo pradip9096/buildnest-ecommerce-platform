@@ -1,5 +1,9 @@
 package com.example.buildnest_ecommerce.service.product;
 
+import com.example.buildnest_ecommerce.event.DomainEventPublisher;
+import com.example.buildnest_ecommerce.event.ProductCreatedEvent;
+import com.example.buildnest_ecommerce.event.ProductDeletedEvent;
+import com.example.buildnest_ecommerce.event.ProductUpdatedEvent;
 import com.example.buildnest_ecommerce.model.dto.CreateProductRequest;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
@@ -10,7 +14,6 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -18,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Product Service Implementation
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final DomainEventPublisher domainEventPublisher;
 
     /**
      * Retrieves all products from catalog.
@@ -99,7 +102,9 @@ public class ProductServiceImpl implements ProductService {
                     .orElseThrow(() -> new RuntimeException("Category not found")));
         }
 
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+        domainEventPublisher.publish(new ProductCreatedEvent(this, saved));
+        return saved;
     }
 
     /**
@@ -135,7 +140,9 @@ public class ProductServiceImpl implements ProductService {
                     .orElseThrow(() -> new RuntimeException("Category not found")));
         }
 
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+        domainEventPublisher.publish(new ProductUpdatedEvent(this, saved));
+        return saved;
     }
 
     @Override
@@ -148,6 +155,7 @@ public class ProductServiceImpl implements ProductService {
         product.setIsActive(false);
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
+        domainEventPublisher.publish(new ProductDeletedEvent(this, productId));
     }
 
     @Override
@@ -165,9 +173,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Product> getProductsByCategory(Long categoryId) {
         log.info("Fetching products for category: {}", categoryId);
-        return productRepository.findAll().stream()
-                .filter(p -> p.getCategory() != null && p.getCategory().getId().equals(categoryId))
-                .collect(Collectors.toList());
+        return productRepository.findByCategory(categoryId, Pageable.unpaged()).getContent();
     }
 
     /**
@@ -183,10 +189,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Product> searchProducts(String keyword) {
         log.info("Searching products with keyword: {}", keyword);
-        return productRepository.findAll().stream()
-                .filter(p -> p.getName().toLowerCase().contains(keyword.toLowerCase()) ||
-                        p.getDescription().toLowerCase().contains(keyword.toLowerCase()))
-                .collect(Collectors.toList());
+        return productRepository.findByNameContainingIgnoreCase(keyword);
     }
 
     @Override
@@ -205,42 +208,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<Product> advancedSearch(String query, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice,
             Boolean inStock, Pageable pageable) {
-        log.info("Advanced search - query: {}, categoryId: {}, priceRange: {} - {}", query, categoryId, minPrice,
-                maxPrice);
-
-        List<Product> allProducts = productRepository.findAll();
-        List<Product> filtered = allProducts.stream()
-                .filter(p -> query == null || p.getName().toLowerCase().contains(query.toLowerCase()))
-                .filter(p -> categoryId == null
-                        || (p.getCategory() != null && p.getCategory().getId().equals(categoryId)))
-                .filter(p -> minPrice == null || p.getPrice().compareTo(minPrice) >= 0)
-                .filter(p -> maxPrice == null || p.getPrice().compareTo(maxPrice) <= 0)
-                .filter(p -> inStock == null || !inStock || p.getStockQuantity() > 0)
-                .collect(Collectors.toList());
-
-        int start = (int) pageable.getOffset();
-        if (start >= filtered.size()) {
-            return new PageImpl<>(List.of(), pageable, filtered.size());
-        }
-        int end = Math.min(start + pageable.getPageSize(), filtered.size());
-
-        return new PageImpl<>(filtered.subList(start, end), pageable, filtered.size());
+        log.info("Advanced search (JPA) — query: {}, categoryId: {}, priceRange: {} - {}", query, categoryId,
+                minPrice, maxPrice);
+        return productRepository.advancedSearch(query, categoryId, minPrice, maxPrice, inStock, true, pageable);
     }
 
     @Override
     public Page<Product> findByCategory(Long categoryId, Pageable pageable) {
         log.info("Fetching products by category: {}", categoryId);
-
-        List<Product> categoryProducts = productRepository.findAll().stream()
-                .filter(p -> p.getCategory() != null && p.getCategory().getId().equals(categoryId))
-                .collect(Collectors.toList());
-
-        int start = (int) pageable.getOffset();
-        if (start >= categoryProducts.size()) {
-            return new PageImpl<>(List.of(), pageable, categoryProducts.size());
-        }
-        int end = Math.min(start + pageable.getPageSize(), categoryProducts.size());
-
-        return new PageImpl<>(categoryProducts.subList(start, end), pageable, categoryProducts.size());
+        return productRepository.findByCategory(categoryId, pageable);
     }
 }

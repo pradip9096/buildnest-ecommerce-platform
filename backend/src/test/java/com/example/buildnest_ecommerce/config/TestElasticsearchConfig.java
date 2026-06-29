@@ -2,10 +2,12 @@ package com.example.buildnest_ecommerce.config;
 
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchAuditLogRepository;
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchMetricsRepository;
+import com.example.buildnest_ecommerce.repository.elasticsearch.ProductElasticsearchRepository;
 import com.example.buildnest_ecommerce.service.notification.NotificationService;
 import com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchAlertingService;
 import com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchIngestionService;
 import com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchMetricsCollectorService;
+import com.example.buildnest_ecommerce.service.product.ProductSearchService;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -44,5 +46,15 @@ public class TestElasticsearchConfig {
     @Bean
     public NotificationService notificationService() {
         return Mockito.mock(NotificationService.class);
+    }
+
+    @Bean
+    public ProductSearchService productSearchService() {
+        return Mockito.mock(ProductSearchService.class);
+    }
+
+    @Bean
+    public ProductElasticsearchRepository productElasticsearchRepository() {
+        return Mockito.mock(ProductElasticsearchRepository.class);
     }
 }
