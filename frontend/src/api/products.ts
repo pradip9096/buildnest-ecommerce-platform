@@ -8,6 +8,14 @@ export async function fetchProducts(): Promise<Product[]> {
   return json.data ?? [];
 }
 
+export async function fetchProductById(id: number): Promise<Product> {
+  const res = await fetch(`/api/public/products/${id}`);
+  if (!res.ok) throw new Error(`Failed to fetch product: ${res.status}`);
+  const json: ApiResponse<Product> = await res.json();
+  if (!json.success || !json.data) throw new Error(json.message ?? 'Product not found');
+  return json.data;
+}
+
 export async function searchProducts(keyword: string): Promise<Product[]> {
   const params = new URLSearchParams({ keyword });
   const res = await fetch(`/api/public/products/search?${params}`);

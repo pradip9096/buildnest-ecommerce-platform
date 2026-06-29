@@ -33,3 +33,33 @@ export interface ProductFilters {
   page: number;
   pageSize: number;
 }
+
+export interface ReviewUser {
+  id: number;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+export interface Review {
+  id: number;
+  rating: number;
+  comment: string;
+  helpfulCount: number;
+  user?: ReviewUser;
+  createdAt: string;
+}
+
+export interface ReviewSummary {
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: Record<string, number>;
+}
+
+export interface PagedResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  number: number;
+  size: number;
+}
