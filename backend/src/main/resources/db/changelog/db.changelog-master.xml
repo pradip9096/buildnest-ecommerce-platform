@@ -17,5 +17,6 @@
     <include file="db/changelog/changes/20260624-006-create-shipping-methods.xml"  relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260624-007-create-return-requests.xml"   relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260624-008-create-inventory-audit-log.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260629-009-alter-payment-add-refund-columns.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

@@ -7,6 +7,7 @@ import com.example.buildnest_ecommerce.event.PaymentSuccessfulEvent;
 import com.example.buildnest_ecommerce.repository.PaymentRepository;
 import com.example.buildnest_ecommerce.integration.RazorpayClientAdapter;
 import com.example.buildnest_ecommerce.exception.PaymentProcessingException;
+import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import com.example.buildnest_ecommerce.exception.ExternalServiceException;
 import com.example.buildnest_ecommerce.service.order.OrderService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -223,5 +224,46 @@ public class PaymentServiceImpl implements PaymentService {
             log.error("Error parsing or processing Razorpay webhook body", e);
             throw new PaymentProcessingException("Webhook processing failed: " + e.getMessage());
         }
+    }
+
+    @Override
+    public Payment processRefund(Long orderId, Double amount, String reason) {
+        log.info("Processing refund for order: {}, amount: {}", orderId, amount);
+
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order: " + orderId));
+
+        if (!"SUCCESS".equals(payment.getStatus())) {
+            throw new PaymentProcessingException(
+                    "Refund is only allowed for payments in SUCCESS status; current status: " + payment.getStatus());
+        }
+
+        double alreadyRefunded = payment.getRefundedAmount() != null ? payment.getRefundedAmount() : 0.0;
+        double maxRefundable = payment.getAmount() - alreadyRefunded;
+        if (amount > maxRefundable + 0.001) {
+            throw new PaymentProcessingException(String.format(
+                    "Refund amount %.2f exceeds refundable balance %.2f", amount, maxRefundable));
+        }
+
+        try {
+            razorpayAdapter.refundPayment(payment.getRazorpayPaymentId(), amount);
+        } catch (PaymentProcessingException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Razorpay refund call failed for order {}", orderId, e);
+            throw new PaymentProcessingException("Refund gateway call failed: " + e.getMessage());
+        }
+
+        double newRefundedAmount = alreadyRefunded + amount;
+        boolean fullyRefunded = newRefundedAmount >= payment.getAmount() - 0.001;
+        payment.setRefundedAmount(newRefundedAmount);
+        payment.setRefundReason(reason);
+        payment.setRefundInitiatedAt(LocalDateTime.now());
+        payment.setStatus(fullyRefunded ? "REFUNDED" : "PARTIALLY_REFUNDED");
+        payment.setUpdatedAt(LocalDateTime.now());
+        payment = paymentRepository.save(payment);
+
+        log.info("Refund processed for order {}: amount={}, status={}", orderId, amount, payment.getStatus());
+        return payment;
     }
 }

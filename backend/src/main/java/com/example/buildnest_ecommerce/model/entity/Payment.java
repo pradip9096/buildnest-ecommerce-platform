@@ -30,11 +30,20 @@ public class Payment {
     private String razorpayPaymentId;
     
     @Column(nullable = false, length = 50)
-    private String status; // PENDING, SUCCESS, FAILED, REFUNDED
-    
+    private String status; // PENDING, SUCCESS, FAILED, REFUNDED, PARTIALLY_REFUNDED
+
+    @Column(name = "refunded_amount", nullable = false)
+    private Double refundedAmount = 0.0;
+
+    @Column(name = "refund_reason", length = 500)
+    private String refundReason;
+
+    @Column(name = "refund_initiated_at")
+    private LocalDateTime refundInitiatedAt;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

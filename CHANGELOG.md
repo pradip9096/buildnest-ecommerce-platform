@@ -13,6 +13,14 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Payment refund endpoint `POST /api/v1/admin/orders/{id}/refund` (admin only): accepts `{ amount, reason }`, validates amount ≤ original payment, calls Razorpay refund API, sets Payment status to `REFUNDED` (full) or `PARTIALLY_REFUNDED` (partial), auditable (PAY-02, #61)
+- `PaymentServiceImpl.processRefund`: find-by-order-id → SUCCESS-status guard → amount guard → gateway call → status + `refundedAmount` + `refundReason` + `refundInitiatedAt` update (#61)
+- `RefundRequest` payload — `@NotNull @DecimalMin("0.01") Double amount`, optional `String reason` (#61)
+- `PaymentRepository.findByOrderId` — for refund lookup by internal order ID (#61)
+- `GlobalExceptionHandler` now handles `PaymentProcessingException` → HTTP 400 (#61)
+- Liquibase changeset `20260629-009` — adds `refunded_amount`, `refund_reason`, `refund_initiated_at` columns to `payment` table and extends MySQL status ENUM with `PARTIALLY_REFUNDED` (PAY-02, #61)
+- `PaymentRefundServiceTest` — 5 unit tests: full refund, partial refund, excess amount, non-SUCCESS status, payment not found, gateway failure (#61)
+- `AdminPaymentRefundControllerIntegrationTest` — 8 integration tests: full/partial refund, excess amount (400), non-SUCCESS (400), missing field (400), no payment (404), 403, 401 (#61)
 - Razorpay webhook endpoint at `POST /api/v1/webhooks/payment` (public; no JWT): validates `X-Razorpay-Signature` via HMAC-SHA256, handles `payment.captured` (Payment→SUCCESS, Order→PAID) and `payment.failed` (Payment→FAILED, Order→PAYMENT_FAILED) with idempotency protection; returns 200 on success, 401 on invalid signature (PAY-01, #60)
 - `PaymentServiceImpl.processWebhookEvent`: signature validation → JSON parse → find-by-razorpay-order-id → idempotency check → status update + `OrderService.updateOrderStatus` + `DomainEventPublisher` (#60)
 - `razorpay.webhook.secret` property (`${RAZORPAY_WEBHOOK_SECRET:test_webhook_secret}`) in `application.properties` (#60)
@@ -51,6 +59,9 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 - Liquibase XML master orchestrator (`db.changelog-master.xml`) replacing direct SQL master reference; enables per-entity XML changeset files and clean include-based composition (#104)
 
 ### Changed
+- `Payment` entity extended with `refundedAmount`, `refundReason`, `refundInitiatedAt` fields; status comment updated to include `PARTIALLY_REFUNDED` (#61)
+- `AdminOrderController` now injects `PaymentService` and exposes `POST /{id}/refund` (#61)
+- `RazorpayClientAdapter.refundPayment` throws `PaymentProcessingException` instead of generic `RuntimeException` (#61)
 - `Order.OrderStatus` enum extended with `PAID` and `PAYMENT_FAILED` to represent webhook-confirmed payment outcomes (#60)
 - `OrderServiceImpl.VALID_TRANSITIONS` extended: `PAID→{SHIPPED, CANCELLED}`, `PAYMENT_FAILED→{CANCELLED}` (#60)
 - `PaymentRepository` extended with `Optional<Payment> findByRazorpayOrderId(String)` for idempotent webhook lookup (#60)

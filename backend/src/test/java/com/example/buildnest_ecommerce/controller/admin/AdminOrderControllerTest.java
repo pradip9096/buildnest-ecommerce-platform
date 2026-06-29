@@ -28,7 +28,7 @@ class AdminOrderControllerTest {
     @BeforeEach
     void setUp() {
         orderService = mock(OrderService.class);
-        controller = new AdminOrderController(orderService);
+        controller = new AdminOrderController(orderService, mock(com.example.buildnest_ecommerce.service.payment.PaymentService.class));
     }
 
     @Test

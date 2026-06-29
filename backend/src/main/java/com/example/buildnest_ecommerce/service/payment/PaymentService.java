@@ -20,4 +20,16 @@ public interface PaymentService {
      * @param razorpaySignature value of the X-Razorpay-Signature header
      */
     void processWebhookEvent(String rawBody, String razorpaySignature);
+
+    /**
+     * Issues a full or partial refund for the payment associated with the given order (PAY-02, #61).
+     * Validates that the refund amount does not exceed the original payment amount, calls the
+     * Razorpay refund API, and updates Payment status to REFUNDED or PARTIALLY_REFUNDED.
+     *
+     * @param orderId internal order ID
+     * @param amount  refund amount in rupees (must be &gt; 0 and ≤ original payment amount)
+     * @param reason  optional human-readable refund reason for audit purposes
+     * @return the updated Payment entity
+     */
+    Payment processRefund(Long orderId, Double amount, String reason);
 }

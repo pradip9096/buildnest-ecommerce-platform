@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #61 (PAY-02): Extend payments table to support partial refunds -->
+    <changeSet id="20260629-009-alter-payment-add-refund-columns" author="buildnest-team">
+        <comment>Add refund tracking columns to payments table (PAY-02, #61)</comment>
+
+        <addColumn tableName="payment">
+            <column name="refunded_amount" type="DECIMAL(19,2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="refund_reason" type="VARCHAR(500)"/>
+            <column name="refund_initiated_at" type="DATETIME"/>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="payment" columnName="refunded_amount"/>
+            <dropColumn tableName="payment" columnName="refund_reason"/>
+            <dropColumn tableName="payment" columnName="refund_initiated_at"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Extend the MySQL status ENUM to include PARTIALLY_REFUNDED (MySQL only;
+         H2 test environment stores status as VARCHAR and is unaffected) -->
+    <changeSet id="20260629-010-alter-payment-status-enum" author="buildnest-team" dbms="mysql">
+        <comment>Add PARTIALLY_REFUNDED to payment status ENUM (PAY-02, #61)</comment>
+        <sql>ALTER TABLE payment MODIFY COLUMN status
+            ENUM('INITIATED','PENDING','SUCCESS','FAILED','REFUNDED','PARTIALLY_REFUNDED')
+            NOT NULL DEFAULT 'PENDING'</sql>
+        <rollback>
+            <sql>ALTER TABLE payment MODIFY COLUMN status
+                ENUM('INITIATED','PENDING','SUCCESS','FAILED','REFUNDED')
+                NOT NULL DEFAULT 'PENDING'</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

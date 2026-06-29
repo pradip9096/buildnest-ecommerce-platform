@@ -1,5 +1,6 @@
 package com.example.buildnest_ecommerce.integration;
 
+import com.example.buildnest_ecommerce.exception.PaymentProcessingException;
 import com.razorpay.Order;
 import com.razorpay.Payment;
 import com.razorpay.RazorpayClient;
@@ -84,7 +85,7 @@ public class RazorpayClientAdapter {
             log.info("Refund processed successfully for payment: {}", razorpayPaymentId);
         } catch (Exception e) {
             log.error("Error processing refund", e);
-            throw new RuntimeException("Failed to process refund", e);
+            throw new PaymentProcessingException("Failed to process refund: " + e.getMessage(), e);
         }
     }
     

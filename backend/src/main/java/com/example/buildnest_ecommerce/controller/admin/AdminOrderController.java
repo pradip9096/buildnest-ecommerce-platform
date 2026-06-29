@@ -3,9 +3,12 @@ package com.example.buildnest_ecommerce.controller.admin;
 import com.example.buildnest_ecommerce.aspect.Auditable;
 import com.example.buildnest_ecommerce.model.dto.AdminOrderDetailDTO;
 import com.example.buildnest_ecommerce.model.entity.Order;
+import com.example.buildnest_ecommerce.model.entity.Payment;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
+import com.example.buildnest_ecommerce.model.payload.RefundRequest;
 import com.example.buildnest_ecommerce.model.payload.UpdateOrderStatusRequest;
 import com.example.buildnest_ecommerce.service.order.OrderService;
+import com.example.buildnest_ecommerce.service.payment.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +28,7 @@ import java.time.LocalDateTime;
 public class AdminOrderController {
 
     private final OrderService orderService;
+    private final PaymentService paymentService;
 
     @GetMapping
     public ResponseEntity<ApiResponse> getAdminOrders(
@@ -62,5 +66,15 @@ public class AdminOrderController {
 
         Order updated = orderService.adminUpdateOrderStatus(id, request.getStatus(), request.getCancellationReason());
         return ResponseEntity.ok(new ApiResponse(true, "Order status updated successfully", updated.getStatus().name()));
+    }
+
+    @PostMapping("/{id}/refund")
+    @Auditable(action = "ADMIN_REFUND_PAYMENT", entityType = "Payment")
+    public ResponseEntity<ApiResponse> refundPayment(
+            @PathVariable Long id,
+            @Valid @RequestBody RefundRequest request) {
+
+        Payment payment = paymentService.processRefund(id, request.getAmount(), request.getReason());
+        return ResponseEntity.ok(new ApiResponse(true, "Refund processed successfully", payment));
     }
 }

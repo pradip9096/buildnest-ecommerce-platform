@@ -135,15 +135,11 @@ class PaymentConditionalTest {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime updated = now.plusMinutes(5);
 
-        Payment payment = new Payment(
-                1L,
-                100L,
-                500.75,
-                "order_abc123",
-                "pay_xyz789",
-                "SUCCESS",
-                now,
-                updated);
+        Payment payment = new Payment();
+        payment.setId(1L); payment.setOrderId(100L); payment.setAmount(500.75);
+        payment.setRazorpayOrderId("order_abc123"); payment.setRazorpayPaymentId("pay_xyz789");
+        payment.setStatus("SUCCESS"); payment.setCreatedAt(now); payment.setUpdatedAt(updated);
+        payment.setRefundedAmount(0.0);
 
         assertEquals(1L, payment.getId());
         assertEquals(100L, payment.getOrderId());
@@ -168,7 +164,10 @@ class PaymentConditionalTest {
     @DisplayName("AllArgsConstructor - 8 parameter constructor")
     void testAllArgsConstructor() {
         LocalDateTime now = LocalDateTime.now();
-        Payment payment = new Payment(1L, 50L, 250.0, "order", "pay", "PENDING", now, null);
+        Payment payment = new Payment();
+        payment.setId(1L); payment.setOrderId(50L); payment.setAmount(250.0);
+        payment.setRazorpayOrderId("order"); payment.setRazorpayPaymentId("pay");
+        payment.setStatus("PENDING"); payment.setCreatedAt(now); payment.setRefundedAmount(0.0);
 
         assertEquals(1L, payment.getId());
         assertEquals(50L, payment.getOrderId());
