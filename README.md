@@ -30,7 +30,7 @@
 
 ## Overview
 
-BuildNest is a full-stack e-commerce platform targeting the home construction and décor market. It exposes a Spring Boot REST API backed by MySQL, Redis, and Elasticsearch, with a React frontend under active development.
+BuildNest is a full-stack e-commerce platform targeting the home construction and décor market. It exposes a Spring Boot REST API backed by MySQL, Redis, and Elasticsearch, with a React 19 + TypeScript frontend (product listing page live; additional pages in active development).
 
 **Key capabilities:**
 
@@ -86,7 +86,7 @@ Schema changes are managed exclusively through **Liquibase** changesets (`backen
 | Observability | Spring Boot Actuator, Prometheus |
 | Build | Maven 3, Maven Wrapper |
 | Containerisation | Docker, Docker Compose |
-| Frontend | React 19, Vite |
+| Frontend | React 19, Vite, TypeScript, Tailwind CSS v4 |
 | CI/CD | GitHub Actions |
 | Security scanning | OWASP Dependency-Check (CVSS ≥ 7.0 fails build), CodeQL |
 | Test quality | JaCoCo (≥ 50% instruction coverage), PIT mutation testing (≥ 75%) |
@@ -125,7 +125,7 @@ BuildNest/
 │   ├── docker-compose.yml
 │   ├── .env.example                # All 62 required variables documented
 │   └── pom.xml
-├── frontend/                       # React 19 / Vite (stub)
+├── frontend/                       # React 19 / Vite / TypeScript / Tailwind CSS v4
 ├── docs/SDLC-docs/                 # SRS, SDD, RTM, Test Plan, SDP, and more
 ├── CHANGELOG.md
 └── README.md
@@ -263,8 +263,8 @@ GitHub Actions workflows in `.github/workflows/`:
 |---|---|---|---|
 | M1 — Stabilisation | Critical test defect fixes | 2026-07-04 | **Complete** (v0.2.0) |
 | M2 — Quality Foundation | Test coverage, OWASP, env docs | 2026-07-18 | **Complete** (v0.3.0) |
-| M3 — Technical Debt Reduction | ES upgrade, CSP hardening, circuit breaker fallbacks, coverage gate 55% | 2026-08-01 | In progress |
-| M4 — Feature Development | 50 features (#60–#109) | 2026-10-24 | Planned |
+| M3 — Technical Debt Reduction | ES upgrade, CSP hardening, circuit breaker fallbacks, coverage gate 55% | 2026-08-01 | **Complete** (v0.4.0) |
+| M4 — Feature Development | 50 features (#60–#109) | 2026-10-24 | **In progress** |
 | M5 — Production Readiness | 27 hardening items (#110–#136) | 2026-11-21 | Planned → v1.0.0 |
 
 ---

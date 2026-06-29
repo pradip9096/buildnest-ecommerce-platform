@@ -13,6 +13,20 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- React product listing page at `/`: TypeScript + Tailwind CSS v4 responsive grid (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`); keyword search via form submit; client-side category multi-filter, sort (relevance / price asc-desc / newest), and pagination; loading skeleton (12 animated cards), per-card error and empty states; Vite dev-server proxy (`/api` → `:8080`) eliminates CORS in development (FE-01, #92)
+- `src/types/index.ts` — shared TypeScript interfaces (`Product`, `Category`, `ApiResponse<T>`, `ProductFilters`, `SortOption`) for the React frontend (#92)
+- `src/api/products.ts` — `fetchProducts()` (`GET /api/public/products`) and `searchProducts(keyword)` (`GET /api/public/products/search?keyword=`) typed API clients (#92)
+- `src/api/categories.ts` — `fetchCategories()` (`GET /api/public/categories`) typed API client (#92)
+- `src/hooks/useProducts.ts` — data-fetching hook with cancellation-flag pattern (async fetch in `useEffect`; returns `{ products, total, loading, error }`) (#92)
+- `src/hooks/useCategories.ts` — category data-fetching hook with graceful empty-array fallback (#92)
+- `src/components/product/ProductCard.tsx` — product card with category label, discount strikethrough price, out-of-stock badge, and placeholder emoji (#92)
+- `src/components/product/ProductGrid.tsx` — responsive product grid with empty-state message (#92)
+- `src/components/product/LoadingSkeleton.tsx` — 12-card animated skeleton loader (#92)
+- `src/components/filters/CategorySidebar.tsx` — multi-select category filter checkboxes with "Clear filters" button (#92)
+- `src/components/filters/SortDropdown.tsx` — sort order selector (relevance / price asc / price desc / newest) (#92)
+- `src/components/common/Pagination.tsx` — prev/next + numbered page buttons with ellipsis via `buildPageRange` helper (#92)
+- `src/components/common/ErrorMessage.tsx` — error display component with optional retry callback (#92)
+- `src/pages/ProductListingPage.tsx` — orchestrates header (logo + search), toolbar (count + sort), sidebar (categories), grid, and pagination; manages filter state and page resets on keyword/category change (#92)
 - Full-text product search at `GET /api/v2/products/search`: delegates to Elasticsearch when `elasticsearch.enabled=true` (multi-field match across name^3, description, categoryName with fuzziness; category/price/stock filters applied); falls back to JPA `advancedSearch` when ES is disabled (SRCH-01, #74)
 - `ProductSearchService` interface + `ProductSearchServiceImpl` (`@ConditionalOnProperty("elasticsearch.enabled","true")`): `search`, `indexProduct`, `deleteFromIndex`, `reindexAll` with Resilience4j circuit-breaker protection and graceful degradation on `CallNotPermittedException` (SRCH-01/SRCH-02, #74/#75)
 - `ProductDocument` Elasticsearch document (`@Document(indexName="products")`): name (Text, standard analyzer, boost×3), description (Text), categoryId/categoryName (Keyword), price/discountPrice (Double), inStock/isActive (Boolean), sku/imageUrl (Keyword), createdAt (Date) (#74)
@@ -68,7 +82,17 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 - `/api/v1/admin/**` URL-level `hasRole("ADMIN")` rules added to `SecurityConfig` and `TestSecurityConfig` (was missing; only `/api/admin/**` was covered) (#67)
 - Liquibase XML master orchestrator (`db.changelog-master.xml`) replacing direct SQL master reference; enables per-entity XML changeset files and clean include-based composition (#104)
 
+### Fixed
+- `CacheConfig.cacheManager` now injects the Spring-managed `ObjectMapper` bean into `GenericJackson2JsonRedisSerializer` (all 9 cache regions: products, categories, auditLogs, userPermissions, inventoryItems, rateLimitStats, orders, users, and default); previously each region created its own bare `ObjectMapper` instance that could not handle Hibernate lazy-proxy types, causing silent cache-write failures for JPA entities
+- `application.properties`: add `spring.jpa.properties.hibernate.type.preferred_boolean_jdbc_type=TINYINT` so Hibernate 6.x schema validation correctly maps `Boolean` entity fields to MySQL `TINYINT(1)` (MySQL `BOOLEAN` synonym) instead of `BIT(1)`, eliminating column-type mismatch errors on startup
+- `application.properties`: externalize `spring.jpa.hibernate.ddl-auto` via `${SPRING_JPA_DDL_AUTO:validate}` to allow environment-specific override without code changes
+
 ### Changed
+- `App.tsx` migrated from JSX stub to full TypeScript: wraps `ProductListingPage` in `BrowserRouter` + `Routes` (react-router-dom) (FE-01, #92)
+- `main.tsx` migrated from `.jsx` to `.tsx`: null-checked root element, no `.jsx` import extension (#92)
+- `vite.config.js` replaced by `vite.config.ts`: added `@tailwindcss/vite` plugin and `/api` proxy to `http://localhost:8080` (#92)
+- `src/index.css` replaced with Tailwind v4 import (`@import "tailwindcss"`) (#92)
+- `eslint.config.js`: added `typescript-eslint`; disabled `react-hooks/set-state-in-effect` rule (hooks v7 incorrectly flags valid async data-fetching patterns documented by the React team) (#92)
 - `ProductControllerV2.searchProducts` now routes to `ProductSearchService` (ES) when the bean is present, falling back to `ProductService.advancedSearch` (JPA) when absent; uses `Optional<ProductSearchService>` injection (#74)
 - `ProductServiceImpl.advancedSearch` replaced in-memory stream filter with proper JPA `ProductRepository.advancedSearch` query (fixes O(n) memory load and incorrect pagination); `findByCategory` and `getProductsByCategory` likewise replaced with repository-level queries (#74)
 - `ProductServiceImpl` now publishes `ProductCreatedEvent`, `ProductUpdatedEvent`, `ProductDeletedEvent` from `createProduct`, `updateProduct`, `deleteProduct` via `DomainEventPublisher` (#75)
