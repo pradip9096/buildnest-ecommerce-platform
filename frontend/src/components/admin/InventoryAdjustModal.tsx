@@ -1,0 +1,100 @@
+import { useState } from 'react';
+import { adjustInventory, type InventoryItem } from '../../api/admin';
+
+interface Props {
+  item: InventoryItem;
+  token: string;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+export function InventoryAdjustModal({ item, token, onClose, onSuccess }: Props) {
+  const [delta, setDelta] = useState('');
+  const [reason, setReason] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const n = parseInt(delta, 10);
+    if (isNaN(n) || n === 0) { setError('Enter a non-zero integer delta.'); return; }
+    if (!reason.trim()) { setError('Reason is required.'); return; }
+    setLoading(true);
+    setError(null);
+    try {
+      await adjustInventory(token, item.productId, n, reason.trim());
+      onSuccess();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to adjust inventory');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+          <h3 className="font-semibold text-gray-900">Adjust Inventory</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+        </div>
+
+        <div className="px-6 py-4">
+          <p className="text-sm text-gray-500 mb-1">Product</p>
+          <p className="font-medium text-gray-900 mb-1">{item.productName}</p>
+          <p className="text-sm text-gray-500">
+            Current: <span className="font-semibold text-gray-800">{item.quantity}</span> total,{' '}
+            <span className="font-semibold text-gray-800">{item.availableQuantity}</span> available
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Delta (positive = add, negative = remove)
+            </label>
+            <input
+              type="number"
+              value={delta}
+              onChange={e => setDelta(e.target.value)}
+              placeholder="e.g. 50 or -10"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+            <input
+              type="text"
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              placeholder="e.g. Restocked from supplier"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              required
+            />
+          </div>
+
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-60 transition-colors"
+            >
+              {loading ? 'Saving…' : 'Apply'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
