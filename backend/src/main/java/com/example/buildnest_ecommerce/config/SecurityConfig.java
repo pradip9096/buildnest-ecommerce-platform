@@ -44,6 +44,9 @@ public class SecurityConfig {
     @Autowired
     private Environment environment;
 
+    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:5174,http://localhost:3000}")
+    private String[] corsAllowedOrigins;
+
     @PostConstruct
     public void validateHttpsInProduction() {
         boolean isProduction = Arrays.asList(environment.getActiveProfiles()).contains("production");
@@ -140,7 +143,9 @@ public class SecurityConfig {
                     CorsConfiguration corsConfig = new CorsConfiguration();
                     // Allow specific origins in production (RQ-SEC-03 - 1.3 CRITICAL HTTPS
                     // Enforcement)
-                    corsConfig.setAllowedOrigins(Arrays.asList("https://buildnest.com", "https://www.buildnest.com"));
+                    List<String> origins = new java.util.ArrayList<>(Arrays.asList("https://buildnest.com", "https://www.buildnest.com"));
+                    origins.addAll(Arrays.asList(corsAllowedOrigins));
+                    corsConfig.setAllowedOrigins(origins);
                     corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
                     corsConfig.setExposedHeaders(Arrays.asList("Authorization"));
