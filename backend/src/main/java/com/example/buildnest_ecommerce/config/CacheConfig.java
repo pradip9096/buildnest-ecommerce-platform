@@ -10,6 +10,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
 import java.time.Duration;
 
@@ -71,7 +72,18 @@ public class CacheConfig {
         @Bean
         @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis")
         public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory, ObjectMapper objectMapper) {
-                var jsonSerializer = SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
+                // Redis serializer needs a dedicated ObjectMapper copy with default typing enabled
+                // so that GenericJackson2JsonRedisSerializer embeds @class type information in the
+                // JSON. Without it, deserialization returns LinkedHashMap instead of the entity class.
+                // We copy the app ObjectMapper to retain all registered modules (Java time, etc.)
+                // rather than creating a new instance.
+                ObjectMapper redisMapper = objectMapper.copy()
+                                .activateDefaultTyping(
+                                                BasicPolymorphicTypeValidator.builder()
+                                                                .allowIfBaseType(Object.class)
+                                                                .build(),
+                                                ObjectMapper.DefaultTyping.NON_FINAL);
+                var jsonSerializer = SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(redisMapper));
                 RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                                 .serializeValuesWith(jsonSerializer)
                                 .entryTtl(Duration.ofMinutes(10))

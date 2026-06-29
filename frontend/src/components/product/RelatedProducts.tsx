@@ -21,7 +21,7 @@ export function RelatedProducts({ currentProductId, categoryId, products }: Prop
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {related.map(product => (
           <Link key={product.id} to={`/products/${product.id}`} className="block hover:no-underline">
-            <ProductCard product={product} />
+            <ProductCard product={product} linkable={false} />
           </Link>
         ))}
       </div>

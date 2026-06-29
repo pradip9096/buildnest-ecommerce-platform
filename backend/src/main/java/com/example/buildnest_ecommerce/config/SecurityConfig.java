@@ -155,6 +155,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/*/reviews").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/*/reviews/summary").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/*/reviews/top-helpful").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers("/api/password/**").permitAll()
                         .requestMatchers("/api/v1/webhooks/**").permitAll()
