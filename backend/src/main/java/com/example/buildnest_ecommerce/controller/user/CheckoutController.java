@@ -119,6 +119,7 @@ public class CheckoutController {
         }
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/calculate-total/{cartId}")
     public ResponseEntity<ApiResponse> calculateTotal(@PathVariable Long cartId) {
         try {
