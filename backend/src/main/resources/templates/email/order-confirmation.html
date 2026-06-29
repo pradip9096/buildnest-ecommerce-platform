@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Order Confirmation</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #333;">
+<div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+    <h1 style="color: #2c7a4b;">Order Confirmed</h1>
+    <p>Hi <span th:text="${customerName}">Customer</span>,</p>
+    <p>Thank you for your order! We have received it and it is now being processed.</p>
+
+    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+        <tr>
+            <td style="padding: 8px; font-weight: bold;">Order Number</td>
+            <td style="padding: 8px;" th:text="${orderNumber}">ORD-001</td>
+        </tr>
+        <tr style="background: #f5f5f5;">
+            <td style="padding: 8px; font-weight: bold;">Order Date</td>
+            <td style="padding: 8px;" th:text="${orderDate}">2026-06-29</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; font-weight: bold;">Total Amount</td>
+            <td style="padding: 8px;" th:text="'₹' + ${totalAmount}">₹0.00</td>
+        </tr>
+        <tr style="background: #f5f5f5;">
+            <td style="padding: 8px; font-weight: bold;">Shipping Address</td>
+            <td style="padding: 8px;" th:text="${shippingAddress}">—</td>
+        </tr>
+    </table>
+
+    <p>We will notify you when your order ships.</p>
+    <p style="color: #999; font-size: 12px;">BuildNest — Your Home Construction &amp; Décor Partner</p>
+</div>
+</body>
+</html>

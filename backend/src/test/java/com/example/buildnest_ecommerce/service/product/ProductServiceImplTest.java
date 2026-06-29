@@ -1,5 +1,6 @@
 package com.example.buildnest_ecommerce.service.product;
 
+import com.example.buildnest_ecommerce.event.DomainEventPublisher;
 import com.example.buildnest_ecommerce.model.dto.CreateProductRequest;
 import com.example.buildnest_ecommerce.model.entity.Category;
 import com.example.buildnest_ecommerce.model.entity.Product;
@@ -15,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -23,6 +25,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +37,9 @@ class ProductServiceImplTest {
 
     @Mock
     private CategoryRepository categoryRepository;
+
+    @Mock
+    private DomainEventPublisher domainEventPublisher;
 
     @InjectMocks
     private ProductServiceImpl productService;
@@ -260,34 +266,30 @@ class ProductServiceImplTest {
 
     @Test
     void testSearchProducts() {
-        // Arrange
-        List<Product> products = Arrays.asList(testProduct);
-        when(productRepository.findAll()).thenReturn(products);
+        when(productRepository.findByNameContainingIgnoreCase("cement")).thenReturn(List.of(testProduct));
 
-        // Act
         List<Product> result = productService.searchProducts("cement");
 
-        // Assert
         assertNotNull(result);
-        assertTrue(result.size() <= 1);
+        assertEquals(1, result.size());
     }
 
     @Test
-    void testSearchProductsMatchesNameOrDescriptionCaseInsensitive() {
+    void testSearchProductsMatchesNameCaseInsensitive() {
         Product other = new Product();
         other.setId(2L);
         other.setName("Steel Rods");
-        other.setDescription("Premium rebar");
 
-        when(productRepository.findAll()).thenReturn(List.of(testProduct, other));
+        when(productRepository.findByNameContainingIgnoreCase("cement")).thenReturn(List.of(testProduct));
+        when(productRepository.findByNameContainingIgnoreCase("steel")).thenReturn(List.of(other));
 
         List<Product> byName = productService.searchProducts("cement");
-        List<Product> byDesc = productService.searchProducts("ReBaR");
+        List<Product> byOther = productService.searchProducts("steel");
 
         assertEquals(1, byName.size());
         assertEquals("OPC 53 Grade Cement", byName.get(0).getName());
-        assertEquals(1, byDesc.size());
-        assertEquals("Steel Rods", byDesc.get(0).getName());
+        assertEquals(1, byOther.size());
+        assertEquals("Steel Rods", byOther.get(0).getName());
     }
 
     @Test
@@ -301,104 +303,66 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void testAdvancedSearchFiltersAndBoundaries() {
-        Category category = new Category();
-        category.setId(1L);
-
-        Product p1 = new Product();
-        p1.setId(1L);
-        p1.setName("Cement Pro");
-        p1.setDescription("Strong cement");
-        p1.setPrice(new BigDecimal("100.00"));
-        p1.setStockQuantity(10);
-        p1.setCategory(category);
-
-        Product p2 = new Product();
-        p2.setId(2L);
-        p2.setName("Cement Lite");
-        p2.setDescription("Budget cement");
-        p2.setPrice(new BigDecimal("50.00"));
-        p2.setStockQuantity(0);
-        p2.setCategory(category);
-
-        Product p3 = new Product();
-        p3.setId(3L);
-        p3.setName("Steel Rod");
-        p3.setDescription("Rebar");
-        p3.setPrice(new BigDecimal("150.00"));
-        p3.setStockQuantity(5);
-        p3.setCategory(category);
-
-        when(productRepository.findAll()).thenReturn(List.of(p1, p2, p3));
-
+    void testAdvancedSearchDelegatesToRepository() {
         PageRequest pageable = PageRequest.of(0, 10);
+        Page<Product> expected = new PageImpl<>(List.of(testProduct));
+        when(productRepository.advancedSearch("cement", 1L,
+                new BigDecimal("50.00"), new BigDecimal("100.00"), true, true, pageable))
+                .thenReturn(expected);
+
         Page<Product> result = productService.advancedSearch("cement", 1L,
                 new BigDecimal("50.00"), new BigDecimal("100.00"), true, pageable);
 
         assertEquals(1, result.getContent().size());
         assertEquals(1L, result.getContent().get(0).getId());
+        verify(productRepository).advancedSearch("cement", 1L,
+                new BigDecimal("50.00"), new BigDecimal("100.00"), true, true, pageable);
     }
 
     @Test
-    void testFindByCategoryFiltersNullCategory() {
-        Product withoutCategory = new Product();
-        withoutCategory.setId(2L);
-        withoutCategory.setCategory(null);
-
-        when(productRepository.findAll()).thenReturn(List.of(testProduct, withoutCategory));
-
+    void testFindByCategoryDelegatesToRepository() {
         PageRequest pageable = PageRequest.of(0, 10);
+        Page<Product> expected = new PageImpl<>(List.of(testProduct));
+        when(productRepository.findByCategory(1L, pageable)).thenReturn(expected);
+
         Page<Product> page = productService.findByCategory(1L, pageable);
 
         assertEquals(1, page.getContent().size());
         assertEquals(1L, page.getContent().get(0).getId());
+        verify(productRepository).findByCategory(1L, pageable);
     }
 
     @Test
-    void testSearchProductsMatchesDescription() {
-        Product product = new Product();
-        product.setId(2L);
-        product.setName("Concrete");
-        product.setDescription("High strength cement mix");
-
-        when(productRepository.findAll()).thenReturn(List.of(product));
+    void testSearchProductsByNameIgnoresCase() {
+        when(productRepository.findByNameContainingIgnoreCase("CEMENT")).thenReturn(List.of(testProduct));
 
         List<Product> result = productService.searchProducts("CEMENT");
 
         assertEquals(1, result.size());
-        assertEquals(2L, result.get(0).getId());
+        assertEquals(1L, result.get(0).getId());
     }
 
     @Test
     void testGetProductsByCategory() {
-        // Arrange
-        List<Product> products = Arrays.asList(testProduct);
-        when(productRepository.findAll()).thenReturn(products);
+        Page<Product> page = new PageImpl<>(List.of(testProduct));
+        when(productRepository.findByCategory(eq(1L), any(Pageable.class))).thenReturn(page);
 
-        // Act
         List<Product> result = productService.getProductsByCategory(1L);
 
-        // Assert
         assertNotNull(result);
-        assertTrue(result.size() <= 1);
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).getId());
     }
 
     @Test
-    void testGetProductsByCategoryIgnoresNullCategory() {
-        Product productWithCategory = new Product();
-        productWithCategory.setId(1L);
-        productWithCategory.setCategory(testCategory);
+    void testGetProductsByCategoryEmpty() {
+        Page<Product> emptyPage = new PageImpl<>(List.of());
+        when(productRepository.findByCategory(eq(99L), any(Pageable.class))).thenReturn(emptyPage);
 
-        Product productWithoutCategory = new Product();
-        productWithoutCategory.setId(2L);
-        productWithoutCategory.setCategory(null);
+        List<Product> result = productService.getProductsByCategory(99L);
 
-        when(productRepository.findAll()).thenReturn(List.of(productWithCategory, productWithoutCategory));
-
-        List<Product> result = productService.getProductsByCategory(1L);
-
-        assertEquals(1, result.size());
-        assertEquals(1L, result.get(0).getId());
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -427,27 +391,16 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void testAdvancedSearchFilters() {
-        Product inStock = new Product();
-        inStock.setId(1L);
-        inStock.setName("Cement Mix");
-        inStock.setDescription("Mix");
-        inStock.setPrice(new BigDecimal("100"));
-        inStock.setStockQuantity(10);
-        inStock.setCategory(testCategory);
-
-        Product outOfStock = new Product();
-        outOfStock.setId(2L);
-        outOfStock.setName("Steel Rod");
-        outOfStock.setDescription("Rod");
-        outOfStock.setPrice(new BigDecimal("200"));
-        outOfStock.setStockQuantity(0);
-        outOfStock.setCategory(testCategory);
-
-        when(productRepository.findAll()).thenReturn(List.of(inStock, outOfStock));
+    void testAdvancedSearchWithQueryAndFilters() {
+        PageRequest pageable = PageRequest.of(0, 10);
+        Product p = new Product();
+        p.setId(1L); p.setName("Cement Mix");
+        Page<Product> expected = new PageImpl<>(List.of(p));
+        when(productRepository.advancedSearch("Cement", 1L, new BigDecimal("50"), new BigDecimal("150"),
+                true, true, pageable)).thenReturn(expected);
 
         Page<Product> result = productService.advancedSearch("Cement", 1L,
-                new BigDecimal("50"), new BigDecimal("150"), true, PageRequest.of(0, 10));
+                new BigDecimal("50"), new BigDecimal("150"), true, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Cement Mix", result.getContent().get(0).getName());
@@ -455,86 +408,49 @@ class ProductServiceImplTest {
 
     @Test
     void testAdvancedSearchWithNullFilters() {
-        Product p1 = new Product();
-        p1.setId(1L);
-        p1.setName("Cement Mix");
-        p1.setDescription("Mix");
-        p1.setPrice(new BigDecimal("100"));
-        p1.setStockQuantity(10);
-        p1.setCategory(testCategory);
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<Product> expected = new PageImpl<>(List.of(testProduct, new Product()));
+        when(productRepository.advancedSearch(null, null, null, null, null, true, pageable))
+                .thenReturn(expected);
 
-        Product p2 = new Product();
-        p2.setId(2L);
-        p2.setName("Steel Rod");
-        p2.setDescription("Rod");
-        p2.setPrice(new BigDecimal("200"));
-        p2.setStockQuantity(0);
-        p2.setCategory(testCategory);
-
-        when(productRepository.findAll()).thenReturn(List.of(p1, p2));
-
-        Page<Product> result = productService.advancedSearch(null, null, null, null, null, PageRequest.of(0, 10));
+        Page<Product> result = productService.advancedSearch(null, null, null, null, null, pageable);
 
         assertEquals(2, result.getTotalElements());
     }
 
     @Test
     void testAdvancedSearchWithPriceRange() {
-        Product p1 = new Product();
-        p1.setId(1L);
-        p1.setName("Cement Mix");
-        p1.setDescription("Mix");
-        p1.setPrice(new BigDecimal("100"));
-        p1.setStockQuantity(10);
-        p1.setCategory(testCategory);
+        PageRequest pageable = PageRequest.of(0, 10);
+        Product p2 = new Product(); p2.setId(2L); p2.setName("Steel Rod");
+        Page<Product> expected = new PageImpl<>(List.of(p2));
+        when(productRepository.advancedSearch(null, null, new BigDecimal("150"), null, null, true, pageable))
+                .thenReturn(expected);
 
-        Product p2 = new Product();
-        p2.setId(2L);
-        p2.setName("Steel Rod");
-        p2.setDescription("Rod");
-        p2.setPrice(new BigDecimal("200"));
-        p2.setStockQuantity(10);
-        p2.setCategory(testCategory);
-
-        when(productRepository.findAll()).thenReturn(List.of(p1, p2));
-
-        Page<Product> result = productService.advancedSearch(null, null, new BigDecimal("150"), null, null,
-                PageRequest.of(0, 10));
+        Page<Product> result = productService.advancedSearch(null, null, new BigDecimal("150"), null, null, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals(2L, result.getContent().get(0).getId());
     }
 
     @Test
-    void testAdvancedSearchInStockFalseIncludesOutOfStock() {
-        Product inStock = new Product();
-        inStock.setId(1L);
-        inStock.setName("Cement Mix");
-        inStock.setDescription("Mix");
-        inStock.setPrice(new BigDecimal("100"));
-        inStock.setStockQuantity(10);
-        inStock.setCategory(testCategory);
+    void testAdvancedSearchInStockFalse() {
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<Product> expected = new PageImpl<>(List.of(testProduct, new Product()));
+        when(productRepository.advancedSearch(null, null, null, null, false, true, pageable))
+                .thenReturn(expected);
 
-        Product outOfStock = new Product();
-        outOfStock.setId(2L);
-        outOfStock.setName("Steel Rod");
-        outOfStock.setDescription("Rod");
-        outOfStock.setPrice(new BigDecimal("200"));
-        outOfStock.setStockQuantity(0);
-        outOfStock.setCategory(testCategory);
-
-        when(productRepository.findAll()).thenReturn(List.of(inStock, outOfStock));
-
-        Page<Product> result = productService.advancedSearch(null, null, null, null, false, PageRequest.of(0, 10));
+        Page<Product> result = productService.advancedSearch(null, null, null, null, false, pageable);
 
         assertEquals(2, result.getTotalElements());
     }
 
     @Test
     void testFindByCategoryWithPagination() {
-        when(productRepository.findAll()).thenReturn(List.of(testProduct));
+        PageRequest pageable = PageRequest.of(0, 5);
+        when(productRepository.findByCategory(1L, pageable))
+                .thenReturn(new PageImpl<>(List.of(testProduct)));
 
-        Page<Product> page = productService.findByCategory(1L, PageRequest.of(0, 5));
+        Page<Product> page = productService.findByCategory(1L, pageable);
         assertEquals(1, page.getTotalElements());
     }
 
@@ -556,7 +472,7 @@ class ProductServiceImplTest {
 
     @Test
     void testSearchProductsNoMatch() {
-        when(productRepository.findAll()).thenReturn(List.of(testProduct));
+        when(productRepository.findByNameContainingIgnoreCase("nonexistentkeyword")).thenReturn(List.of());
 
         List<Product> result = productService.searchProducts("nonexistentkeyword");
 
@@ -565,26 +481,13 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void testAdvancedSearchIgnoresProductsWithNullCategoryWhenCategoryFilterSet() {
-        Product withCategory = new Product();
-        withCategory.setId(1L);
-        withCategory.setName("Cement");
-        withCategory.setDescription("desc");
-        withCategory.setPrice(new BigDecimal("100"));
-        withCategory.setStockQuantity(5);
-        withCategory.setCategory(testCategory);
+    void testAdvancedSearchWithCategoryFilter() {
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<Product> expected = new PageImpl<>(List.of(testProduct));
+        when(productRepository.advancedSearch(null, 1L, null, null, null, true, pageable))
+                .thenReturn(expected);
 
-        Product withoutCategory = new Product();
-        withoutCategory.setId(2L);
-        withoutCategory.setName("Cement Bag");
-        withoutCategory.setDescription("desc");
-        withoutCategory.setPrice(new BigDecimal("100"));
-        withoutCategory.setStockQuantity(5);
-        withoutCategory.setCategory(null);
-
-        when(productRepository.findAll()).thenReturn(List.of(withCategory, withoutCategory));
-
-        Page<Product> result = productService.advancedSearch(null, 1L, null, null, null, PageRequest.of(0, 10));
+        Page<Product> result = productService.advancedSearch(null, 1L, null, null, null, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals(1L, result.getContent().get(0).getId());
@@ -592,9 +495,11 @@ class ProductServiceImplTest {
 
     @Test
     void testFindByCategoryPageOffsetBeyondResults() {
-        when(productRepository.findAll()).thenReturn(List.of(testProduct));
+        PageRequest pageable = PageRequest.of(5, 10);
+        when(productRepository.findByCategory(1L, pageable))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 1));
 
-        Page<Product> page = productService.findByCategory(1L, PageRequest.of(5, 10));
+        Page<Product> page = productService.findByCategory(1L, pageable);
 
         assertEquals(1, page.getTotalElements());
         assertTrue(page.getContent().isEmpty());

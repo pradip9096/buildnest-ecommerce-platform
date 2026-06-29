@@ -182,12 +182,14 @@ class OrderTest {
     @Test
     @DisplayName("Should test all OrderStatus enum values")
     void testOrderStatusEnum() {
-        assertEquals(5, Order.OrderStatus.values().length);
+        assertEquals(7, Order.OrderStatus.values().length);
         assertEquals(Order.OrderStatus.PENDING, Order.OrderStatus.valueOf("PENDING"));
         assertEquals(Order.OrderStatus.CONFIRMED, Order.OrderStatus.valueOf("CONFIRMED"));
         assertEquals(Order.OrderStatus.SHIPPED, Order.OrderStatus.valueOf("SHIPPED"));
         assertEquals(Order.OrderStatus.DELIVERED, Order.OrderStatus.valueOf("DELIVERED"));
         assertEquals(Order.OrderStatus.CANCELLED, Order.OrderStatus.valueOf("CANCELLED"));
+        assertEquals(Order.OrderStatus.PAID, Order.OrderStatus.valueOf("PAID"));
+        assertEquals(Order.OrderStatus.PAYMENT_FAILED, Order.OrderStatus.valueOf("PAYMENT_FAILED"));
     }
 
     @Test

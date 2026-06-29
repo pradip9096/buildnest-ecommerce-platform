@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Welcome to BuildNest</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #333;">
+<div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+    <h1 style="color: #2c7a4b;">Welcome to BuildNest!</h1>
+    <p>Hi <span th:text="${customerName}">Customer</span>,</p>
+    <p>Thank you for registering with BuildNest — your one-stop shop for home construction and décor products.</p>
+
+    <p>Please verify your email address by clicking the button below:</p>
+
+    <div style="text-align: center; margin: 32px 0;">
+        <a th:href="${verificationUrl}" href="#"
+           style="background: #2c7a4b; color: #fff; padding: 12px 28px; border-radius: 4px;
+                  text-decoration: none; font-size: 16px;">
+            Verify Email Address
+        </a>
+    </div>
+
+    <p style="word-break: break-all; color: #555; font-size: 12px;">
+        Or copy this link: <span th:text="${verificationUrl}">https://buildnest.com/verify</span>
+    </p>
+    <p>Once verified, you can browse thousands of products and enjoy a seamless shopping experience.</p>
+    <p style="color: #999; font-size: 12px;">BuildNest — Your Home Construction &amp; Décor Partner</p>
+</div>
+</body>
+</html>

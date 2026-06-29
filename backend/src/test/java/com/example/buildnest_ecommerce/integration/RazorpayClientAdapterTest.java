@@ -4,6 +4,7 @@ import com.razorpay.Order;
 import com.razorpay.OrderClient;
 import com.razorpay.Payment;
 import com.razorpay.PaymentClient;
+import com.razorpay.Refund;
 import com.razorpay.RazorpayClient;
 import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
@@ -86,15 +87,21 @@ class RazorpayClientAdapterTest {
 
     @Test
     @DisplayName("Should process refund without error")
-    void testRefundPayment() {
+    void testRefundPayment() throws Exception {
         RazorpayClientAdapter adapter = new RazorpayClientAdapter();
         ReflectionTestUtils.setField(adapter, "razorpayKeyId", "key");
         ReflectionTestUtils.setField(adapter, "razorpayKeySecret", "secret");
 
+        PaymentClient paymentClient = mock(PaymentClient.class);
+        Refund refundResponse = mock(Refund.class);
+        when(paymentClient.refund(any(String.class), any(JSONObject.class))).thenReturn(refundResponse);
+
         RazorpayClient client = mock(RazorpayClient.class);
+        ReflectionTestUtils.setField(client, "payments", paymentClient);
         ReflectionTestUtils.setField(adapter, "razorpayClient", client);
 
         assertDoesNotThrow(() -> adapter.refundPayment("pay_1", 50.0));
+        verify(paymentClient).refund(eq("pay_1"), any(JSONObject.class));
     }
 
     @Test

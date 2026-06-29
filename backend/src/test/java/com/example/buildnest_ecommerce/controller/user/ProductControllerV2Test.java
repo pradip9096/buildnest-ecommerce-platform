@@ -12,6 +12,7 @@ import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -25,7 +26,7 @@ class ProductControllerV2Test {
         when(productService.findAll(any())).thenReturn(page);
         when(productService.findById(1L)).thenReturn(new Product());
 
-        ProductControllerV2 controller = new ProductControllerV2(productService);
+        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.empty());
         assertEquals(HttpStatus.OK, controller.getAllProducts(0, 10, "id", Sort.Direction.ASC).getStatusCode());
         assertEquals(HttpStatus.OK, controller.getProduct(1L).getStatusCode());
     }
@@ -37,7 +38,7 @@ class ProductControllerV2Test {
         when(productService.advancedSearch(any(), any(), any(), any(), any(), any())).thenReturn(page);
         when(productService.findByCategory(eq(1L), any())).thenReturn(page);
 
-        ProductControllerV2 controller = new ProductControllerV2(productService);
+        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.empty());
         assertEquals(HttpStatus.OK,
                 controller
                         .searchProducts("q", 1L, BigDecimal.ONE, BigDecimal.TEN, true, 0, 10, "id", Sort.Direction.DESC)

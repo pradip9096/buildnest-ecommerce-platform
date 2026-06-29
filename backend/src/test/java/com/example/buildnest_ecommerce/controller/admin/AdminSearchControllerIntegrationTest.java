@@ -31,6 +31,9 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.mockito.Mockito;
+
+
 /**
  * Integration tests for {@link AdminSearchController} (SRCH-02, #75).
  *
@@ -61,6 +64,7 @@ class AdminSearchControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        Mockito.reset(productSearchService);
         when(rateLimitUtil.isAllowed(any(HttpServletRequest.class), anyString())).thenReturn(true);
         when(rateLimitUtil.isAllowed(any(HttpServletRequest.class), anyString(), anyLong())).thenReturn(true);
 
