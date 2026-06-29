@@ -79,9 +79,8 @@ public class RazorpayClientAdapter {
             
             JSONObject refundRequest = new JSONObject();
             refundRequest.put("amount", (int)(amount * 100)); // Amount in paise
-            
-            // Refund using Razorpay API
-            // Note: actual refund implementation depends on Razorpay SDK methods
+
+            razorpayClient.payments.refund(razorpayPaymentId, refundRequest);
             log.info("Refund processed successfully for payment: {}", razorpayPaymentId);
         } catch (Exception e) {
             log.error("Error processing refund", e);

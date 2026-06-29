@@ -45,13 +45,15 @@ import java.util.stream.Collectors;
 @SuppressWarnings("null")
 public class OrderServiceImpl implements OrderService {
 
-    private static final Map<OrderStatus, Set<OrderStatus>> VALID_TRANSITIONS = Map.of(
-            OrderStatus.PENDING,   EnumSet.of(OrderStatus.CONFIRMED, OrderStatus.CANCELLED),
-            OrderStatus.CONFIRMED, EnumSet.of(OrderStatus.SHIPPED,   OrderStatus.CANCELLED),
-            OrderStatus.SHIPPED,   EnumSet.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED),
-            OrderStatus.DELIVERED, Collections.emptySet(),
-            OrderStatus.CANCELLED, Collections.emptySet()
-    );
+    private static final Map<OrderStatus, Set<OrderStatus>> VALID_TRANSITIONS = new java.util.EnumMap<>(Map.of(
+            OrderStatus.PENDING,        EnumSet.of(OrderStatus.CONFIRMED, OrderStatus.CANCELLED),
+            OrderStatus.CONFIRMED,      EnumSet.of(OrderStatus.SHIPPED,   OrderStatus.CANCELLED),
+            OrderStatus.SHIPPED,        EnumSet.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED),
+            OrderStatus.DELIVERED,      Collections.emptySet(),
+            OrderStatus.CANCELLED,      Collections.emptySet(),
+            OrderStatus.PAID,           EnumSet.of(OrderStatus.SHIPPED,   OrderStatus.CANCELLED),
+            OrderStatus.PAYMENT_FAILED, EnumSet.of(OrderStatus.CANCELLED)
+    ));
 
     private final OrderRepository orderRepository;
     private final DomainEventPublisher domainEventPublisher;

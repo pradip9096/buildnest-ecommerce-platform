@@ -8,42 +8,46 @@ import com.example.buildnest_ecommerce.repository.PaymentRepository;
 import com.example.buildnest_ecommerce.integration.RazorpayClientAdapter;
 import com.example.buildnest_ecommerce.exception.PaymentProcessingException;
 import com.example.buildnest_ecommerce.exception.ExternalServiceException;
-import lombok.RequiredArgsConstructor;
+import com.example.buildnest_ecommerce.service.order.OrderService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Payment Service Implementation
- *
- * Handles payment processing, Razorpay integration, and payment lifecycle
- * management.
- * Manages payment initiation, callback processing, and payment status tracking.
- *
- * @author BuildNest Team
- * @version 1.0
- * @since 1.0.0
- */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @SuppressWarnings("null")
 public class PaymentServiceImpl implements PaymentService {
+
     private final PaymentRepository paymentRepository;
     private final RazorpayClientAdapter razorpayAdapter;
     private final DomainEventPublisher domainEventPublisher;
+    private final PaymentSignatureValidationService paymentSignatureValidationService;
+    private final ObjectMapper objectMapper;
+    private final OrderService orderService;
 
-    /**
-     * Initiates a payment by creating a Razorpay order.
-     *
-     * Creates a payment record with PENDING status and communicates with Razorpay
-     * to generate an order ID for payment processing.
-     *
-     * @param orderId the ID of the order for which payment is initiated (required)
-     * @param amount  the payment amount in rupees (required)
-     * @return the created Payment entity with Razorpay order ID
-     */
+    @Value("${razorpay.webhook.secret}")
+    private String razorpayWebhookSecret;
+
+    public PaymentServiceImpl(
+            PaymentRepository paymentRepository,
+            RazorpayClientAdapter razorpayAdapter,
+            DomainEventPublisher domainEventPublisher,
+            PaymentSignatureValidationService paymentSignatureValidationService,
+            ObjectMapper objectMapper,
+            @Lazy OrderService orderService) {
+        this.paymentRepository = paymentRepository;
+        this.razorpayAdapter = razorpayAdapter;
+        this.domainEventPublisher = domainEventPublisher;
+        this.paymentSignatureValidationService = paymentSignatureValidationService;
+        this.objectMapper = objectMapper;
+        this.orderService = orderService;
+    }
+
     @Override
     public Payment initiatePayment(Long orderId, Double amount) {
         log.info("Initiating payment for order: {}, amount: {}", orderId, amount);
@@ -54,7 +58,6 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setCreatedAt(LocalDateTime.now());
 
         try {
-            // Call Razorpay to create order
             String razorpayOrderId = razorpayAdapter.createOrder(amount, orderId);
             payment.setRazorpayOrderId(razorpayOrderId);
             log.info("Razorpay order created with id: {}", razorpayOrderId);
@@ -75,25 +78,11 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentRepository.save(payment);
     }
 
-    /**
-     * Processes payment callback from Razorpay.
-     *
-     * Verifies the payment signature, updates payment status to SUCCESS,
-     * and publishes PaymentSuccessfulEvent or PaymentFailedEvent accordingly.
-     *
-     * @param razorpayOrderId   the Razorpay order ID (required)
-     * @param razorpayPaymentId the Razorpay payment ID (required)
-     * @param razorpaySignature the HMAC-SHA256 signature for verification
-     *                          (required)
-     * @return the updated Payment entity with SUCCESS status
-     * @throws RuntimeException if signature is invalid or payment is not found
-     */
     @Override
     public Payment processPaymentCallback(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature) {
         log.info("Processing payment callback for Razorpay order: {}", razorpayOrderId);
         Long relatedOrderId = null;
         try {
-            // Verify signature
             boolean isValid = razorpayAdapter.verifySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
 
             if (!isValid) {
@@ -101,7 +90,6 @@ public class PaymentServiceImpl implements PaymentService {
                 throw new RuntimeException("Invalid payment signature");
             }
 
-            // Find and update payment
             Payment payment = paymentRepository.findAll().stream()
                     .filter(p -> p.getRazorpayOrderId().equals(razorpayOrderId))
                     .findFirst()
@@ -122,13 +110,6 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    /**
-     * Retrieves a payment by order ID.
-     *
-     * @param orderId the ID of the order (required)
-     * @return the Payment entity associated with the order
-     * @throws RuntimeException if payment is not found for the order
-     */
     @Override
     public Payment getPaymentByOrderId(Long orderId) {
         log.info("Fetching payment for order: {}", orderId);
@@ -141,7 +122,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<Payment> getPaymentsByUserId(Long userId) {
         log.info("Fetching payments for user: {}", userId);
-        // Note: This requires joining with Order table in actual implementation
         return paymentRepository.findAll();
     }
 
@@ -167,5 +147,81 @@ public class PaymentServiceImpl implements PaymentService {
         log.info("Fetching payment with id: {}", paymentId);
         return paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found with id: " + paymentId));
+    }
+
+    /**
+     * Processes inbound Razorpay webhook events (PAY-01, #60).
+     *
+     * Validates the HMAC-SHA256 signature, handles payment.captured and
+     * payment.failed events with idempotency protection, and updates both
+     * Payment and Order status accordingly.
+     */
+    @Override
+    public void processWebhookEvent(String rawBody, String razorpaySignature) {
+        log.info("Processing Razorpay webhook event");
+
+        boolean signatureValid = paymentSignatureValidationService.validateWebhookSignature(
+                rawBody, razorpayWebhookSecret, razorpaySignature);
+        if (!signatureValid) {
+            log.warn("Razorpay webhook signature validation failed — rejecting event");
+            throw new PaymentProcessingException("Invalid webhook signature");
+        }
+
+        try {
+            JsonNode root = objectMapper.readTree(rawBody);
+            String event = root.path("event").asText();
+            JsonNode paymentEntity = root.path("payload").path("payment").path("entity");
+            String razorpayPaymentId = paymentEntity.path("id").asText(null);
+            String razorpayOrderId = paymentEntity.path("order_id").asText(null);
+
+            if (razorpayOrderId == null || razorpayOrderId.isBlank()) {
+                log.warn("Webhook event '{}' has no order_id — ignoring", event);
+                return;
+            }
+
+            Payment payment = paymentRepository.findByRazorpayOrderId(razorpayOrderId).orElse(null);
+            if (payment == null) {
+                log.info("No local payment record for Razorpay order {} — ignoring webhook", razorpayOrderId);
+                return;
+            }
+
+            // Idempotency: skip already-processed events
+            if (!"PENDING".equals(payment.getStatus())) {
+                log.info("Payment {} already in status '{}' — skipping duplicate webhook",
+                        payment.getId(), payment.getStatus());
+                return;
+            }
+
+            switch (event) {
+                case "payment.captured" -> {
+                    payment.setRazorpayPaymentId(razorpayPaymentId);
+                    payment.setStatus("SUCCESS");
+                    payment.setUpdatedAt(LocalDateTime.now());
+                    paymentRepository.save(payment);
+                    orderService.updateOrderStatus(payment.getOrderId(), "PAID");
+                    domainEventPublisher.publish(new PaymentSuccessfulEvent(
+                            this, payment.getId(), payment.getOrderId(),
+                            java.math.BigDecimal.valueOf(payment.getAmount())));
+                    log.info("Payment {} captured — order {} set to PAID", payment.getId(), payment.getOrderId());
+                }
+                case "payment.failed" -> {
+                    payment.setRazorpayPaymentId(razorpayPaymentId);
+                    payment.setStatus("FAILED");
+                    payment.setUpdatedAt(LocalDateTime.now());
+                    paymentRepository.save(payment);
+                    orderService.updateOrderStatus(payment.getOrderId(), "PAYMENT_FAILED");
+                    domainEventPublisher.publish(new PaymentFailedEvent(
+                            this, payment.getOrderId(), "Payment failed via webhook"));
+                    log.info("Payment {} failed — order {} set to PAYMENT_FAILED",
+                            payment.getId(), payment.getOrderId());
+                }
+                default -> log.info("Unhandled Razorpay webhook event '{}' — ignoring", event);
+            }
+        } catch (PaymentProcessingException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error parsing or processing Razorpay webhook body", e);
+            throw new PaymentProcessingException("Webhook processing failed: " + e.getMessage());
+        }
     }
 }

@@ -157,6 +157,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers("/api/password/**").permitAll()
+                        .requestMatchers("/api/v1/webhooks/**").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         // Actuator endpoints - health is public, others require ADMIN (RQ-ES-SEC-01,

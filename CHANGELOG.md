@@ -13,6 +13,11 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Razorpay webhook endpoint at `POST /api/v1/webhooks/payment` (public; no JWT): validates `X-Razorpay-Signature` via HMAC-SHA256, handles `payment.captured` (Payment→SUCCESS, Order→PAID) and `payment.failed` (Payment→FAILED, Order→PAYMENT_FAILED) with idempotency protection; returns 200 on success, 401 on invalid signature (PAY-01, #60)
+- `PaymentServiceImpl.processWebhookEvent`: signature validation → JSON parse → find-by-razorpay-order-id → idempotency check → status update + `OrderService.updateOrderStatus` + `DomainEventPublisher` (#60)
+- `razorpay.webhook.secret` property (`${RAZORPAY_WEBHOOK_SECRET:test_webhook_secret}`) in `application.properties` (#60)
+- `PaymentWebhookServiceTest` — 7 unit tests: captured event, failed event, invalid signature, idempotency skip, payment not found, unknown event, malformed JSON (#60)
+- `PaymentWebhookControllerIntegrationTest` — 4 integration tests: valid webhook → 200, invalid signature → 401, missing header → 401, public access without JWT → 200 (#60)
 - Shipping method and cost calculation service: `GET /api/v1/checkout/shipping-options?postalCode=` returns all active methods with `calculatedCost = baseCost + (costPerKg × totalWeightKg × zoneMultiplier)`; zone derived from postal code prefix hash into configurable `app.shipping.zone-multipliers` list (SHIP-01, #87)
 - `ShippingConfig` (`@ConfigurationProperties("app.shipping")`): `defaultWeightPerItemKg` (default 0.5 kg/unit) and `zoneMultipliers` (default [1.0, 1.5, 2.0]) — fully configurable without code changes (#87)
 - `AdminShippingController` at `GET/POST/PUT/DELETE /api/v1/admin/shipping-methods`: full CRUD with `@Auditable` on all mutating operations; DELETE is a soft-deactivate (`isActive=false`) (#87)
@@ -46,6 +51,11 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 - Liquibase XML master orchestrator (`db.changelog-master.xml`) replacing direct SQL master reference; enables per-entity XML changeset files and clean include-based composition (#104)
 
 ### Changed
+- `Order.OrderStatus` enum extended with `PAID` and `PAYMENT_FAILED` to represent webhook-confirmed payment outcomes (#60)
+- `OrderServiceImpl.VALID_TRANSITIONS` extended: `PAID→{SHIPPED, CANCELLED}`, `PAYMENT_FAILED→{CANCELLED}` (#60)
+- `PaymentRepository` extended with `Optional<Payment> findByRazorpayOrderId(String)` for idempotent webhook lookup (#60)
+- `PaymentServiceImpl` refactored to explicit constructor injection (`@Lazy OrderService` to avoid circular dependency); `processWebhookEvent` added; `RazorpayClientAdapter.refundPayment` fixed to call `razorpayClient.payments.refund()` (was a no-op stub) (#60)
+- `/api/v1/webhooks/**` added to `permitAll()` in both `SecurityConfig` and `TestSecurityConfig` (#60)
 - `MultiStepCheckoutController` extended with `GET /api/v1/checkout/shipping-options` delegating to `ShippingService` (#87)
 - `CheckoutService` extended with 4 new methods (`setAddress`, `selectShipping`, `initiatePayment`, `confirmCheckout`); `CheckoutServiceImpl` extended with implementations + `AddressRepository`, `ShippingMethodRepository`, `PaymentService`, `CheckoutSessionStore` injected via constructor (#76)
 - `AdminInventoryController` migrated from `/api/admin/inventory` to `/api/v1/admin/inventory`; `GET /` and `PATCH /{productId}` added; legacy sub-path endpoints retained for backward compatibility (ADM-06, #72)

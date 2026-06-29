@@ -70,6 +70,6 @@ public class Order implements AggregateRoot {
     private Set<OrderItem> orderItems;
 
     public enum OrderStatus {
-        PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED
+        PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED, PAID, PAYMENT_FAILED
     }
 }

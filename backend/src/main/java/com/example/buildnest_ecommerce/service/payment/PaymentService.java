@@ -10,4 +10,14 @@ public interface PaymentService {
     List<Payment> getPaymentsByUserId(Long userId);
     void refundPayment(Long paymentId);
     Payment getPaymentById(Long paymentId);
+
+    /**
+     * Processes an inbound Razorpay webhook event (PAY-01, #60).
+     * Validates the webhook signature, handles payment.captured and payment.failed
+     * events, and updates Payment and Order status accordingly.
+     *
+     * @param rawBody           raw JSON body exactly as received (for HMAC verification)
+     * @param razorpaySignature value of the X-Razorpay-Signature header
+     */
+    void processWebhookEvent(String rawBody, String razorpaySignature);
 }
