@@ -119,3 +119,27 @@ export interface Order {
   orderItems?: OrderItem[];
   createdAt: string;
 }
+
+export interface UserProfile {
+  id: number;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  address?: string;
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  userId: number;
+  username: string;
+}
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  roles: string[];
+}
