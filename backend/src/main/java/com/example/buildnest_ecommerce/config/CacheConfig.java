@@ -7,6 +7,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 
@@ -67,8 +70,10 @@ public class CacheConfig {
          */
         @Bean
         @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis")
-        public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+        public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory, ObjectMapper objectMapper) {
+                var jsonSerializer = SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
                 RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+                                .serializeValuesWith(jsonSerializer)
                                 .entryTtl(Duration.ofMinutes(10))
                                 .disableCachingNullValues();
 
@@ -77,41 +82,49 @@ public class CacheConfig {
                                 // Products cache: TTL from application.properties
                                 .withCacheConfiguration("products",
                                                 RedisCacheConfiguration.defaultCacheConfig()
+                                                                .serializeValuesWith(jsonSerializer)
                                                                 .entryTtl(Duration.ofMillis(productsTtlMs))
                                                                 .disableCachingNullValues())
                                 // Categories cache: TTL from application.properties
                                 .withCacheConfiguration("categories",
                                                 RedisCacheConfiguration.defaultCacheConfig()
+                                                                .serializeValuesWith(jsonSerializer)
                                                                 .entryTtl(Duration.ofMillis(categoriesTtlMs))
                                                                 .disableCachingNullValues())
                                 // Audit logs cache: TTL from application.properties
                                 .withCacheConfiguration("auditLogs",
                                                 RedisCacheConfiguration.defaultCacheConfig()
+                                                                .serializeValuesWith(jsonSerializer)
                                                                 .entryTtl(Duration.ofMillis(auditLogsTtlMs))
                                                                 .disableCachingNullValues())
                                 // User permissions cache: TTL from application.properties
                                 .withCacheConfiguration("userPermissions",
                                                 RedisCacheConfiguration.defaultCacheConfig()
+                                                                .serializeValuesWith(jsonSerializer)
                                                                 .entryTtl(Duration.ofMillis(userPermissionsTtlMs))
                                                                 .disableCachingNullValues())
                                 // Inventory items cache: TTL from application.properties
                                 .withCacheConfiguration("inventoryItems",
                                                 RedisCacheConfiguration.defaultCacheConfig()
+                                                                .serializeValuesWith(jsonSerializer)
                                                                 .entryTtl(Duration.ofMillis(inventoryItemsTtlMs))
                                                                 .disableCachingNullValues())
                                 // Rate limit statistics cache: TTL from application.properties
                                 .withCacheConfiguration("rateLimitStats",
                                                 RedisCacheConfiguration.defaultCacheConfig()
+                                                                .serializeValuesWith(jsonSerializer)
                                                                 .entryTtl(Duration.ofMillis(rateLimitStatsTtlMs))
                                                                 .disableCachingNullValues())
                                 // Orders cache: TTL from application.properties
                                 .withCacheConfiguration("orders",
                                                 RedisCacheConfiguration.defaultCacheConfig()
+                                                                .serializeValuesWith(jsonSerializer)
                                                                 .entryTtl(Duration.ofMillis(ordersTtlMs))
                                                                 .disableCachingNullValues())
                                 // Users cache: TTL from application.properties
                                 .withCacheConfiguration("users",
                                                 RedisCacheConfiguration.defaultCacheConfig()
+                                                                .serializeValuesWith(jsonSerializer)
                                                                 .entryTtl(Duration.ofMillis(usersTtlMs))
                                                                 .disableCachingNullValues())
                                 .build();
