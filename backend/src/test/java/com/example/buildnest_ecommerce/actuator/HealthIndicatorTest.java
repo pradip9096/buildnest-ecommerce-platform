@@ -56,6 +56,19 @@ class HealthIndicatorTest {
     }
 
     @Test
+    @DisplayName("Redis health should be down when connection throws")
+    void testRedisHealthDownOnException() {
+        RedisConnectionFactory factory = mock(RedisConnectionFactory.class);
+        when(factory.getConnection()).thenThrow(new RuntimeException("connection refused"));
+
+        RedisHealthIndicator indicator = new RedisHealthIndicator(factory);
+        Health health = indicator.health();
+
+        assertEquals("DOWN", health.getStatus().getCode());
+        assertEquals("Connection failed", health.getDetails().get("status"));
+    }
+
+    @Test
     @DisplayName("Database health should be up when connection is valid")
     void testDatabaseHealthUp() throws Exception {
         DataSource dataSource = mock(DataSource.class);
