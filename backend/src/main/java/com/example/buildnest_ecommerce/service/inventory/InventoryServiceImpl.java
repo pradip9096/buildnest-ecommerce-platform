@@ -11,8 +11,10 @@ import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.event.DomainEventPublisher;
 import com.example.buildnest_ecommerce.event.LowStockWarningEvent;
+import com.example.buildnest_ecommerce.exception.InventoryException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -81,7 +83,7 @@ public class InventoryServiceImpl implements InventoryService {
         @Override
         @Transactional
         public void deductStock(Long productId, Integer quantity) {
-                log.info("Deducting {} stock from product {}", quantity, productId);
+                log.info("Permanently deducting {} units from product {} (finalising reservation)", quantity, productId);
 
                 Product product = productRepository.findById(productId)
                                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -93,8 +95,13 @@ public class InventoryServiceImpl implements InventoryService {
                         throw new RuntimeException("Insufficient stock available");
                 }
 
+                // Finalise: decrement physical stock and clear the reservation hold
                 inventory.setQuantityInStock(inventory.getQuantityInStock() - quantity);
-                inventory.setQuantityReserved(inventory.getQuantityReserved() + quantity);
+                int newReserved = Math.max(0, inventory.getQuantityReserved() - quantity);
+                inventory.setQuantityReserved(newReserved);
+                if (newReserved == 0) {
+                        inventory.setReservationExpiresAt(null);
+                }
                 inventory.setUpdatedAt(LocalDateTime.now());
                 updateStatusBasedOnQuantity(inventory);
 
@@ -103,7 +110,7 @@ public class InventoryServiceImpl implements InventoryService {
 
         @Override
         public boolean hasStock(Long productId, Integer quantity) {
-                log.info("Checking stock availability for product {}: {}", productId, quantity);
+                log.debug("Checking available stock for product {}: requested={}", productId, quantity);
 
                 Product product = productRepository.findById(productId)
                                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -111,11 +118,86 @@ public class InventoryServiceImpl implements InventoryService {
                 Inventory inventory = inventoryRepository.findByProduct(product)
                                 .orElse(null);
 
-                if (inventory == null || inventory.getQuantityInStock() == null) {
+                if (inventory == null) {
                         return false;
                 }
 
-                return inventory.getQuantityInStock() >= quantity;
+                return inventory.getAvailableQuantity() >= quantity;
+        }
+
+        @Override
+        @Transactional
+        public void reserveStock(Long productId, Integer quantity, LocalDateTime expiresAt) {
+                log.info("Reserving {} units of product {} until {}", quantity, productId, expiresAt);
+
+                Product product = productRepository.findById(productId)
+                                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+                Inventory inventory = inventoryRepository.findByProduct(product)
+                                .orElseThrow(() -> new RuntimeException("Inventory not found for product: " + productId));
+
+                if (inventory.getAvailableQuantity() < quantity) {
+                        throw new InventoryException(
+                                "Insufficient available stock for product " + productId
+                                + ". Available: " + inventory.getAvailableQuantity()
+                                + ", requested: " + quantity);
+                }
+
+                inventory.setQuantityReserved(inventory.getQuantityReserved() + quantity);
+                inventory.setReservationExpiresAt(expiresAt);
+                inventory.setUpdatedAt(LocalDateTime.now());
+
+                try {
+                        inventoryRepository.save(inventory);
+                } catch (OptimisticLockingFailureException e) {
+                        throw new InventoryException(
+                                "Product " + productId + " was modified by a concurrent request. Please retry.");
+                }
+        }
+
+        @Override
+        @Transactional
+        public void releaseReservation(Long productId, Integer quantity) {
+                log.info("Releasing reservation of {} units for product {}", quantity, productId);
+
+                Product product = productRepository.findById(productId)
+                                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+                Inventory inventory = inventoryRepository.findByProduct(product)
+                                .orElse(null);
+
+                if (inventory == null || inventory.getQuantityReserved() == 0) {
+                        log.warn("No active reservation to release for product {}", productId);
+                        return;
+                }
+
+                int newReserved = Math.max(0, inventory.getQuantityReserved() - quantity);
+                inventory.setQuantityReserved(newReserved);
+                if (newReserved == 0) {
+                        inventory.setReservationExpiresAt(null);
+                }
+                inventory.setUpdatedAt(LocalDateTime.now());
+                inventoryRepository.save(inventory);
+        }
+
+        @Override
+        @Transactional
+        public void releaseExpiredReservations() {
+                List<Inventory> expired = inventoryRepository.findExpiredReservations(LocalDateTime.now());
+                if (expired.isEmpty()) {
+                        return;
+                }
+                log.info("Releasing expired reservations for {} inventory records", expired.size());
+                for (Inventory inventory : expired) {
+                        log.info("Releasing expired reservation: productId={}, reserved={}, expiredAt={}",
+                                inventory.getProduct().getId(),
+                                inventory.getQuantityReserved(),
+                                inventory.getReservationExpiresAt());
+                        inventory.setQuantityReserved(0);
+                        inventory.setReservationExpiresAt(null);
+                        inventory.setUpdatedAt(LocalDateTime.now());
+                        inventoryRepository.save(inventory);
+                }
         }
 
         @Override

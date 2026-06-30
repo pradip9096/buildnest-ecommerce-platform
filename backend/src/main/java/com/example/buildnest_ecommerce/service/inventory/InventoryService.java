@@ -4,6 +4,7 @@ import com.example.buildnest_ecommerce.model.dto.InventoryDTO;
 import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
 import java.util.List;
+import java.time.LocalDateTime;
 
 public interface InventoryService {
     Inventory addStock(Long productId, Integer stock);
@@ -53,4 +54,25 @@ public interface InventoryService {
      * @throws IllegalArgumentException if the resulting quantity would be negative
      */
     Inventory adjustStock(Long productId, int delta, String reason, Long changedByUserId);
+
+    /**
+     * Reserve stock for a checkout session (INV-01, #73).
+     * Increments quantityReserved and sets reservationExpiresAt.
+     * Uses optimistic locking — throws OptimisticLockingFailureException on concurrent conflict.
+     *
+     * @throws com.example.buildnest_ecommerce.exception.InventoryException if available quantity is insufficient
+     */
+    void reserveStock(Long productId, Integer quantity, LocalDateTime expiresAt);
+
+    /**
+     * Release a reservation back to the available pool (INV-01, #73).
+     * Decrements quantityReserved. Safe to call even if no reservation is held.
+     */
+    void releaseReservation(Long productId, Integer quantity);
+
+    /**
+     * Release all expired reservations (INV-01, #73).
+     * Called by the cleanup scheduler every minute.
+     */
+    void releaseExpiredReservations();
 }

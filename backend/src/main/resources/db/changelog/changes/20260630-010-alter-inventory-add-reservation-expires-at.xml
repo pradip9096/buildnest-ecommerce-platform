@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #73 (INV-01): track when a reservation expires so the cleanup job can release orphaned holds -->
+    <changeSet id="20260630-010-alter-inventory-add-reservation-expires-at" author="buildnest-team">
+        <comment>Add reservation_expires_at to inventory for timed reservation release (INV-01, #73)</comment>
+
+        <addColumn tableName="inventory">
+            <column name="reservation_expires_at" type="DATETIME">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="inventory" columnName="reservation_expires_at"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

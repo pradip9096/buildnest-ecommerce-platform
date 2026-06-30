@@ -3,6 +3,7 @@ package com.example.buildnest_ecommerce.service.checkout;
 import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import com.example.buildnest_ecommerce.model.dto.CheckoutRequestDTO;
 import com.example.buildnest_ecommerce.model.dto.CheckoutSessionDTO;
+import com.example.buildnest_ecommerce.model.dto.OrderResponseDTO;
 import com.example.buildnest_ecommerce.model.entity.*;
 import com.example.buildnest_ecommerce.repository.AddressRepository;
 import com.example.buildnest_ecommerce.repository.CartRepository;
@@ -97,6 +98,8 @@ public class CheckoutServiceImpl implements CheckoutService {
         return toDTO(session);
     }
 
+    private static final int RESERVATION_MINUTES = 15;
+
     @Override
     @Transactional
     public CheckoutSessionDTO initiatePayment(Long userId) {
@@ -111,14 +114,31 @@ public class CheckoutServiceImpl implements CheckoutService {
         Cart cart = cartRepository.findById(session.getCartId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found: " + session.getCartId()));
 
+        // Reserve inventory before creating the order. If reservation fails (e.g. concurrent
+        // checkout grabbed the last unit), the exception propagates and the cart is untouched.
+        LocalDateTime reservationExpiry = LocalDateTime.now().plusMinutes(RESERVATION_MINUTES);
+        reserveInventoryFromCart(cart, reservationExpiry);
+
         Order order = buildOrderFromCart(cart, session.getShippingCost());
-        Order savedOrder = orderRepository.save(order);
+        Order savedOrder;
+        try {
+            savedOrder = orderRepository.save(order);
+        } catch (Exception e) {
+            // Roll back reservations if the order cannot be persisted
+            releaseInventoryFromCart(cart);
+            throw e;
+        }
 
-        deductInventoryFromCart(cart);
-        cartService.clearCart(userId);
-
-        Payment payment = paymentService.initiatePayment(
-                savedOrder.getId(), savedOrder.getTotalAmount().doubleValue());
+        Payment payment;
+        try {
+            payment = paymentService.initiatePayment(
+                    savedOrder.getId(), savedOrder.getTotalAmount().doubleValue());
+        } catch (Exception e) {
+            // Payment gateway failure — release reservations so stock is available again
+            log.error("Payment initiation failed for user={}, orderId={}; releasing reservations", userId, savedOrder.getId(), e);
+            releaseInventoryFromCart(cart);
+            throw e;
+        }
 
         session.setOrderId(savedOrder.getId());
         session.setRazorpayOrderId(payment.getRazorpayOrderId());
@@ -131,13 +151,21 @@ public class CheckoutServiceImpl implements CheckoutService {
 
     @Override
     @Transactional
-    public Order confirmCheckout(Long userId) {
+    public OrderResponseDTO confirmCheckout(Long userId) {
         log.info("Checkout step 4/4 — confirmCheckout: user={}", userId);
 
         CheckoutSession session = requireSession(userId, CheckoutStep.PENDING_CONFIRM);
 
         Order order = orderRepository.findById(session.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + session.getOrderId()));
+
+        // Retrieve the cart items to finalise the permanent deduction.
+        // The cart was not cleared at initiatePayment — it is cleared here after the order is confirmed.
+        Cart cart = cartRepository.findById(session.getCartId())
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found: " + session.getCartId()));
+
+        deductInventoryFromCart(cart);
+        cartService.clearCart(userId);
 
         order.setStatus(Order.OrderStatus.CONFIRMED);
         order.setUpdatedAt(LocalDateTime.now());
@@ -146,7 +174,21 @@ public class CheckoutServiceImpl implements CheckoutService {
         checkoutSessionStore.delete(userId);
 
         log.info("Checkout confirmed for user={}, orderId={}", userId, confirmed.getId());
-        return confirmed;
+        return toOrderDTO(confirmed);
+    }
+
+    private OrderResponseDTO toOrderDTO(Order order) {
+        return new OrderResponseDTO(
+                order.getId(),
+                order.getUser().getId(),
+                order.getOrderNumber(),
+                order.getStatus().toString(),
+                order.getTotalAmount(),
+                order.getTaxAmount(),
+                order.getShippingAmount(),
+                order.getDiscountAmount(),
+                order.getCreatedAt(),
+                order.getUpdatedAt());
     }
 
     private CheckoutSession requireSession(Long userId, CheckoutStep expectedStep) {
@@ -411,8 +453,28 @@ public class CheckoutServiceImpl implements CheckoutService {
     }
 
     @Transactional
+    private void reserveInventoryFromCart(Cart cart, LocalDateTime expiresAt) {
+        log.debug("Reserving inventory for cart: {}", cart.getId());
+        for (CartItem item : cart.getItems()) {
+            inventoryService.reserveStock(item.getProduct().getId(), item.getQuantity(), expiresAt);
+            log.debug("Reserved {} units of product {}", item.getQuantity(), item.getProduct().getId());
+        }
+    }
+
+    private void releaseInventoryFromCart(Cart cart) {
+        log.debug("Releasing inventory reservations for cart: {}", cart.getId());
+        for (CartItem item : cart.getItems()) {
+            try {
+                inventoryService.releaseReservation(item.getProduct().getId(), item.getQuantity());
+            } catch (Exception ex) {
+                log.error("Failed to release reservation for product {}", item.getProduct().getId(), ex);
+            }
+        }
+    }
+
+    @Transactional
     private void deductInventoryFromCart(Cart cart) {
-        log.debug("Deducting inventory for cart: {}", cart.getId());
+        log.debug("Permanently deducting inventory for cart: {}", cart.getId());
 
         for (CartItem cartItem : cart.getItems()) {
             try {

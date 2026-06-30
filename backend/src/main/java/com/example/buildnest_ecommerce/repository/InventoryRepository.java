@@ -6,7 +6,9 @@ import com.example.buildnest_ecommerce.model.entity.Product;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,4 +47,11 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
      */
     @Query("SELECT i FROM Inventory i WHERE i.quantityInStock <= i.minimumStockLevel")
     List<Inventory> findBelowThresholdProducts();
+
+    /**
+     * Find inventory rows with an expired reservation (INV-01, #73).
+     * Used by the cleanup scheduler to release orphaned holds.
+     */
+    @Query("SELECT i FROM Inventory i WHERE i.quantityReserved > 0 AND i.reservationExpiresAt IS NOT NULL AND i.reservationExpiresAt < :now")
+    List<Inventory> findExpiredReservations(@Param("now") LocalDateTime now);
 }

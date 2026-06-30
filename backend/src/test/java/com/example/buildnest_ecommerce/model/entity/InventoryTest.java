@@ -32,6 +32,7 @@ class InventoryTest {
                 now,
                 5L,
                 now,
+                null,
                 breaches);
 
         assertEquals(10L, inventory.getId());

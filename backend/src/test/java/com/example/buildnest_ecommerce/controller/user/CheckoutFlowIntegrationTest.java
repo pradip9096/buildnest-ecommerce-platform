@@ -26,12 +26,15 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.buildnest_ecommerce.exception.PaymentProcessingException;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -163,6 +166,43 @@ class CheckoutFlowIntegrationTest {
         item.setCart(cart);
         item.setProduct(product);
         item.setQuantity(2);
+        item.setPrice(new BigDecimal("200.00"));
+        item = cartItemRepository.save(item);
+
+        cart.getItems().add(item);
+        return cart;
+    }
+
+    private Cart savedCartWithItemAndInsufficientStock() {
+        Category cat = new Category();
+        cat.setName("ChkCatLow_" + System.nanoTime());
+        cat.setIsActive(true);
+        cat = categoryRepository.save(cat);
+
+        Product product = new Product();
+        product.setName("ChkProductLow_" + System.nanoTime());
+        product.setPrice(new BigDecimal("200.00"));
+        product.setCategory(cat);
+        product.setIsActive(true);
+        product = productRepository.save(product);
+
+        Inventory inv = new Inventory();
+        inv.setProduct(product);
+        inv.setQuantityInStock(1);
+        inv.setQuantityReserved(0);
+        inv.setMinimumStockLevel(5);
+        inv.setStatus(InventoryStatus.IN_STOCK);
+        inventoryRepository.save(inv);
+
+        Cart cart = new Cart();
+        cart.setUser(regularUser);
+        cart.setItems(new ArrayList<>());
+        cart = cartRepository.save(cart);
+
+        CartItem item = new CartItem();
+        item.setCart(cart);
+        item.setProduct(product);
+        item.setQuantity(5);
         item.setPrice(new BigDecimal("200.00"));
         item = cartItemRepository.save(item);
 
@@ -371,6 +411,41 @@ class CheckoutFlowIntegrationTest {
 
     // ─── Step 4: confirmCheckout ─────────────────────────────────────────────
 
+    // ─── Step 3: initiatePayment — error paths ───────────────────────────────
+
+    @Test
+    @DisplayName("TC-CHK-009b: POST /payment — insufficient inventory → 400")
+    void initiatePayment_insufficientInventory_returns400() throws Exception {
+        // Cart item quantity=5 but only 1 unit in stock
+        Cart cart = savedCartWithItemAndInsufficientStock();
+
+        CheckoutSession session = CheckoutSession.builder()
+                .userId(userId).cartId(cart.getId()).step(CheckoutStep.PENDING_PAYMENT)
+                .addressId(1L).shippingMethodId(1L).shippingCost(new BigDecimal("50.00")).build();
+        when(checkoutSessionStore.find(userId)).thenReturn(Optional.of(session));
+
+        mockMvc.perform(post(BASE + "/payment")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("TC-CHK-009c: POST /payment — payment gateway failure → 400")
+    void initiatePayment_gatewayFailure_returns400() throws Exception {
+        Cart cart = savedCartWithItem();
+
+        CheckoutSession session = CheckoutSession.builder()
+                .userId(userId).cartId(cart.getId()).step(CheckoutStep.PENDING_PAYMENT)
+                .addressId(1L).shippingMethodId(1L).shippingCost(new BigDecimal("50.00")).build();
+        when(checkoutSessionStore.find(userId)).thenReturn(Optional.of(session));
+        when(paymentService.initiatePayment(anyLong(), anyDouble()))
+                .thenThrow(new PaymentProcessingException("Razorpay gateway unavailable"));
+
+        mockMvc.perform(post(BASE + "/payment")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isBadRequest());
+    }
+
     @Test
     @DisplayName("TC-CHK-010: POST /confirm — wrong step → 409 Conflict")
     void confirmCheckout_wrongStep_returns409() throws Exception {
@@ -386,10 +461,12 @@ class CheckoutFlowIntegrationTest {
     @Test
     @DisplayName("TC-CHK-011: POST /confirm — valid session → 200, order CONFIRMED, session deleted")
     void confirmCheckout_valid_returns200() throws Exception {
+        // savedPendingOrder creates a cart internally; retrieve it to put in the session
         Order order = savedPendingOrder();
+        Cart cart = cartRepository.findByUser(regularUser).orElseThrow();
 
         CheckoutSession session = CheckoutSession.builder()
-                .userId(userId).step(CheckoutStep.PENDING_CONFIRM).orderId(order.getId()).build();
+                .userId(userId).cartId(cart.getId()).step(CheckoutStep.PENDING_CONFIRM).orderId(order.getId()).build();
         when(checkoutSessionStore.find(userId)).thenReturn(Optional.of(session));
 
         mockMvc.perform(post(BASE + "/confirm")
@@ -400,6 +477,63 @@ class CheckoutFlowIntegrationTest {
         verify(checkoutSessionStore).delete(userId);
 
         Order confirmed = orderRepository.findById(order.getId()).orElseThrow();
+        org.junit.jupiter.api.Assertions.assertEquals(OrderStatus.CONFIRMED, confirmed.getStatus());
+    }
+
+    // ─── End-to-end happy path ───────────────────────────────────────────────
+
+    @Test
+    @DisplayName("TC-CHK-012: full checkout flow address→shipping→payment→confirm → order CONFIRMED in DB")
+    void fullCheckoutFlow_happyPath_orderConfirmed() throws Exception {
+        Address address = savedAddress();
+        ShippingMethod method = savedShippingMethod();
+        Cart cart = savedCartWithItem();
+
+        // Stateful mock: tracks the session across all four steps
+        AtomicReference<CheckoutSession> sessionRef = new AtomicReference<>();
+        org.mockito.Mockito.doAnswer(inv -> { sessionRef.set(inv.getArgument(1)); return null; })
+                .when(checkoutSessionStore).save(anyLong(), any(CheckoutSession.class));
+        when(checkoutSessionStore.find(userId))
+                .thenAnswer(inv -> Optional.ofNullable(sessionRef.get()));
+
+        Payment mockPayment = new Payment();
+        mockPayment.setId(1L);
+        mockPayment.setRazorpayOrderId("rzp_e2e_order_" + System.nanoTime());
+        mockPayment.setStatus("PENDING");
+        when(paymentService.initiatePayment(anyLong(), anyDouble())).thenReturn(mockPayment);
+
+        // Step 1: address
+        mockMvc.perform(post(BASE + "/address")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"addressId\": %d}".formatted(address.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.step", is("PENDING_SHIPPING")));
+
+        // Step 2: shipping
+        mockMvc.perform(post(BASE + "/shipping")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"shippingMethodId\": %d}".formatted(method.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.step", is("PENDING_PAYMENT")));
+
+        // Step 3: initiate payment
+        mockMvc.perform(post(BASE + "/payment")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.step", is("PENDING_CONFIRM")));
+
+        Long orderId = sessionRef.get().getOrderId();
+        org.junit.jupiter.api.Assertions.assertNotNull(orderId, "Order should have been created at payment step");
+
+        // Step 4: confirm
+        mockMvc.perform(post(BASE + "/confirm")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success", is(true)));
+
+        Order confirmed = orderRepository.findById(orderId).orElseThrow();
         org.junit.jupiter.api.Assertions.assertEquals(OrderStatus.CONFIRMED, confirmed.getStatus());
     }
 }

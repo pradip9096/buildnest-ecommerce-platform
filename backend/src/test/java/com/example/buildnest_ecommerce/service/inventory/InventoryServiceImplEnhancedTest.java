@@ -113,17 +113,17 @@ class InventoryServiceImplEnhancedTest {
     }
 
     @Test
-    @DisplayName("Should verify deductStock increments reserved quantity")
+    @DisplayName("deductStock clears the reservation hold and decrements quantityInStock")
     void testDeductStockReserveIncrement() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
         Inventory inventory = buildInventory(product, 10, 2);
-        inventory.setQuantityReserved(0);
+        inventory.setQuantityReserved(3); // simulate a prior reservation
         when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
 
         inventoryService.deductStock(1L, 3);
 
-        assertEquals(3, inventory.getQuantityReserved());
+        assertEquals(0, inventory.getQuantityReserved()); // reservation cleared
         assertEquals(7, inventory.getQuantityInStock());
     }
 

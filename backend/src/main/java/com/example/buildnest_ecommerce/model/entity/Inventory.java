@@ -61,6 +61,9 @@ public class Inventory {
     @Column(name = "last_threshold_breach")
     private LocalDateTime lastThresholdBreach;
 
+    @Column(name = "reservation_expires_at")
+    private LocalDateTime reservationExpiresAt;
+
     @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, fetch = jakarta.persistence.FetchType.LAZY, orphanRemoval = true)
     private List<InventoryThresholdBreachEvent> thresholdBreaches = new ArrayList<>();
 

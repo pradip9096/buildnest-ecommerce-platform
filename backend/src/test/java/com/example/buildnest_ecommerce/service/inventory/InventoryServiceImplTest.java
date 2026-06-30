@@ -126,16 +126,17 @@ class InventoryServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should deduct stock and reserve")
+    @DisplayName("deductStock decrements quantityInStock and clears any existing reservation")
     void testDeductStock() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
         Inventory inventory = buildInventory(product, 5, 2);
+        inventory.setQuantityReserved(2); // simulate a prior reservation
         when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
 
         inventoryService.deductStock(1L, 2);
         assertEquals(3, inventory.getQuantityInStock());
-        assertEquals(2, inventory.getQuantityReserved());
+        assertEquals(0, inventory.getQuantityReserved()); // reservation cleared
         verify(inventoryRepository).save(inventory);
     }
 
@@ -414,18 +415,18 @@ class InventoryServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should verify deductStock increments reserved quantity correctly")
+    @DisplayName("deductStock decrements quantityInStock and clears the reservation hold")
     void testDeductStockIncrementsReserved() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         Inventory inventory = buildInventory(product, 10, 2);
-        inventory.setQuantityReserved(0);
+        inventory.setQuantityReserved(3); // simulate a prior reservation of 3
         when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
         when(inventoryRepository.save(any(Inventory.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         inventoryService.deductStock(1L, 3);
 
         assertEquals(7, inventory.getQuantityInStock());
-        assertEquals(3, inventory.getQuantityReserved());
+        assertEquals(0, inventory.getQuantityReserved()); // reservation cleared
         verify(inventoryRepository).save(any(Inventory.class));
     }
 
