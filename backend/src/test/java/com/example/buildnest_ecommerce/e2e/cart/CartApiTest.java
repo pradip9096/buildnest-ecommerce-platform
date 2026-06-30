@@ -4,10 +4,12 @@ import com.example.buildnest_ecommerce.e2e.BaseApiTest;
 import com.example.buildnest_ecommerce.model.payload.AddItemRequest;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import io.restassured.RestAssured;
 import static org.hamcrest.Matchers.*;
 
+@Tag("e2e")
 public class CartApiTest extends BaseApiTest {
 
         private String token;
