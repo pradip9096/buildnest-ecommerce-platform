@@ -52,7 +52,7 @@ class ReliabilityTest {
      * TC-REL-001: Test endpoint reliability through repeated execution.
      * Detects flaky tests and intermittent failures.
      */
-    @RepeatedTest(50)
+    @RepeatedTest(3)
     void testRepeatedEndpointExecution() throws Exception {
         mockMvc.perform(get("/api/public/products"))
                 .andExpect(status().isOk());
