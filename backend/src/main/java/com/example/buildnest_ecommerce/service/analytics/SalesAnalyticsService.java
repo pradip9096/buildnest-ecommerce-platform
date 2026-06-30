@@ -2,41 +2,22 @@ package com.example.buildnest_ecommerce.service.analytics;
 
 import com.example.buildnest_ecommerce.model.dto.SalesDashboardDTO;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/**
- * Sales Analytics Service Interface
- * Provides business intelligence and analytics data
- */
 public interface SalesAnalyticsService {
 
-    /**
-     * Get comprehensive sales dashboard data
-     */
     SalesDashboardDTO getDashboard(LocalDate startDate, LocalDate endDate);
 
-    /**
-     * Get daily revenue
-     */
-    Double getDailyRevenue(LocalDate date);
+    BigDecimal getDailyRevenue(LocalDate date);
 
-    /**
-     * Get conversion rate (orders/visitors)
-     */
+    /** Conversion rate as a percentage (0–100). Approximate: no visitor-tracking data available. */
     Double getConversionRate(LocalDate startDate, LocalDate endDate);
 
-    /**
-     * Get cart abandonment rate
-     */
+    /** Cart abandonment rate as a percentage (0–100). Approximate: no cart-event tracking data available. */
     Double getCartAbandonmentRate(LocalDate startDate, LocalDate endDate);
 
-    /**
-     * Get customer lifetime value
-     */
-    Double getCustomerLifetimeValue(Long userId);
+    BigDecimal getCustomerLifetimeValue(Long userId);
 
-    /**
-     * Get average order value
-     */
-    Double getAverageOrderValue(LocalDate startDate, LocalDate endDate);
+    BigDecimal getAverageOrderValue(LocalDate startDate, LocalDate endDate);
 }

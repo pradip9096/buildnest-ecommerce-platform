@@ -6,6 +6,7 @@ import com.example.buildnest_ecommerce.repository.OrderRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,17 +16,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-/**
- * Sales Analytics Service Implementation
- * Provides comprehensive business intelligence and analytics
- * Implements Section 6.2 - Business Intelligence Features from
- * EXHAUSTIVE_RECOMMENDATION_REPORT
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -43,19 +37,21 @@ public class SalesAnalyticsServiceImpl implements SalesAnalyticsService {
         LocalDate weekStart = today.minusDays(7);
         LocalDate monthStart = today.withDayOfMonth(1);
         LocalDate yearStart = today.withDayOfYear(1);
+        LocalDate tomorrow = today.plusDays(1);
 
         return SalesDashboardDTO.builder()
-                .dailyRevenue(calculateRevenue(today, today.plusDays(1)))
-                .weeklyRevenue(calculateRevenue(weekStart, today.plusDays(1)))
-                .monthlyRevenue(calculateRevenue(monthStart, today.plusDays(1)))
-                .yearlyRevenue(calculateRevenue(yearStart, today.plusDays(1)))
-                .dailyOrders(countOrders(today, today.plusDays(1)))
-                .weeklyOrders(countOrders(weekStart, today.plusDays(1)))
-                .monthlyOrders(countOrders(monthStart, today.plusDays(1)))
+                .dailyRevenue(revenueForRange(today, tomorrow))
+                .weeklyRevenue(revenueForRange(weekStart, tomorrow))
+                .monthlyRevenue(revenueForRange(monthStart, tomorrow))
+                .yearlyRevenue(revenueForRange(yearStart, tomorrow))
+                .dailyOrders(orderRepository.countOrdersBetween(today.atStartOfDay(), tomorrow.atStartOfDay()))
+                .weeklyOrders(orderRepository.countOrdersBetween(weekStart.atStartOfDay(), tomorrow.atStartOfDay()))
+                .monthlyOrders(orderRepository.countOrdersBetween(monthStart.atStartOfDay(), tomorrow.atStartOfDay()))
                 .totalOrders(orderRepository.count())
                 .averageOrderValue(getAverageOrderValue(startDate, endDate))
                 .totalCustomers(userRepository.count())
-                .newCustomersThisMonth(countNewCustomers(monthStart, today.plusDays(1)))
+                .newCustomersThisMonth(userRepository.countNewUsersBetween(
+                        monthStart.atStartOfDay(), tomorrow.atStartOfDay()))
                 .customerRetentionRate(calculateRetentionRate())
                 .topSellingProducts(getTopSellingProducts(startDate, endDate, 10))
                 .revenueByCategory(getRevenueByCategory(startDate, endDate))
@@ -68,152 +64,118 @@ public class SalesAnalyticsServiceImpl implements SalesAnalyticsService {
     }
 
     @Override
-    public Double getDailyRevenue(LocalDate date) {
-        log.debug("Calculating revenue for date: {}", date);
-        BigDecimal revenue = calculateRevenue(date, date.plusDays(1));
-        return revenue.doubleValue();
+    public BigDecimal getDailyRevenue(LocalDate date) {
+        return revenueForRange(date, date.plusDays(1));
     }
 
     @Override
     public Double getConversionRate(LocalDate startDate, LocalDate endDate) {
-        log.debug("Calculating conversion rate for period {} to {}", startDate, endDate);
-
-        // This would typically integrate with analytics service for visitor data
-        // For now, using a simplified calculation
-        long orders = countOrders(startDate, endDate);
-        long visitors = orders * 5; // Simplified: assume 5 visitors per order
-
-        return visitors > 0 ? (double) orders / visitors * 100 : 0.0;
+        // No visitor-tracking data exists; use order count as a proxy (20% assumed rate).
+        long orders = orderRepository.countOrdersBetween(
+                startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
+        if (orders == 0) {
+            return 0.0;
+        }
+        long estimatedVisitors = orders * 5;
+        return (double) orders / estimatedVisitors * 100;
     }
 
     @Override
     public Double getCartAbandonmentRate(LocalDate startDate, LocalDate endDate) {
-        log.debug("Calculating cart abandonment rate for period {} to {}", startDate, endDate);
-
-        // Simplified calculation - in real scenario would track cart creation vs
-        // completion
-        long completedOrders = countOrders(startDate, endDate);
-        long abandonedCarts = completedOrders * 2; // Simplified: assume 2 abandoned for every completed
-        long totalCarts = completedOrders + abandonedCarts;
-
-        return totalCarts > 0 ? (double) abandonedCarts / totalCarts * 100 : 0.0;
-    }
-
-    @Override
-    public Double getCustomerLifetimeValue(Long userId) {
-        log.debug("Calculating lifetime value for user {}", userId);
-
-        BigDecimal totalSpent = orderRepository.findByUserId(userId).stream()
-                .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
-                .map(order -> order.getTotalAmount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return totalSpent.doubleValue();
-    }
-
-    @Override
-    public Double getAverageOrderValue(LocalDate startDate, LocalDate endDate) {
-        log.debug("Calculating average order value for period {} to {}", startDate, endDate);
-
-        LocalDateTime start = startDate.atStartOfDay();
-        LocalDateTime end = endDate.atTime(23, 59, 59);
-
-        List<BigDecimal> orderValues = orderRepository.findAll().stream()
-                .filter(order -> !order.getCreatedAt().isBefore(start) && !order.getCreatedAt().isAfter(end))
-                .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
-                .map(order -> order.getTotalAmount())
-                .collect(Collectors.toList());
-
-        if (orderValues.isEmpty()) {
+        // Cart entity has no creation timestamp; use completed-order count as a proxy.
+        // Assumes a 2:1 abandonment-to-completion ratio until cart-event tracking is added.
+        long completedOrders = orderRepository.countOrdersBetween(
+                startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
+        if (completedOrders == 0) {
             return 0.0;
         }
+        long abandonedCarts = completedOrders * 2;
+        long totalCarts = completedOrders + abandonedCarts;
+        return (double) abandonedCarts / totalCarts * 100;
+    }
 
-        BigDecimal sum = orderValues.stream()
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    @Override
+    public BigDecimal getCustomerLifetimeValue(Long userId) {
+        return orderRepository.sumRevenueByUser(userId, OrderStatus.DELIVERED);
+    }
 
-        return sum.divide(BigDecimal.valueOf(orderValues.size()), 2, RoundingMode.HALF_UP)
+    @Override
+    public BigDecimal getAverageOrderValue(LocalDate startDate, LocalDate endDate) {
+        BigDecimal avg = orderRepository.avgOrderValueBetween(
+                startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay(),
+                OrderStatus.DELIVERED);
+        return avg != null ? avg.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+    }
+
+    // --- private helpers ---
+
+    private BigDecimal revenueForRange(LocalDate from, LocalDate toExclusive) {
+        return orderRepository.sumRevenueBetween(
+                from.atStartOfDay(), toExclusive.atStartOfDay(), OrderStatus.DELIVERED);
+    }
+
+    private Double calculateRetentionRate() {
+        long total = orderRepository.countDistinctCustomersByStatus(OrderStatus.DELIVERED);
+        if (total == 0) {
+            return 0.0;
+        }
+        long returning = orderRepository.countReturningCustomers(OrderStatus.DELIVERED);
+        return BigDecimal.valueOf(returning)
+                .divide(BigDecimal.valueOf(total), 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(2, RoundingMode.HALF_UP)
                 .doubleValue();
     }
 
-    /**
-     * Calculate revenue for a date range
-     */
-    private BigDecimal calculateRevenue(LocalDate startDate, LocalDate endDate) {
-        LocalDateTime start = startDate.atStartOfDay();
-        LocalDateTime end = endDate.atTime(23, 59, 59);
-
-        return orderRepository.findAll().stream()
-                .filter(order -> !order.getCreatedAt().isBefore(start) && !order.getCreatedAt().isAfter(end))
-                .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
-                .map(order -> order.getTotalAmount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    /**
-     * Count orders for a date range
-     */
-    private Long countOrders(LocalDate startDate, LocalDate endDate) {
-        LocalDateTime start = startDate.atStartOfDay();
-        LocalDateTime end = endDate.atTime(23, 59, 59);
-
-        return orderRepository.findAll().stream()
-                .filter(order -> !order.getCreatedAt().isBefore(start) && !order.getCreatedAt().isAfter(end))
-                .count();
-    }
-
-    /**
-     * Count new customers in date range
-     */
-    private Long countNewCustomers(LocalDate startDate, LocalDate endDate) {
-        LocalDateTime start = startDate.atStartOfDay();
-        LocalDateTime end = endDate.atTime(23, 59, 59);
-
-        return userRepository.findAll().stream()
-                .filter(user -> !user.getCreatedAt().isBefore(start) && !user.getCreatedAt().isAfter(end))
-                .count();
-    }
-
-    /**
-     * Calculate customer retention rate
-     */
-    private Double calculateRetentionRate() {
-        // Simplified calculation - would need more sophisticated logic in production
-        return 65.0; // Placeholder percentage
-    }
-
-    /**
-     * Get top selling products
-     */
     private List<SalesDashboardDTO.TopProductDTO> getTopSellingProducts(
             LocalDate startDate, LocalDate endDate, int limit) {
 
-        // This would be implemented with proper aggregation query
-        // For now, returning empty list as placeholder
-        return new ArrayList<>();
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = endDate.plusDays(1).atStartOfDay();
+
+        List<Object[]> rows = orderRepository.findTopSellingProducts(
+                start, end, OrderStatus.DELIVERED, PageRequest.of(0, limit));
+
+        List<SalesDashboardDTO.TopProductDTO> result = new ArrayList<>(rows.size());
+        for (Object[] row : rows) {
+            result.add(SalesDashboardDTO.TopProductDTO.builder()
+                    .productId((Long) row[0])
+                    .productName((String) row[1])
+                    .unitsSold(((Number) row[2]).longValue())
+                    .revenue((BigDecimal) row[3])
+                    .build());
+        }
+        return result;
     }
 
-    /**
-     * Get revenue by category
-     */
     private Map<String, BigDecimal> getRevenueByCategory(LocalDate startDate, LocalDate endDate) {
-        // This would be implemented with proper aggregation query
-        // For now, returning empty map as placeholder
-        return new HashMap<>();
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = endDate.plusDays(1).atStartOfDay();
+
+        List<Object[]> rows = orderRepository.sumRevenueGroupedByCategory(
+                start, end, OrderStatus.DELIVERED);
+
+        Map<String, BigDecimal> result = new LinkedHashMap<>();
+        for (Object[] row : rows) {
+            String categoryName = row[0] != null ? (String) row[0] : "Uncategorised";
+            result.put(categoryName, (BigDecimal) row[1]);
+        }
+        return result;
     }
 
-    /**
-     * Get revenue trend data
-     */
     private List<SalesDashboardDTO.RevenueTrendPoint> getRevenueTrend(
             LocalDate startDate, LocalDate endDate) {
 
-        List<SalesDashboardDTO.RevenueTrendPoint> trend = new ArrayList<>();
-        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        long days = ChronoUnit.DAYS.between(startDate, endDate);
+        List<SalesDashboardDTO.RevenueTrendPoint> trend = new ArrayList<>((int) days + 1);
 
-        for (int i = 0; i <= daysBetween; i++) {
+        for (long i = 0; i <= days; i++) {
             LocalDate date = startDate.plusDays(i);
-            BigDecimal revenue = calculateRevenue(date, date.plusDays(1));
-            Long orders = countOrders(date, date.plusDays(1));
+            LocalDateTime dayStart = date.atStartOfDay();
+            LocalDateTime dayEnd = date.plusDays(1).atStartOfDay();
+
+            BigDecimal revenue = orderRepository.sumRevenueBetween(dayStart, dayEnd, OrderStatus.DELIVERED);
+            Long orders = orderRepository.countOrdersBetween(dayStart, dayEnd);
 
             trend.add(SalesDashboardDTO.RevenueTrendPoint.builder()
                     .date(date)
@@ -221,7 +183,6 @@ public class SalesAnalyticsServiceImpl implements SalesAnalyticsService {
                     .orderCount(orders)
                     .build());
         }
-
         return trend;
     }
 }

@@ -35,7 +35,7 @@ public class SalesDashboardDTO {
     private Long totalOrders;
 
     // Customer Metrics
-    private Double averageOrderValue;
+    private BigDecimal averageOrderValue;
     private Long totalCustomers;
     private Long newCustomersThisMonth;
     private Double customerRetentionRate;

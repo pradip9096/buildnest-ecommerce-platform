@@ -31,4 +31,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "(SELECT DISTINCT o.user.id FROM Order o " +
             "GROUP BY o.user.id HAVING SUM(o.totalAmount) >= :minValue)")
     List<User> findUsersWithHighOrderValue(@Param("minValue") BigDecimal minValue);
+
+    /**
+     * Count users registered in [start, end) — used for new-customer metrics.
+     */
+    @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :start AND u.createdAt < :end")
+    Long countNewUsersBetween(
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
 }

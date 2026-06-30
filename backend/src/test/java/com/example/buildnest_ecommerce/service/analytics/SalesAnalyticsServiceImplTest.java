@@ -2,189 +2,234 @@ package com.example.buildnest_ecommerce.service.analytics;
 
 import com.example.buildnest_ecommerce.model.dto.SalesDashboardDTO;
 import com.example.buildnest_ecommerce.model.entity.Order;
+import com.example.buildnest_ecommerce.model.entity.Order.OrderStatus;
 import com.example.buildnest_ecommerce.model.entity.User;
 import com.example.buildnest_ecommerce.repository.OrderRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-@DisplayName("SalesAnalyticsServiceImpl tests")
+@DataJpaTest
+@ActiveProfiles("test")
+@Transactional
+@DisplayName("SalesAnalyticsServiceImpl integration tests")
 class SalesAnalyticsServiceImplTest {
 
-    @Mock
+    @Autowired
     private OrderRepository orderRepository;
 
-    @Mock
+    @Autowired
     private UserRepository userRepository;
 
-    @InjectMocks
-    private SalesAnalyticsServiceImpl analyticsService;
+    private SalesAnalyticsServiceImpl service;
+
+    private User user;
+
+    @BeforeEach
+    void setUp() {
+        service = new SalesAnalyticsServiceImpl(orderRepository, userRepository);
+
+        user = new User();
+        user.setUsername("analytics_user");
+        user.setEmail("analytics@example.com");
+        user.setPassword("hashed");
+        user.setFirstName("Ana");
+        user.setLastName("Lytic");
+        user.setIsActive(true);
+        user.setCreatedAt(LocalDateTime.now());
+        user = userRepository.save(user);
+    }
+
+    private Order savedOrder(OrderStatus status, BigDecimal amount, LocalDateTime createdAt) {
+        Order order = new Order();
+        order.setUser(user);
+        order.setOrderNumber("ORD-" + System.nanoTime());
+        order.setStatus(status);
+        order.setTotalAmount(amount);
+        order.setDiscountAmount(BigDecimal.ZERO);
+        order.setTaxAmount(BigDecimal.ZERO);
+        order.setShippingAmount(BigDecimal.ZERO);
+        order.setIsDeleted(false);
+        order.setCreatedAt(createdAt);
+        return orderRepository.save(order);
+    }
+
+    // --- getDailyRevenue ---
 
     @Test
-    @DisplayName("Should calculate dashboard metrics")
-    void testGetDashboard() {
-        Order delivered = new Order();
-        delivered.setStatus(Order.OrderStatus.DELIVERED);
-        delivered.setTotalAmount(new BigDecimal("100.00"));
-        delivered.setCreatedAt(LocalDateTime.now().minusDays(1));
+    @DisplayName("getDailyRevenue sums only DELIVERED orders for the given date")
+    void getDailyRevenue_sumsDeliveredOrdersOnly() {
+        LocalDateTime today = LocalDate.now().atStartOfDay();
+        savedOrder(OrderStatus.DELIVERED, new BigDecimal("100.00"), today);
+        savedOrder(OrderStatus.DELIVERED, new BigDecimal("50.00"), today);
+        savedOrder(OrderStatus.PENDING, new BigDecimal("200.00"), today);  // excluded
 
-        Order pending = new Order();
-        pending.setStatus(Order.OrderStatus.PENDING);
-        pending.setTotalAmount(new BigDecimal("50.00"));
-        pending.setCreatedAt(LocalDateTime.now());
+        BigDecimal revenue = service.getDailyRevenue(LocalDate.now());
 
-        User user = new User();
-        user.setCreatedAt(LocalDateTime.now().minusDays(2));
-
-        when(orderRepository.findAll()).thenReturn(List.of(delivered, pending));
-        when(orderRepository.count()).thenReturn(2L);
-        when(userRepository.findAll()).thenReturn(List.of(user));
-        when(userRepository.count()).thenReturn(1L);
-
-        LocalDate start = LocalDate.now().minusDays(7);
-        LocalDate end = LocalDate.now();
-        SalesDashboardDTO dashboard = analyticsService.getDashboard(start, end);
-
-        assertNotNull(dashboard);
-        assertEquals(2L, dashboard.getTotalOrders());
-        assertEquals(1L, dashboard.getTotalCustomers());
-        assertTrue(dashboard.getDailyRevenue().compareTo(BigDecimal.ZERO) >= 0);
+        assertEquals(0, new BigDecimal("150.00").compareTo(revenue));
     }
 
     @Test
-    @DisplayName("Should calculate conversion rate")
-    void testConversionRate() {
-        when(orderRepository.findAll()).thenReturn(List.of());
-
-        Double rate = analyticsService.getConversionRate(LocalDate.now().minusDays(3), LocalDate.now());
-        assertEquals(0.0, rate);
+    @DisplayName("getDailyRevenue returns zero when no orders exist")
+    void getDailyRevenue_returnsZeroWhenNoOrders() {
+        BigDecimal revenue = service.getDailyRevenue(LocalDate.now());
+        assertEquals(0, BigDecimal.ZERO.compareTo(revenue));
     }
 
     @Test
-    @DisplayName("Should calculate conversion rate with orders")
-    void testConversionRateWithOrders() {
-        Order delivered = new Order();
-        delivered.setStatus(Order.OrderStatus.DELIVERED);
-        delivered.setCreatedAt(LocalDateTime.now().minusDays(1));
+    @DisplayName("getDailyRevenue excludes orders from other dates")
+    void getDailyRevenue_excludesOtherDates() {
+        savedOrder(OrderStatus.DELIVERED, new BigDecimal("300.00"),
+                LocalDate.now().minusDays(2).atStartOfDay());
 
-        Order delivered2 = new Order();
-        delivered2.setStatus(Order.OrderStatus.DELIVERED);
-        delivered2.setCreatedAt(LocalDateTime.now().minusDays(1));
+        BigDecimal revenue = service.getDailyRevenue(LocalDate.now());
+        assertEquals(0, BigDecimal.ZERO.compareTo(revenue));
+    }
 
-        when(orderRepository.findAll()).thenReturn(List.of(delivered, delivered2));
+    // --- getAverageOrderValue ---
 
-        Double rate = analyticsService.getConversionRate(LocalDate.now().minusDays(3), LocalDate.now());
+    @Test
+    @DisplayName("getAverageOrderValue computes mean of DELIVERED orders in range")
+    void getAverageOrderValue_computesMeanOfDeliveredOrders() {
+        LocalDateTime recent = LocalDate.now().minusDays(1).atStartOfDay();
+        savedOrder(OrderStatus.DELIVERED, new BigDecimal("100.00"), recent);
+        savedOrder(OrderStatus.DELIVERED, new BigDecimal("200.00"), recent);
+        savedOrder(OrderStatus.PENDING, new BigDecimal("999.00"), recent);  // excluded
+
+        BigDecimal avg = service.getAverageOrderValue(
+                LocalDate.now().minusDays(7), LocalDate.now());
+
+        assertEquals(0, new BigDecimal("150.00").compareTo(avg));
+    }
+
+    @Test
+    @DisplayName("getAverageOrderValue returns zero when no qualifying orders exist")
+    void getAverageOrderValue_returnsZeroWhenNoOrders() {
+        BigDecimal avg = service.getAverageOrderValue(
+                LocalDate.now().minusDays(7), LocalDate.now());
+        assertEquals(0, BigDecimal.ZERO.compareTo(avg));
+    }
+
+    // --- getCustomerLifetimeValue ---
+
+    @Test
+    @DisplayName("getCustomerLifetimeValue sums only DELIVERED orders for the user")
+    void getCustomerLifetimeValue_sumsDeliveredForUser() {
+        savedOrder(OrderStatus.DELIVERED, new BigDecimal("500.00"), LocalDateTime.now());
+        savedOrder(OrderStatus.DELIVERED, new BigDecimal("250.00"), LocalDateTime.now());
+        savedOrder(OrderStatus.CANCELLED, new BigDecimal("100.00"), LocalDateTime.now()); // excluded
+
+        BigDecimal ltv = service.getCustomerLifetimeValue(user.getId());
+
+        assertEquals(0, new BigDecimal("750.00").compareTo(ltv));
+    }
+
+    @Test
+    @DisplayName("getCustomerLifetimeValue returns zero for user with no delivered orders")
+    void getCustomerLifetimeValue_returnsZeroWithNoDelivered() {
+        savedOrder(OrderStatus.PENDING, new BigDecimal("100.00"), LocalDateTime.now());
+
+        BigDecimal ltv = service.getCustomerLifetimeValue(user.getId());
+        assertEquals(0, BigDecimal.ZERO.compareTo(ltv));
+    }
+
+    // --- getConversionRate ---
+
+    @Test
+    @DisplayName("getConversionRate returns 20 percent when orders exist")
+    void getConversionRate_returns20PercentProxy() {
+        savedOrder(OrderStatus.DELIVERED, new BigDecimal("100.00"),
+                LocalDate.now().minusDays(1).atStartOfDay());
+
+        Double rate = service.getConversionRate(
+                LocalDate.now().minusDays(7), LocalDate.now());
+
         assertEquals(20.0, rate);
     }
 
     @Test
-    @DisplayName("Should calculate cart abandonment rate with zero orders")
-    void testCartAbandonmentRateNoOrders() {
-        when(orderRepository.findAll()).thenReturn(List.of());
+    @DisplayName("getConversionRate returns zero when no orders exist")
+    void getConversionRate_returnsZeroWhenNoOrders() {
+        Double rate = service.getConversionRate(
+                LocalDate.now().minusDays(7), LocalDate.now());
+        assertEquals(0.0, rate);
+    }
 
-        Double rate = analyticsService.getCartAbandonmentRate(LocalDate.now().minusDays(3), LocalDate.now());
+    // --- getCartAbandonmentRate ---
+
+    @Test
+    @DisplayName("getCartAbandonmentRate returns zero when no orders exist")
+    void getCartAbandonmentRate_returnsZeroWhenNoOrders() {
+        Double rate = service.getCartAbandonmentRate(
+                LocalDate.now().minusDays(7), LocalDate.now());
         assertEquals(0.0, rate);
     }
 
     @Test
-    @DisplayName("Should calculate cart abandonment rate with orders")
-    void testCartAbandonmentRateWithOrders() {
-        Order delivered = new Order();
-        delivered.setStatus(Order.OrderStatus.DELIVERED);
-        delivered.setCreatedAt(LocalDateTime.now().minusDays(1));
+    @DisplayName("getCartAbandonmentRate returns ~66.67 percent with completed orders")
+    void getCartAbandonmentRate_returnsProxyRateWithOrders() {
+        savedOrder(OrderStatus.DELIVERED, new BigDecimal("100.00"),
+                LocalDate.now().minusDays(1).atStartOfDay());
+        savedOrder(OrderStatus.DELIVERED, new BigDecimal("100.00"),
+                LocalDate.now().minusDays(1).atStartOfDay());
 
-        Order delivered2 = new Order();
-        delivered2.setStatus(Order.OrderStatus.DELIVERED);
-        delivered2.setCreatedAt(LocalDateTime.now().minusDays(1));
+        Double rate = service.getCartAbandonmentRate(
+                LocalDate.now().minusDays(7), LocalDate.now());
 
-        when(orderRepository.findAll()).thenReturn(List.of(delivered, delivered2));
-
-        Double rate = analyticsService.getCartAbandonmentRate(LocalDate.now().minusDays(3), LocalDate.now());
-        assertTrue(rate > 66.6 && rate < 66.7);
+        assertTrue(rate > 66.6 && rate < 66.8,
+                "Expected ~66.67% abandonment proxy, got: " + rate);
     }
 
-    @Test
-    @DisplayName("Should calculate customer lifetime value")
-    void testCustomerLifetimeValue() {
-        Order delivered = new Order();
-        delivered.setStatus(Order.OrderStatus.DELIVERED);
-        delivered.setTotalAmount(new BigDecimal("100.00"));
-
-        Order pending = new Order();
-        pending.setStatus(Order.OrderStatus.PENDING);
-        pending.setTotalAmount(new BigDecimal("50.00"));
-
-        when(orderRepository.findByUserId(1L)).thenReturn(List.of(delivered, pending));
-
-        Double value = analyticsService.getCustomerLifetimeValue(1L);
-        assertEquals(100.00, value);
-    }
+    // --- getDashboard ---
 
     @Test
-    @DisplayName("Should calculate average order value")
-    void testAverageOrderValue() {
-        Order delivered = new Order();
-        delivered.setStatus(Order.OrderStatus.DELIVERED);
-        delivered.setTotalAmount(new BigDecimal("120.00"));
-        delivered.setCreatedAt(LocalDateTime.now());
+    @DisplayName("getDashboard populates totalOrders and totalCustomers from repository counts")
+    void getDashboard_populatesTotals() {
+        savedOrder(OrderStatus.DELIVERED, new BigDecimal("100.00"), LocalDateTime.now());
+        savedOrder(OrderStatus.PENDING, new BigDecimal("50.00"), LocalDateTime.now());
 
-        when(orderRepository.findAll()).thenReturn(List.of(delivered));
+        SalesDashboardDTO dashboard = service.getDashboard(
+                LocalDate.now().minusDays(7), LocalDate.now());
 
-        Double avg = analyticsService.getAverageOrderValue(LocalDate.now().minusDays(1), LocalDate.now());
-        assertEquals(120.00, avg);
-    }
-
-    @Test
-    @DisplayName("Should return zero average order value when no delivered orders")
-    void testAverageOrderValueNoOrders() {
-        when(orderRepository.findAll()).thenReturn(List.of());
-
-        Double avg = analyticsService.getAverageOrderValue(LocalDate.now().minusDays(1), LocalDate.now());
-        assertEquals(0.0, avg);
-    }
-
-    @Test
-    @DisplayName("Should calculate daily revenue")
-    void testGetDailyRevenue() {
-        Order delivered = new Order();
-        delivered.setStatus(Order.OrderStatus.DELIVERED);
-        delivered.setTotalAmount(new BigDecimal("75.00"));
-        delivered.setCreatedAt(LocalDateTime.now());
-
-        when(orderRepository.findAll()).thenReturn(List.of(delivered));
-
-        Double revenue = analyticsService.getDailyRevenue(LocalDate.now());
-        assertEquals(75.00, revenue);
-    }
-
-    @Test
-    @DisplayName("Should build revenue trend for date range")
-    void testGetRevenueTrend() {
-        Order delivered = new Order();
-        delivered.setStatus(Order.OrderStatus.DELIVERED);
-        delivered.setTotalAmount(new BigDecimal("50.00"));
-        delivered.setCreatedAt(LocalDateTime.now().minusDays(1));
-
-        when(orderRepository.findAll()).thenReturn(List.of(delivered));
-
-        LocalDate start = LocalDate.now().minusDays(1);
-        LocalDate end = LocalDate.now();
-        SalesDashboardDTO dashboard = analyticsService.getDashboard(start, end);
-
+        assertNotNull(dashboard);
+        assertEquals(2L, dashboard.getTotalOrders());
+        assertEquals(1L, dashboard.getTotalCustomers());
         assertNotNull(dashboard.getRevenueTrend());
-        assertEquals(2, dashboard.getRevenueTrend().size());
+        assertEquals(8, dashboard.getRevenueTrend().size());  // 7 days + today = 8 points
+    }
+
+    @Test
+    @DisplayName("getDashboard revenue metrics are non-negative")
+    void getDashboard_revenueMetricsAreNonNegative() {
+        SalesDashboardDTO dashboard = service.getDashboard(
+                LocalDate.now().minusDays(30), LocalDate.now());
+
+        assertTrue(dashboard.getDailyRevenue().compareTo(BigDecimal.ZERO) >= 0);
+        assertTrue(dashboard.getWeeklyRevenue().compareTo(BigDecimal.ZERO) >= 0);
+        assertTrue(dashboard.getMonthlyRevenue().compareTo(BigDecimal.ZERO) >= 0);
+        assertTrue(dashboard.getYearlyRevenue().compareTo(BigDecimal.ZERO) >= 0);
+    }
+
+    @Test
+    @DisplayName("getDashboard start and end dates are reflected in the response")
+    void getDashboard_reflectsRequestedDateRange() {
+        LocalDate start = LocalDate.now().minusDays(14);
+        LocalDate end = LocalDate.now();
+
+        SalesDashboardDTO dashboard = service.getDashboard(start, end);
+
+        assertEquals(start, dashboard.getStartDate());
+        assertEquals(end, dashboard.getEndDate());
     }
 }

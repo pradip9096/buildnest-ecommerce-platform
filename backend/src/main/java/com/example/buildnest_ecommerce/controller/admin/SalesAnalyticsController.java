@@ -3,6 +3,8 @@ package com.example.buildnest_ecommerce.controller.admin;
 import com.example.buildnest_ecommerce.model.dto.SalesDashboardDTO;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.service.analytics.SalesAnalyticsService;
+
+import java.math.BigDecimal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,7 +29,7 @@ import java.time.LocalDate;
  * EXHAUSTIVE_RECOMMENDATION_REPORT
  */
 @RestController
-@RequestMapping("/api/admin/analytics/sales")
+@RequestMapping("/api/v1/admin/analytics/sales")
 @RequiredArgsConstructor
 @Slf4j
 @PreAuthorize("hasRole('ADMIN')")
@@ -76,7 +78,7 @@ public class SalesAnalyticsController {
             @Parameter(description = "Date (YYYY-MM-DD)", example = "2024-01-15") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         try {
             log.debug("Fetching revenue for date: {}", date);
-            Double revenue = analyticsService.getDailyRevenue(date);
+            BigDecimal revenue = analyticsService.getDailyRevenue(date);
             return ResponseEntity.ok(
                     new ApiResponse(true, "Revenue retrieved", revenue));
         } catch (Exception e) {
@@ -130,7 +132,7 @@ public class SalesAnalyticsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         try {
             log.debug("Calculating average order value for {} to {}", startDate, endDate);
-            Double aov = analyticsService.getAverageOrderValue(startDate, endDate);
+            BigDecimal aov = analyticsService.getAverageOrderValue(startDate, endDate);
             return ResponseEntity.ok(
                     new ApiResponse(true, "Average order value calculated", aov));
         } catch (Exception e) {
@@ -147,7 +149,7 @@ public class SalesAnalyticsController {
             @Parameter(description = "User ID", example = "123", required = true) @PathVariable Long userId) {
         try {
             log.debug("Calculating lifetime value for user {}", userId);
-            Double ltv = analyticsService.getCustomerLifetimeValue(userId);
+            BigDecimal ltv = analyticsService.getCustomerLifetimeValue(userId);
             return ResponseEntity.ok(
                     new ApiResponse(true, "Customer lifetime value calculated", ltv));
         } catch (Exception e) {
