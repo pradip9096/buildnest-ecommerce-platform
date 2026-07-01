@@ -1,3 +1,20 @@
+---
+title: Quality Gate Ratchet Pattern
+category: quality-engineering
+tags: [pit, mutation-testing, quality-gate, ci, fitness-function, coverage, archunit]
+keywords: [ratchet, fitness function, mutation threshold, monotonic improvement, broken windows, pitest, mutationThreshold]
+objective: Explain what a quality gate ratchet is, why it works, and how it is applied to PIT mutation scoring in BuildNest.
+audience: engineers working on BuildNest test quality or implementing quality gates in any project
+scope: BuildNest-specific ratchet schedule; general pattern applicable to any CI metric
+source_conversations: [Session 2026-06-30, Session 2026-07-01]
+last_updated: 2026-07-01
+confidence: high
+evidence_strength: strong
+related_articles:
+  - docs/wiki/learned-lessons/pit-mutation-testing-patterns.md
+status: published
+---
+
 # Quality Gate Ratchet Pattern
 
 ## What It Is
@@ -16,6 +33,30 @@ In software engineering this is formally called a **fitness function** — an ob
 | **Monotonic improvement constraint** | The academic framing: a metric required to be non-decreasing over time. |
 | **Progressive tightening** | The strategy of incrementally raising standards at defined checkpoints (milestones, releases). |
 | **Broken windows theory** | The rationale: once a metric is allowed to slip, further slippage accelerates. A floor prevents the spiral. Originated in criminology (Wilson & Kelling, 1982); applied to software by the Pragmatic Programmers. |
+
+## The Ratchet Effect — Origin Concept
+
+The **ratchet effect** is a concept from economics and social science describing a process that moves easily in one direction but resists or cannot reverse. The asymmetry is the defining feature.
+
+### Classic Examples
+
+**Economics**
+- **Duesenberry's ratchet effect (1949)**: Consumer spending rises easily with income but does not fall proportionally when income drops — people maintain their standard of living by reducing savings rather than cutting consumption. Spending ratchets up but resists ratcheting down.
+- **Government spending**: Public programs are easy to create but extremely difficult to cut. Spending ratchets upward during crises and rarely returns to prior levels (Peacock-Wiseman hypothesis, 1961).
+
+**Politics and Institutions**
+- Rights and entitlements tend to expand over time — once granted, they are politically nearly impossible to withdraw. The Overton window shifts in one direction.
+
+**Biology**
+- **Müller's ratchet (1964)**: In asexual populations, harmful mutations accumulate irreversibly over generations because there is no recombination mechanism to restore the original genome.
+
+### The Common Thread
+
+All instances share the same structure: a mechanism that **permits movement in one direction** (a pawl on a gear) **but prevents reversal**. The direction and rate vary; the asymmetry is constant.
+
+In software quality gates, this asymmetry is **deliberately engineered**: thresholds move forward when earned, but the build prevents them from sliding back. It is a designed ratchet rather than an emergent one.
+
+---
 
 ## How It Is Applied in BuildNest
 
@@ -44,6 +85,9 @@ Setting `<mutationThreshold>83</mutationThreshold>` today would immediately fail
 
 ## References
 
+- Duesenberry, J.S. (1949). *Income, Saving, and the Theory of Consumer Behavior*. Harvard University Press. — origin of the ratchet effect in economics.
+- Peacock, A. & Wiseman, J. (1961). *The Growth of Public Expenditure in the United Kingdom*. Princeton University Press. — government spending ratchet.
+- Müller, H.J. (1964). "The relation of recombination to mutational advance". *Mutation Research*, 1(1), 2–9. — Müller's ratchet in evolutionary biology.
 - Ford, N. & Parsons, R. (2017). *Building Evolutionary Architectures*. O'Reilly. — source of the fitness function concept.
 - Wilson, J.Q. & Kelling, G.L. (1982). "Broken Windows". *The Atlantic*. — origin of the broken-windows theory.
 - Hunt, A. & Thomas, D. (1999). *The Pragmatic Programmer*. — applied broken-windows theory to software quality.

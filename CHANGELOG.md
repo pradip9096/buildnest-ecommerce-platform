@@ -13,6 +13,11 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Changed
+- PIT mutation score raised from 75% (1,237/1,658) to 77% (1,284/1,658), bumping the CI gate to ≥77% (#277); no-coverage mutations reduced from 72 to 68; test strength improved from 78% to 81%
+  - `AdminServiceImplTest`: `ArgumentCaptor<User>` on `deleteUser` asserting `isDeleted=true` and `deletedAt≠null`; `ArgumentCaptor` on `updateUser`/`updateUserByAdmin` asserting `updatedAt≠null`; `ex.getMessage()` assertions on all not-found paths to kill lambda null-return mutations
+  - `CartServiceImplTest`: full `CartItemResponseDTO` field assertions (cartItemId, productId, productName, quantity, price, itemTotal); `ArgumentCaptor<Cart>` on `save()` for new-cart path asserting user and items set; new test `testAddToCart_newItem_setsAllFieldsOnCartItem` with `ArgumentCaptor<CartItem>` asserting all fields; `testGetCartTotal` tightened from `assertTrue(total >= 0)` to `assertEquals(200.0, total)`
+  - `UserServiceImplTest`: `ArgumentCaptor<User>` on `save()` in `updateUserProfile` asserting `updatedAt≠null`; field assertions on all three name/phone fields; `assertNotNull(existing.getDeletedAt())` in `testDeleteUser`
+  - Three test files renamed via `git mv` so PIT `targetTests` pattern includes them: `RedisCheckoutSessionStoreTest` → `RedisCheckoutSessionStoreImplTest`, `EmailTemplateRenderingTest` → `EmailTemplateRenderingServiceTest`, `OrderProcessingComprehensiveTest` → `OrderProcessingComprehensiveServiceTest`
 - PIT mutation score raised from 69% (1,122/1,637) to 75% (1,237/1,658), clearing the ≥75% CI gate (#277); no-coverage mutations reduced from 167 to 72; test strength improved from 76% to 78%
   - `NotificationServiceImplTest`: `ArgumentCaptor<Context>` assertions on all `ctx.setVariable()` calls; `MimeMessage` recipient/subject assertions to detect `setTo`/`setSubject` removal mutations
   - `InventoryServiceImplTest`: added `@Mock InventoryAuditLogRepository` (was null, blocking `adjustStock`); 22 new tests covering `reserveStock`, `releaseReservation`, `releaseExpiredReservations`, `adjustStock`, `getInventoryStatus`, `getAllInventorySummary`
@@ -23,6 +28,7 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   - `OrderSpecificationTest` renamed to `OrderSpecificationImplTest` for same reason
 
 ### Added
+- `PitNamingConventionTest` — ArchUnit rule in the `architecture` package enforcing that service-package test classes use `*ImplTest` or `*ServiceTest` suffixes; plain `*Test` classes are silently excluded from PIT's `targetTests` pattern and kill zero mutations while appearing in JaCoCo coverage; the rule fails the build at PR time with a rename suggestion (#278)
 - React product detail page at `/products/:id`: image gallery (main + thumbnail strip), star rating (half-star aware, sm/md/lg sizes), quantity selector (clamped to stock), paginated reviews section (summary box with distribution bars + review list), related products grid (same-category, max 4); SEO meta (`document.title`, og:title/description/image); skeleton loader and 404 error state; add-to-cart placeholder (deferred to FE-06, #95) (FE-02, #93)
 - `src/api/products.ts` — `fetchProductById(id)` (`GET /api/public/products/{id}`) typed API client (#93)
 - `src/api/reviews.ts` — `fetchReviews(productId, page, size)` (`GET /api/products/{id}/reviews`) and `fetchReviewSummary(productId)` (`GET /api/products/{id}/reviews/summary`) typed API clients (#93)
