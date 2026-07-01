@@ -12,6 +12,16 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Changed
+- PIT mutation score raised from 69% (1,122/1,637) to 75% (1,237/1,658), clearing the ≥75% CI gate (#277); no-coverage mutations reduced from 167 to 72; test strength improved from 76% to 78%
+  - `NotificationServiceImplTest`: `ArgumentCaptor<Context>` assertions on all `ctx.setVariable()` calls; `MimeMessage` recipient/subject assertions to detect `setTo`/`setSubject` removal mutations
+  - `InventoryServiceImplTest`: added `@Mock InventoryAuditLogRepository` (was null, blocking `adjustStock`); 22 new tests covering `reserveStock`, `releaseReservation`, `releaseExpiredReservations`, `adjustStock`, `getInventoryStatus`, `getAllInventorySummary`
+  - `InventoryReportServiceTest`: replaced size-only assertions with specific map-field checks; added sorting-order tests for all three sorted result sets
+  - `InventoryThresholdManagementServiceTest`: state assertions after `setProductThreshold`/`setCategoryThreshold`; new cache-repopulation test for `getProductThreshold` cache-miss path
+  - `CheckoutServiceImplTest`: added 4 missing `@Mock` fields (was causing 57 no-coverage mutations); 12 new multi-step checkout tests; strengthened subtotal/order-number/status assertions
+  - Scheduler tests renamed `*Test` → `*ImplTest` (`TokenCleanupScheduler`, `InventoryReservationCleanupJob`, `InventoryMonitoringScheduler`) so PIT `targetTests` pattern includes them
+  - `OrderSpecificationTest` renamed to `OrderSpecificationImplTest` for same reason
+
 ### Added
 - React product detail page at `/products/:id`: image gallery (main + thumbnail strip), star rating (half-star aware, sm/md/lg sizes), quantity selector (clamped to stock), paginated reviews section (summary box with distribution bars + review list), related products grid (same-category, max 4); SEO meta (`document.title`, og:title/description/image); skeleton loader and 404 error state; add-to-cart placeholder (deferred to FE-06, #95) (FE-02, #93)
 - `src/api/products.ts` — `fetchProductById(id)` (`GET /api/public/products/{id}`) typed API client (#93)
