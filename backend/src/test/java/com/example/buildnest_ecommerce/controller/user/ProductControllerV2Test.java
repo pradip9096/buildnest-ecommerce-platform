@@ -1,8 +1,11 @@
 package com.example.buildnest_ecommerce.controller.user;
 
+import com.example.buildnest_ecommerce.model.elasticsearch.ProductDocument;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
+import com.example.buildnest_ecommerce.service.product.ProductSearchService;
 import com.example.buildnest_ecommerce.service.product.ProductService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -29,6 +32,23 @@ class ProductControllerV2Test {
         ProductControllerV2 controller = new ProductControllerV2(productService, Optional.empty());
         assertEquals(HttpStatus.OK, controller.getAllProducts(0, 10, "id", Sort.Direction.ASC).getStatusCode());
         assertEquals(HttpStatus.OK, controller.getProduct(1L).getStatusCode());
+    }
+
+    @Test
+    @DisplayName("searchProducts — when Elasticsearch bean is present, delegates to ProductSearchService")
+    void searchProducts_withElasticsearchPresent_delegatesToSearchService() {
+        ProductService productService = mock(ProductService.class);
+        ProductSearchService searchService = mock(ProductSearchService.class);
+        Page<ProductDocument> esPage = new PageImpl<>(Collections.emptyList());
+        when(searchService.search(any(), any(), any(), any(), any(), any())).thenReturn(esPage);
+
+        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.of(searchService));
+        ResponseEntity<ApiResponse> response = controller.searchProducts(
+                "cement", null, null, null, null, 0, 10, "id", Sort.Direction.ASC);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(searchService).search(eq("cement"), isNull(), isNull(), isNull(), isNull(), any());
+        verify(productService, never()).advancedSearch(any(), any(), any(), any(), any(), any());
     }
 
     @Test

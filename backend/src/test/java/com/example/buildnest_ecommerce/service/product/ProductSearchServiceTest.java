@@ -22,6 +22,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -142,5 +144,195 @@ class ProductSearchServiceTest {
             List<ProductDocument> list = (List<ProductDocument>) docs;
             return list.size() == 2;
         }));
+    }
+
+    // ── search — circuit breaker and exception paths ─────────────────────────
+
+    @Test
+    @DisplayName("search — circuit breaker OPEN returns empty page without throwing")
+    void search_circuitBreakerOpen_returnsEmptyPage() {
+        CircuitBreaker openBreaker = CircuitBreaker.of("test",
+                CircuitBreakerConfig.custom().minimumNumberOfCalls(1).failureRateThreshold(1).build());
+        openBreaker.transitionToOpenState();
+        ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, openBreaker);
+
+        Page<ProductDocument> result = svc.search("cement", null, null, null, null, PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isZero();
+        verify(esRepository, never()).fullTextSearch(any(), any());
+    }
+
+    @Test
+    @DisplayName("search — repository throws Exception returns empty page without throwing")
+    void search_repositoryThrows_returnsEmptyPage() {
+        when(esRepository.fullTextSearch(any(), any()))
+                .thenThrow(new RuntimeException("ES cluster unreachable"));
+
+        Page<ProductDocument> result = service.search("tile", null, null, null, null, PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    // ── doSearch — query routing edge cases ──────────────────────────────────
+
+    @Test
+    @DisplayName("search — blank query string falls back to findByIsActiveTrue (not fullTextSearch)")
+    void search_blankQuery_fallsBackToActiveSearch() {
+        PageRequest pr = PageRequest.of(0, 10);
+        when(esRepository.findByIsActiveTrue(pr))
+                .thenReturn(new PageImpl<>(List.of(doc("1", "cement"))));
+
+        Page<ProductDocument> result = service.search("   ", null, null, null, null, pr);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        verify(esRepository).findByIsActiveTrue(pr);
+        verify(esRepository, never()).fullTextSearch(any(), any());
+    }
+
+    @Test
+    @DisplayName("search — blank query with categoryId falls back to findByCategoryId")
+    void search_blankQueryWithCategory_fallsBackToCategorySearch() {
+        PageRequest pr = PageRequest.of(0, 10);
+        when(esRepository.findByCategoryIdAndIsActiveTrue(3L, pr))
+                .thenReturn(new PageImpl<>(List.of(doc("2", "tile"))));
+
+        service.search("  ", 3L, null, null, null, pr);
+
+        verify(esRepository).findByCategoryIdAndIsActiveTrue(3L, pr);
+        verify(esRepository, never()).fullTextSearch(any(), any());
+    }
+
+    // ── doSearch — inStock filter ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("search — inStock=true excludes out-of-stock documents")
+    void search_inStockTrue_excludesOutOfStockDocs() {
+        PageRequest pr = PageRequest.of(0, 10);
+        ProductDocument inStockDoc = ProductDocument.builder().id("1").price(100.0).inStock(true).build();
+        ProductDocument outOfStockDoc = ProductDocument.builder().id("2").price(100.0).inStock(false).build();
+        when(esRepository.findByIsActiveTrue(pr))
+                .thenReturn(new PageImpl<>(List.of(inStockDoc, outOfStockDoc)));
+
+        Page<ProductDocument> result = service.search(null, null, null, null, true, pr);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getId()).isEqualTo("1");
+    }
+
+    // ── indexProduct — circuit breaker and exception paths ───────────────────
+
+    @Test
+    @DisplayName("indexProduct — circuit breaker OPEN does not throw")
+    void indexProduct_circuitBreakerOpen_doesNotThrow() {
+        CircuitBreaker openBreaker = CircuitBreaker.of("test",
+                CircuitBreakerConfig.custom().minimumNumberOfCalls(1).failureRateThreshold(1).build());
+        openBreaker.transitionToOpenState();
+        ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, openBreaker);
+
+        assertThatCode(() -> svc.indexProduct(product(1L, "brick"))).doesNotThrowAnyException();
+        verify(esRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("indexProduct — repository throws does not propagate exception")
+    void indexProduct_repositoryThrows_doesNotThrow() {
+        doThrow(new RuntimeException("ES save failed")).when(esRepository).save(any());
+
+        assertThatCode(() -> service.indexProduct(product(1L, "brick"))).doesNotThrowAnyException();
+    }
+
+    // ── toDocument — null field branches ────────────────────────────────────
+
+    @Test
+    @DisplayName("indexProduct — product with null category sets null categoryId and categoryName")
+    void indexProduct_nullCategory_setsNullCategoryFields() {
+        Product p = product(5L, "gravel");
+        p.setCategory(null);
+
+        service.indexProduct(p);
+
+        verify(esRepository).save(argThat(d -> d.getCategoryId() == null && d.getCategoryName() == null));
+    }
+
+    @Test
+    @DisplayName("indexProduct — product with null price and null discountPrice sets null in document")
+    void indexProduct_nullPriceAndDiscount_setsNullFields() {
+        Product p = product(6L, "sand");
+        p.setPrice(null);
+        p.setDiscountPrice(null);
+
+        service.indexProduct(p);
+
+        verify(esRepository).save(argThat(d -> d.getPrice() == null && d.getDiscountPrice() == null));
+    }
+
+    @Test
+    @DisplayName("indexProduct — product with null stockQuantity maps to inStock=false")
+    void indexProduct_nullStockQuantity_inStockFalse() {
+        Product p = product(7L, "mortar");
+        p.setStockQuantity(null);
+
+        service.indexProduct(p);
+
+        verify(esRepository).save(argThat(d -> Boolean.FALSE.equals(d.getInStock())));
+    }
+
+    @Test
+    @DisplayName("indexProduct — product with stockQuantity=0 maps to inStock=false")
+    void indexProduct_zeroStockQuantity_inStockFalse() {
+        Product p = product(8L, "plaster");
+        p.setStockQuantity(0);
+
+        service.indexProduct(p);
+
+        verify(esRepository).save(argThat(d -> Boolean.FALSE.equals(d.getInStock())));
+    }
+
+    // ── deleteFromIndex — circuit breaker and exception paths ────────────────
+
+    @Test
+    @DisplayName("deleteFromIndex — circuit breaker OPEN does not throw")
+    void deleteFromIndex_circuitBreakerOpen_doesNotThrow() {
+        CircuitBreaker openBreaker = CircuitBreaker.of("test",
+                CircuitBreakerConfig.custom().minimumNumberOfCalls(1).failureRateThreshold(1).build());
+        openBreaker.transitionToOpenState();
+        ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, openBreaker);
+
+        assertThatCode(() -> svc.deleteFromIndex(99L)).doesNotThrowAnyException();
+        verify(esRepository, never()).deleteById(any());
+    }
+
+    @Test
+    @DisplayName("deleteFromIndex — repository throws does not propagate exception")
+    void deleteFromIndex_repositoryThrows_doesNotThrow() {
+        doThrow(new RuntimeException("ES delete failed")).when(esRepository).deleteById(any());
+
+        assertThatCode(() -> service.deleteFromIndex(99L)).doesNotThrowAnyException();
+    }
+
+    // ── reindexAll — circuit breaker and exception paths ─────────────────────
+
+    @Test
+    @DisplayName("reindexAll — circuit breaker OPEN throws IllegalStateException")
+    void reindexAll_circuitBreakerOpen_throwsIllegalState() {
+        CircuitBreaker openBreaker = CircuitBreaker.of("test",
+                CircuitBreakerConfig.custom().minimumNumberOfCalls(1).failureRateThreshold(1).build());
+        openBreaker.transitionToOpenState();
+        ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, openBreaker);
+
+        assertThatThrownBy(svc::reindexAll)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("circuit breaker");
+    }
+
+    @Test
+    @DisplayName("reindexAll — repository throws wraps exception in IllegalStateException")
+    void reindexAll_repositoryThrows_throwsIllegalState() {
+        doThrow(new RuntimeException("ES cluster down")).when(esRepository).deleteAll();
+
+        assertThatThrownBy(service::reindexAll)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Re-index failed");
     }
 }

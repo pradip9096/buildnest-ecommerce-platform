@@ -120,6 +120,28 @@ class AdminShippingControllerIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    // ─── GET /{id} ────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("TC-SHIP-ADM-010: GET /shipping-methods/{id} — existing → 200 with method data")
+    void getById_existing_returns200() throws Exception {
+        ShippingMethod method = savedMethod();
+
+        mockMvc.perform(get(BASE + "/" + method.getId())
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.data.id").value(method.getId()));
+    }
+
+    @Test
+    @DisplayName("TC-SHIP-ADM-011: GET /shipping-methods/{id} — non-existent → 404")
+    void getById_notFound_returns404() throws Exception {
+        mockMvc.perform(get(BASE + "/99999999")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNotFound());
+    }
+
     // ─── POST / ───────────────────────────────────────────────────────────────
 
     @Test

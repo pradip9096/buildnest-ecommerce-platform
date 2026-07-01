@@ -40,6 +40,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -535,5 +536,26 @@ class CheckoutFlowIntegrationTest {
 
         Order confirmed = orderRepository.findById(orderId).orElseThrow();
         org.junit.jupiter.api.Assertions.assertEquals(OrderStatus.CONFIRMED, confirmed.getStatus());
+    }
+
+    // ─── GET /shipping-options ────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("TC-CHK-013: GET /shipping-options — authenticated user with active cart returns shipping options")
+    void getShippingOptions_authenticated_returnsOptions() throws Exception {
+        savedCartWithItem();
+
+        mockMvc.perform(get(BASE + "/shipping-options")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.data").isArray());
+    }
+
+    @Test
+    @DisplayName("TC-CHK-014: GET /shipping-options — unauthenticated request returns 401")
+    void getShippingOptions_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get(BASE + "/shipping-options"))
+                .andExpect(status().isUnauthorized());
     }
 }

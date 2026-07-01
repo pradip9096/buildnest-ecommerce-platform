@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class AdminProductControllerTest {
@@ -81,5 +82,36 @@ class AdminProductControllerTest {
 
         ResponseEntity<ApiResponse> response = controller.uploadProductImage(1L, file);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void createProduct_serviceThrows_returns400() {
+        CreateProductRequest request = new CreateProductRequest("name", "desc desc", BigDecimal.TEN,
+                BigDecimal.ONE, 1, "SKU", 1L, "http://image");
+        when(productService.createProduct(any(CreateProductRequest.class)))
+                .thenThrow(new RuntimeException("duplicate SKU"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, controller.createProduct(request).getStatusCode());
+    }
+
+    @Test
+    void updateProduct_serviceThrows_returns400() {
+        CreateProductRequest request = new CreateProductRequest("name", "desc desc", BigDecimal.TEN,
+                BigDecimal.ONE, 1, "SKU", 1L, "http://image");
+        when(productService.updateProduct(eq(1L), any(CreateProductRequest.class)))
+                .thenThrow(new RuntimeException("not found"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, controller.updateProduct(1L, request).getStatusCode());
+    }
+
+    @Test
+    void uploadProductImage_generalException_returns500() {
+        MockMultipartFile file = new MockMultipartFile("file", "img.jpg", "image/jpeg", new byte[]{1});
+        when(storageService.store(file)).thenReturn("/uploads/img.jpg");
+        when(productService.updateProductImage(eq(1L), anyString()))
+                .thenThrow(new RuntimeException("unexpected error"));
+
+        ResponseEntity<ApiResponse> response = controller.uploadProductImage(1L, file);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 }
