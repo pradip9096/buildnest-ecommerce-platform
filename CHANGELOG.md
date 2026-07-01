@@ -13,6 +13,18 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- React product detail page at `/products/:id`: image gallery (main + thumbnail strip), star rating (half-star aware, sm/md/lg sizes), quantity selector (clamped to stock), paginated reviews section (summary box with distribution bars + review list), related products grid (same-category, max 4); SEO meta (`document.title`, og:title/description/image); skeleton loader and 404 error state; add-to-cart placeholder (deferred to FE-06, #95) (FE-02, #93)
+- `src/api/products.ts` — `fetchProductById(id)` (`GET /api/public/products/{id}`) typed API client (#93)
+- `src/api/reviews.ts` — `fetchReviews(productId, page, size)` (`GET /api/products/{id}/reviews`) and `fetchReviewSummary(productId)` (`GET /api/products/{id}/reviews/summary`) typed API clients (#93)
+- `src/hooks/useProduct.ts` — single-product data-fetching hook with cancellation-flag pattern (#93)
+- `src/hooks/useReviews.ts` — parallel fetch of review list + summary with cancellation (#93)
+- `src/components/product/StarRating.tsx` — half-star-aware rating display, amber-400 filled stars, three size variants (#93)
+- `src/components/product/ImageGallery.tsx` — main image large display with thumbnail strip; graceful single-image degradation (#93)
+- `src/components/product/QuantitySelector.tsx` — +/− buttons clamped to `[1, stockQuantity]` (#93)
+- `src/components/product/ReviewsSection.tsx` — average rating + distribution bars summary box, paginated review list (#93)
+- `src/components/product/RelatedProducts.tsx` — same-category product grid (max 4); uses `linkable={false}` on `ProductCard` to avoid anchor-in-anchor HTML nesting (#93)
+- `src/pages/ProductDetailPage.tsx` — orchestrates gallery, rating, quantity, add-to-cart, reviews, and related products; uses `useParams<{ id: string }>()` for route param (#93)
+- `ReviewUser`, `Review`, `ReviewSummary`, `PagedResponse<T>` TypeScript interfaces in `src/types/index.ts` (#93)
 - React product listing page at `/`: TypeScript + Tailwind CSS v4 responsive grid (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`); keyword search via form submit; client-side category multi-filter, sort (relevance / price asc-desc / newest), and pagination; loading skeleton (12 animated cards), per-card error and empty states; Vite dev-server proxy (`/api` → `:8080`) eliminates CORS in development (FE-01, #92)
 - `src/types/index.ts` — shared TypeScript interfaces (`Product`, `Category`, `ApiResponse<T>`, `ProductFilters`, `SortOption`) for the React frontend (#92)
 - `src/api/products.ts` — `fetchProducts()` (`GET /api/public/products`) and `searchProducts(keyword)` (`GET /api/public/products/search?keyword=`) typed API clients (#92)
@@ -83,11 +95,18 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 - Liquibase XML master orchestrator (`db.changelog-master.xml`) replacing direct SQL master reference; enables per-entity XML changeset files and clean include-based composition (#104)
 
 ### Fixed
+- `SecurityConfig` and `TestSecurityConfig`: add `POST /api/auth/refresh` to `permitAll()` — was returning 401 when access token expired, forcing clients into a broken loop
+- `SecurityConfig` and `TestSecurityConfig`: split blanket `/api/password/**` permit into explicit `/forgot` and `/reset` (public) and `/change` (requires `USER` or `ADMIN`) — unauthenticated callers could previously invoke the password-change endpoint
+- `CheckoutController.calculateTotal` (`GET /api/checkout/calculate-total/{cartId}`): add `@PreAuthorize("hasRole('USER')")` — the only method in the controller missing the annotation its siblings already carried
+- `WebhookAdminController`: add class-level `@PreAuthorize("hasRole('ADMIN')")` — the only controller under `/api/admin/**` without an authorization annotation
 - `CacheConfig.cacheManager` now injects the Spring-managed `ObjectMapper` bean into `GenericJackson2JsonRedisSerializer` (all 9 cache regions: products, categories, auditLogs, userPermissions, inventoryItems, rateLimitStats, orders, users, and default); previously each region created its own bare `ObjectMapper` instance that could not handle Hibernate lazy-proxy types, causing silent cache-write failures for JPA entities
 - `application.properties`: add `spring.jpa.properties.hibernate.type.preferred_boolean_jdbc_type=TINYINT` so Hibernate 6.x schema validation correctly maps `Boolean` entity fields to MySQL `TINYINT(1)` (MySQL `BOOLEAN` synonym) instead of `BIT(1)`, eliminating column-type mismatch errors on startup
 - `application.properties`: externalize `spring.jpa.hibernate.ddl-auto` via `${SPRING_JPA_DDL_AUTO:validate}` to allow environment-specific override without code changes
 
 ### Changed
+- `App.tsx`: added `/products/:id` route wired to `ProductDetailPage` (FE-02, #93)
+- `src/components/product/ProductCard.tsx`: added `linkable?: boolean` prop (default `true`); when `false` renders the card div without a wrapping `<Link>`, enabling parent-controlled navigation in `RelatedProducts` (#93)
+- `SecurityConfig` and `TestSecurityConfig`: add `GET /api/products/*/reviews`, `/reviews/summary`, and `/reviews/top-helpful` to `permitAll()` (required for unauthenticated product detail page) (#93)
 - `App.tsx` migrated from JSX stub to full TypeScript: wraps `ProductListingPage` in `BrowserRouter` + `Routes` (react-router-dom) (FE-01, #92)
 - `main.tsx` migrated from `.jsx` to `.tsx`: null-checked root element, no `.jsx` import extension (#92)
 - `vite.config.js` replaced by `vite.config.ts`: added `@tailwindcss/vite` plugin and `/api` proxy to `http://localhost:8080` (#92)

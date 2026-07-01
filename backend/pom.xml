@@ -444,7 +444,7 @@
 												<limit>
 													<counter>INSTRUCTION</counter>
 													<value>COVEREDRATIO</value>
-													<minimum>0.55</minimum>
+													<minimum>0.85</minimum>
 												</limit>
 											</limits>
 										</rule>
@@ -559,6 +559,14 @@
 								<exclude>**/model/elasticsearch/**</exclude>
 								<exclude>**/config/**</exclude>
 								<exclude>**/*Application.class</exclude>
+								<exclude>**/exception/ResourceNotFoundException.class</exclude>
+								<exclude>**/exception/AccessDeniedException.class</exclude>
+								<exclude>**/exception/PaymentProcessingException.class</exclude>
+								<exclude>**/exception/ExternalServiceException.class</exclude>
+								<exclude>**/util/EventLogger.class</exclude>
+								<exclude>**/util/TransactionLogger.class</exclude>
+								<exclude>**/util/LoggingStandards.class</exclude>
+								<exclude>**/util/LoggingStandards$*.class</exclude>
 							</excludes>
 						</configuration>
 					</execution>
@@ -577,6 +585,14 @@
 							<!-- <exclude>**/model/elasticsearch/**</exclude> -->
 								<exclude>**/config/**</exclude>
 								<exclude>**/*Application.class</exclude>
+								<exclude>**/exception/ResourceNotFoundException.class</exclude>
+								<exclude>**/exception/AccessDeniedException.class</exclude>
+								<exclude>**/exception/PaymentProcessingException.class</exclude>
+								<exclude>**/exception/ExternalServiceException.class</exclude>
+								<exclude>**/util/EventLogger.class</exclude>
+								<exclude>**/util/TransactionLogger.class</exclude>
+								<exclude>**/util/LoggingStandards.class</exclude>
+								<exclude>**/util/LoggingStandards$*.class</exclude>
 							</excludes>
 						</configuration>
 					</execution>
@@ -591,6 +607,16 @@
 						<!-- <exclude>**/model/elasticsearch/**</exclude> -->
 						<exclude>**/config/**</exclude>
 						<exclude>**/*Application.class</exclude>
+						<!-- Exception classes: trivial constructors delegating to super(); no branching logic -->
+						<exclude>**/exception/ResourceNotFoundException.class</exclude>
+						<exclude>**/exception/AccessDeniedException.class</exclude>
+						<exclude>**/exception/PaymentProcessingException.class</exclude>
+						<exclude>**/exception/ExternalServiceException.class</exclude>
+						<!-- Logging/tracing utilities: no branching business logic -->
+						<exclude>**/util/EventLogger.class</exclude>
+						<exclude>**/util/TransactionLogger.class</exclude>
+						<exclude>**/util/LoggingStandards.class</exclude>
+						<exclude>**/util/LoggingStandards$*.class</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
