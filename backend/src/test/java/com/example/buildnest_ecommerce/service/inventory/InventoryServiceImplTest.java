@@ -2,9 +2,12 @@ package com.example.buildnest_ecommerce.service.inventory;
 
 import com.example.buildnest_ecommerce.event.DomainEventPublisher;
 import com.example.buildnest_ecommerce.event.LowStockWarningEvent;
+import com.example.buildnest_ecommerce.exception.InventoryException;
+import com.example.buildnest_ecommerce.model.dto.InventoryDTO;
 import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.repository.InventoryAuditLogRepository;
 import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +18,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +36,9 @@ class InventoryServiceImplTest {
 
     @Mock
     private ProductRepository productRepository;
+
+    @Mock
+    private InventoryAuditLogRepository inventoryAuditLogRepository;
 
     @Mock
     private DomainEventPublisher domainEventPublisher;
@@ -555,5 +563,231 @@ class InventoryServiceImplTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> inventoryService.deductStock(1L, 5));
         assertTrue(ex.getMessage().contains("Insufficient stock"));
+    }
+
+    // ── reserveStock ─────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("reserveStock — happy path increments quantityReserved and saves")
+    void testReserveStock_happyPath() {
+        Inventory inventory = buildInventory(product, 10, 2);
+        inventory.setQuantityReserved(0);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(any(Inventory.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        inventoryService.reserveStock(1L, 3, LocalDateTime.now().plusMinutes(15));
+
+        assertEquals(3, inventory.getQuantityReserved(), "quantityReserved must increase by requested amount");
+        assertNotNull(inventory.getReservationExpiresAt(), "reservationExpiresAt must be set");
+        verify(inventoryRepository).save(inventory);
+    }
+
+    @Test
+    @DisplayName("reserveStock — insufficient available stock throws InventoryException")
+    void testReserveStock_insufficientAvailable_throws() {
+        Inventory inventory = buildInventory(product, 5, 2);
+        inventory.setQuantityReserved(4); // available = 5-4=1, requesting 3
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+
+        assertThrows(InventoryException.class,
+                () -> inventoryService.reserveStock(1L, 3, LocalDateTime.now().plusMinutes(15)));
+        verify(inventoryRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("reserveStock — product not found throws RuntimeException")
+    void testReserveStock_productNotFound_throws() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class,
+                () -> inventoryService.reserveStock(1L, 3, LocalDateTime.now().plusMinutes(15)));
+    }
+
+    // ── releaseReservation ────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("releaseReservation — decrements quantityReserved and saves")
+    void testReleaseReservation_happyPath() {
+        Inventory inventory = buildInventory(product, 10, 2);
+        inventory.setQuantityReserved(5);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+
+        inventoryService.releaseReservation(1L, 3);
+
+        assertEquals(2, inventory.getQuantityReserved(), "reserved must decrease by released amount");
+        verify(inventoryRepository).save(inventory);
+    }
+
+    @Test
+    @DisplayName("releaseReservation — clears reservationExpiresAt when reserved drops to zero")
+    void testReleaseReservation_dropsToZero_clearsExpiry() {
+        Inventory inventory = buildInventory(product, 10, 2);
+        inventory.setQuantityReserved(3);
+        inventory.setReservationExpiresAt(LocalDateTime.now().plusMinutes(10));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+
+        inventoryService.releaseReservation(1L, 3);
+
+        assertEquals(0, inventory.getQuantityReserved());
+        assertNull(inventory.getReservationExpiresAt(), "reservationExpiresAt must be null when reserved=0");
+    }
+
+    @Test
+    @DisplayName("releaseReservation — no-op when inventory has no active reservation")
+    void testReleaseReservation_noActiveReservation_skips() {
+        Inventory inventory = buildInventory(product, 10, 2);
+        inventory.setQuantityReserved(0);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+
+        inventoryService.releaseReservation(1L, 3);
+
+        verify(inventoryRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("releaseReservation — no-op when inventory record is absent")
+    void testReleaseReservation_inventoryAbsent_skips() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.empty());
+
+        inventoryService.releaseReservation(1L, 3);
+
+        verify(inventoryRepository, never()).save(any());
+    }
+
+    // ── releaseExpiredReservations ────────────────────────────────────────────
+
+    @Test
+    @DisplayName("releaseExpiredReservations — resets quantityReserved and expiry for each expired record")
+    void testReleaseExpiredReservations_resetsFields() {
+        Product p = new Product();
+        p.setId(2L);
+        Inventory expired = buildInventory(p, 8, 2);
+        expired.setQuantityReserved(3);
+        expired.setReservationExpiresAt(LocalDateTime.now().minusMinutes(1));
+        when(inventoryRepository.findExpiredReservations(any(LocalDateTime.class)))
+                .thenReturn(List.of(expired));
+
+        inventoryService.releaseExpiredReservations();
+
+        assertEquals(0, expired.getQuantityReserved(), "quantityReserved must be reset to 0");
+        assertNull(expired.getReservationExpiresAt(), "reservationExpiresAt must be cleared");
+        verify(inventoryRepository).save(expired);
+    }
+
+    @Test
+    @DisplayName("releaseExpiredReservations — no-op when no expired reservations")
+    void testReleaseExpiredReservations_empty_noSave() {
+        when(inventoryRepository.findExpiredReservations(any(LocalDateTime.class)))
+                .thenReturn(Collections.emptyList());
+
+        inventoryService.releaseExpiredReservations();
+
+        verify(inventoryRepository, never()).save(any());
+    }
+
+    // ── getInventoryStatus ────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("getInventoryStatus — returns status from inventory record")
+    void testGetInventoryStatus_returnsStatus() {
+        Inventory inventory = buildInventory(product, 0, 2);
+        inventory.setStatus(InventoryStatus.OUT_OF_STOCK);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+
+        InventoryStatus status = inventoryService.getInventoryStatus(1L);
+
+        assertEquals(InventoryStatus.OUT_OF_STOCK, status);
+    }
+
+    // ── getAllInventorySummary ─────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("getAllInventorySummary — maps each inventory record to InventoryDTO")
+    void testGetAllInventorySummary_mapsToDTO() {
+        Inventory inventory = buildInventory(product, 10, 2);
+        inventory.setId(1L);
+        inventory.setStatus(InventoryStatus.IN_STOCK);
+        when(inventoryRepository.findAll()).thenReturn(List.of(inventory));
+
+        List<InventoryDTO> result = inventoryService.getAllInventorySummary();
+
+        assertEquals(1, result.size(), "must return one DTO per inventory record");
+        InventoryDTO dto = result.get(0);
+        assertEquals(1L, dto.getId(), "id must match inventory id");
+        assertEquals(product.getId(), dto.getProductId(), "productId must match");
+        assertEquals(10, dto.getQuantityInStock(), "quantityInStock must match");
+        assertEquals("IN_STOCK", dto.getStatus(), "status must be mapped to name()");
+    }
+
+    @Test
+    @DisplayName("getAllInventorySummary — returns empty list when no inventory records exist")
+    void testGetAllInventorySummary_empty() {
+        when(inventoryRepository.findAll()).thenReturn(Collections.emptyList());
+
+        List<InventoryDTO> result = inventoryService.getAllInventorySummary();
+
+        assertTrue(result.isEmpty());
+    }
+
+    // ── adjustStock ───────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("adjustStock — positive delta increases quantityInStock and saves audit log")
+    void testAdjustStock_positiveDelta_savesAndAudits() {
+        Inventory inventory = buildInventory(product, 10, 2);
+        inventory.setId(1L);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(any(Inventory.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Inventory result = inventoryService.adjustStock(1L, 5, "restock", 99L);
+
+        assertEquals(15, result.getQuantityInStock(), "stock must increase by delta");
+        verify(inventoryRepository).save(any(Inventory.class));
+        verify(inventoryAuditLogRepository).save(any());
+    }
+
+    @Test
+    @DisplayName("adjustStock — negative delta that would result in negative stock throws IllegalArgumentException")
+    void testAdjustStock_negativeDeltaBelowZero_throws() {
+        Inventory inventory = buildInventory(product, 3, 2);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> inventoryService.adjustStock(1L, -5, "correction", 99L));
+        verify(inventoryRepository, never()).save(any());
+        verify(inventoryAuditLogRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("adjustStock — product not found throws ResourceNotFoundException")
+    void testAdjustStock_productNotFound_throws() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class,
+                () -> inventoryService.adjustStock(1L, 5, "restock", 99L));
+    }
+
+    @Test
+    @DisplayName("adjustStock — zero delta returns inventory unchanged and still audits")
+    void testAdjustStock_zeroDelta_savesAndAudits() {
+        Inventory inventory = buildInventory(product, 10, 2);
+        inventory.setId(1L);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(any(Inventory.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Inventory result = inventoryService.adjustStock(1L, 0, "no-op adjustment", 99L);
+
+        assertEquals(10, result.getQuantityInStock());
+        verify(inventoryAuditLogRepository).save(any());
     }
 }
