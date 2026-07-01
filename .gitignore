@@ -3,6 +3,7 @@
 # -------------------------------------------------------
 .agents/
 .claude/
+.playwright-mcp/
 .gemini/
 .codex/
 .opencode/
@@ -25,6 +26,11 @@ MASTER_SPEC.md
 # Assets (local use only)
 # -------------------------------------------------------
 assets/
+
+# -------------------------------------------------------
+# Archive (legacy documents, local use only)
+# -------------------------------------------------------
+archive/
 
 # -------------------------------------------------------
 # Docs — exclude legacy / generated sub-directories
