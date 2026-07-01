@@ -12,7 +12,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class InventoryMonitoringSchedulerTest {
+class InventoryMonitoringSchedulerImplTest {
 
     @Mock
     private InventoryMonitoringService inventoryMonitoringService;
