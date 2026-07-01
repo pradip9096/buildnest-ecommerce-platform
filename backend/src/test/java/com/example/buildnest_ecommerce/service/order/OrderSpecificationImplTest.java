@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("OrderSpecification")
-class OrderSpecificationTest {
+class OrderSpecificationImplTest {
 
     @Mock private Root<Order> root;
     @Mock private CriteriaQuery<?> query;
