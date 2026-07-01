@@ -17,9 +17,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -156,5 +162,129 @@ class ProductReviewServiceImplTest {
         when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> reviewService.createReview(1L, 2L, 5, "x", false));
+    }
+
+    @Test
+    @DisplayName("Should throw when user not found during create")
+    void testCreateReviewMissingUser() {
+        Product product = new Product();
+        product.setId(1L);
+        when(reviewRepository.existsByProductIdAndUserId(1L, 2L)).thenReturn(false);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(userRepository.findById(2L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> reviewService.createReview(1L, 2L, 5, "x", false));
+    }
+
+    @Test
+    @DisplayName("Should throw when user has already reviewed product")
+    void testCreateReviewDuplicate() {
+        when(reviewRepository.existsByProductIdAndUserId(1L, 2L)).thenReturn(true);
+
+        assertThrows(IllegalStateException.class, () -> reviewService.createReview(1L, 2L, 5, "x", false));
+        verify(productRepository, never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("Should throw when review not found on update")
+    void testUpdateReviewNotFound() {
+        when(reviewRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> reviewService.updateReview(99L, 3, "new"));
+    }
+
+    @Test
+    @DisplayName("Should throw when review not found on delete")
+    void testDeleteReviewNotFound() {
+        when(reviewRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> reviewService.deleteReview(99L, 2L));
+    }
+
+    @Test
+    @DisplayName("Should throw when review not found on markAsHelpful")
+    void testMarkAsHelpfulNotFound() {
+        when(reviewRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> reviewService.markAsHelpful(99L));
+    }
+
+    @Test
+    @DisplayName("Should return empty distribution when no reviews exist")
+    void testGetRatingDistributionEmpty() {
+        when(reviewRepository.getRatingDistribution(1L)).thenReturn(Collections.emptyList());
+
+        Map<Integer, Long> dist = reviewService.getRatingDistribution(1L);
+        for (int i = 1; i <= 5; i++) {
+            assertEquals(0L, dist.get(i), "Rating " + i + " should default to 0");
+        }
+    }
+
+    @Test
+    @DisplayName("Should return false when user has not purchased product")
+    void testHasUserPurchasedProductFalse() {
+        when(orderRepository.findByUserId(2L)).thenReturn(Collections.emptyList());
+
+        assertFalse(reviewService.hasUserPurchasedProduct(2L, 10L));
+    }
+
+    @Test
+    @DisplayName("Should return false when orders exist but product not in any of them")
+    void testHasUserPurchasedProductWrongProduct() {
+        Product otherProduct = new Product();
+        otherProduct.setId(99L);
+        OrderItem item = new OrderItem();
+        item.setProduct(otherProduct);
+        Order order = new Order();
+        order.setOrderItems(new java.util.HashSet<>(List.of(item)));
+
+        when(orderRepository.findByUserId(2L)).thenReturn(List.of(order));
+
+        assertFalse(reviewService.hasUserPurchasedProduct(2L, 10L));
+    }
+
+    @Test
+    @DisplayName("Should delegate getProductReviews to repository")
+    void testGetProductReviews() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ProductReview> page = new PageImpl<>(Collections.emptyList());
+        when(reviewRepository.findByProductIdAndIsVisibleTrue(1L, pageable)).thenReturn(page);
+
+        Page<ProductReview> result = reviewService.getProductReviews(1L, pageable);
+        assertSame(page, result);
+        verify(reviewRepository).findByProductIdAndIsVisibleTrue(1L, pageable);
+    }
+
+    @Test
+    @DisplayName("Should delegate getUserReviews to repository")
+    void testGetUserReviews() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ProductReview> page = new PageImpl<>(Collections.emptyList());
+        when(reviewRepository.findByUserId(2L, pageable)).thenReturn(page);
+
+        Page<ProductReview> result = reviewService.getUserReviews(2L, pageable);
+        assertSame(page, result);
+    }
+
+    @Test
+    @DisplayName("Should delegate getTopHelpfulReviews to repository")
+    void testGetTopHelpfulReviews() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<ProductReview> page = new PageImpl<>(Collections.emptyList());
+        when(reviewRepository.findTopHelpfulReviews(1L, pageable)).thenReturn(page);
+
+        Page<ProductReview> result = reviewService.getTopHelpfulReviews(1L, pageable);
+        assertSame(page, result);
+    }
+
+    @Test
+    @DisplayName("Should delegate getVerifiedPurchaseReviews to repository")
+    void testGetVerifiedPurchaseReviews() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<ProductReview> page = new PageImpl<>(Collections.emptyList());
+        when(reviewRepository.findVerifiedPurchaseReviews(1L, pageable)).thenReturn(page);
+
+        Page<ProductReview> result = reviewService.getVerifiedPurchaseReviews(1L, pageable);
+        assertSame(page, result);
     }
 }

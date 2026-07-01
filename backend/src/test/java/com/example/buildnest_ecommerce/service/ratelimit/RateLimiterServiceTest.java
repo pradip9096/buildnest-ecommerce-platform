@@ -1,6 +1,8 @@
 package com.example.buildnest_ecommerce.service.ratelimit;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -263,5 +265,91 @@ class RateLimiterServiceTest {
         when(redisTemplate.getExpire(anyString(), any(TimeUnit.class))).thenReturn(15L);
         long reset = rateLimiterService.getTimeUntilReset("key");
         assertEquals(15L, reset);
+    }
+
+    @Test
+    @DisplayName("isAllowed returns true when circuit breaker is OPEN")
+    void testIsAllowedCircuitBreakerOpen() {
+        CircuitBreaker openBreaker = CircuitBreaker.of("test",
+                CircuitBreakerConfig.custom()
+                        .minimumNumberOfCalls(1)
+                        .failureRateThreshold(1)
+                        .build());
+        openBreaker.transitionToOpenState();
+
+        RateLimiterService service = new RateLimiterService(redisTemplate, openBreaker);
+        boolean allowed = service.isAllowed("key", 10, Duration.ofMinutes(1));
+        assertTrue(allowed, "Should allow requests when circuit breaker is OPEN (graceful degradation)");
+    }
+
+    @Test
+    @DisplayName("isAllowed returns true when increment returns null")
+    void testIsAllowedNullIncrementResult() {
+        when(valueOperations.increment(anyString())).thenReturn(null);
+
+        boolean allowed = rateLimiterService.isAllowed("key", 10, Duration.ofMinutes(1));
+        assertFalse(allowed, "null increment result means Redis did not increment — deny to be safe");
+    }
+
+    @Test
+    @DisplayName("getRetryAfterSeconds returns 0 when TTL is null")
+    void testGetRetryAfterSecondsNullTtl() {
+        when(redisTemplate.getExpire(anyString(), any(TimeUnit.class))).thenReturn(null);
+
+        long retryAfter = rateLimiterService.getRetryAfterSeconds("key");
+        assertEquals(0L, retryAfter);
+    }
+
+    @Test
+    @DisplayName("getRetryAfterSeconds returns 0 when circuit breaker is OPEN")
+    void testGetRetryAfterSecondsCircuitBreakerOpen() {
+        CircuitBreaker openBreaker = CircuitBreaker.of("test",
+                CircuitBreakerConfig.custom()
+                        .minimumNumberOfCalls(1)
+                        .failureRateThreshold(1)
+                        .build());
+        openBreaker.transitionToOpenState();
+
+        RateLimiterService service = new RateLimiterService(redisTemplate, openBreaker);
+        long retryAfter = service.getRetryAfterSeconds("key");
+        assertEquals(0L, retryAfter);
+    }
+
+    @Test
+    @DisplayName("resetRateLimit skips silently when circuit breaker is OPEN")
+    void testResetRateLimitCircuitBreakerOpen() {
+        CircuitBreaker openBreaker = CircuitBreaker.of("test",
+                CircuitBreakerConfig.custom()
+                        .minimumNumberOfCalls(1)
+                        .failureRateThreshold(1)
+                        .build());
+        openBreaker.transitionToOpenState();
+
+        RateLimiterService service = new RateLimiterService(redisTemplate, openBreaker);
+        assertDoesNotThrow(() -> service.resetRateLimit("key"));
+        verify(redisTemplate, never()).delete(anyString());
+    }
+
+    @Test
+    @DisplayName("resetRateLimit logs error and does not throw when Redis delete fails")
+    void testResetRateLimitRedisException() {
+        doThrow(new RuntimeException("Redis unavailable")).when(redisTemplate).delete(anyString());
+
+        assertDoesNotThrow(() -> rateLimiterService.resetRateLimit("key"));
+    }
+
+    @Test
+    @DisplayName("getRemainingTokens returns full limit when circuit breaker is OPEN")
+    void testGetRemainingTokensCircuitBreakerOpen() {
+        CircuitBreaker openBreaker = CircuitBreaker.of("test",
+                CircuitBreakerConfig.custom()
+                        .minimumNumberOfCalls(1)
+                        .failureRateThreshold(1)
+                        .build());
+        openBreaker.transitionToOpenState();
+
+        RateLimiterService service = new RateLimiterService(redisTemplate, openBreaker);
+        int remaining = service.getRemainingTokens("key", 50);
+        assertEquals(50, remaining);
     }
 }
