@@ -190,6 +190,14 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- ArchUnit — architecture and naming convention enforcement -->
+		<dependency>
+			<groupId>com.tngtech.archunit</groupId>
+			<artifactId>archunit-junit5</artifactId>
+			<version>1.3.0</version>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- Spring Boot Starter -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -751,12 +759,12 @@
 						<param>com.example.buildnest_ecommerce.inventory.*</param>
 						<param>com.example.buildnest_ecommerce.payment.*</param>
 					</excludedTestClasses>
-					<!-- mutationThreshold gates on TEST STRENGTH = killed / (killed + survived).
-					     The console prints "Mutation score of N" which is killed / total (includes
-					     NO_COVERAGE mutants in the denominator) — that number will always be lower
-					     and is NOT what the gate evaluates. Check the HTML report or mutations.xml
-					     for the authoritative test-strength figure. -->
-					<mutationThreshold>75</mutationThreshold>
+					<!-- mutationThreshold gates on MUTATION SCORE = killed / generated (includes
+					     NO_COVERAGE mutants in the denominator). The console line "Mutation score
+					     of N" is exactly what this gate evaluates. Test strength (killed / reached,
+					     i.e. excluding no-coverage) is printed separately and is NOT gated.
+					     Current score: 77% (1,284/1,658). Ratchet plan: 79% end-M4 → 81% start-M5 → 83% end-M5. -->
+					<mutationThreshold>77</mutationThreshold>
 					<coverageThreshold>70</coverageThreshold>
 					<outputFormats>
 						<outputFormat>HTML</outputFormat>

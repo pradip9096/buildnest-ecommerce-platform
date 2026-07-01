@@ -7,6 +7,7 @@ import com.example.buildnest_ecommerce.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -54,6 +55,10 @@ class UserServiceImplTest {
 
         User updated = userService.updateUser(1L, update);
         assertEquals("new@example.com", updated.getEmail());
+        assertEquals("New", updated.getFirstName(), "firstName must be copied from update object");
+        assertEquals("Name", updated.getLastName(), "lastName must be copied from update object");
+        assertEquals("123", updated.getPhoneNumber(), "phoneNumber must be copied from update object");
+        assertNotNull(updated.getUpdatedAt(), "updatedAt must be set on save");
     }
 
     @Test
@@ -66,6 +71,7 @@ class UserServiceImplTest {
 
         userService.deleteUser(1L);
         assertTrue(existing.getIsDeleted());
+        assertNotNull(existing.getDeletedAt(), "deletedAt must be set on soft delete");
     }
 
     @Test
@@ -128,5 +134,12 @@ class UserServiceImplTest {
 
         UserResponseDTO response = userService.updateUserProfile(3L, dto);
         assertEquals("f@l.com", response.getEmail());
+        assertEquals("F", response.getFirstName(), "firstName must be updated in profile");
+        assertEquals("L", response.getLastName(), "lastName must be updated in profile");
+        assertEquals("123", response.getPhone(), "phone must be updated in profile");
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertNotNull(captor.getValue().getUpdatedAt(), "updatedAt must be set before save");
     }
 }

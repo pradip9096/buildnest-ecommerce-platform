@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("RedisCheckoutSessionStore")
-class RedisCheckoutSessionStoreTest {
+class RedisCheckoutSessionStoreImplTest {
 
     @Mock
     private StringRedisTemplate redisTemplate;

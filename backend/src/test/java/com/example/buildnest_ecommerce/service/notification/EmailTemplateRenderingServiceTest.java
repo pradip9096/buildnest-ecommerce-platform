@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Uses {@link SpringTemplateEngine} directly — no Spring context required.
  */
 @DisplayName("Email template rendering tests")
-class EmailTemplateRenderingTest {
+class EmailTemplateRenderingServiceTest {
 
     private static SpringTemplateEngine engine;
 

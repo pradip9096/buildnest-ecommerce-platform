@@ -4,6 +4,7 @@ import com.example.buildnest_ecommerce.model.entity.Cart;
 import com.example.buildnest_ecommerce.model.entity.CartItem;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.entity.User;
+import com.example.buildnest_ecommerce.model.payload.CartItemResponseDTO;
 import com.example.buildnest_ecommerce.model.payload.CartResponseDTO;
 import com.example.buildnest_ecommerce.repository.CartItemRepository;
 import com.example.buildnest_ecommerce.repository.CartRepository;
@@ -12,6 +13,7 @@ import com.example.buildnest_ecommerce.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -75,15 +77,15 @@ class CartServiceImplTest {
 
     @Test
     void testGetCartByUserId() {
-        // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(cartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
 
-        // Act
         CartResponseDTO result = cartService.getCartByUserId(1L);
 
-        // Assert
         assertNotNull(result);
+        assertEquals(1L, result.getCartId(), "cartId must be mapped from cart.getId()");
+        assertEquals(1L, result.getUserId(), "userId must be mapped from user.getId()");
+        assertEquals(1, result.getItems().size(), "items list must contain one item");
         verify(cartRepository).findByUser(testUser);
     }
 
@@ -116,30 +118,26 @@ class CartServiceImplTest {
 
     @Test
     void testClearCart() {
-        // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(cartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
 
-        // Act
         cartService.clearCart(1L);
 
-        // Assert
-        verify(cartItemRepository).deleteAll(testCart.getItems());
+        verify(cartItemRepository).deleteAll(any());
+        assertTrue(testCart.getItems().isEmpty(), "cart.getItems() must be cleared after clearCart");
         verify(cartRepository).save(testCart);
     }
 
     @Test
     void testGetCartTotal() {
-        // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(cartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
 
-        // Act
         Double total = cartService.getCartTotal(1L);
 
-        // Assert
+        // testCartItem has quantity=2, price=100.00; getTotalPrice() = 200.0
         assertNotNull(total);
-        assertTrue(total >= 0);
+        assertEquals(200.0, total, "getCartTotal must return the cart total amount");
     }
 
     @Test
@@ -158,7 +156,13 @@ class CartServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1, result.getItems().size());
-        verify(cartRepository).save(any(Cart.class));
+
+        ArgumentCaptor<Cart> cartCaptor = ArgumentCaptor.forClass(Cart.class);
+        verify(cartRepository).save(cartCaptor.capture());
+        Cart savedCart = cartCaptor.getValue();
+        assertEquals(testUser, savedCart.getUser(), "new cart must have user set before save");
+        assertNotNull(savedCart.getItems(), "new cart must have items list initialised before save");
+
         verify(cartItemRepository).save(any(CartItem.class));
     }
 
@@ -248,8 +252,24 @@ class CartServiceImplTest {
 
         CartResponseDTO result = cartService.getCartByUserId(1L);
 
-        assertEquals(25.0, result.getTotalAmount());
-        assertEquals(2, result.getItems().size());
+        assertEquals(25.0, result.getTotalAmount(), "totalAmount must be sum of all item totals");
+        assertEquals(2, result.getItems().size(), "items list size must match cart items count");
+
+        CartItemResponseDTO dto1 = result.getItems().get(0);
+        assertEquals(100L, dto1.getCartItemId(), "cartItemId must be mapped from item.getId()");
+        assertEquals(11L, dto1.getProductId(), "productId must be mapped from item.getProduct().getId()");
+        assertEquals("Item1", dto1.getProductName(), "productName must be mapped from item.getProduct().getName()");
+        assertEquals(2, dto1.getQuantity(), "quantity must be mapped from item.getQuantity()");
+        assertEquals(10.0, dto1.getPrice(), "price must be mapped from item.getPrice()");
+        assertEquals(20.0, dto1.getItemTotal(), "itemTotal must be item quantity × price");
+
+        CartItemResponseDTO dto2 = result.getItems().get(1);
+        assertEquals(101L, dto2.getCartItemId(), "cartItemId must be mapped for second item");
+        assertEquals(12L, dto2.getProductId(), "productId must be mapped for second item");
+        assertEquals("Item2", dto2.getProductName(), "productName must be mapped for second item");
+        assertEquals(1, dto2.getQuantity(), "quantity must be mapped for second item");
+        assertEquals(5.0, dto2.getPrice(), "price must be mapped for second item");
+        assertEquals(5.0, dto2.getItemTotal(), "itemTotal must be item quantity × price for second item");
     }
 
     @Test
@@ -269,6 +289,28 @@ class CartServiceImplTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> cartService.clearCart(1L));
         assertTrue(ex.getMessage().contains("Cart not found"));
         verify(cartItemRepository, never()).deleteAll(any());
+    }
+
+    @Test
+    void testAddToCart_newItem_setsAllFieldsOnCartItem() {
+        Cart emptyCart = new Cart();
+        emptyCart.setId(55L);
+        emptyCart.setUser(testUser);
+        emptyCart.setItems(new ArrayList<>());
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(cartRepository.findByUser(testUser)).thenReturn(Optional.of(emptyCart));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+
+        cartService.addToCart(1L, 1L, 3);
+
+        ArgumentCaptor<CartItem> captor = ArgumentCaptor.forClass(CartItem.class);
+        verify(cartItemRepository).save(captor.capture());
+        CartItem saved = captor.getValue();
+        assertEquals(emptyCart, saved.getCart(), "item.cart must be set to the user's cart");
+        assertEquals(testProduct, saved.getProduct(), "item.product must be set to the requested product");
+        assertEquals(3, saved.getQuantity(), "item.quantity must equal the requested quantity");
+        assertEquals(testProduct.getPrice(), saved.getPrice(), "item.price must be set from product.getPrice()");
     }
 
     @Test

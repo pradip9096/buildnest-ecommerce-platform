@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @Transactional
 @SuppressWarnings("null")
-class OrderProcessingComprehensiveTest {
+class OrderProcessingComprehensiveServiceTest {
 
     @Autowired
     private OrderRepository orderRepository;
