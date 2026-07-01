@@ -1,7 +1,7 @@
 package com.example.buildnest_ecommerce.controller.user;
 
 import com.example.buildnest_ecommerce.model.dto.CheckoutSessionDTO;
-import com.example.buildnest_ecommerce.model.entity.Order;
+import com.example.buildnest_ecommerce.model.dto.OrderResponseDTO;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.model.payload.SelectShippingRequest;
 import com.example.buildnest_ecommerce.model.payload.SetAddressRequest;
@@ -70,7 +70,7 @@ public class MultiStepCheckoutController {
     public ResponseEntity<ApiResponse> confirmCheckout(
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
-        Order order = checkoutService.confirmCheckout(currentUser.getId());
+        OrderResponseDTO order = checkoutService.confirmCheckout(currentUser.getId());
         return ResponseEntity.ok(new ApiResponse(true, "Order confirmed successfully.", order));
     }
 }

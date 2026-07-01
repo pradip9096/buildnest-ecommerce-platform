@@ -313,8 +313,12 @@ public class OrderServiceImpl implements OrderService {
         return new OrderResponseDTO(
                 order.getId(),
                 order.getUser().getId(),
+                order.getOrderNumber(),
                 order.getStatus().toString(),
-                order.getTotalAmount().doubleValue(),
+                order.getTotalAmount(),
+                order.getTaxAmount(),
+                order.getShippingAmount(),
+                order.getDiscountAmount(),
                 order.getCreatedAt(),
                 order.getUpdatedAt());
     }
