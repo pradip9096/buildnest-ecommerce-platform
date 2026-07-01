@@ -1,5 +1,6 @@
 package com.example.buildnest_ecommerce.integration;
 
+import com.example.buildnest_ecommerce.exception.PaymentProcessingException;
 import com.razorpay.Order;
 import com.razorpay.OrderClient;
 import com.razorpay.Payment;
@@ -112,4 +113,59 @@ class RazorpayClientAdapterTest {
 
         assertFalse(adapter.verifySignature("order", "pay", "sig"));
     }
+
+    @Test
+    @DisplayName("createOrder — client throws → wraps in RuntimeException")
+    void testCreateOrder_clientThrows_throwsRuntimeException() throws Exception {
+        RazorpayClientAdapter adapter = new RazorpayClientAdapter();
+        ReflectionTestUtils.setField(adapter, "razorpayKeyId", "key");
+        ReflectionTestUtils.setField(adapter, "razorpayKeySecret", "secret");
+
+        RazorpayClient client = mock(RazorpayClient.class);
+        OrderClient orderClient = mock(OrderClient.class);
+        ReflectionTestUtils.setField(client, "orders", orderClient);
+        when(orderClient.create(any(JSONObject.class))).thenThrow(new RuntimeException("API error"));
+        ReflectionTestUtils.setField(adapter, "razorpayClient", client);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> adapter.createOrder(100.0, 1L));
+        assertTrue(ex.getMessage().contains("Failed to create Razorpay order"));
+    }
+
+    @Test
+    @DisplayName("refundPayment — client throws → wraps in PaymentProcessingException")
+    void testRefundPayment_clientThrows_throwsPaymentProcessingException() throws Exception {
+        RazorpayClientAdapter adapter = new RazorpayClientAdapter();
+        ReflectionTestUtils.setField(adapter, "razorpayKeyId", "key");
+        ReflectionTestUtils.setField(adapter, "razorpayKeySecret", "secret");
+
+        RazorpayClient client = mock(RazorpayClient.class);
+        PaymentClient paymentClient = mock(PaymentClient.class);
+        ReflectionTestUtils.setField(client, "payments", paymentClient);
+        when(paymentClient.refund(any(String.class), any(JSONObject.class)))
+                .thenThrow(new RuntimeException("refund API error"));
+        ReflectionTestUtils.setField(adapter, "razorpayClient", client);
+
+        assertThrows(PaymentProcessingException.class,
+                () -> adapter.refundPayment("pay_1", 50.0));
+    }
+
+    @Test
+    @DisplayName("fetchPaymentDetails — client throws → wraps in RuntimeException")
+    void testFetchPaymentDetails_clientThrows_throwsRuntimeException() throws Exception {
+        RazorpayClientAdapter adapter = new RazorpayClientAdapter();
+        ReflectionTestUtils.setField(adapter, "razorpayKeyId", "key");
+        ReflectionTestUtils.setField(adapter, "razorpayKeySecret", "secret");
+
+        RazorpayClient client = mock(RazorpayClient.class);
+        PaymentClient paymentClient = mock(PaymentClient.class);
+        ReflectionTestUtils.setField(client, "payments", paymentClient);
+        when(paymentClient.fetch(any(String.class))).thenThrow(new RuntimeException("fetch error"));
+        ReflectionTestUtils.setField(adapter, "razorpayClient", client);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> adapter.fetchPaymentDetails("pay_1"));
+        assertTrue(ex.getMessage().contains("Failed to fetch payment details"));
+    }
+
 }
