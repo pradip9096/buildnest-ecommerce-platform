@@ -751,6 +751,11 @@
 						<param>com.example.buildnest_ecommerce.inventory.*</param>
 						<param>com.example.buildnest_ecommerce.payment.*</param>
 					</excludedTestClasses>
+					<!-- mutationThreshold gates on TEST STRENGTH = killed / (killed + survived).
+					     The console prints "Mutation score of N" which is killed / total (includes
+					     NO_COVERAGE mutants in the denominator) — that number will always be lower
+					     and is NOT what the gate evaluates. Check the HTML report or mutations.xml
+					     for the authoritative test-strength figure. -->
 					<mutationThreshold>75</mutationThreshold>
 					<coverageThreshold>70</coverageThreshold>
 					<outputFormats>
