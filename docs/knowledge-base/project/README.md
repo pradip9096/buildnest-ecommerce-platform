@@ -18,6 +18,8 @@ For operational lessons extracted from specific sessions (tooling gotchas, one-t
 | [mermaid-diagram-quality-attributes.md](mermaid-diagram-quality-attributes.md) | Mermaid diagram conventions for quality attribute documentation | documentation | — |
 | [open-core-business-model.md](open-core-business-model.md) | Open-core business model pattern and examples | product | — |
 | [check-mysql-installation-on-wsl2.md](check-mysql-installation-on-wsl2.md) | Verifying MySQL installation state on WSL2 | infrastructure | — |
+| [claude-code-memory-directory.md](claude-code-memory-directory.md) | Memory directory structure, the four memory types, current BuildNest files, and how to shape memory via instruction, feedback, or direct editing | tooling | 2026-07-02 |
+| [loop-engineering-vs-claude-code-loop.md](loop-engineering-vs-claude-code-loop.md) | "Loop engineering" as a 2026 industry trend (generator/verifier, ReAct) vs. Claude Code's narrower `/loop` scheduling skill and the closer `/goal` analog | tooling | 2026-07-02 |
 
 ---
 

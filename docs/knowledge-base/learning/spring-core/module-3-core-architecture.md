@@ -450,10 +450,187 @@ Understand the role of the Spring ApplicationContext in managing beans and how i
 
 ---
 
+## What is Context?
 
+In Spring, a **context** is the **runtime environment that holds and manages all the beans of an application**.
+
+In practice, when people say "Spring Context," they usually mean the **ApplicationContext**, which is the most commonly used Spring container.
+
+> **Definition:**
+> The Spring Context (ApplicationContext) is the central container that stores, manages, and provides access to all Spring beans.
+
+---
+
+## Why Do We Need a Context?
+
+An application may contain dozens or hundreds of beans.
+
+The context provides a central place to:
+
+* Store beans
+* Manage bean lifecycles
+* Inject dependencies
+* Provide beans when requested
+* Maintain application-wide configuration
+
+Without a context, every object would need to be created and managed manually.
+
+---
+
+## What Does the Context Contain?
+
+The Spring Context contains:
+
+* Beans
+* Bean definitions
+* Configuration metadata
+* Dependency relationships
+* Bean lifecycle information
+
+Conceptually:
+
+```text
+ApplicationContext
+        │
+        ├── UserService Bean
+        ├── UserRepository Bean
+        ├── EmailService Bean
+        ├── PaymentService Bean
+        └── Configuration Metadata
+```
+
+---
+
+## How Does It Work?
+
+When an application starts:
+
+1. Spring creates the **ApplicationContext**.
+2. The context reads the configuration metadata.
+3. The context creates all required beans.
+4. The context injects dependencies between beans.
+5. The application requests beans from the context whenever needed.
+
+```text
+Application Starts
+        │
+        ▼
+ApplicationContext Created
+        │
+        ▼
+Read Configuration
+        │
+        ▼
+Create Beans
+        │
+        ▼
+Inject Dependencies
+        │
+        ▼
+Application Uses Beans
+```
+
+---
+
+## Context vs Container
+
+These terms are closely related but not identical.
+
+| Container                                                            | Context (ApplicationContext)                                                       |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| General concept that manages beans                                   | The most commonly used implementation of the Spring container                      |
+| Creates and manages beans                                            | Creates, manages, and provides access to beans with additional enterprise features |
+| Includes implementations like `BeanFactory` and `ApplicationContext` | A specific implementation built on top of `BeanFactory`                            |
+
+> **Key point:** Every `ApplicationContext` is a Spring container, but not every Spring container is an `ApplicationContext`.
+
+---
+
+## Getting a Bean from the Context
+
+Instead of creating an object yourself:
+
+```java
+UserService service = new UserService();
+```
+
+You ask the context for it:
+
+```java
+UserService service = context.getBean(UserService.class);
+```
+
+The context returns the already managed bean.
+
+---
+
+## Real-World Analogy
+
+Imagine a **company office**.
+
+* The **office** represents the Spring Context.
+* The **employees** represent beans.
+
+The office:
+
+* Keeps records of all employees.
+* Assigns work.
+* Coordinates interactions.
+* Provides the right employee when needed.
+
+Similarly, the Spring Context:
+
+* Knows every bean.
+* Manages their relationships.
+* Supplies the required bean to the application.
+
+---
+
+## Relationship with Other Core Concepts
+
+```text
+Application
+      │
+      ▼
+ApplicationContext
+      │
+      ├── Bean A
+      ├── Bean B
+      ├── Bean C
+      └── Bean D
+             │
+             ▼
+      Dependency Injection
+```
+
+* The **ApplicationContext** is the central container.
+* It manages all **beans**.
+* It performs **Dependency Injection** between beans.
+
+---
+
+## Context vs Bean
+
+| Context                                             | Bean                                    |
+| --------------------------------------------------- | --------------------------------------- |
+| Manages application objects                         | An application object managed by Spring |
+| Holds multiple beans                                | Represents a single managed object      |
+| Responsible for lifecycle and dependency management | Participates in dependency injection    |
+
+---
+
+## Key Takeaways (80/20)
+
+* The **Spring Context** usually refers to the **ApplicationContext**.
+* It is the central runtime environment that **stores, manages, and provides access to Spring beans**.
+* It reads configuration metadata, creates beans, injects dependencies, and manages bean lifecycles.
+* Applications obtain managed objects (beans) from the **ApplicationContext** instead of creating them manually.
+* **ApplicationContext** is the most commonly used implementation of the Spring container.
+
+1
 
 ---
 # Open Questions about obscure or inconspicuous topics
 
 1. What is the application lifecycle in Spring, and how does the container manage it?
-2. 
+2. What is the difference between `BeanFactory` and `ApplicationContext`, and when should each be used?

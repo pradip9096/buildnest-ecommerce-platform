@@ -10,6 +10,9 @@ Each file is a standalone reference — read it when you hit the relevant situat
 | [pit-mutation-testing-patterns.md](pit-mutation-testing-patterns.md) | Three common PIT mutation survival patterns and their fixes: lambda null-return, setter-removal hidden by DTO, and `targetTests` naming exclusion | testing | 2026-07-01 |
 | [shell-pipeline-exit-code-masking.md](shell-pipeline-exit-code-masking.md) | Pipelines ending in `tail`/`grep` always exit 0 — masks build failures; use `$PIPESTATUS` or `set -o pipefail` | tooling | 2026-07-01 |
 | [github-issue-hygiene.md](github-issue-hygiene.md) | Root causes of stale issue accumulation and a repeatable closure protocol | process | 2026-07-01 |
+| [dotenv-not-auto-loaded-by-local-processes.md](dotenv-not-auto-loaded-by-local-processes.md) | Docker Compose auto-loads `.env`; locally-run processes (`mvnw`, `npm run dev`) do not — must be sourced explicitly | tooling | 2026-07-02 |
+| [persistent-memory-staleness-drift.md](persistent-memory-staleness-drift.md) | Claude's persistent memory (issue counts, milestone status) silently goes stale with no auto-refresh — verify before citing project-state/reference memory as fact | process | 2026-07-02 |
+| [stale-test-classes-false-failures.md](stale-test-classes-false-failures.md) | `mvn test` without `clean` can run orphaned `.class` files for test sources already deleted in an earlier commit, causing unrelated `NoClassDefFoundError` failures | testing | 2026-07-02 |
 
 ## Related Knowledge Base Articles
 
