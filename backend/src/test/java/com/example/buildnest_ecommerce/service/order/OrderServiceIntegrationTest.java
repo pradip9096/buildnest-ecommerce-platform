@@ -280,4 +280,44 @@ class OrderServiceIntegrationTest {
         assertEquals(savedOrder.getIsDeleted(), retrievedOrder.get().getIsDeleted());
         assertEquals(savedOrder.getUser().getId(), retrievedOrder.get().getUser().getId());
     }
+
+    @Test
+    @DisplayName("TC-ORD-018: Should filter persisted orders by status")
+    void testOrderFilteringByStatus() {
+        orderRepository.save(testOrder);
+
+        Order confirmed = new Order();
+        confirmed.setUser(testUser);
+        confirmed.setOrderNumber("ORD-TEST-018-CONF");
+        confirmed.setStatus(Order.OrderStatus.CONFIRMED);
+        confirmed.setTotalAmount(new BigDecimal("2000.00"));
+        confirmed.setIsDeleted(false);
+        confirmed.setCreatedAt(LocalDateTime.now());
+        Order savedConfirmed = orderRepository.save(confirmed);
+
+        List<Order> all = orderRepository.findAll();
+        List<Order> pending = all.stream()
+                .filter(o -> o.getStatus() == Order.OrderStatus.PENDING)
+                .toList();
+        List<Order> confirmedList = all.stream()
+                .filter(o -> o.getStatus() == Order.OrderStatus.CONFIRMED)
+                .toList();
+
+        assertFalse(pending.isEmpty());
+        assertFalse(confirmedList.isEmpty());
+        assertTrue(confirmedList.stream().anyMatch(o -> o.getId().equals(savedConfirmed.getId())));
+    }
+
+    @Test
+    @DisplayName("TC-ORD-019: Should persist and retrieve tracking number")
+    void testTrackingNumberPersistence() {
+        testOrder.setTrackingNumber("TRACK-" + System.currentTimeMillis());
+        Order savedOrder = orderRepository.save(testOrder);
+
+        Optional<Order> retrievedOrder = orderRepository.findById(savedOrder.getId());
+
+        assertTrue(retrievedOrder.isPresent());
+        assertNotNull(retrievedOrder.get().getTrackingNumber());
+        assertEquals(testOrder.getTrackingNumber(), retrievedOrder.get().getTrackingNumber());
+    }
 }

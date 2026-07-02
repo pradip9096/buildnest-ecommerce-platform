@@ -16,6 +16,7 @@ Each file is a standalone reference — read it when you hit the relevant situat
 | [pretooluse-hook-fires-once-per-bash-call.md](pretooluse-hook-fires-once-per-bash-call.md) | `PreToolUse` hooks fire once before the whole Bash tool call, not per line — combining a staging command and a triggering command in one call gives the hook stale state | tooling | 2026-07-02 |
 | [git-checkout-vs-reset-order.md](git-checkout-vs-reset-order.md) | `git checkout -- <file>` restores from the index, not HEAD — on an already-staged file it's a no-op; use `git restore --staged --worktree` or `reset` before `checkout --` | tooling | 2026-07-02 |
 | [changelog-guard-scope-gap.md](changelog-guard-scope-gap.md) | The `changelog-guard` PreToolUse hook only watches `backend/src/main` and `frontend/src` — root scripts, CI config, and other infra files won't trigger it, even though they're "notable changes" | process | 2026-07-02 |
+| [webmvctest-scans-filters-and-interceptors.md](webmvctest-scans-filters-and-interceptors.md) | `@WebMvcTest` scans every `Filter`/`HandlerInterceptor`/`WebMvcConfigurer` bean app-wide, not just the target controller — expect cascading `@MockBean` requirements when converting from `@SpringBootTest` | testing | 2026-07-02 |
 
 ## Related Knowledge Base Articles
 

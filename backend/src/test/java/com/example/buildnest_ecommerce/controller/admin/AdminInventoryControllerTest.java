@@ -1,17 +1,19 @@
 package com.example.buildnest_ecommerce.controller.admin;
 
-import com.example.buildnest_ecommerce.CivilEcommerceApplication;
-import com.example.buildnest_ecommerce.config.TestElasticsearchConfig;
 import com.example.buildnest_ecommerce.config.TestSecurityConfig;
 import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.security.CustomUserDetails;
+import com.example.buildnest_ecommerce.security.Jwt.JwtAuthenticationEntryPoint;
+import com.example.buildnest_ecommerce.security.Jwt.JwtTokenProvider;
+import com.example.buildnest_ecommerce.service.CustomUserDetailsService;
 import com.example.buildnest_ecommerce.service.inventory.InventoryService;
+import com.example.buildnest_ecommerce.service.monitoring.PerformanceMonitoringService;
+import com.example.buildnest_ecommerce.util.RateLimitUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -35,18 +37,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Test suite for AdminInventoryController.
  * Tests admin-specific inventory management endpoints.
  */
-@SpringBootTest(classes = CivilEcommerceApplication.class)
-@AutoConfigureMockMvc
+@WebMvcTest(AdminInventoryController.class)
 @ActiveProfiles("test")
-@Import({ TestElasticsearchConfig.class, TestSecurityConfig.class })
+@Import({ TestSecurityConfig.class, JwtAuthenticationEntryPoint.class })
 @SuppressWarnings({ "null", "removal" })
 class AdminInventoryControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-        @MockBean
+    @MockBean
     private InventoryService inventoryService;
+
+    @MockBean
+    private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private CustomUserDetailsService customUserDetailsService;
+
+    @MockBean
+    private PerformanceMonitoringService performanceMonitoringService;
+
+    @MockBean
+    private RateLimitUtil rateLimitUtil;
 
     private CustomUserDetails adminDetails;
     private CustomUserDetails userDetails;
