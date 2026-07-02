@@ -12,6 +12,9 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Removed
+- 7 misleadingly named top-level `@DataJpaTest` classes — `RBACTest`, `AdminDashboardTest`, `AnalyticsReportingTest`, `ApiIntegrationTest`, `PaymentProcessingTest`, `InventoryManagementTest`, `CategoryManagementTest` — each tested only basic JPA persistence mechanics while its name implied coverage of RBAC enforcement, admin dashboards, analytics, API contracts, payment processing, inventory management, or category management respectively; `ApiIntegrationTest` asserted tautologies (e.g. `page >= 0`) and tested no actual API contract; every persistence scenario they covered is already tested more thoroughly by dedicated classes (`AuthenticationAuthorizationSecurityTest`, `AdminProductControllerIntegrationTest`, `SalesAnalyticsServiceImplTest`/`AdminAnalyticsServiceTest`, the payment test suite, `InventoryServiceImplTest`, `CategoryRepositoryTest`); no unique coverage lost (#255)
+
 ### Changed
 - PIT mutation score raised from 75% (1,237/1,658) to 77% (1,284/1,658), bumping the CI gate to ≥77% (#277); no-coverage mutations reduced from 72 to 68; test strength improved from 78% to 81%
   - `AdminServiceImplTest`: `ArgumentCaptor<User>` on `deleteUser` asserting `isDeleted=true` and `deletedAt≠null`; `ArgumentCaptor` on `updateUser`/`updateUserByAdmin` asserting `updatedAt≠null`; `ex.getMessage()` assertions on all not-found paths to kill lambda null-return mutations
