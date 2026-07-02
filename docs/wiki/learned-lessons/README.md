@@ -13,6 +13,8 @@ Each file is a standalone reference — read it when you hit the relevant situat
 | [dotenv-not-auto-loaded-by-local-processes.md](dotenv-not-auto-loaded-by-local-processes.md) | Docker Compose auto-loads `.env`; locally-run processes (`mvnw`, `npm run dev`) do not — must be sourced explicitly | tooling | 2026-07-02 |
 | [persistent-memory-staleness-drift.md](persistent-memory-staleness-drift.md) | Claude's persistent memory (issue counts, milestone status) silently goes stale with no auto-refresh — verify before citing project-state/reference memory as fact | process | 2026-07-02 |
 | [stale-test-classes-false-failures.md](stale-test-classes-false-failures.md) | `mvn test` without `clean` can run orphaned `.class` files for test sources already deleted in an earlier commit, causing unrelated `NoClassDefFoundError` failures | testing | 2026-07-02 |
+| [pretooluse-hook-fires-once-per-bash-call.md](pretooluse-hook-fires-once-per-bash-call.md) | `PreToolUse` hooks fire once before the whole Bash tool call, not per line — combining a staging command and a triggering command in one call gives the hook stale state | tooling | 2026-07-02 |
+| [git-checkout-vs-reset-order.md](git-checkout-vs-reset-order.md) | `git checkout -- <file>` restores from the index, not HEAD — on an already-staged file it's a no-op; use `git restore --staged --worktree` or `reset` before `checkout --` | tooling | 2026-07-02 |
 
 ## Related Knowledge Base Articles
 
