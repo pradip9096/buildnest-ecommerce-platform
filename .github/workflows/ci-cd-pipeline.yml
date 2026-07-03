@@ -19,6 +19,10 @@ env:
   JAVA_VERSION: '21'
   JAVA_DISTRIBUTION: 'temurin'
 
+permissions:
+  contents: read
+  pull-requests: write
+
 defaults:
   run:
     working-directory: backend
@@ -77,6 +81,109 @@ jobs:
       
       - name: Run integration tests with coverage
         run: ./mvnw verify -P ci -Dpitest.skip=${{ github.event_name == 'workflow_dispatch' && inputs.pit_debug == 'true' }}
+
+      - name: Parse PIT Mutation Report
+        id: pit
+        if: always()
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+          import json
+          from collections import defaultdict
+          from pathlib import Path
+
+          report_file = Path("target/pit-reports/mutations.xml")
+          result = {"present": report_file.exists()}
+
+          if result["present"]:
+              tree = ET.parse(report_file)
+              mutations = tree.getroot().findall("mutation")
+
+              killed = survived = no_coverage = 0
+              survived_by_class = defaultdict(int)
+
+              for m in mutations:
+                  detected = m.get("detected") == "true"
+                  status = m.findtext("status", default="")
+                  if status == "NO_COVERAGE":
+                      no_coverage += 1
+                      survived_by_class[m.findtext("mutatedClass", default="?")] += 1
+                  elif detected:
+                      killed += 1
+                  else:
+                      survived += 1
+                      survived_by_class[m.findtext("mutatedClass", default="?")] += 1
+
+              total = killed + survived + no_coverage
+              reached = killed + survived
+
+              # mutationThreshold in pom.xml gates on mutation score = killed / total
+              # (includes NO_COVERAGE mutants in the denominator) — see pom.xml comment
+              # at the pitest-maven plugin configuration. Test strength (killed / reached)
+              # is reported for visibility only and is NOT what the build gate evaluates.
+              mutation_score = round(killed / total * 100, 1) if total else 0.0
+              test_strength = round(killed / reached * 100, 1) if reached else 0.0
+              threshold = 77.0  # keep in sync with pom.xml <mutationThreshold>
+
+              result.update({
+                  "killed": killed,
+                  "survived": survived,
+                  "no_coverage": no_coverage,
+                  "total": total,
+                  "mutation_score": mutation_score,
+                  "test_strength": test_strength,
+                  "threshold": threshold,
+                  "gate_pass": mutation_score >= threshold,
+                  "top_survived_classes": sorted(
+                      survived_by_class.items(), key=lambda kv: kv[1], reverse=True
+                  )[:5],
+              })
+
+          with open("pit-results.json", "w") as f:
+              json.dump(result, f)
+
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Comment PR with PIT Mutation Results
+        if: ${{ always() && github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'backend/pit-results.json';
+            if (!fs.existsSync(path)) return;
+
+            const pit = JSON.parse(fs.readFileSync(path, 'utf8'));
+            if (!pit.present) return;
+
+            const gateStatus = pit.gate_pass ? '✅' : '❌';
+
+            let comment = '## 🧬 Mutation Testing (PIT)\n\n';
+            comment += '| Metric | Value | Threshold |\n';
+            comment += '|---|---|---|\n';
+            comment += `| Mutation Score (gate) | ${pit.mutation_score}% | ≥ ${pit.threshold}% ${gateStatus} |\n`;
+            comment += `| Test Strength (informational) | ${pit.test_strength}% | not gated |\n`;
+            comment += `| Killed | ${pit.killed} | — |\n`;
+            comment += `| Survived | ${pit.survived} | — |\n`;
+            comment += `| No Coverage | ${pit.no_coverage} | — |\n`;
+
+            if (pit.top_survived_classes.length > 0) {
+              comment += '\n### Top classes by surviving/uncovered mutants\n\n';
+              comment += '| Class | Count |\n|---|---|\n';
+              for (const [cls, count] of pit.top_survived_classes) {
+                comment += `| ${cls} | ${count} |\n`;
+              }
+            }
+
+            comment += '\n*Mutation Score (killed / all generated mutants, including no-coverage) is the metric `mutationThreshold` in `pom.xml` gates the build on. Test Strength (killed / reached mutants) is shown for visibility but does not gate the build.*\n';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
 
       - name: Run PIT mutation testing (debug)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.pit_debug == 'true' }}
