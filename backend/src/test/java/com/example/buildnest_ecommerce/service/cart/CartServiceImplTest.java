@@ -109,11 +109,32 @@ class CartServiceImplTest {
 
     @Test
     void testRemoveItemFromCart() {
-        // Act
-        cartService.removeItemFromCart(1L);
+        when(cartItemRepository.findById(1L)).thenReturn(Optional.of(testCartItem));
 
-        // Assert
+        cartService.removeItemFromCart(1L, testUser.getId());
+
         verify(cartItemRepository).deleteById(1L);
+    }
+
+    @Test
+    void testRemoveItemFromCartRejectsWhenNotOwner() {
+        when(cartItemRepository.findById(1L)).thenReturn(Optional.of(testCartItem));
+
+        assertThrows(
+                com.example.buildnest_ecommerce.exception.AccessDeniedException.class,
+                () -> cartService.removeItemFromCart(1L, 999L),
+                "removing another user's cart item must be rejected");
+        verify(cartItemRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void testRemoveItemFromCartNotFoundThrows() {
+        when(cartItemRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(
+                com.example.buildnest_ecommerce.exception.ResourceNotFoundException.class,
+                () -> cartService.removeItemFromCart(1L, testUser.getId()));
+        verify(cartItemRepository, never()).deleteById(any());
     }
 
     @Test

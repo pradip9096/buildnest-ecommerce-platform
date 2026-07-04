@@ -58,6 +58,16 @@ public class HomeController {
         }
     }
 
+    @GetMapping("/products/featured")
+    public ResponseEntity<ApiResponse> getFeaturedProducts() {
+        try {
+            List<Product> products = productService.getFeaturedProducts();
+            return ResponseEntity.ok(new ApiResponse(true, "Featured products retrieved successfully", products));
+        } catch (Exception e) {
+            return ResponseEntity.ok(new ApiResponse(false, "Error retrieving featured products", null));
+        }
+    }
+
     @GetMapping("/categories")
     public ResponseEntity<ApiResponse> getAllCategories() {
         try {

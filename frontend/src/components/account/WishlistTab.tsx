@@ -71,7 +71,7 @@ export function WishlistTab({ token, userId }: Props) {
         <div className="text-center py-12">
           <div className="text-4xl mb-3">❤️</div>
           <p className="text-gray-500 mb-4">Your wishlist is empty.</p>
-          <Link to="/" className="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+          <Link to="/products" className="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
             Browse Products
           </Link>
         </div>

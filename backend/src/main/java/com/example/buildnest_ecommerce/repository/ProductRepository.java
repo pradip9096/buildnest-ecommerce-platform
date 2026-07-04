@@ -51,6 +51,12 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
         List<Product> findByIsActiveTrue();
 
         /**
+         * Find active, admin-curated featured products for home page merchandising.
+         */
+        @EntityGraph(attributePaths = { "category", "inventory" })
+        List<Product> findByIsFeaturedTrueAndIsActiveTrue();
+
+        /**
          * Advanced search with multiple filters
          * Supports filtering by name, category, price range, and stock status
          * 

@@ -96,7 +96,7 @@ export function CartPage() {
             <h2 className="text-xl font-semibold text-gray-700 mb-2">Your cart is empty</h2>
             <p className="text-gray-500 mb-6">Discover our range of home construction and décor products.</p>
             <Link
-              to="/"
+              to="/products"
               className="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
             >
               Browse Products
@@ -165,7 +165,7 @@ export function CartPage() {
                   Proceed to Checkout
                 </button>
                 <Link
-                  to="/"
+                  to="/products"
                   className="mt-3 block text-center text-sm text-gray-500 hover:text-gray-700"
                 >
                   ← Continue Shopping

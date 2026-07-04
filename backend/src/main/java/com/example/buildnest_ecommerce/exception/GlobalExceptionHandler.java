@@ -42,6 +42,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleSpringSecurityAccessDeniedException(
+            org.springframework.security.access.AccessDeniedException ex, WebRequest request) {
+        log.warn("Authorization denied: {}", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "You do not have permission to perform this action",
+                "Access denied"
+        );
+        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
     
     @ExceptionHandler(PaymentProcessingException.class)
     public ResponseEntity<ErrorResponse> handlePaymentProcessingException(

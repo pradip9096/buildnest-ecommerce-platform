@@ -119,6 +119,37 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Should include role names in response dto")
+    void testGetUserResponseById_includesRoles() {
+        com.example.buildnest_ecommerce.model.entity.Role adminRole =
+                new com.example.buildnest_ecommerce.model.entity.Role();
+        adminRole.setName("ROLE_ADMIN");
+        User user = new User();
+        user.setId(4L);
+        user.setUsername("admin");
+        user.setRoles(java.util.Set.of(adminRole));
+        when(userRepository.findById(4L)).thenReturn(Optional.of(user));
+
+        UserResponseDTO response = userService.getUserResponseById(4L);
+
+        assertEquals(List.of("ROLE_ADMIN"), response.getRoles());
+    }
+
+    @Test
+    @DisplayName("Should return empty roles list when user has no roles")
+    void testGetUserResponseById_nullRoles_returnsEmptyList() {
+        User user = new User();
+        user.setId(5L);
+        user.setUsername("norole");
+        when(userRepository.findById(5L)).thenReturn(Optional.of(user));
+
+        UserResponseDTO response = userService.getUserResponseById(5L);
+
+        assertNotNull(response.getRoles());
+        assertTrue(response.getRoles().isEmpty());
+    }
+
+    @Test
     @DisplayName("Should update user profile")
     void testUpdateUserProfile() {
         User user = new User();

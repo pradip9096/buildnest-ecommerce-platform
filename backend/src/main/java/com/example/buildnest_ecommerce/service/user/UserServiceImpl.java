@@ -2,6 +2,7 @@ package com.example.buildnest_ecommerce.service.user;
 
 import com.example.buildnest_ecommerce.model.dto.UpdateUserDTO;
 import com.example.buildnest_ecommerce.model.dto.UserResponseDTO;
+import com.example.buildnest_ecommerce.model.entity.Role;
 import com.example.buildnest_ecommerce.model.entity.User;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -94,6 +95,9 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserResponseDTO mapToResponseDTO(User user) {
+        List<String> roleNames = user.getRoles() == null
+                ? List.of()
+                : user.getRoles().stream().map(Role::getName).toList();
         return new UserResponseDTO(
                 user.getId(),
                 user.getUsername(),
@@ -101,6 +105,7 @@ public class UserServiceImpl implements UserService {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getPhoneNumber(),
-                null);
+                null,
+                roleNames);
     }
 }

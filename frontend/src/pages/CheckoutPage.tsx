@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
 import { CheckoutStepper } from '../components/checkout/CheckoutStepper';
-import { AddressStep } from '../components/checkout/AddressStep';
+import { AddressStep, type AddressSubmission } from '../components/checkout/AddressStep';
 import { ShippingStep } from '../components/checkout/ShippingStep';
 import { PaymentStep } from '../components/checkout/PaymentStep';
 import {
@@ -13,9 +13,8 @@ import {
   initiateCheckoutPayment,
   confirmCheckout,
 } from '../api/checkout';
+import { createAddress } from '../api/addresses';
 import type { CheckoutSession, ShippingOption } from '../types';
-
-const PLACEHOLDER_ADDRESS_ID = 1;
 
 export function CheckoutPage() {
   const { user, token, isAuthenticated } = useAuth();
@@ -56,15 +55,16 @@ export function CheckoutPage() {
     );
   }
 
-  const handleAddressNext = async (postalCode: string) => {
+  const handleAddressNext = async (address: AddressSubmission) => {
     if (!token) return;
     setActionLoading(true);
     setError(null);
     try {
-      const sess = await setCheckoutAddress(PLACEHOLDER_ADDRESS_ID, token);
+      const savedAddress = await createAddress(address, token);
+      const sess = await setCheckoutAddress(savedAddress.id, token);
       setSession(sess);
       setStep(1);
-      await fetchShippingOptions(token, postalCode).then(setShippingOptions).catch(() => {});
+      await fetchShippingOptions(token, address.postalCode).then(setShippingOptions).catch(() => {});
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save address');
     } finally {

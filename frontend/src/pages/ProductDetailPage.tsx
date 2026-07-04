@@ -97,7 +97,7 @@ export function ProductDetailPage() {
     return (
       <div className="max-w-6xl mx-auto px-4 py-16 flex flex-col items-center gap-4">
         <ErrorMessage message={productError ?? 'Product not found'} />
-        <Link to="/" className="text-sm text-indigo-600 hover:underline">← Back to products</Link>
+        <Link to="/products" className="text-sm text-indigo-600 hover:underline">← Back to products</Link>
       </div>
     );
   }
@@ -124,7 +124,7 @@ export function ProductDetailPage() {
           <span>/</span>
           {product.category && (
             <>
-              <Link to={`/?category=${product.category.id}`} className="hover:text-indigo-600">
+              <Link to={`/products?category=${product.category.id}`} className="hover:text-indigo-600">
                 {product.category.name}
               </Link>
               <span>/</span>

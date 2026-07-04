@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { apiLogin, apiLogout, apiRegister } from '../api/auth';
+import { fetchProfile } from '../api/user';
 import type { AuthUser, AuthTokens } from '../types';
 
 interface AuthContextValue {
@@ -35,20 +36,18 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
-function tokenToUser(token: string): AuthUser | null {
+// The JWT deliberately carries only subject/issuedAt/expiration (see spring-security.md) —
+// it never contains the user's id or roles. Those must come from the login response or
+// GET /api/user/profile, never decoded from the token.
+function isTokenExpired(token: string): boolean {
   const payload = decodeJwtPayload(token);
-  if (!payload) return null;
+  if (!payload) return true;
   const exp = payload['exp'] as number | undefined;
-  if (exp && exp * 1000 < Date.now()) return null;
-  return {
-    id: (payload['id'] as number) ?? (payload['userId'] as number) ?? 0,
-    username: (payload['sub'] as string) ?? '',
-    roles: (
-      (payload['roles'] as string[] | undefined) ??
-      (payload['authorities'] as string[] | undefined) ??
-      []
-    ).map(r => r.replace('ROLE_', '')),
-  };
+  return exp !== undefined && exp * 1000 < Date.now();
+}
+
+function normalizeRoles(roles: string[] | undefined): string[] {
+  return (roles ?? []).map(r => r.replace('ROLE_', ''));
 }
 
 function storeTokens(tokens: AuthTokens) {
@@ -67,25 +66,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('access_token');
-    if (stored) {
-      const parsed = tokenToUser(stored);
-      if (parsed) {
-        setUser(parsed);
+    let cancelled = false;
+
+    async function restoreSession() {
+      const stored = localStorage.getItem('access_token');
+      if (!stored || isTokenExpired(stored)) {
+        if (stored) clearTokens();
+        setLoading(false);
+        return;
+      }
+      try {
+        const profile = await fetchProfile(stored);
+        if (cancelled) return;
+        setUser({ id: profile.id, username: profile.username, roles: normalizeRoles(profile.roles) });
         setToken(stored);
-      } else {
-        clearTokens();
+      } catch {
+        if (!cancelled) clearTokens();
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
-    setLoading(false);
+
+    restoreSession();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {
     const tokens = await apiLogin(username, password);
     storeTokens(tokens);
-    const parsed = tokenToUser(tokens.accessToken);
     setToken(tokens.accessToken);
-    setUser(parsed ?? { id: tokens.userId, username: tokens.username, roles: ['USER'] });
+    // Roles are never in the JWT or the login response (see spring-security.md) —
+    // fetch the profile to get the authoritative role list.
+    const profile = await fetchProfile(tokens.accessToken).catch(() => null);
+    setUser({
+      id: tokens.userId,
+      username: tokens.username,
+      roles: normalizeRoles(profile?.roles),
+    });
   }, []);
 
   const logout = useCallback(async () => {

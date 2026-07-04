@@ -7,6 +7,12 @@
 
     <!-- Issue #73 (INV-01): track when a reservation expires so the cleanup job can release orphaned holds -->
     <changeSet id="20260630-010-alter-inventory-add-reservation-expires-at" author="buildnest-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="inventory" columnName="reservation_expires_at"/>
+            </not>
+        </preConditions>
+
         <comment>Add reservation_expires_at to inventory for timed reservation release (INV-01, #73)</comment>
 
         <addColumn tableName="inventory">

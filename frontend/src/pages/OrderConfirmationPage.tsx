@@ -139,7 +139,7 @@ export function OrderConfirmationPage() {
 
         <div className="flex flex-col sm:flex-row gap-3 mt-6">
           <Link
-            to="/"
+            to="/products"
             className="flex-1 text-center bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition-colors"
           >
             Continue Shopping

@@ -24,3 +24,11 @@ export async function searchProducts(keyword: string): Promise<Product[]> {
   if (!json.success) throw new Error(json.message);
   return json.data ?? [];
 }
+
+export async function fetchFeaturedProducts(): Promise<Product[]> {
+  const res = await fetch('/api/public/products/featured');
+  if (!res.ok) throw new Error(`Failed to fetch featured products: ${res.status}`);
+  const json: ApiResponse<Product[]> = await res.json();
+  if (!json.success) throw new Error(json.message);
+  return json.data ?? [];
+}

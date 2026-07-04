@@ -23,6 +23,8 @@ public interface ProductService {
 
     List<Product> searchProducts(String keyword);
 
+    List<Product> getFeaturedProducts();
+
     // New methods for V2 API
     Page<Product> findAll(Pageable pageable);
 

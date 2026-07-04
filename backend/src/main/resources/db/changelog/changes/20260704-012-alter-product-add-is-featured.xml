@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #289 (PROD-06): featured-products backend support, prerequisite for the home page (#288) -->
+    <changeSet id="20260704-012-alter-product-add-is-featured" author="buildnest-team">
+        <!-- "products" is not created by any Liquibase changeset in this repo — same drift class
+             as #241 and the categories/inventory precedents. In the test profile, Liquibase runs
+             before Hibernate's create-drop creates the table, so it does not exist yet here. -->
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="products"/>
+        </preConditions>
+
+        <comment>Add is_featured to products for home page merchandising (PROD-06, #289)</comment>
+
+        <addColumn tableName="products">
+            <column name="is_featured" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="products" columnName="is_featured"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

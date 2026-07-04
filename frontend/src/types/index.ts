@@ -120,6 +120,17 @@ export interface Order {
   createdAt: string;
 }
 
+export interface Address {
+  id: number;
+  streetAddress: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+  addressType?: string;
+}
+
 export interface UserProfile {
   id: number;
   username: string;
@@ -128,6 +139,7 @@ export interface UserProfile {
   lastName: string;
   phone?: string;
   address?: string;
+  roles?: string[];
 }
 
 export interface AuthTokens {

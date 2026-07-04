@@ -46,8 +46,10 @@ export function LoginPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">Username</label>
               <input
+                id="username"
+                name="username"
                 type="text"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
@@ -60,13 +62,15 @@ export function LoginPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
                 <Link to="/forgot-password" className="text-xs text-amber-600 hover:text-amber-700">
                   Forgot password?
                 </Link>
               </div>
               <div className="relative">
                 <input
+                  id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}

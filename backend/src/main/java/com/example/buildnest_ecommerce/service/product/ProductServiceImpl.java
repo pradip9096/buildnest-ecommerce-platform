@@ -95,6 +95,7 @@ public class ProductServiceImpl implements ProductService {
         product.setStockQuantity(request.getStockQuantity());
         product.setSku(request.getSku());
         product.setImageUrl(request.getImageUrl());
+        product.setIsFeatured(Boolean.TRUE.equals(request.getIsFeatured()));
         product.setCreatedAt(LocalDateTime.now());
 
         if (request.getCategoryId() != null) {
@@ -133,6 +134,9 @@ public class ProductServiceImpl implements ProductService {
         product.setStockQuantity(request.getStockQuantity());
         product.setSku(request.getSku());
         product.setImageUrl(request.getImageUrl());
+        if (request.getIsFeatured() != null) {
+            product.setIsFeatured(request.getIsFeatured());
+        }
         product.setUpdatedAt(LocalDateTime.now());
 
         if (request.getCategoryId() != null) {
@@ -190,6 +194,12 @@ public class ProductServiceImpl implements ProductService {
     public List<Product> searchProducts(String keyword) {
         log.info("Searching products with keyword: {}", keyword);
         return productRepository.findByNameContainingIgnoreCase(keyword);
+    }
+
+    @Override
+    public List<Product> getFeaturedProducts() {
+        log.info("Fetching featured products");
+        return productRepository.findByIsFeaturedTrueAndIsActiveTrue();
     }
 
     @Override

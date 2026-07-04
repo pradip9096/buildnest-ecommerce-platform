@@ -19,5 +19,7 @@
     <include file="db/changelog/changes/20260624-008-create-inventory-audit-log.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260629-009-alter-payment-add-refund-columns.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260630-010-alter-inventory-add-reservation-expires-at.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260704-011-fix-decor-category-encoding.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260704-012-alter-product-add-is-featured.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

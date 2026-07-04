@@ -35,6 +35,7 @@ class ProductTest {
                 "http://image.url",
                 expiryDate,
                 true,
+                false,
                 now,
                 now);
 

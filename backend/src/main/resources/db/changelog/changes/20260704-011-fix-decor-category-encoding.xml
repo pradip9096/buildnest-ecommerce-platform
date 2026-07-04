@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Dynamic analysis report 2026-07-04, Finding 4: category id 4 was inserted with
+         mismatched client/connection character encoding, producing double-encoded UTF-8
+         ("DÃ©cor" instead of "Décor"). Corrects the stored value; see also the JDBC URL
+         charset params added alongside this changeset to prevent recurrence. -->
+    <changeSet id="20260704-011-fix-decor-category-encoding" author="buildnest-team">
+        <!-- "categories" is not created by any Liquibase changeset in this repo — it exists in the
+             real dev MySQL DB only via Hibernate ddl-auto drift (same class of issue as #241 and
+             the 20260630-010 inventory column). In the test profile, Liquibase runs before Hibernate's
+             create-drop schema generation, so the table does not exist yet at this point — skip cleanly. -->
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="categories"/>
+        </preConditions>
+
+        <comment>Fix double-encoded UTF-8 in Décor category name/description (dynamic-analysis-2026-07-04 Finding 4)</comment>
+
+        <update tableName="categories">
+            <column name="name" value="Décor"/>
+            <column name="description" value="Home décor and finishes"/>
+            <where>id = 4</where>
+        </update>
+
+        <rollback>
+            <update tableName="categories">
+                <column name="name" value="DÃ©cor"/>
+                <column name="description" value="Home dÃ©cor and finishes"/>
+                <where>id = 4</where>
+            </update>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

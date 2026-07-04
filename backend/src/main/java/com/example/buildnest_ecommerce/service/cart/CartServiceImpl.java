@@ -10,6 +10,8 @@ import com.example.buildnest_ecommerce.repository.CartRepository;
 import com.example.buildnest_ecommerce.repository.CartItemRepository;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import com.example.buildnest_ecommerce.exception.AccessDeniedException;
+import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -111,8 +113,16 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public void removeItemFromCart(Long cartItemId) {
+    public void removeItemFromCart(Long cartItemId, Long requestingUserId) {
         log.info("Removing item {} from cart", cartItemId);
+
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("CartItem", cartItemId));
+
+        if (!item.getCart().getUser().getId().equals(requestingUserId)) {
+            throw new AccessDeniedException("Cart item does not belong to the requesting user");
+        }
+
         cartItemRepository.deleteById(cartItemId);
     }
 

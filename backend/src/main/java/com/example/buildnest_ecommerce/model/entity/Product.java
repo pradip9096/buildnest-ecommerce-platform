@@ -61,6 +61,9 @@ public class Product implements AggregateRoot {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Column(name = "is_featured")
+    private Boolean isFeatured = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 

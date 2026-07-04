@@ -52,4 +52,7 @@ public class CreateProductRequest {
     @Size(max = 500, message = "Image URL must not exceed 500 characters")
     @Schema(example = "https://cdn.example.com/products/cement-50kg.jpg")
     private String imageUrl;
+
+    @Schema(example = "false", description = "Whether this product appears in the home page featured section")
+    private Boolean isFeatured;
 }

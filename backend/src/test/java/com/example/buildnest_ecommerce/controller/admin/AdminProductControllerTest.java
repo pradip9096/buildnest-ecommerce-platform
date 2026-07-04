@@ -53,7 +53,7 @@ class AdminProductControllerTest {
     @Test
     void createUpdateDeleteProduct() {
         CreateProductRequest request = new CreateProductRequest("name", "desc desc", BigDecimal.TEN,
-                BigDecimal.ONE, 1, "SKU", 1L, "http://image");
+                BigDecimal.ONE, 1, "SKU", 1L, "http://image", false);
         when(productService.createProduct(any(CreateProductRequest.class))).thenReturn(new Product());
         when(productService.updateProduct(eq(1L), any(CreateProductRequest.class))).thenReturn(new Product());
 
@@ -87,7 +87,7 @@ class AdminProductControllerTest {
     @Test
     void createProduct_serviceThrows_returns400() {
         CreateProductRequest request = new CreateProductRequest("name", "desc desc", BigDecimal.TEN,
-                BigDecimal.ONE, 1, "SKU", 1L, "http://image");
+                BigDecimal.ONE, 1, "SKU", 1L, "http://image", false);
         when(productService.createProduct(any(CreateProductRequest.class)))
                 .thenThrow(new RuntimeException("duplicate SKU"));
 
@@ -97,7 +97,7 @@ class AdminProductControllerTest {
     @Test
     void updateProduct_serviceThrows_returns400() {
         CreateProductRequest request = new CreateProductRequest("name", "desc desc", BigDecimal.TEN,
-                BigDecimal.ONE, 1, "SKU", 1L, "http://image");
+                BigDecimal.ONE, 1, "SKU", 1L, "http://image", false);
         when(productService.updateProduct(eq(1L), any(CreateProductRequest.class)))
                 .thenThrow(new RuntimeException("not found"));
 

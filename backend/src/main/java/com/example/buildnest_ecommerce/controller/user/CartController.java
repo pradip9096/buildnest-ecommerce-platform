@@ -3,6 +3,7 @@ package com.example.buildnest_ecommerce.controller.user;
 import com.example.buildnest_ecommerce.model.payload.AddItemRequest;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.model.payload.CartResponseDTO;
+import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import com.example.buildnest_ecommerce.service.cart.CartService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -40,6 +42,7 @@ public class CartController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized - Valid JWT token required")
     })
     @PostMapping("/add")
+    @PreAuthorize("hasRole('USER') and #userId == authentication.principal.id")
     public ResponseEntity<ApiResponse> addToCart(
             @Parameter(description = "User ID", example = "1", required = true) @RequestParam Long userId,
             @Parameter(description = "Product details to add to cart", required = true) @RequestBody AddItemRequest request) {
@@ -59,6 +62,7 @@ public class CartController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Cart not found for the specified user")
     })
     @GetMapping("/{userId}")
+    @PreAuthorize("hasRole('USER') and #userId == authentication.principal.id")
     public ResponseEntity<ApiResponse> getCart(
             @Parameter(description = "User ID", example = "1", required = true) @PathVariable Long userId) {
         try {
@@ -71,9 +75,11 @@ public class CartController {
     }
 
     @DeleteMapping("/item/{cartItemId}")
-    public ResponseEntity<ApiResponse> removeFromCart(@PathVariable Long cartItemId) {
+    public ResponseEntity<ApiResponse> removeFromCart(
+            @PathVariable Long cartItemId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
-            cartService.removeItemFromCart(cartItemId);
+            cartService.removeItemFromCart(cartItemId, userDetails.getId());
             return ResponseEntity.ok(new ApiResponse(true, "Item removed from cart", null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -82,6 +88,7 @@ public class CartController {
     }
 
     @DeleteMapping("/clear/{userId}")
+    @PreAuthorize("hasRole('USER') and #userId == authentication.principal.id")
     public ResponseEntity<ApiResponse> clearCart(@PathVariable Long userId) {
         try {
             cartService.clearCart(userId);
@@ -93,6 +100,7 @@ public class CartController {
     }
 
     @GetMapping("/total/{userId}")
+    @PreAuthorize("hasRole('USER') and #userId == authentication.principal.id")
     public ResponseEntity<ApiResponse> getCartTotal(@PathVariable Long userId) {
         try {
             Double total = cartService.getCartTotal(userId);

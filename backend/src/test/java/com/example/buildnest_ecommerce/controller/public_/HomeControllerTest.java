@@ -223,4 +223,48 @@ class HomeControllerTest {
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data").isEmpty());
     }
+
+    @Test
+    @DisplayName("Should return featured products successfully")
+    void testGetFeaturedProducts() throws Exception {
+        // Arrange
+        testProduct.setIsFeatured(true);
+        List<Product> products = Arrays.asList(testProduct);
+        when(productService.getFeaturedProducts()).thenReturn(products);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/public/products/featured"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Featured products retrieved successfully"))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].name").value("Test Product"));
+    }
+
+    @Test
+    @DisplayName("Should return empty list when no products are featured")
+    void testGetFeaturedProductsEmpty() throws Exception {
+        // Arrange
+        when(productService.getFeaturedProducts()).thenReturn(Arrays.asList());
+
+        // Act & Assert
+        mockMvc.perform(get("/api/public/products/featured"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    @DisplayName("Should handle error when getting featured products")
+    void testGetFeaturedProductsError() throws Exception {
+        // Arrange
+        when(productService.getFeaturedProducts()).thenThrow(new RuntimeException("Database error"));
+
+        // Act & Assert
+        mockMvc.perform(get("/api/public/products/featured"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Error retrieving featured products"));
+    }
 }

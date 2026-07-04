@@ -2,15 +2,23 @@ package com.example.buildnest_ecommerce.controller.user;
 
 import com.example.buildnest_ecommerce.model.payload.AddItemRequest;
 import com.example.buildnest_ecommerce.model.payload.CartResponseDTO;
+import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import com.example.buildnest_ecommerce.service.cart.CartService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class CartControllerTest {
+
+    private static CustomUserDetails userDetails(Long id) {
+        return new CustomUserDetails(id, "testuser", "test@example.com", "hash",
+                Collections.emptyList(), true, true, true, true);
+    }
 
     @Test
     void addGetRemoveClearTotal() {
@@ -26,7 +34,7 @@ class CartControllerTest {
 
         assertEquals(HttpStatus.OK, controller.addToCart(1L, request).getStatusCode());
         assertEquals(HttpStatus.OK, controller.getCart(1L).getStatusCode());
-        assertEquals(HttpStatus.OK, controller.removeFromCart(5L).getStatusCode());
+        assertEquals(HttpStatus.OK, controller.removeFromCart(5L, userDetails(1L)).getStatusCode());
         assertEquals(HttpStatus.OK, controller.clearCart(1L).getStatusCode());
         assertEquals(HttpStatus.OK, controller.getCartTotal(1L).getStatusCode());
     }
@@ -46,7 +54,7 @@ class CartControllerTest {
         doThrow(new RuntimeException("add"))
                 .when(cartService).addToCart(eq(1L), eq(10L), eq(2));
         doThrow(new RuntimeException("remove"))
-                .when(cartService).removeItemFromCart(eq(5L));
+                .when(cartService).removeItemFromCart(eq(5L), eq(1L));
         doThrow(new RuntimeException("clear"))
                 .when(cartService).clearCart(eq(1L));
         when(cartService.getCartTotal(1L)).thenThrow(new RuntimeException("total"));
@@ -58,8 +66,19 @@ class CartControllerTest {
         request.setQuantity(2);
 
         assertEquals(HttpStatus.BAD_REQUEST, controller.addToCart(1L, request).getStatusCode());
-        assertEquals(HttpStatus.BAD_REQUEST, controller.removeFromCart(5L).getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, controller.removeFromCart(5L, userDetails(1L)).getStatusCode());
         assertEquals(HttpStatus.BAD_REQUEST, controller.clearCart(1L).getStatusCode());
         assertEquals(HttpStatus.NOT_FOUND, controller.getCartTotal(1L).getStatusCode());
+    }
+
+    @Test
+    void removeFromCartRejectsWhenNotOwner() {
+        CartService cartService = mock(CartService.class);
+        doThrow(new com.example.buildnest_ecommerce.exception.AccessDeniedException("not owner"))
+                .when(cartService).removeItemFromCart(eq(5L), eq(2L));
+
+        CartController controller = new CartController(cartService);
+
+        assertEquals(HttpStatus.BAD_REQUEST, controller.removeFromCart(5L, userDetails(2L)).getStatusCode());
     }
 }

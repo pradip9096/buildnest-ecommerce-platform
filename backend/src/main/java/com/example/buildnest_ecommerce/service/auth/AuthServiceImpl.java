@@ -84,6 +84,7 @@ public class AuthServiceImpl implements AuthService {
             response.setAccessToken(jwt);
             response.setRefreshToken(refreshToken.getToken());
             response.setTokenType("Bearer");
+            response.setUserId(user.getId());
             response.setUsername(username);
             return response;
         } catch (Exception e) {
@@ -236,6 +237,7 @@ public class AuthServiceImpl implements AuthService {
         response.setAccessToken(newAccessToken);
         response.setRefreshToken(newRefreshToken.getToken());
         response.setTokenType("Bearer");
+        response.setUserId(user.getId());
         response.setUsername(user.getUsername());
         return response;
     }

@@ -42,8 +42,10 @@ export function ProfileTab({ token }: Props) {
 
   const inp = (name: keyof typeof form, label: string, type = 'text') => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label htmlFor={`profile-${name}`} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <input
+        id={`profile-${name}`}
+        name={name}
         type={type}
         value={form[name]}
         onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
@@ -75,8 +77,10 @@ export function ProfileTab({ token }: Props) {
       {inp('email', 'Email', 'email')}
       {inp('phone', 'Phone number', 'tel')}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+        <label htmlFor="profile-address" className="block text-sm font-medium text-gray-700 mb-1">Address</label>
         <textarea
+          id="profile-address"
+          name="address"
           value={form.address}
           onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
           rows={2}

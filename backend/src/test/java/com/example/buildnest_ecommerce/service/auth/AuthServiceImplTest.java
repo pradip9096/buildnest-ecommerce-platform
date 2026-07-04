@@ -111,6 +111,7 @@ class AuthServiceImplTest {
         assertEquals("refresh-token", response.getRefreshToken());
         assertEquals("Bearer", response.getTokenType());
         assertEquals("testuser", response.getUsername());
+        assertEquals(1L, response.getUserId(), "login response must include the real user id, not null");
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(jwtTokenProvider).generateToken(authentication);
         verify(userRepository).findByUsername(username);
@@ -210,6 +211,7 @@ class AuthServiceImplTest {
         assertEquals("new-refresh-token", response.getRefreshToken());
         assertEquals("Bearer", response.getTokenType());
         assertEquals("testuser", response.getUsername());
+        assertEquals(1L, response.getUserId(), "refresh response must include the real user id, not null");
         verify(refreshTokenService).rotateRefreshToken(any());
         verify(auditLogService).logAuthenticationEvent(eq(1L), eq("TOKEN_REFRESH"), any(), any());
     }

@@ -7,17 +7,26 @@ interface AddressForm {
   city: string;
   state: string;
   postalCode: string;
+  country: string;
   phone: string;
 }
 
+export interface AddressSubmission {
+  streetAddress: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
 interface Props {
-  onNext: (postalCode: string) => void;
+  onNext: (address: AddressSubmission) => void;
   loading: boolean;
   error: string | null;
 }
 
 const EMPTY: AddressForm = {
-  fullName: '', line1: '', line2: '', city: '', state: '', postalCode: '', phone: '',
+  fullName: '', line1: '', line2: '', city: '', state: '', postalCode: '', country: 'India', phone: '',
 };
 
 type Field = keyof AddressForm;
@@ -28,6 +37,7 @@ function validate(form: AddressForm): Partial<Record<Field, string>> {
   if (!form.line1.trim()) e.line1 = 'Address line 1 is required';
   if (!form.city.trim()) e.city = 'City is required';
   if (!form.state.trim()) e.state = 'State is required';
+  if (!form.country.trim()) e.country = 'Country is required';
   if (!/^\d{6}$/.test(form.postalCode)) e.postalCode = 'Enter a valid 6-digit postal code';
   if (!/^\d{10}$/.test(form.phone)) e.phone = 'Enter a valid 10-digit phone number';
   return e;
@@ -61,7 +71,13 @@ export function AddressStep({ onNext, loading, error }: Props) {
     e.preventDefault();
     setTouched(Object.fromEntries(Object.keys(EMPTY).map(k => [k, true])));
     if (Object.keys(errors).length > 0) return;
-    onNext(form.postalCode);
+    onNext({
+      streetAddress: form.line2.trim() ? `${form.line1}, ${form.line2}` : form.line1,
+      city: form.city,
+      state: form.state,
+      postalCode: form.postalCode,
+      country: form.country,
+    });
   };
 
   return (
@@ -69,7 +85,7 @@ export function AddressStep({ onNext, loading, error }: Props) {
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Delivery Address</h2>
 
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5 text-sm text-amber-800">
-        Address management is coming in a future update. Enter your delivery details below — they will be used to calculate shipping costs.
+        Saved address book is coming in a future update. This address will be used for this order and delivery cost calculation.
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -79,6 +95,7 @@ export function AddressStep({ onNext, loading, error }: Props) {
         {field('city', 'City', 'Mumbai')}
         {field('state', 'State', 'Maharashtra')}
         {field('postalCode', 'Postal code', '400001')}
+        {field('country', 'Country', 'India')}
         {field('phone', 'Phone number', '9876543210', 'tel')}
       </div>
 

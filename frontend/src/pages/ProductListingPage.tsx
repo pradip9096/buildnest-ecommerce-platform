@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useProducts } from '../hooks/useProducts';
 import { useCategories } from '../hooks/useCategories';
 import { ProductGrid } from '../components/product/ProductGrid';
@@ -11,20 +12,37 @@ import type { ProductFilters, SortOption } from '../types';
 
 const PAGE_SIZE = 12;
 
-const DEFAULT_FILTERS: ProductFilters = {
-  keyword: '',
-  categoryIds: [],
-  sort: 'relevance',
-  page: 0,
-  pageSize: PAGE_SIZE,
-};
+function filtersFromSearchParams(params: URLSearchParams): ProductFilters {
+  return {
+    keyword: params.get('search') ?? '',
+    categoryIds: params.getAll('category').map(Number).filter(n => !Number.isNaN(n)),
+    sort: 'relevance',
+    page: 0,
+    pageSize: PAGE_SIZE,
+  };
+}
 
 export function ProductListingPage() {
-  const [filters, setFilters] = useState<ProductFilters>(DEFAULT_FILTERS);
-  const [searchInput, setSearchInput] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [filters, setFilters] = useState<ProductFilters>(() => filtersFromSearchParams(searchParams));
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('search') ?? '');
 
   const { products, totalItems, totalPages, loading, error } = useProducts(filters);
   const { categories, loading: categoriesLoading } = useCategories();
+
+  // Keep filters/search box in sync when the URL changes from outside a form
+  // handler in this component — e.g. browser back/forward through search history.
+  const urlKeyword = searchParams.get('search') ?? '';
+  const urlCategoryIds = searchParams.getAll('category').map(Number).filter(n => !Number.isNaN(n)).join(',');
+  useEffect(() => {
+    setFilters(f => ({
+      ...f,
+      keyword: urlKeyword,
+      categoryIds: urlCategoryIds ? urlCategoryIds.split(',').map(Number) : [],
+      page: 0,
+    }));
+    setSearchInput(urlKeyword);
+  }, [urlKeyword, urlCategoryIds]);
 
   const setPage = useCallback((page: number) => {
     setFilters(f => ({ ...f, page }));
@@ -37,16 +55,34 @@ export function ProductListingPage() {
 
   const setCategoryIds = useCallback((categoryIds: number[]) => {
     setFilters(f => ({ ...f, categoryIds, page: 0 }));
-  }, []);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete('category');
+      categoryIds.forEach(id => next.append('category', String(id)));
+      return next;
+    });
+  }, [setSearchParams]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    setFilters(f => ({ ...f, keyword: searchInput.trim(), page: 0 }));
+    const keyword = searchInput.trim();
+    setFilters(f => ({ ...f, keyword, page: 0 }));
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (keyword) next.set('search', keyword);
+      else next.delete('search');
+      return next;
+    });
   }
 
   function handleClearSearch() {
     setSearchInput('');
     setFilters(f => ({ ...f, keyword: '', page: 0 }));
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete('search');
+      return next;
+    });
   }
 
   return (

@@ -275,6 +275,61 @@ class ProductServiceImplTest {
     }
 
     @Test
+    void testGetFeaturedProducts() {
+        testProduct.setIsFeatured(true);
+        when(productRepository.findByIsFeaturedTrueAndIsActiveTrue()).thenReturn(List.of(testProduct));
+
+        List<Product> result = productService.getFeaturedProducts();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertTrue(result.get(0).getIsFeatured());
+    }
+
+    @Test
+    void testGetFeaturedProductsEmpty() {
+        when(productRepository.findByIsFeaturedTrueAndIsActiveTrue()).thenReturn(List.of());
+
+        List<Product> result = productService.getFeaturedProducts();
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void testCreateProduct_setsIsFeaturedFromRequest() {
+        createRequest.setIsFeatured(true);
+        when(categoryRepository.findById(anyLong())).thenReturn(java.util.Optional.of(testCategory));
+        when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Product result = productService.createProduct(createRequest);
+
+        assertTrue(result.getIsFeatured());
+    }
+
+    @Test
+    void testCreateProduct_defaultsIsFeaturedToFalseWhenNotProvided() {
+        when(categoryRepository.findById(anyLong())).thenReturn(java.util.Optional.of(testCategory));
+        when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Product result = productService.createProduct(createRequest);
+
+        assertFalse(result.getIsFeatured());
+    }
+
+    @Test
+    void testUpdateProduct_doesNotClearIsFeaturedWhenNotProvidedInRequest() {
+        testProduct.setIsFeatured(true);
+        when(productRepository.findById(1L)).thenReturn(java.util.Optional.of(testProduct));
+        when(categoryRepository.findById(anyLong())).thenReturn(java.util.Optional.of(testCategory));
+        when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Product result = productService.updateProduct(1L, createRequest);
+
+        assertTrue(result.getIsFeatured(), "isFeatured must be left unchanged when the request omits it");
+    }
+
+    @Test
     void testSearchProductsMatchesNameCaseInsensitive() {
         Product other = new Product();
         other.setId(2L);
