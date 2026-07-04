@@ -1,4 +1,7 @@
+import { useState, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import { addToCart } from '../../api/cart';
 import type { Product } from '../../types';
 
 interface Props {
@@ -6,9 +9,51 @@ interface Props {
   linkable?: boolean;
 }
 
+type AddState = 'idle' | 'loading' | 'added' | 'error' | 'signin';
+
+const BUTTON_LABEL: Record<AddState, string> = {
+  idle: 'Add to Cart',
+  loading: 'Adding…',
+  added: 'Added ✓',
+  error: 'Failed — retry',
+  signin: 'Sign in to add',
+};
+
+const BUTTON_STYLE: Record<AddState, string> = {
+  idle: 'bg-primary-500 hover:bg-primary-600 text-white',
+  loading: 'bg-primary-500 text-white',
+  added: 'bg-green-500 text-white',
+  error: 'bg-red-500 text-white',
+  signin: 'bg-gray-200 text-gray-600',
+};
+
 export function ProductCard({ product, linkable = true }: Props) {
+  const { user, token, isAuthenticated } = useAuth();
+  const [addState, setAddState] = useState<AddState>('idle');
   const displayPrice = product.discountPrice ?? product.price;
   const hasDiscount = product.discountPrice != null && product.discountPrice < product.price;
+  const outOfStock = product.stockQuantity === 0;
+
+  const handleAddToCart = async (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated || !user || !token) {
+      setAddState('signin');
+      setTimeout(() => setAddState('idle'), 2000);
+      return;
+    }
+
+    setAddState('loading');
+    try {
+      await addToCart(user.id, product.id, 1, token);
+      setAddState('added');
+    } catch {
+      setAddState('error');
+    } finally {
+      setTimeout(() => setAddState('idle'), 2000);
+    }
+  };
 
   const card = (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
@@ -47,8 +92,17 @@ export function ProductCard({ product, linkable = true }: Props) {
           )}
         </div>
 
-        {product.stockQuantity === 0 && (
+        {outOfStock ? (
           <span className="text-xs text-red-500 font-medium">Out of stock</span>
+        ) : (
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={addState === 'loading'}
+            className={`w-full text-xs font-semibold py-2 rounded-lg transition-colors disabled:opacity-70 ${BUTTON_STYLE[addState]}`}
+          >
+            {BUTTON_LABEL[addState]}
+          </button>
         )}
       </div>
     </div>
