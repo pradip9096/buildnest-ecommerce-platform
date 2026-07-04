@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchOrderById } from '../../api/orders';
+import { fetchOrders, fetchOrderById } from '../../api/orders';
 import { OrderDetailModal } from './OrderDetailModal';
 import type { Order } from '../../types';
 
@@ -22,9 +22,8 @@ export function OrdersTab({ token, userId }: Props) {
   const [selected, setSelected] = useState<Order | null>(null);
 
   useEffect(() => {
-    fetch('/api/user/orders', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(body => setOrders(Array.isArray(body.data) ? body.data : []))
+    fetchOrders(token)
+      .then(setOrders)
       .catch(e => setError(e instanceof Error ? e.message : 'Failed to load orders'))
       .finally(() => setLoading(false));
   }, [token, userId]);
