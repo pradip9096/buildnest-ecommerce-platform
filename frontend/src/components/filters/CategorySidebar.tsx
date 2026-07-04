@@ -35,7 +35,7 @@ export function CategorySidebar({ categories, selected, onChange, loading }: Pro
                   type="checkbox"
                   checked={selected.includes(cat.id)}
                   onChange={() => toggle(cat.id)}
-                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
                 <span className="text-sm text-gray-700 group-hover:text-gray-900">
                   {cat.name}
@@ -52,7 +52,7 @@ export function CategorySidebar({ categories, selected, onChange, loading }: Pro
       {selected.length > 0 && (
         <button
           onClick={() => onChange([])}
-          className="mt-4 text-xs text-indigo-600 hover:underline"
+          className="mt-4 text-xs text-primary-600 hover:underline"
         >
           Clear filters
         </button>

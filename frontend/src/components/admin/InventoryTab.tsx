@@ -51,7 +51,7 @@ export function InventoryTab({ token }: Props) {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search products…"
-          className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-amber-400"
+          className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-primary-400"
         />
       </div>
 
@@ -101,7 +101,7 @@ export function InventoryTab({ token }: Props) {
                 <td className="px-4 py-3">
                   <button
                     onClick={() => setAdjusting(item)}
-                    className="text-xs font-medium text-amber-600 hover:text-amber-800 border border-amber-200 hover:border-amber-400 rounded-lg px-3 py-1 transition-colors"
+                    className="text-xs font-medium text-primary-600 hover:text-primary-800 border border-primary-200 hover:border-primary-400 rounded-lg px-3 py-1 transition-colors"
                   >
                     Adjust
                   </button>

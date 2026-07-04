@@ -51,7 +51,7 @@ export function RegisterPage() {
         onBlur={blur(name)}
         placeholder={placeholder}
         autoComplete={name === 'confirmPassword' ? 'new-password' : name}
-        className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 ${
+        className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 ${
           touched[name] && errors[name] ? 'border-red-400' : 'border-gray-300'
         }`}
       />
@@ -87,7 +87,7 @@ export function RegisterPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Link to="/" className="text-3xl font-bold text-amber-600">🏗️ BuildNest</Link>
+          <Link to="/" className="text-3xl font-bold text-primary-600">🏗️ BuildNest</Link>
           <h1 className="mt-4 text-2xl font-bold text-gray-900">Create an account</h1>
           <p className="mt-1 text-sm text-gray-500">Start building your dream home today</p>
         </div>
@@ -111,7 +111,7 @@ export function RegisterPage() {
                   onBlur={blur('password')}
                   placeholder="Min. 12 characters"
                   autoComplete="new-password"
-                  className={`w-full border rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 ${
+                  className={`w-full border rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 ${
                     touched.password && errors.password ? 'border-red-400' : 'border-gray-300'
                   }`}
                 />
@@ -136,7 +136,7 @@ export function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors mt-2"
+              className="w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors mt-2"
             >
               {loading ? 'Creating account…' : 'Create account'}
             </button>
@@ -145,7 +145,7 @@ export function RegisterPage() {
 
         <p className="mt-5 text-center text-sm text-gray-500">
           Already have an account?{' '}
-          <Link to="/login" className="text-amber-600 hover:text-amber-700 font-medium">
+          <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
             Sign in
           </Link>
         </p>

@@ -27,7 +27,7 @@ export function ProductCard({ product, linkable = true }: Props) {
 
       <div className="p-4 flex flex-col gap-2 flex-1">
         {product.category && (
-          <span className="text-xs font-medium text-indigo-600 uppercase tracking-wide">
+          <span className="text-xs font-medium text-primary-600 uppercase tracking-wide">
             {product.category.name}
           </span>
         )}

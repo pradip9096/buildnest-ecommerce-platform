@@ -56,7 +56,7 @@ export function OrdersTab({ token, userId }: Props) {
       <button
         type="button"
         onClick={loadOrders}
-        className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+        className="bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
       >
         Retry
       </button>
@@ -78,7 +78,7 @@ export function OrdersTab({ token, userId }: Props) {
             <button
               key={order.id}
               onClick={() => openDetail(order)}
-              className="w-full text-left border border-gray-100 rounded-xl px-4 py-3 hover:border-amber-300 hover:bg-amber-50/50 transition-colors"
+              className="w-full text-left border border-gray-100 rounded-xl px-4 py-3 hover:border-primary-300 hover:bg-primary-50/50 transition-colors"
             >
               <div className="flex items-center justify-between">
                 <div>

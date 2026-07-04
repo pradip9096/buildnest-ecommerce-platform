@@ -24,7 +24,7 @@ export function CartPage() {
           <p className="text-gray-500 mb-6">Sign in to view your cart and continue shopping.</p>
           <Link
             to="/login"
-            className="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+            className="inline-block bg-primary-500 hover:bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
           >
             Sign in
           </Link>
@@ -89,7 +89,7 @@ export function CartPage() {
             <p className="text-gray-500 mb-6">Discover our range of home construction and décor products.</p>
             <Link
               to="/products"
-              className="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+              className="inline-block bg-primary-500 hover:bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
             >
               Browse Products
             </Link>
@@ -117,7 +117,7 @@ export function CartPage() {
                   value={coupon}
                   onChange={e => { setCoupon(e.target.value); setCouponMsg(null); }}
                   placeholder="Coupon code"
-                  className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                 />
                 <button
                   type="submit"
@@ -152,7 +152,7 @@ export function CartPage() {
 
                 <button
                   onClick={() => navigate('/checkout')}
-                  className="mt-5 w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition-colors"
+                  className="mt-5 w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 rounded-xl transition-colors"
                 >
                   Proceed to Checkout
                 </button>

@@ -71,7 +71,7 @@ export function WishlistTab({ token, userId }: Props) {
         <div className="text-center py-12">
           <div className="text-4xl mb-3">❤️</div>
           <p className="text-gray-500 mb-4">Your wishlist is empty.</p>
-          <Link to="/products" className="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+          <Link to="/products" className="inline-block bg-primary-500 hover:bg-primary-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
             Browse Products
           </Link>
         </div>
@@ -87,7 +87,7 @@ export function WishlistTab({ token, userId }: Props) {
                 </div>
                 <div className="p-3">
                   <p className="font-medium text-gray-900 text-sm truncate">{product.name}</p>
-                  <p className="text-amber-600 font-semibold text-sm mt-1">
+                  <p className="text-primary-600 font-semibold text-sm mt-1">
                     ₹{(product.discountPrice ?? product.price).toFixed(2)}
                   </p>
                 </div>
@@ -96,7 +96,7 @@ export function WishlistTab({ token, userId }: Props) {
                 <button
                   onClick={() => handleMoveToCart(product)}
                   disabled={movingToCart === product.id || !product.isActive || product.stockQuantity === 0}
-                  className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
+                  className="flex-1 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
                 >
                   {movingToCart === product.id ? 'Moving…' : 'Move to Cart'}
                 </button>

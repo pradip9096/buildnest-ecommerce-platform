@@ -57,7 +57,7 @@ export function AddressStep({ onNext, loading, error }: Props) {
         onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
         onBlur={() => setTouched(t => ({ ...t, [name]: true }))}
         placeholder={placeholder}
-        className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 ${
+        className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 ${
           touched[name] && errors[name] ? 'border-red-400' : 'border-gray-300'
         }`}
       />
@@ -108,7 +108,7 @@ export function AddressStep({ onNext, loading, error }: Props) {
       <button
         type="submit"
         disabled={loading}
-        className="mt-6 w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
+        className="mt-6 w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
       >
         {loading ? 'Saving…' : 'Continue to Shipping'}
       </button>

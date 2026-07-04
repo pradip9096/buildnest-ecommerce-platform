@@ -50,7 +50,7 @@ export function ShippingStep({ options, loading, error, onNext, onBack }: Props)
             <label
               key={opt.id}
               className={`flex items-start gap-3 border-2 rounded-xl p-4 cursor-pointer transition-colors ${
-                selected === opt.id ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:border-gray-300'
+                selected === opt.id ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <input
@@ -59,7 +59,7 @@ export function ShippingStep({ options, loading, error, onNext, onBack }: Props)
                 value={opt.id}
                 checked={selected === opt.id}
                 onChange={() => { setSelected(opt.id); setSubmitError(null); }}
-                className="mt-0.5 accent-amber-500"
+                className="mt-0.5 accent-primary-500"
               />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
@@ -89,7 +89,7 @@ export function ShippingStep({ options, loading, error, onNext, onBack }: Props)
         <button
           type="submit"
           disabled={options.length === 0}
-          className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
+          className="flex-1 bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
         >
           Continue to Payment
         </button>

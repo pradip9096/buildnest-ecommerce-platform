@@ -58,7 +58,7 @@ export function OrdersTab({ token }: Props) {
           <select
             value={statusFilter}
             onChange={e => { setStatusFilter(e.target.value); setPage(0); }}
-            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
           >
             {STATUS_OPTIONS.map(s => (
               <option key={s} value={s}>{s === '' ? 'All statuses' : s}</option>
@@ -115,7 +115,7 @@ export function OrdersTab({ token }: Props) {
                     value={order.status}
                     disabled={updating === order.id}
                     onChange={e => handleStatusChange(order.id, e.target.value)}
-                    className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50"
+                    className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:opacity-50"
                   >
                     {STATUS_OPTIONS.filter(Boolean).map(s => (
                       <option key={s} value={s}>{s}</option>

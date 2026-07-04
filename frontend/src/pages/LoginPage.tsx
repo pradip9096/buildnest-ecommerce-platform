@@ -38,7 +38,7 @@ export function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Link to="/" className="text-3xl font-bold text-amber-600">🏗️ BuildNest</Link>
+          <Link to="/" className="text-3xl font-bold text-primary-600">🏗️ BuildNest</Link>
           <h1 className="mt-4 text-2xl font-bold text-gray-900">Welcome back</h1>
           <p className="mt-1 text-sm text-gray-500">Sign in to your account</p>
         </div>
@@ -56,14 +56,14 @@ export function LoginPage() {
                 autoComplete="username"
                 autoFocus
                 placeholder="your_username"
-                className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                <Link to="/forgot-password" className="text-xs text-amber-600 hover:text-amber-700">
+                <Link to="/forgot-password" className="text-xs text-primary-600 hover:text-primary-700">
                   Forgot password?
                 </Link>
               </div>
@@ -76,7 +76,7 @@ export function LoginPage() {
                   onChange={e => setPassword(e.target.value)}
                   autoComplete="current-password"
                   placeholder="••••••••••••"
-                  className="w-full border border-gray-300 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full border border-gray-300 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                 />
                 <button
                   type="button"
@@ -97,7 +97,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={loading || !username.trim() || !password}
-              className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
+              className="w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
             >
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
@@ -106,7 +106,7 @@ export function LoginPage() {
 
         <p className="mt-5 text-center text-sm text-gray-500">
           Don&apos;t have an account?{' '}
-          <Link to="/register" className="text-amber-600 hover:text-amber-700 font-medium">
+          <Link to="/register" className="text-primary-600 hover:text-primary-700 font-medium">
             Create one
           </Link>
         </p>

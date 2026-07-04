@@ -30,7 +30,7 @@ export function ImageGallery({ imageUrl, productName }: Props) {
               key={i}
               onClick={() => setSelected(i)}
               className={`w-16 h-16 rounded-lg border-2 overflow-hidden flex-shrink-0 ${
-                selected === i ? 'border-indigo-500' : 'border-gray-200 hover:border-gray-400'
+                selected === i ? 'border-primary-500' : 'border-gray-200 hover:border-gray-400'
               }`}
             >
               <img src={src} alt={`${productName} thumbnail ${i + 1}`} className="w-full h-full object-cover" />

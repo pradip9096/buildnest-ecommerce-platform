@@ -22,7 +22,7 @@ export function SortDropdown({ value, onChange }: Props) {
         id="sort"
         value={value}
         onChange={e => onChange(e.target.value as SortOption)}
-        className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+        className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
       >
         {SORT_OPTIONS.map(opt => (
           <option key={opt.value} value={opt.value}>

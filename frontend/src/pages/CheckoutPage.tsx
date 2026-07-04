@@ -46,7 +46,7 @@ export function CheckoutPage() {
           <p className="text-gray-500 mb-6">You need to be signed in to complete your purchase.</p>
           <Link
             to="/login"
-            className="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+            className="inline-block bg-primary-500 hover:bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
           >
             Sign in
           </Link>

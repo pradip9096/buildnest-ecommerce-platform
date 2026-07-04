@@ -62,7 +62,7 @@ export function PaymentStep({ session, totalAmount, loading, error, onPay, onBac
           type="button"
           onClick={onPay}
           disabled={loading}
-          className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
+          className="flex-1 bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
         >
           {loading ? 'Processing…' : `Pay ₹${grandTotal.toFixed(2)}`}
         </button>

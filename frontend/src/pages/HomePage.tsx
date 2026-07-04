@@ -18,14 +18,14 @@ export function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-        <section className="bg-indigo-600 rounded-2xl px-8 py-12 sm:py-16 text-center text-white">
+        <section className="bg-primary-600 rounded-2xl px-8 py-12 sm:py-16 text-center text-white">
           <h1 className="text-2xl sm:text-4xl font-bold mb-3">{PROMO_BANNER.headline}</h1>
-          <p className="text-indigo-100 text-sm sm:text-base max-w-xl mx-auto mb-6">
+          <p className="text-primary-100 text-sm sm:text-base max-w-xl mx-auto mb-6">
             {PROMO_BANNER.subhead}
           </p>
           <Link
             to="/products"
-            className="inline-block bg-white text-indigo-600 font-semibold px-6 py-3 rounded-xl hover:bg-indigo-50 transition-colors"
+            className="inline-block bg-white text-primary-600 font-semibold px-6 py-3 rounded-xl hover:bg-primary-50 transition-colors"
           >
             Shop All Products
           </Link>
@@ -45,7 +45,7 @@ export function HomePage() {
                 <Link
                   key={category.id}
                   to={`/products?category=${category.id}`}
-                  className="px-5 py-4 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+                  className="px-5 py-4 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-primary-400 hover:text-primary-600 transition-colors"
                 >
                   {category.name}
                 </Link>
@@ -57,7 +57,7 @@ export function HomePage() {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Featured Products</h2>
-            <Link to="/products" className="text-sm text-indigo-600 hover:underline">
+            <Link to="/products" className="text-sm text-primary-600 hover:underline">
               View all →
             </Link>
           </div>

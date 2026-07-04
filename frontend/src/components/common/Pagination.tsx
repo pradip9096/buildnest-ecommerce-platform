@@ -30,7 +30,7 @@ export function Pagination({ page, totalPages, onPageChange }: Props) {
             aria-current={p === page ? 'page' : undefined}
             className={`px-3 py-1.5 text-sm rounded-lg border ${
               p === page
-                ? 'bg-indigo-600 border-indigo-600 text-white font-medium'
+                ? 'bg-primary-600 border-primary-600 text-white font-medium'
                 : 'border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
           >

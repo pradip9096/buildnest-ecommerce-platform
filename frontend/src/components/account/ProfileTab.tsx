@@ -49,7 +49,7 @@ export function ProfileTab({ token }: Props) {
         type={type}
         value={form[name]}
         onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
-        className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+        className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
       />
     </div>
   );
@@ -60,7 +60,7 @@ export function ProfileTab({ token }: Props) {
 
       {profile && (
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center text-xl font-bold text-amber-700">
+          <div className="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center text-xl font-bold text-primary-700">
             {profile.firstName[0]}{profile.lastName[0]}
           </div>
           <div>
@@ -84,7 +84,7 @@ export function ProfileTab({ token }: Props) {
           value={form.address}
           onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
           rows={2}
-          className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+          className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
         />
       </div>
 
@@ -92,7 +92,7 @@ export function ProfileTab({ token }: Props) {
       {success && <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-3 py-2">Profile saved successfully.</p>}
 
       <button type="submit" disabled={saving}
-        className="bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors text-sm">
+        className="bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors text-sm">
         {saving ? 'Saving…' : 'Save Changes'}
       </button>
     </form>

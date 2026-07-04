@@ -24,7 +24,7 @@ export function AccountPage() {
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-6 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-lg font-bold text-amber-700">
+          <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-lg font-bold text-primary-700">
             {user?.username?.[0]?.toUpperCase() ?? '?'}
           </div>
           <div>
@@ -43,7 +43,7 @@ export function AccountPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                       activeTab === tab.id
-                        ? 'bg-amber-500 text-white'
+                        ? 'bg-primary-500 text-white'
                         : 'text-gray-600 hover:bg-gray-100'
                     }`}
                   >

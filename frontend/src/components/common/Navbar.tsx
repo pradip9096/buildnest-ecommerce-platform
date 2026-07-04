@@ -52,11 +52,11 @@ export function Navbar() {
             onChange={e => setSearchInput(e.target.value)}
             placeholder="Search products…"
             aria-label="Search products"
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <button
             type="submit"
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
           >
             Search
           </button>
@@ -66,7 +66,7 @@ export function Navbar() {
           <Link to="/cart" className="relative text-gray-600 hover:text-gray-900" aria-label="Cart">
             <span className="text-xl">🛒</span>
             {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+              <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             )}
@@ -79,7 +79,7 @@ export function Navbar() {
                 onClick={() => setAccountOpen(o => !o)}
                 className="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900"
               >
-                <span className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">
+                <span className="w-7 h-7 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-bold">
                   {user?.username?.[0]?.toUpperCase() ?? '?'}
                 </span>
                 <span className="font-medium">{user?.username}</span>
@@ -105,7 +105,7 @@ export function Navbar() {
               )}
             </div>
           ) : (
-            <Link to="/login" className="text-sm font-medium text-indigo-600 hover:text-indigo-700">
+            <Link to="/login" className="text-sm font-medium text-primary-600 hover:text-primary-700">
               Sign in
             </Link>
           )}
@@ -130,11 +130,11 @@ export function Navbar() {
               onChange={e => setSearchInput(e.target.value)}
               placeholder="Search products…"
               aria-label="Search products"
-              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
             >
               Search
             </button>
@@ -159,7 +159,7 @@ export function Navbar() {
               </button>
             </>
           ) : (
-            <Link to="/login" onClick={() => setMobileOpen(false)} className="block text-sm font-medium text-indigo-600">
+            <Link to="/login" onClick={() => setMobileOpen(false)} className="block text-sm font-medium text-primary-600">
               Sign in
             </Link>
           )}

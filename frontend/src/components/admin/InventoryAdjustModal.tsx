@@ -58,7 +58,7 @@ export function InventoryAdjustModal({ item, token, onClose, onSuccess }: Props)
               value={delta}
               onChange={e => setDelta(e.target.value)}
               placeholder="e.g. 50 or -10"
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
               required
             />
           </div>
@@ -70,7 +70,7 @@ export function InventoryAdjustModal({ item, token, onClose, onSuccess }: Props)
               value={reason}
               onChange={e => setReason(e.target.value)}
               placeholder="e.g. Restocked from supplier"
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
               required
             />
           </div>
@@ -88,7 +88,7 @@ export function InventoryAdjustModal({ item, token, onClose, onSuccess }: Props)
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-60 transition-colors"
+              className="flex-1 bg-primary-500 hover:bg-primary-600 text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-60 transition-colors"
             >
               {loading ? 'Saving…' : 'Apply'}
             </button>

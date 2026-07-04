@@ -83,7 +83,7 @@ export function ProductListingPage() {
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="ml-2 text-indigo-600 hover:underline"
+                  className="ml-2 text-primary-600 hover:underline"
                 >
                   Clear
                 </button>

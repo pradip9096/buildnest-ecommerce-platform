@@ -44,7 +44,7 @@ export function OrderConfirmationPage() {
         <div className="text-center max-w-sm">
           <div className="text-5xl mb-4">🔒</div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Sign in to view your order</h1>
-          <Link to="/login" className="inline-block mt-4 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors">
+          <Link to="/login" className="inline-block mt-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors">
             Sign in
           </Link>
         </div>
@@ -70,7 +70,7 @@ export function OrderConfirmationPage() {
           <div className="text-5xl mb-4">⚠️</div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Order not found</h1>
           <p className="text-gray-500 mb-6">{error ?? 'We could not find this order.'}</p>
-          <Link to="/" className="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors">
+          <Link to="/" className="inline-block bg-primary-500 hover:bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors">
             Back to Home
           </Link>
         </div>
@@ -134,7 +134,7 @@ export function OrderConfirmationPage() {
         <div className="flex flex-col sm:flex-row gap-3 mt-6">
           <Link
             to="/products"
-            className="flex-1 text-center bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition-colors"
+            className="flex-1 text-center bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 rounded-xl transition-colors"
           >
             Continue Shopping
           </Link>

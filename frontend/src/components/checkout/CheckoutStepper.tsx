@@ -18,7 +18,7 @@ export function CheckoutStepper({ currentStep }: Props) {
                   done
                     ? 'bg-green-500 border-green-500 text-white'
                     : active
-                    ? 'bg-amber-500 border-amber-500 text-white'
+                    ? 'bg-primary-500 border-primary-500 text-white'
                     : 'bg-white border-gray-300 text-gray-400'
                 }`}
               >
@@ -26,7 +26,7 @@ export function CheckoutStepper({ currentStep }: Props) {
               </div>
               <span
                 className={`mt-1 text-xs font-medium ${
-                  active ? 'text-amber-600' : done ? 'text-green-600' : 'text-gray-400'
+                  active ? 'text-primary-600' : done ? 'text-green-600' : 'text-gray-400'
                 }`}
               >
                 {label}

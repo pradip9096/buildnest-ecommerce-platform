@@ -46,7 +46,7 @@ export function UsersTab({ token }: Props) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search users…"
-            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-amber-400"
+            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-primary-400"
           />
           <span className="text-sm text-gray-400">{users.length} total</span>
         </div>
@@ -84,7 +84,7 @@ export function UsersTab({ token }: Props) {
               <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-sm font-bold text-amber-700 flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-sm font-bold text-primary-700 flex-shrink-0">
                       {user.firstName?.[0]?.toUpperCase() ?? user.username[0].toUpperCase()}
                     </div>
                     <div>

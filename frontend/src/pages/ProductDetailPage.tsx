@@ -96,7 +96,7 @@ export function ProductDetailPage() {
     return (
       <div className="max-w-6xl mx-auto px-4 py-16 flex flex-col items-center gap-4">
         <ErrorMessage message={productError ?? 'Product not found'} />
-        <Link to="/products" className="text-sm text-indigo-600 hover:underline">← Back to products</Link>
+        <Link to="/products" className="text-sm text-primary-600 hover:underline">← Back to products</Link>
       </div>
     );
   }
@@ -112,11 +112,11 @@ export function ProductDetailPage() {
     <div className="min-h-screen bg-white">
       <main className="max-w-6xl mx-auto px-4 py-8">
         <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5 flex-wrap">
-          <Link to="/" className="hover:text-indigo-600">Home</Link>
+          <Link to="/" className="hover:text-primary-600">Home</Link>
           <span>/</span>
           {product.category && (
             <>
-              <Link to={`/products?category=${product.category.id}`} className="hover:text-indigo-600">
+              <Link to={`/products?category=${product.category.id}`} className="hover:text-primary-600">
                 {product.category.name}
               </Link>
               <span>/</span>
@@ -130,7 +130,7 @@ export function ProductDetailPage() {
 
           <div className="flex flex-col gap-4">
             {product.category && (
-              <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-primary-600 uppercase tracking-wider">
                 {product.category.name}
               </span>
             )}
@@ -182,7 +182,7 @@ export function ProductDetailPage() {
                 <button
                   onClick={handleAddToCart}
                   disabled={cartAdding}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-60 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+                  className="w-full bg-primary-600 hover:bg-primary-700 active:bg-primary-800 disabled:opacity-60 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
                 >
                   {cartAdding ? 'Adding…' : 'Add to Cart'}
                 </button>

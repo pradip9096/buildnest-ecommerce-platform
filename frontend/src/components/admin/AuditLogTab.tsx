@@ -78,7 +78,7 @@ export function AuditLogTab({ token }: Props) {
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 font-mono">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-50 text-primary-700 font-mono">
                     {entry.action}
                   </span>
                 </td>
