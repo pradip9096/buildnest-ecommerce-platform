@@ -18,48 +18,10 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ];
 
 export function AdminDashboardPage() {
-  const { user, token, isAuthenticated, loading, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [loggingOut, setLoggingOut] = useState(false);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  const isAdmin = isAuthenticated && (user?.roles?.includes('ADMIN') ?? false);
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="text-center max-w-sm">
-          <div className="text-5xl mb-4">🔒</div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Sign in required</h1>
-          <Link to="/login" state={{ from: '/admin' }}
-            className="inline-block mt-4 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors">
-            Sign in
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="text-center max-w-sm">
-          <div className="text-5xl mb-4">🚫</div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Access denied</h1>
-          <p className="text-gray-500 text-sm mb-4">Admin role required.</p>
-          <Link to="/" className="text-amber-600 hover:text-amber-800 text-sm font-medium">← Back to store</Link>
-        </div>
-      </div>
-    );
-  }
 
   const handleLogout = async () => {
     setLoggingOut(true);

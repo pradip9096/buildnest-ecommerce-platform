@@ -13,6 +13,8 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- `frontend/src/components/common/RequireAuth.tsx` — route-guard wrapper component consuming `useAuth()`: shows a loading spinner while auth state resolves, redirects unauthenticated users to `/login` (preserving the original path via `location.state.from`, matching the existing `LoginPage` redirect-back convention), and renders an "Access denied" message when an optional `role` prop is required but the user lacks it (#294)
+- `frontend/src/components/common/RequireAuth.test.tsx` — 5 tests: loading state, unauthenticated redirect, authenticated with no role required, authenticated missing required role, authenticated with required role (#294)
 - `frontend`: Vitest + React Testing Library test harness (`#293`) — `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`, `jsdom`, `@vitest/coverage-v8` installed; `test`/`test:watch`/`test:coverage` scripts added to `package.json`; Vitest configured inline in `vite.config.ts` (jsdom environment, `src/test/setup.ts`) rather than a separate config file
 - `frontend/src/contexts/AuthContext.test.tsx` — session restore (no token, valid token, expired token clears storage without calling the profile API), login (stores tokens, loads roles from profile), logout (clears tokens, calls `apiLogout`) (#293)
 - `frontend/src/hooks/useCart.test.ts` — no-op when userId/token missing, load, error surfacing on fetch failure, add-item-then-reload, remove-item-then-reload (#293)
@@ -22,6 +24,8 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ### Changed
 - `docs/SDLC-docs/software-testing/test-plan.md`: TR-10 marked resolved (frontend test suite now exists); Phase 2 entry-criteria row and the frontend-component-coverage metrics row updated to reflect the Vitest baseline rather than "not yet active" — coverage is not yet at the ≥80% gate, only `AuthContext`, `useCart`, and `api/cart` are covered so far (#293)
+- `App.tsx`: `/account` and `/admin` routes now wrapped in `<RequireAuth>` (the latter with `role="ADMIN"`) instead of relying on each page to guard itself (#294)
+- `AccountPage.tsx` / `AdminDashboardPage.tsx`: removed the duplicated inline loading/`isAuthenticated`/`isAdmin` guard blocks — now handled once by `RequireAuth` at the route level; both pages' existing null-safe rendering (`token &&`, `user?.username`) already tolerated the change with no further edits needed (#294)
 
 ### Fixed
 - `CartController` IDOR: `addToCart`, `getCart`, `clearCart`, `getCartTotal` now enforce `#userId == authentication.principal.id` via `@PreAuthorize`; `removeFromCart` (which took no `userId` at all and did a blind `deleteById`) now derives the caller's ID from `@AuthenticationPrincipal` and verifies cart-item ownership in `CartServiceImpl` before deleting — a valid token for one user previously could read/mutate another user's cart with no ownership check (#281)
