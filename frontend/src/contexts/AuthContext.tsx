@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { apiLogin, apiLogout, apiRegister } from '../api/auth';
+import { apiLogin, apiLogout, apiRefresh, apiRegister } from '../api/auth';
 import { fetchProfile } from '../api/user';
+import { setUnauthorizedHandler } from '../api/client';
 import type { AuthUser, AuthTokens } from '../types';
 
 interface AuthContextValue {
@@ -113,6 +114,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearTokens();
     setUser(null);
     setToken(null);
+  }, []);
+
+  // Registered with the shared HTTP client so a 401 on any authenticated
+  // request triggers one silent refresh-and-retry instead of forcing the
+  // user to reload the page (or losing in-progress work) the moment the
+  // short-lived access token expires mid-session.
+  useEffect(() => {
+    const handleUnauthorized = async (): Promise<string | null> => {
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) {
+        clearTokens();
+        setUser(null);
+        setToken(null);
+        return null;
+      }
+      try {
+        const tokens = await apiRefresh(refreshToken);
+        storeTokens(tokens);
+        setToken(tokens.accessToken);
+        return tokens.accessToken;
+      } catch {
+        clearTokens();
+        setUser(null);
+        setToken(null);
+        return null;
+      }
+    };
+
+    setUnauthorizedHandler(handleUnauthorized);
+    return () => setUnauthorizedHandler(null);
   }, []);
 
   const register = useCallback(async (payload: {

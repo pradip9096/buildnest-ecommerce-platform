@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { request, requestData, ApiError } from './client';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { request, requestData, setUnauthorizedHandler, ApiError } from './client';
 import type { ApiResponse } from '../types';
 
 function jsonResponse(body: unknown, ok: boolean, status = 200): Response {
@@ -12,6 +12,10 @@ function jsonResponse(body: unknown, ok: boolean, status = 200): Response {
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn());
+});
+
+afterEach(() => {
+  setUnauthorizedHandler(null);
 });
 
 describe('api/client', () => {
@@ -101,6 +105,64 @@ describe('api/client', () => {
       vi.mocked(fetch).mockResolvedValue(res);
 
       await expect(request('/api/thing', {}, 'Fallback')).rejects.toThrow('Fallback');
+    });
+  });
+
+  describe('401 refresh-and-retry', () => {
+    it('retries once with the refreshed token when the unauthorized handler resolves one', async () => {
+      vi.mocked(fetch)
+        .mockResolvedValueOnce(jsonResponse({}, false, 401))
+        .mockResolvedValueOnce(jsonResponse({ ok: true }, true));
+      const handler = vi.fn().mockResolvedValue('new-token');
+      setUnauthorizedHandler(handler);
+
+      const result = await request<{ ok: boolean }>('/api/thing', { token: 'expired-token' });
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(fetch).toHaveBeenNthCalledWith(2, '/api/thing', {
+        headers: { Authorization: 'Bearer new-token' },
+        body: undefined,
+      });
+      expect(result).toEqual({ ok: true });
+    });
+
+    it('throws the original 401 error when the unauthorized handler cannot refresh', async () => {
+      vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
+      const handler = vi.fn().mockResolvedValue(null);
+      setUnauthorizedHandler(handler);
+
+      await expect(request('/api/thing', { token: 'expired-token' }, 'Session expired')).rejects.toThrow(
+        'Session expired'
+      );
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not retry more than once even if the refreshed token also gets a 401', async () => {
+      vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
+      const handler = vi.fn().mockResolvedValue('still-bad-token');
+      setUnauthorizedHandler(handler);
+
+      await expect(request('/api/thing', { token: 'expired-token' })).rejects.toThrow(ApiError);
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not invoke the handler for a 401 on a request with no token', async () => {
+      vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
+      const handler = vi.fn().mockResolvedValue('new-token');
+      setUnauthorizedHandler(handler);
+
+      await expect(request('/api/thing')).rejects.toThrow(ApiError);
+      expect(handler).not.toHaveBeenCalled();
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws the original 401 error when no handler is registered', async () => {
+      vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
+
+      await expect(request('/api/thing', { token: 'expired-token' })).rejects.toThrow(ApiError);
+      expect(fetch).toHaveBeenCalledTimes(1);
     });
   });
 

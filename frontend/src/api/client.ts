@@ -30,14 +30,33 @@ function buildHeaders(token: string | undefined, hasBody: boolean, extra?: Heade
 }
 
 /**
+ * Called on a 401 response to an authenticated request. Should attempt a
+ * token refresh and return the new access token, or `null` if refresh itself
+ * failed (the caller is responsible for any resulting logout). Registered by
+ * `AuthContext` so this module never depends on it directly.
+ */
+type UnauthorizedHandler = () => Promise<string | null>;
+
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
+  unauthorizedHandler = handler;
+}
+
+/**
  * Sends a request and returns the raw parsed JSON body.
  * Throws `ApiError` on a non-2xx response, preferring the backend's own
  * `ApiResponse.message` when the error body includes one.
+ *
+ * A 401 response to a token-bearing request triggers one silent refresh
+ * attempt (via the registered unauthorized handler) and retry before the
+ * error is thrown.
  */
 export async function request<T>(
   path: string,
   options: RequestOptions = {},
-  fallbackMessage?: FallbackMessage
+  fallbackMessage?: FallbackMessage,
+  isRetry = false
 ): Promise<T> {
   const { token, body, headers, ...rest } = options;
   const hasBody = body !== undefined;
@@ -47,6 +66,13 @@ export async function request<T>(
     headers: buildHeaders(token, hasBody, headers),
     body: hasBody ? JSON.stringify(body) : undefined,
   });
+
+  if (res.status === 401 && token && !isRetry && unauthorizedHandler) {
+    const newToken = await unauthorizedHandler();
+    if (newToken) {
+      return request<T>(path, { ...options, token: newToken }, fallbackMessage, true);
+    }
+  }
 
   if (!res.ok) {
     const errorBody = (await res.json().catch(() => null)) as Partial<ApiResponse<unknown>> | null;

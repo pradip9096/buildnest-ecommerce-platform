@@ -1,14 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
-import { apiLogin, apiLogout } from '../api/auth';
+import { apiLogin, apiLogout, apiRefresh } from '../api/auth';
 import { fetchProfile } from '../api/user';
+import { request } from '../api/client';
 import { makeJwt } from '../test/jwt';
 import type { AuthTokens, UserProfile } from '../types';
 
 vi.mock('../api/auth', () => ({
   apiLogin: vi.fn(),
   apiLogout: vi.fn(),
+  apiRefresh: vi.fn(),
   apiRegister: vi.fn(),
 }));
 
@@ -18,6 +20,7 @@ vi.mock('../api/user', () => ({
 
 const mockApiLogin = vi.mocked(apiLogin);
 const mockApiLogout = vi.mocked(apiLogout);
+const mockApiRefresh = vi.mocked(apiRefresh);
 const mockFetchProfile = vi.mocked(fetchProfile);
 
 const profile: UserProfile = {
@@ -120,6 +123,62 @@ describe('AuthContext', () => {
     expect(mockApiLogout).toHaveBeenCalledWith('refresh-abc');
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.user).toBeNull();
+    expect(localStorage.getItem('access_token')).toBeNull();
+    expect(localStorage.getItem('refresh_token')).toBeNull();
+  });
+
+  it('silently refreshes the access token and updates state when a request hits a 401', async () => {
+    const token = makeJwt({ sub: 'alice', exp: Math.floor(Date.now() / 1000) + 3600 });
+    localStorage.setItem('access_token', token);
+    localStorage.setItem('refresh_token', 'refresh-abc');
+    mockFetchProfile.mockResolvedValue({ ...profile, roles: ['USER'] });
+
+    const newTokens: AuthTokens = {
+      accessToken: makeJwt({ sub: 'alice', exp: Math.floor(Date.now() / 1000) + 7200 }),
+      refreshToken: 'refresh-def',
+      tokenType: 'Bearer',
+      userId: 1,
+      username: 'alice',
+    };
+    mockApiRefresh.mockResolvedValue(newTokens);
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
+
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce({ ok: false, status: 401, json: () => Promise.resolve({}) } as Response)
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({ ok: true }) } as Response));
+
+    await act(async () => {
+      await request('/api/protected-thing', { token: result.current.token! });
+    });
+
+    expect(mockApiRefresh).toHaveBeenCalledWith('refresh-abc');
+    expect(result.current.token).toBe(newTokens.accessToken);
+    expect(localStorage.getItem('access_token')).toBe(newTokens.accessToken);
+    expect(localStorage.getItem('refresh_token')).toBe('refresh-def');
+  });
+
+  it('logs the user out when the refresh attempt itself fails after a 401', async () => {
+    const token = makeJwt({ sub: 'alice', exp: Math.floor(Date.now() / 1000) + 3600 });
+    localStorage.setItem('access_token', token);
+    localStorage.setItem('refresh_token', 'refresh-abc');
+    mockFetchProfile.mockResolvedValue({ ...profile, roles: ['USER'] });
+    mockApiRefresh.mockRejectedValue(new Error('Token refresh failed'));
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
+
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValue({ ok: false, status: 401, json: () => Promise.resolve({}) } as Response));
+
+    await act(async () => {
+      await request('/api/protected-thing', { token: result.current.token! }).catch(() => {});
+    });
+
+    expect(mockApiRefresh).toHaveBeenCalledWith('refresh-abc');
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.token).toBeNull();
     expect(localStorage.getItem('access_token')).toBeNull();
     expect(localStorage.getItem('refresh_token')).toBeNull();
   });
