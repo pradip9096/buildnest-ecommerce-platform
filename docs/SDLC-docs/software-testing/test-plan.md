@@ -708,7 +708,7 @@ All Phase 1 exit criteria met, plus:
 | JaCoCo gate at 0.70 in `pom.xml` | Config review |
 | PIT plugin configured in `pom.xml` | Config review |
 | Staging environment provisioned and validated | Environment checklist |
-| Frontend test tooling (Vitest, Playwright) installed | `npm test` succeeds |
+| Frontend test tooling (Vitest, Playwright) installed | Vitest installed and `npm test` succeeds (2026-07-04, `#293`); Playwright E2E still pending |
 | Performance environment provisioned | DevOps sign-off |
 
 ### 9.2 Exit Criteria
@@ -856,7 +856,7 @@ Test execution resumes when:
 | TR-07 | Redis mock behaviour diverges from real Redis (rate limiting tests) | Medium | Medium | Integration test `RateLimiterServiceTest` uses Mockito stub; supplement with `@SpringBootTest` + embedded Redis (Testcontainers) in Phase 2 |
 | TR-08 | Liquibase validation failure (`ddl-auto=validate`) after entity changes | Medium | High | All schema changes must have a Liquibase changeset before merging the corresponding entity change; pre-merge CI validates against H2 |
 | TR-09 | Test data interference between parallel test classes | Low | Medium | `@DataJpaTest` tests run in a transaction rolled back after each test; `@SpringBootTest` tests use `@DirtiesContext` where shared state is modified |
-| TR-10 | Frontend test suite non-existent at Phase 1 start | High (known) | Medium | Accepted and deferred to Phase 2; backend test gate is independent of frontend test status |
+| TR-10 | Frontend test suite non-existent at Phase 1 start | High (known) | Medium | **Resolved 2026-07-04** — Vitest + React Testing Library installed (`#293`); baseline tests added for `AuthContext` (session restore, login, logout, expired-token handling), `useCart`, and `api/cart`. Remaining Phase 2 work: Playwright E2E, axe-core accessibility, and expanding component coverage toward the 80% gate. |
 
 ---
 
@@ -917,7 +917,7 @@ The table below maps SRS v4.0 requirement groups to the test classes that verify
 | Branch coverage (backend) | JaCoCo | Reported only | ≥ 60% | MNT-02 |
 | Mutation score (backend service + security) | PIT | Not yet active | **≥ 75%** | TIR-05 |
 | E2E critical path coverage | Manual | Key flows identified | 100% critical paths pass | FR-* |
-| Frontend component coverage | Vitest | Not yet active | ≥ 80% statements | FR-FE-* |
+| Frontend component coverage | Vitest | Harness active 2026-07-04 (`#293`); baseline covers `AuthContext`, `useCart`, `api/cart` only | ≥ 80% statements | FR-FE-* |
 | WCAG 2.1 AA violations | axe-core | Not yet active | 0 violations | ACC-01 |
 
 ### 17.2 Current Baseline (2026-06-19)

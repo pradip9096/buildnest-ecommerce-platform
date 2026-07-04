@@ -12,6 +12,17 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Added
+- `frontend`: Vitest + React Testing Library test harness (`#293`) — `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`, `jsdom`, `@vitest/coverage-v8` installed; `test`/`test:watch`/`test:coverage` scripts added to `package.json`; Vitest configured inline in `vite.config.ts` (jsdom environment, `src/test/setup.ts`) rather than a separate config file
+- `frontend/src/contexts/AuthContext.test.tsx` — session restore (no token, valid token, expired token clears storage without calling the profile API), login (stores tokens, loads roles from profile), logout (clears tokens, calls `apiLogout`) (#293)
+- `frontend/src/hooks/useCart.test.ts` — no-op when userId/token missing, load, error surfacing on fetch failure, add-item-then-reload, remove-item-then-reload (#293)
+- `frontend/src/api/cart.test.ts` — success and non-2xx paths for `fetchCart`, `addToCart`, `removeCartItem`, `clearCart` (#293)
+- `docs/reports/frontend-anti-patterns-audit-2026-07-04.md` — exhaustive frontend anti-pattern audit (12 findings); source of issues #293–#302
+- `docs/wiki/learned-lessons/github-issue-multi-domain-labeling.md`, `vitest-needs-triple-slash-reference-in-vite-config.md` — reusable lessons from this session's audit and test-harness work
+
+### Changed
+- `docs/SDLC-docs/software-testing/test-plan.md`: TR-10 marked resolved (frontend test suite now exists); Phase 2 entry-criteria row and the frontend-component-coverage metrics row updated to reflect the Vitest baseline rather than "not yet active" — coverage is not yet at the ≥80% gate, only `AuthContext`, `useCart`, and `api/cart` are covered so far (#293)
+
 ### Fixed
 - `CartController` IDOR: `addToCart`, `getCart`, `clearCart`, `getCartTotal` now enforce `#userId == authentication.principal.id` via `@PreAuthorize`; `removeFromCart` (which took no `userId` at all and did a blind `deleteById`) now derives the caller's ID from `@AuthenticationPrincipal` and verifies cart-item ownership in `CartServiceImpl` before deleting — a valid token for one user previously could read/mutate another user's cart with no ownership check (#281)
 - `GlobalExceptionHandler`: added a handler for `org.springframework.security.access.AccessDeniedException` (the supertype of `AuthorizationDeniedException`, thrown by `@PreAuthorize` denial) — previously uncaught and falling through to the generic 500 handler, so a blocked IDOR attempt returned "Internal Server Error" instead of 403 (found verifying #281)
