@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useAsync } from '../../hooks/useAsync';
 import { fetchOrders, fetchOrderById } from '../../api/orders';
 import { OrderDetailModal } from './OrderDetailModal';
 import type { Order } from '../../types';
@@ -16,23 +17,12 @@ const STATUS_COLOR: Record<string, string> = {
 interface Props { token: string; userId: number; }
 
 export function OrdersTab({ token, userId }: Props) {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, loading, error, reload } = useAsync<Order[]>(
+    () => fetchOrders(token),
+    [token, userId]
+  );
+  const orders = data ?? [];
   const [selected, setSelected] = useState<Order | null>(null);
-
-  const loadOrders = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    fetchOrders(token)
-      .then(setOrders)
-      .catch(e => setError(e instanceof Error ? e.message : 'Failed to load orders'))
-      .finally(() => setLoading(false));
-  }, [token]);
-
-  useEffect(() => {
-    loadOrders();
-  }, [loadOrders, userId]);
 
   const openDetail = async (order: Order) => {
     if (order.orderItems) { setSelected(order); return; }
@@ -55,7 +45,7 @@ export function OrdersTab({ token, userId }: Props) {
       <p className="text-red-600 text-sm mb-3">{error}</p>
       <button
         type="button"
-        onClick={loadOrders}
+        onClick={reload}
         className="bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
       >
         Retry

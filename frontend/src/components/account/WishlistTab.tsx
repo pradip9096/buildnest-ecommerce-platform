@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAsync } from '../../hooks/useAsync';
 import { fetchWishlist, removeFromWishlist } from '../../api/wishlist';
 import { addToCart } from '../../api/cart';
 import type { Product } from '../../types';
@@ -7,25 +8,20 @@ import type { Product } from '../../types';
 interface Props { token: string; userId: number; }
 
 export function WishlistTab({ token, userId }: Props) {
-  const [items, setItems] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, loading, error, setData } = useAsync<Product[]>(
+    () => fetchWishlist(token),
+    [token]
+  );
+  const items = data ?? [];
   const [removing, setRemoving] = useState<number | null>(null);
   const [movingToCart, setMovingToCart] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<{ id: number; msg: string } | null>(null);
-
-  useEffect(() => {
-    fetchWishlist(token)
-      .then(setItems)
-      .catch(e => setError(e instanceof Error ? e.message : 'Failed to load wishlist'))
-      .finally(() => setLoading(false));
-  }, [token]);
 
   const handleRemove = async (productId: number) => {
     setRemoving(productId);
     try {
       await removeFromWishlist(productId, token);
-      setItems(prev => prev.filter(p => p.id !== productId));
+      setData(prev => (prev ?? []).filter(p => p.id !== productId));
     } catch {
       // silently ignore
     } finally {
@@ -38,7 +34,7 @@ export function WishlistTab({ token, userId }: Props) {
     try {
       await addToCart(userId, product.id, 1, token);
       await removeFromWishlist(product.id, token);
-      setItems(prev => prev.filter(p => p.id !== product.id));
+      setData(prev => (prev ?? []).filter(p => p.id !== product.id));
       setFeedback({ id: product.id, msg: `${product.name} moved to cart.` });
       setTimeout(() => setFeedback(null), 3000);
     } catch {

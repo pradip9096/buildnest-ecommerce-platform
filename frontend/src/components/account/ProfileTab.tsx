@@ -1,38 +1,48 @@
 import { useState, useEffect } from 'react';
+import { useAsync } from '../../hooks/useAsync';
 import { fetchProfile, updateProfile } from '../../api/user';
 import type { UserProfile } from '../../types';
 
 interface Props { token: string; }
 
 export function ProfileTab({ token }: Props) {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: profile, loading, error: loadError, setData: setProfile } = useAsync<UserProfile>(
+    () => fetchProfile(token),
+    [token]
+  );
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', address: '' });
 
   useEffect(() => {
-    fetchProfile(token)
-      .then(p => { setProfile(p); setForm({ firstName: p.firstName, lastName: p.lastName, email: p.email, phone: p.phone ?? '', address: p.address ?? '' }); })
-      .catch(e => setError(e instanceof Error ? e.message : 'Failed to load profile'))
-      .finally(() => setLoading(false));
-  }, [token]);
+    if (profile) {
+      setForm({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        phone: profile.phone ?? '',
+        address: profile.address ?? '',
+      });
+    }
+  }, [profile]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true); setError(null); setSuccess(false);
+    setSaving(true); setSaveError(null); setSuccess(false);
     try {
       const updated = await updateProfile(token, form);
       setProfile(updated);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save');
+      setSaveError(e instanceof Error ? e.message : 'Failed to save');
     } finally {
       setSaving(false);
     }
   };
+
+  const error = saveError ?? loadError;
 
   if (loading) return (
     <div className="space-y-4 animate-pulse">

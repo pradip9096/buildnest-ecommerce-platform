@@ -1,30 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
-import { fetchAuditLogs, type AuditLogEntry } from '../../api/admin';
+import { useState } from 'react';
+import { useAsync } from '../../hooks/useAsync';
+import { fetchAuditLogs, type AuditLogEntry, type AuditLogPage } from '../../api/admin';
 
 interface Props { token: string; }
 
 export function AuditLogTab({ token }: Props) {
-  const [entries, setEntries] = useState<AuditLogEntry[]>([]);
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    fetchAuditLogs(token, page, 20)
-      .then(data => {
-        setEntries(data.content);
-        setTotalPages(data.totalPages);
-        setTotalElements(data.totalElements);
-      })
-      .catch(e => setError(e instanceof Error ? e.message : 'Failed to load audit log'))
-      .finally(() => setLoading(false));
-  }, [token, page]);
-
-  useEffect(() => { load(); }, [load]);
+  const { data, loading, error } = useAsync<AuditLogPage>(
+    () => fetchAuditLogs(token, page, 20),
+    [token, page]
+  );
+  const entries: AuditLogEntry[] = data?.content ?? [];
+  const totalPages = data?.totalPages ?? 0;
+  const totalElements = data?.totalElements ?? 0;
 
   return (
     <div className="space-y-4">

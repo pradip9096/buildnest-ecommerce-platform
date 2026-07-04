@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useAsync } from '../../hooks/useAsync';
 import { fetchAdminInventory, type InventoryItem } from '../../api/admin';
 import { InventoryAdjustModal } from './InventoryAdjustModal';
 
@@ -11,22 +12,13 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function InventoryTab({ token }: Props) {
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, loading, error, reload } = useAsync<InventoryItem[]>(
+    () => fetchAdminInventory(token),
+    [token]
+  );
+  const items = data ?? [];
   const [adjusting, setAdjusting] = useState<InventoryItem | null>(null);
   const [search, setSearch] = useState('');
-
-  const load = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    fetchAdminInventory(token)
-      .then(setItems)
-      .catch(e => setError(e instanceof Error ? e.message : 'Failed to load inventory'))
-      .finally(() => setLoading(false));
-  }, [token]);
-
-  useEffect(() => { load(); }, [load]);
 
   const filtered = items.filter(i =>
     i.productName.toLowerCase().includes(search.toLowerCase()) ||
@@ -40,7 +32,7 @@ export function InventoryTab({ token }: Props) {
           item={adjusting}
           token={token}
           onClose={() => setAdjusting(null)}
-          onSuccess={() => { setAdjusting(null); load(); }}
+          onSuccess={() => { setAdjusting(null); reload(); }}
         />
       )}
 

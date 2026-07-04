@@ -1,7 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useAsync } from '../../hooks/useAsync';
 import { fetchAdminOrders, updateOrderStatus, type AdminOrder } from '../../api/admin';
 
 interface Props { token: string; }
+
+type AdminOrdersPage = Awaited<ReturnType<typeof fetchAdminOrders>>;
 
 const STATUS_OPTIONS = ['', 'PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 const STATUS_COLORS: Record<string, string> = {
@@ -14,35 +17,23 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function OrdersTab({ token }: Props) {
-  const [orders, setOrders] = useState<AdminOrder[]>([]);
-  const [totalElements, setTotalElements] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<number | null>(null);
 
-  const load = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    fetchAdminOrders(token, { status: statusFilter || undefined, page, size: 15 })
-      .then(data => {
-        setOrders(data.content);
-        setTotalElements(data.totalElements);
-        setTotalPages(data.totalPages);
-      })
-      .catch(e => setError(e instanceof Error ? e.message : 'Failed to load orders'))
-      .finally(() => setLoading(false));
-  }, [token, statusFilter, page]);
-
-  useEffect(() => { load(); }, [load]);
+  const { data, loading, error, setData } = useAsync<AdminOrdersPage>(
+    () => fetchAdminOrders(token, { status: statusFilter || undefined, page, size: 15 }),
+    [token, statusFilter, page]
+  );
+  const orders: AdminOrder[] = data?.content ?? [];
+  const totalElements = data?.totalElements ?? 0;
+  const totalPages = data?.totalPages ?? 0;
 
   const handleStatusChange = async (orderId: number, newStatus: string) => {
     setUpdating(orderId);
     try {
       await updateOrderStatus(token, orderId, newStatus);
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      setData(prev => prev && { ...prev, content: prev.content.map(o => o.id === orderId ? { ...o, status: newStatus } : o) });
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Failed to update status');
     } finally {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useAsync } from './useAsync';
 import { fetchProducts, searchProducts } from '../api/products';
 import type { Product, ProductFilters, SortOption } from '../types';
 
@@ -17,34 +17,13 @@ function sortProducts(products: Product[], sort: SortOption): Product[] {
 }
 
 export function useProducts(filters: ProductFilters) {
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
   const keyword = filters.keyword.trim();
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    const request = keyword ? searchProducts(keyword) : fetchProducts();
-
-    request
-      .then(data => {
-        if (!cancelled) setAllProducts(data);
-      })
-      .catch(err => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Unknown error');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [keyword]);
+  const { data, loading, error } = useAsync<Product[]>(
+    () => (keyword ? searchProducts(keyword) : fetchProducts()),
+    [keyword]
+  );
+  const allProducts = data ?? [];
 
   const filtered = allProducts.filter(p => {
     if (filters.categoryIds.length > 0) {

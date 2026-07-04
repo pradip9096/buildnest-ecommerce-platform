@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useAsync } from '../../hooks/useAsync';
 import { fetchDashboardStats, type DashboardStats } from '../../api/admin';
 
 interface Props { token: string; }
@@ -11,16 +11,10 @@ const STAT_CARDS = [
 ];
 
 export function OverviewTab({ token }: Props) {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchDashboardStats(token)
-      .then(setStats)
-      .catch(e => setError(e instanceof Error ? e.message : 'Failed to load stats'))
-      .finally(() => setLoading(false));
-  }, [token]);
+  const { data: stats, loading, error } = useAsync<DashboardStats>(
+    () => fetchDashboardStats(token),
+    [token]
+  );
 
   if (loading) return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
