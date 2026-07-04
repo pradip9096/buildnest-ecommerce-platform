@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { changePassword } from '../../api/user';
 
-interface Props { token: string; userId: number; }
+interface Props { token: string; }
 
-export function SecurityTab({ token, userId }: Props) {
+export function SecurityTab({ token }: Props) {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNew, setConfirmNew] = useState('');
@@ -17,7 +17,7 @@ export function SecurityTab({ token, userId }: Props) {
     if (newPassword !== confirmNew) { setError('New passwords do not match'); return; }
     setSaving(true); setError(null);
     try {
-      await changePassword(token, userId, oldPassword, newPassword);
+      await changePassword(token, oldPassword, newPassword);
       setSuccess(true);
       setOldPassword(''); setNewPassword(''); setConfirmNew('');
       setTimeout(() => setSuccess(false), 4000);
@@ -28,10 +28,10 @@ export function SecurityTab({ token, userId }: Props) {
     }
   };
 
-  const pwdField = (label: string, value: string, onChange: (v: string) => void, autoComplete: string) => (
+  const pwdField = (id: string, label: string, value: string, onChange: (v: string) => void, autoComplete: string) => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <input type="password" value={value} onChange={e => onChange(e.target.value)} autoComplete={autoComplete}
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <input id={id} name={id} type="password" value={value} onChange={e => onChange(e.target.value)} autoComplete={autoComplete}
         className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400" />
     </div>
   );
@@ -41,9 +41,9 @@ export function SecurityTab({ token, userId }: Props) {
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {pwdField('Current password', oldPassword, setOldPassword, 'current-password')}
-          {pwdField('New password', newPassword, setNewPassword, 'new-password')}
-          {pwdField('Confirm new password', confirmNew, setConfirmNew, 'new-password')}
+          {pwdField('old-password', 'Current password', oldPassword, setOldPassword, 'current-password')}
+          {pwdField('new-password', 'New password', newPassword, setNewPassword, 'new-password')}
+          {pwdField('confirm-new-password', 'Confirm new password', confirmNew, setConfirmNew, 'new-password')}
           <p className="text-xs text-gray-400">Password must be at least 12 characters.</p>
 
           {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{error}</p>}

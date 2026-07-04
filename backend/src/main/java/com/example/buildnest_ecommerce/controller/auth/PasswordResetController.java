@@ -1,13 +1,17 @@
 package com.example.buildnest_ecommerce.controller.auth;
 
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
+import com.example.buildnest_ecommerce.model.payload.ChangePasswordRequest;
+import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import com.example.buildnest_ecommerce.service.password.PasswordResetService;
 import com.example.buildnest_ecommerce.util.RateLimitUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -60,10 +64,12 @@ public class PasswordResetController {
     }
 
     @PostMapping("/change")
-    public ResponseEntity<ApiResponse> changePassword(@RequestParam Long userId,
-            @RequestParam String oldPassword,
-            @RequestParam String newPassword,
+    public ResponseEntity<ApiResponse> changePassword(
+            @Valid @RequestBody ChangePasswordRequest changeRequest,
+            @AuthenticationPrincipal CustomUserDetails currentUser,
             HttpServletRequest request) {
+        Long userId = currentUser.getId();
+
         if (!rateLimitUtil.isAllowed(request, "password-change", userId)) {
             long retryAfter = rateLimitUtil.getRetryAfterSeconds(request, "password-change", userId);
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
@@ -74,7 +80,8 @@ public class PasswordResetController {
             String ipAddress = request.getRemoteAddr();
             String userAgent = request.getHeader("User-Agent");
 
-            passwordResetService.changePassword(userId, oldPassword, newPassword, ipAddress, userAgent);
+            passwordResetService.changePassword(
+                    userId, changeRequest.getOldPassword(), changeRequest.getNewPassword(), ipAddress, userAgent);
 
             return ResponseEntity.ok(new ApiResponse(true, "Password changed successfully", null));
         } catch (IllegalArgumentException e) {

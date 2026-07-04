@@ -1,6 +1,8 @@
 package com.example.buildnest_ecommerce.controller.auth;
 
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
+import com.example.buildnest_ecommerce.model.payload.ChangePasswordRequest;
+import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import com.example.buildnest_ecommerce.service.password.PasswordResetService;
 import com.example.buildnest_ecommerce.util.RateLimitUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -31,6 +35,11 @@ class PasswordResetControllerTest {
     private PasswordResetController passwordResetController;
 
     private HttpServletRequest request;
+
+    private static CustomUserDetails userDetails(Long id) {
+        return new CustomUserDetails(id, "testuser", "test@example.com", "hash",
+                Collections.emptyList(), true, true, true, true);
+    }
 
     @BeforeEach
     void setUp() {
@@ -141,8 +150,8 @@ class PasswordResetControllerTest {
         doNothing().when(passwordResetService).changePassword(eq(1L), eq("oldPass"), eq("newPass"), anyString(),
                 anyString());
 
-        ResponseEntity<ApiResponse> response = passwordResetController.changePassword(1L, "oldPass", "newPass",
-                mockRequest);
+        ResponseEntity<ApiResponse> response = passwordResetController.changePassword(
+                new ChangePasswordRequest("oldPass", "newPass"), userDetails(1L), mockRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(response.getBody().isSuccess());
@@ -156,8 +165,8 @@ class PasswordResetControllerTest {
         when(rateLimitUtil.isAllowed(any(), eq("password-change"), eq(1L))).thenReturn(false);
         when(rateLimitUtil.getRetryAfterSeconds(any(), eq("password-change"), eq(1L))).thenReturn(300L);
 
-        ResponseEntity<ApiResponse> response = passwordResetController.changePassword(1L, "oldPass", "newPass",
-                request);
+        ResponseEntity<ApiResponse> response = passwordResetController.changePassword(
+                new ChangePasswordRequest("oldPass", "newPass"), userDetails(1L), request);
 
         assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
         assertFalse(response.getBody().isSuccess());
@@ -177,8 +186,8 @@ class PasswordResetControllerTest {
         doThrow(new IllegalArgumentException("Incorrect old password")).when(passwordResetService)
                 .changePassword(anyLong(), anyString(), anyString(), anyString(), anyString());
 
-        ResponseEntity<ApiResponse> response = passwordResetController.changePassword(1L, "wrongPass", "newPass",
-                mockRequest);
+        ResponseEntity<ApiResponse> response = passwordResetController.changePassword(
+                new ChangePasswordRequest("wrongPass", "newPass"), userDetails(1L), mockRequest);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertFalse(response.getBody().isSuccess());
@@ -195,11 +204,31 @@ class PasswordResetControllerTest {
         doThrow(new RuntimeException("Unexpected error")).when(passwordResetService)
                 .changePassword(anyLong(), anyString(), anyString(), anyString(), anyString());
 
-        ResponseEntity<ApiResponse> response = passwordResetController.changePassword(1L, "oldPass", "newPass",
-                mockRequest);
+        ResponseEntity<ApiResponse> response = passwordResetController.changePassword(
+                new ChangePasswordRequest("oldPass", "newPass"), userDetails(1L), mockRequest);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertFalse(response.getBody().isSuccess());
         assertEquals("Error changing password", response.getBody().getMessage());
+    }
+
+    @Test
+    void changePasswordShouldDeriveUserIdFromAuthenticatedPrincipalNotClientInput() {
+        MockHttpServletRequest mockRequest = new MockHttpServletRequest();
+        mockRequest.setRemoteAddr("127.0.0.1");
+        mockRequest.addHeader("User-Agent", "Mozilla/5.0");
+
+        when(rateLimitUtil.isAllowed(any(), eq("password-change"), eq(7L))).thenReturn(true);
+        doNothing().when(passwordResetService).changePassword(eq(7L), anyString(), anyString(), anyString(),
+                anyString());
+
+        passwordResetController.changePassword(
+                new ChangePasswordRequest("oldPass", "newPass"), userDetails(7L), mockRequest);
+
+        // The request body carries no userId at all — verifying the call used
+        // the authenticated principal's id (7L) confirms a client cannot
+        // change another user's password by supplying a different id.
+        verify(passwordResetService).changePassword(eq(7L), anyString(), anyString(), anyString(), anyString());
+        verify(rateLimitUtil).isAllowed(any(), eq("password-change"), eq(7L));
     }
 }

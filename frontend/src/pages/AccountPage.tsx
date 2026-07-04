@@ -61,7 +61,7 @@ export function AccountPage() {
             {activeTab === 'orders'    && token && user && <OrdersTab token={token} userId={user.id} />}
             {activeTab === 'addresses' && token && <AddressesTab token={token} />}
             {activeTab === 'wishlist'  && token && user && <WishlistTab token={token} userId={user.id} />}
-            {activeTab === 'security'  && token && user && <SecurityTab token={token} userId={user.id} />}
+            {activeTab === 'security'  && token && <SecurityTab token={token} />}
           </div>
         </div>
       </main>

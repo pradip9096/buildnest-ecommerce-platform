@@ -18,10 +18,12 @@ export async function updateProfile(
 
 export async function changePassword(
   token: string,
-  userId: number,
   oldPassword: string,
   newPassword: string
 ): Promise<void> {
-  const params = new URLSearchParams({ userId: String(userId), oldPassword, newPassword });
-  await request(`/api/password/change?${params}`, { method: 'POST', token }, 'Failed to change password');
+  await request(
+    '/api/password/change',
+    { method: 'POST', token, body: { oldPassword, newPassword } },
+    'Failed to change password'
+  );
 }
