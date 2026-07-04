@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface AddressForm {
   fullName: string;
@@ -85,7 +86,8 @@ export function AddressStep({ onNext, loading, error }: Props) {
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Delivery Address</h2>
 
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5 text-sm text-amber-800">
-        Saved address book is coming in a future update. This address will be used for this order and delivery cost calculation.
+        This address is used for this order and its delivery cost calculation only. To save an address for future
+        orders, add one from your account's <Link to="/account" className="underline">Address Book</Link>.
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

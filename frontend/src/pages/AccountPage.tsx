@@ -59,7 +59,7 @@ export function AccountPage() {
           <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 min-h-[400px]">
             {activeTab === 'profile'   && token && <ProfileTab token={token} />}
             {activeTab === 'orders'    && token && user && <OrdersTab token={token} userId={user.id} />}
-            {activeTab === 'addresses' && <AddressesTab />}
+            {activeTab === 'addresses' && token && <AddressesTab token={token} />}
             {activeTab === 'wishlist'  && token && user && <WishlistTab token={token} userId={user.id} />}
             {activeTab === 'security'  && token && user && <SecurityTab token={token} userId={user.id} />}
           </div>
