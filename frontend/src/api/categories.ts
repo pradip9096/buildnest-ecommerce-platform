@@ -1,9 +1,7 @@
-import type { ApiResponse, Category } from '../types';
+import { requestData } from './client';
+import type { Category } from '../types';
 
 export async function fetchCategories(): Promise<Category[]> {
-  const res = await fetch('/api/public/categories');
-  if (!res.ok) throw new Error(`Failed to fetch categories: ${res.status}`);
-  const json: ApiResponse<Category[]> = await res.json();
-  if (!json.success) throw new Error(json.message);
-  return json.data ?? [];
+  const data = await requestData<Category[]>('/api/public/categories', {}, s => `Failed to fetch categories: ${s}`);
+  return data ?? [];
 }

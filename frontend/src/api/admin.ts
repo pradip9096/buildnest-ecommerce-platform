@@ -1,8 +1,4 @@
-import type { ApiResponse } from '../types';
-
-function authHeaders(token: string): HeadersInit {
-  return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-}
+import { request, requestData } from './client';
 
 // ── Dashboard stats ──────────────────────────────────────────────────────────
 
@@ -14,10 +10,7 @@ export interface DashboardStats {
 }
 
 export async function fetchDashboardStats(token: string): Promise<DashboardStats> {
-  const res = await fetch('/api/admin/reports/dashboard', { headers: authHeaders(token) });
-  const body: ApiResponse<DashboardStats> = await res.json();
-  if (!res.ok) throw new Error(body.message ?? 'Failed to load dashboard stats');
-  return body.data;
+  return requestData<DashboardStats>('/api/admin/reports/dashboard', { token }, 'Failed to load dashboard stats');
 }
 
 // ── Orders ───────────────────────────────────────────────────────────────────
@@ -38,10 +31,12 @@ export async function fetchAdminOrders(
   if (params.status) q.set('status', params.status);
   q.set('page', String(params.page ?? 0));
   q.set('size', String(params.size ?? 20));
-  const res = await fetch(`/api/v1/admin/orders?${q}`, { headers: authHeaders(token) });
-  const body: ApiResponse<{ content: AdminOrder[]; totalElements: number; totalPages: number }> = await res.json();
-  if (!res.ok) throw new Error(body.message ?? 'Failed to load orders');
-  return body.data ?? { content: [], totalElements: 0, totalPages: 0 };
+  const data = await requestData<{ content: AdminOrder[]; totalElements: number; totalPages: number }>(
+    `/api/v1/admin/orders?${q}`,
+    { token },
+    'Failed to load orders'
+  );
+  return data ?? { content: [], totalElements: 0, totalPages: 0 };
 }
 
 export async function updateOrderStatus(
@@ -49,15 +44,11 @@ export async function updateOrderStatus(
   orderId: number,
   status: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/admin/orders/${orderId}/status`, {
-    method: 'PATCH',
-    headers: authHeaders(token),
-    body: JSON.stringify({ status }),
-  });
-  if (!res.ok) {
-    const body: ApiResponse<null> = await res.json().catch(() => ({ success: false, message: 'Failed', data: null }));
-    throw new Error(body.message ?? 'Failed to update status');
-  }
+  await request(
+    `/api/v1/admin/orders/${orderId}/status`,
+    { method: 'PATCH', token, body: { status } },
+    'Failed to update status'
+  );
 }
 
 // ── Inventory ────────────────────────────────────────────────────────────────
@@ -72,10 +63,8 @@ export interface InventoryItem {
 }
 
 export async function fetchAdminInventory(token: string): Promise<InventoryItem[]> {
-  const res = await fetch('/api/v1/admin/inventory', { headers: authHeaders(token) });
-  const body: ApiResponse<InventoryItem[]> = await res.json();
-  if (!res.ok) throw new Error(body.message ?? 'Failed to load inventory');
-  return Array.isArray(body.data) ? body.data : [];
+  const data = await requestData<InventoryItem[]>('/api/v1/admin/inventory', { token }, 'Failed to load inventory');
+  return Array.isArray(data) ? data : [];
 }
 
 export async function adjustInventory(
@@ -84,15 +73,11 @@ export async function adjustInventory(
   delta: number,
   reason: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/admin/inventory/${productId}`, {
-    method: 'PATCH',
-    headers: authHeaders(token),
-    body: JSON.stringify({ delta, reason }),
-  });
-  if (!res.ok) {
-    const body: ApiResponse<null> = await res.json().catch(() => ({ success: false, message: 'Failed', data: null }));
-    throw new Error(body.message ?? 'Failed to adjust inventory');
-  }
+  await request(
+    `/api/v1/admin/inventory/${productId}`,
+    { method: 'PATCH', token, body: { delta, reason } },
+    'Failed to adjust inventory'
+  );
 }
 
 // ── Users ────────────────────────────────────────────────────────────────────
@@ -108,18 +93,12 @@ export interface AdminUser {
 }
 
 export async function fetchAdminUsers(token: string): Promise<AdminUser[]> {
-  const res = await fetch('/api/admin/users', { headers: authHeaders(token) });
-  const body: ApiResponse<AdminUser[]> = await res.json();
-  if (!res.ok) throw new Error(body.message ?? 'Failed to load users');
-  return Array.isArray(body.data) ? body.data : [];
+  const data = await requestData<AdminUser[]>('/api/admin/users', { token }, 'Failed to load users');
+  return Array.isArray(data) ? data : [];
 }
 
 export async function deleteAdminUser(token: string, userId: number): Promise<void> {
-  const res = await fetch(`/api/admin/users/${userId}`, {
-    method: 'DELETE',
-    headers: authHeaders(token),
-  });
-  if (!res.ok) throw new Error('Failed to disable user');
+  await request(`/api/admin/users/${userId}`, { method: 'DELETE', token }, 'Failed to disable user');
 }
 
 // ── Audit Log ────────────────────────────────────────────────────────────────
@@ -143,17 +122,24 @@ export interface AuditLogPage {
   number: number;
 }
 
+interface RawAuditLogPage {
+  content?: AuditLogEntry[];
+  totalElements?: number;
+  totalPages?: number;
+  number?: number;
+}
+
 export async function fetchAuditLogs(
   token: string,
   page = 0,
   size = 20
 ): Promise<AuditLogPage> {
-  const res = await fetch(`/api/admin/audit?page=${page}&size=${size}`, {
-    headers: authHeaders(token),
-  });
-  if (!res.ok) throw new Error('Failed to load audit logs');
   // AuditLogController returns Page<AuditLog> directly, not wrapped in ApiResponse
-  const body = await res.json();
+  const body = await request<RawAuditLogPage>(
+    `/api/admin/audit?page=${page}&size=${size}`,
+    { token },
+    'Failed to load audit logs'
+  );
   return {
     content: body.content ?? [],
     totalElements: body.totalElements ?? 0,

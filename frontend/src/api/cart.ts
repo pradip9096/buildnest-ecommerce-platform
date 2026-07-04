@@ -1,16 +1,10 @@
-import type { ApiResponse, Cart } from '../types';
+import { request, requestData } from './client';
+import type { Cart } from '../types';
 
 const BASE = '/api/user/cart';
 
-function authHeaders(token: string): HeadersInit {
-  return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-}
-
 export async function fetchCart(userId: number, token: string): Promise<Cart> {
-  const res = await fetch(`${BASE}/${userId}`, { headers: authHeaders(token) });
-  if (!res.ok) throw new Error(`Failed to fetch cart (${res.status})`);
-  const body: ApiResponse<Cart> = await res.json();
-  return body.data;
+  return requestData<Cart>(`${BASE}/${userId}`, { token }, s => `Failed to fetch cart (${s})`);
 }
 
 export async function addToCart(
@@ -19,26 +13,17 @@ export async function addToCart(
   quantity: number,
   token: string
 ): Promise<void> {
-  const res = await fetch(`${BASE}/add?userId=${userId}`, {
-    method: 'POST',
-    headers: authHeaders(token),
-    body: JSON.stringify({ productId, quantity }),
-  });
-  if (!res.ok) throw new Error(`Failed to add item (${res.status})`);
+  await request(
+    `${BASE}/add?userId=${userId}`,
+    { method: 'POST', token, body: { productId, quantity } },
+    s => `Failed to add item (${s})`
+  );
 }
 
 export async function removeCartItem(cartItemId: number, token: string): Promise<void> {
-  const res = await fetch(`${BASE}/item/${cartItemId}`, {
-    method: 'DELETE',
-    headers: authHeaders(token),
-  });
-  if (!res.ok) throw new Error(`Failed to remove item (${res.status})`);
+  await request(`${BASE}/item/${cartItemId}`, { method: 'DELETE', token }, s => `Failed to remove item (${s})`);
 }
 
 export async function clearCart(userId: number, token: string): Promise<void> {
-  const res = await fetch(`${BASE}/clear/${userId}`, {
-    method: 'DELETE',
-    headers: authHeaders(token),
-  });
-  if (!res.ok) throw new Error(`Failed to clear cart (${res.status})`);
+  await request(`${BASE}/clear/${userId}`, { method: 'DELETE', token }, s => `Failed to clear cart (${s})`);
 }

@@ -1,26 +1,19 @@
-import type { ApiResponse, Product } from '../types';
-
-function authHeaders(token: string): HeadersInit {
-  return { Authorization: `Bearer ${token}` };
-}
+import { request, requestData } from './client';
+import type { Product } from '../types';
 
 export async function fetchWishlist(token: string): Promise<Product[]> {
-  const res = await fetch('/api/user/wishlist', { headers: authHeaders(token) });
-  const body: ApiResponse<Product[]> = await res.json();
-  if (!res.ok) throw new Error(body.message ?? 'Failed to load wishlist');
-  return Array.isArray(body.data) ? body.data : [];
+  const data = await requestData<Product[]>('/api/user/wishlist', { token }, 'Failed to load wishlist');
+  return data ?? [];
 }
 
 export async function addToWishlist(productId: number, token: string): Promise<void> {
-  await fetch(`/api/user/wishlist/items/${productId}`, {
-    method: 'POST',
-    headers: authHeaders(token),
-  });
+  await request(`/api/user/wishlist/items/${productId}`, { method: 'POST', token }, 'Failed to add to wishlist');
 }
 
 export async function removeFromWishlist(productId: number, token: string): Promise<void> {
-  await fetch(`/api/user/wishlist/items/${productId}`, {
-    method: 'DELETE',
-    headers: authHeaders(token),
-  });
+  await request(
+    `/api/user/wishlist/items/${productId}`,
+    { method: 'DELETE', token },
+    'Failed to remove from wishlist'
+  );
 }

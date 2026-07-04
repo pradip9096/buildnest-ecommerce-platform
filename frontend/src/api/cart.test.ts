@@ -25,7 +25,8 @@ describe('api/cart', () => {
       const result = await fetchCart(42, 'token-abc');
 
       expect(fetch).toHaveBeenCalledWith('/api/user/cart/42', {
-        headers: { Authorization: 'Bearer token-abc', 'Content-Type': 'application/json' },
+        headers: { Authorization: 'Bearer token-abc' },
+        body: undefined,
       });
       expect(result).toEqual(cart);
     });

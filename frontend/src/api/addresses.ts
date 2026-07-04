@@ -1,10 +1,7 @@
-import type { Address, ApiResponse } from '../types';
+import { requestData } from './client';
+import type { Address } from '../types';
 
 const BASE = '/api/user/addresses';
-
-function authHeaders(token: string): HeadersInit {
-  return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-}
 
 export interface CreateAddressInput {
   streetAddress: string;
@@ -16,12 +13,11 @@ export interface CreateAddressInput {
 }
 
 export async function createAddress(input: CreateAddressInput, token: string): Promise<Address> {
-  const res = await fetch(BASE, {
-    method: 'POST',
-    headers: authHeaders(token),
-    body: JSON.stringify(input),
-  });
-  const body: ApiResponse<Address> = await res.json();
-  if (!res.ok || !body.data) throw new Error(body.message ?? `Failed to create address (${res.status})`);
-  return body.data;
+  const data = await requestData<Address>(
+    BASE,
+    { method: 'POST', token, body: input },
+    s => `Failed to create address (${s})`
+  );
+  if (!data) throw new Error(`Failed to create address`);
+  return data;
 }

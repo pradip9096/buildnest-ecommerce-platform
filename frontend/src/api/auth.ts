@@ -1,14 +1,11 @@
-import type { ApiResponse, AuthTokens } from '../types';
+import { request, requestData } from './client';
+import type { AuthTokens } from '../types';
 
 export async function apiLogin(username: string, password: string): Promise<AuthTokens> {
-  const res = await fetch('/api/auth/login', {
+  return requestData<AuthTokens>('/api/auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-  });
-  const body: ApiResponse<AuthTokens> = await res.json();
-  if (!res.ok) throw new Error(body.message ?? 'Login failed');
-  return body.data;
+    body: { username, password },
+  }, 'Login failed');
 }
 
 export async function apiRegister(payload: {
@@ -18,30 +15,16 @@ export async function apiRegister(payload: {
   firstName: string;
   lastName: string;
 }): Promise<void> {
-  const res = await fetch('/api/auth/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  const body: ApiResponse<null> = await res.json();
-  if (!res.ok) throw new Error(body.message ?? 'Registration failed');
+  await requestData<null>('/api/auth/register', { method: 'POST', body: payload }, 'Registration failed');
 }
 
 export async function apiRefresh(refreshToken: string): Promise<AuthTokens> {
-  const res = await fetch('/api/auth/refresh', {
+  return requestData<AuthTokens>('/api/auth/refresh', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
-  });
-  const body: ApiResponse<AuthTokens> = await res.json();
-  if (!res.ok) throw new Error(body.message ?? 'Token refresh failed');
-  return body.data;
+    body: { refreshToken },
+  }, 'Token refresh failed');
 }
 
 export async function apiLogout(refreshToken: string | null): Promise<void> {
-  await fetch('/api/auth/logout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
-  });
+  await request('/api/auth/logout', { method: 'POST', body: { refreshToken } }, 'Logout failed');
 }

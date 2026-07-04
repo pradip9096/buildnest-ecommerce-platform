@@ -1,34 +1,36 @@
-import type { ApiResponse, Product } from '../types';
+import { requestData } from './client';
+import type { Product } from '../types';
 
 export async function fetchProducts(): Promise<Product[]> {
-  const res = await fetch('/api/public/products');
-  if (!res.ok) throw new Error(`Failed to fetch products: ${res.status}`);
-  const json: ApiResponse<Product[]> = await res.json();
-  if (!json.success) throw new Error(json.message);
-  return json.data ?? [];
+  const data = await requestData<Product[]>('/api/public/products', {}, s => `Failed to fetch products: ${s}`);
+  return data ?? [];
 }
 
 export async function fetchProductById(id: number): Promise<Product> {
-  const res = await fetch(`/api/public/products/${id}`);
-  if (!res.ok) throw new Error(`Failed to fetch product: ${res.status}`);
-  const json: ApiResponse<Product> = await res.json();
-  if (!json.success || !json.data) throw new Error(json.message ?? 'Product not found');
-  return json.data;
+  const data = await requestData<Product>(
+    `/api/public/products/${id}`,
+    {},
+    s => `Failed to fetch product: ${s}`
+  );
+  if (!data) throw new Error('Product not found');
+  return data;
 }
 
 export async function searchProducts(keyword: string): Promise<Product[]> {
   const params = new URLSearchParams({ keyword });
-  const res = await fetch(`/api/public/products/search?${params}`);
-  if (!res.ok) throw new Error(`Search failed: ${res.status}`);
-  const json: ApiResponse<Product[]> = await res.json();
-  if (!json.success) throw new Error(json.message);
-  return json.data ?? [];
+  const data = await requestData<Product[]>(
+    `/api/public/products/search?${params}`,
+    {},
+    s => `Search failed: ${s}`
+  );
+  return data ?? [];
 }
 
 export async function fetchFeaturedProducts(): Promise<Product[]> {
-  const res = await fetch('/api/public/products/featured');
-  if (!res.ok) throw new Error(`Failed to fetch featured products: ${res.status}`);
-  const json: ApiResponse<Product[]> = await res.json();
-  if (!json.success) throw new Error(json.message);
-  return json.data ?? [];
+  const data = await requestData<Product[]>(
+    '/api/public/products/featured',
+    {},
+    s => `Failed to fetch featured products: ${s}`
+  );
+  return data ?? [];
 }
