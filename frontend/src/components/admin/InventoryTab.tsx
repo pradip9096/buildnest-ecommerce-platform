@@ -92,6 +92,7 @@ export function InventoryTab({ token }: Props) {
                 </td>
                 <td className="px-4 py-3">
                   <button
+                    type="button"
                     onClick={() => setAdjusting(item)}
                     className="text-xs font-medium text-primary-600 hover:text-primary-800 border border-primary-200 hover:border-primary-400 rounded-lg px-3 py-1 transition-colors"
                   >

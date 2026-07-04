@@ -27,6 +27,7 @@ export function ImageGallery({ imageUrl, productName }: Props) {
         <div className="flex gap-2">
           {images.map((src, i) => (
             <button
+              type="button"
               key={i}
               onClick={() => setSelected(i)}
               className={`w-16 h-16 rounded-lg border-2 overflow-hidden flex-shrink-0 ${

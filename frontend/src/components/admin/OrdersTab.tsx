@@ -122,6 +122,7 @@ export function OrdersTab({ token }: Props) {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
           <button
+            type="button"
             onClick={() => setPage(p => Math.max(0, p - 1))}
             disabled={page === 0}
             className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50"
@@ -130,6 +131,7 @@ export function OrdersTab({ token }: Props) {
           </button>
           <span className="text-sm text-gray-500">Page {page + 1} of {totalPages}</span>
           <button
+            type="button"
             onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
             disabled={page >= totalPages - 1}
             className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50"

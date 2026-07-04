@@ -180,6 +180,7 @@ export function ProductDetailPage() {
                 </div>
 
                 <button
+                  type="button"
                   onClick={handleAddToCart}
                   disabled={cartAdding}
                   className="w-full bg-primary-600 hover:bg-primary-700 active:bg-primary-800 disabled:opacity-60 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
@@ -204,6 +205,7 @@ export function ProductDetailPage() {
 
             {!inStock && (
               <button
+                type="button"
                 disabled
                 className="w-full mt-4 bg-gray-100 text-gray-400 font-semibold py-3 px-6 rounded-xl cursor-not-allowed"
               >

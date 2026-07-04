@@ -11,6 +11,7 @@ export function ErrorMessage({ message, onRetry }: Props) {
       <p className="text-sm text-gray-500 mt-1 max-w-sm">{message}</p>
       {onRetry && (
         <button
+          type="button"
           onClick={onRetry}
           className="mt-4 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
         >

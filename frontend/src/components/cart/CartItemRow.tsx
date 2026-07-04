@@ -21,6 +21,7 @@ export function CartItemRow({ item, onRemove, onAdd, removing }: Props) {
 
       <div className="flex items-center gap-2">
         <button
+          type="button"
           onClick={() => onAdd(item.productId)}
           className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
           aria-label="Increase quantity"
@@ -29,6 +30,7 @@ export function CartItemRow({ item, onRemove, onAdd, removing }: Props) {
         </button>
         <span className="w-6 text-center font-medium text-sm">{item.quantity}</span>
         <button
+          type="button"
           onClick={() => onRemove(item.cartItemId)}
           disabled={removing}
           className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
@@ -43,6 +45,7 @@ export function CartItemRow({ item, onRemove, onAdd, removing }: Props) {
       </p>
 
       <button
+        type="button"
         onClick={() => onRemove(item.cartItemId)}
         disabled={removing}
         className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40 p-1"

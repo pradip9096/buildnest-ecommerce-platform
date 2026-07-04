@@ -94,6 +94,7 @@ export function ReviewsSection({ reviews, summary, totalPages, page, loading, on
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 mt-6">
           <button
+            type="button"
             onClick={() => onPageChange(page - 1)}
             disabled={page === 0}
             className="px-4 py-2 text-sm rounded-lg border border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
@@ -102,6 +103,7 @@ export function ReviewsSection({ reviews, summary, totalPages, page, loading, on
           </button>
           <span className="text-sm text-gray-600">Page {page + 1} of {totalPages}</span>
           <button
+            type="button"
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages - 1}
             className="px-4 py-2 text-sm rounded-lg border border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"

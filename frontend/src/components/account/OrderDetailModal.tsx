@@ -33,7 +33,7 @@ export function OrderDetailModal({ order, onClose }: Props) {
             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}>
               {order.status.replace(/_/g, ' ')}
             </span>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
+            <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
           </div>
         </div>
 
@@ -62,7 +62,7 @@ export function OrderDetailModal({ order, onClose }: Props) {
         )}
 
         <div className="px-6 pb-5">
-          <button onClick={onClose}
+          <button type="button" onClick={onClose}
             className="w-full border border-gray-200 text-gray-600 font-medium py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm">
             Close
           </button>

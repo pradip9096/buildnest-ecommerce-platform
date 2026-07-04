@@ -78,7 +78,7 @@ export function CartPage() {
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm flex items-center gap-2">
             <span>⚠️</span>
             <span>{error}</span>
-            <button onClick={reload} className="ml-auto underline text-red-600 hover:text-red-800">Retry</button>
+            <button type="button" onClick={reload} className="ml-auto underline text-red-600 hover:text-red-800">Retry</button>
           </div>
         )}
 
@@ -151,6 +151,7 @@ export function CartPage() {
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => navigate('/checkout')}
                   className="mt-5 w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 rounded-xl transition-colors"
                 >

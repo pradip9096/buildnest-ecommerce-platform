@@ -51,6 +51,7 @@ export function CategorySidebar({ categories, selected, onChange, loading }: Pro
 
       {selected.length > 0 && (
         <button
+          type="button"
           onClick={() => onChange([])}
           className="mt-4 text-xs text-primary-600 hover:underline"
         >

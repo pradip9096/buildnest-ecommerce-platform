@@ -90,6 +90,7 @@ export function WishlistTab({ token, userId }: Props) {
               </Link>
               <div className="px-3 pb-3 flex gap-2">
                 <button
+                  type="button"
                   onClick={() => handleMoveToCart(product)}
                   disabled={movingToCart === product.id || !product.isActive || product.stockQuantity === 0}
                   className="flex-1 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
@@ -97,6 +98,7 @@ export function WishlistTab({ token, userId }: Props) {
                   {movingToCart === product.id ? 'Moving…' : 'Move to Cart'}
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleRemove(product.id)}
                   disabled={removing === product.id}
                   className="border border-gray-200 text-gray-500 hover:text-red-500 hover:border-red-300 disabled:opacity-50 text-xs px-2.5 py-2 rounded-lg transition-colors"

@@ -12,6 +12,7 @@ export function Pagination({ page, totalPages, onPageChange }: Props) {
   return (
     <nav aria-label="Pagination" className="flex items-center justify-center gap-1 mt-8">
       <button
+        type="button"
         onClick={() => onPageChange(page - 1)}
         disabled={page === 0}
         className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -25,6 +26,7 @@ export function Pagination({ page, totalPages, onPageChange }: Props) {
           <span key={`ellipsis-${i}`} className="px-2 text-gray-400">…</span>
         ) : (
           <button
+            type="button"
             key={p}
             onClick={() => onPageChange(p)}
             aria-current={p === page ? 'page' : undefined}
@@ -40,6 +42,7 @@ export function Pagination({ page, totalPages, onPageChange }: Props) {
       )}
 
       <button
+        type="button"
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages - 1}
         className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"

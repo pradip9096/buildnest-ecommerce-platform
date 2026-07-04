@@ -108,6 +108,7 @@ export function UsersTab({ token }: Props) {
                 <td className="px-4 py-3">
                   {user.enabled !== false && (
                     <button
+                      type="button"
                       onClick={() => handleDisable(user)}
                       disabled={disabling === user.id}
                       className="text-xs font-medium text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 rounded-lg px-3 py-1 transition-colors disabled:opacity-50"

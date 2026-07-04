@@ -66,6 +66,7 @@ export function OrdersTab({ token, userId }: Props) {
         <div className="space-y-2">
           {orders.map(order => (
             <button
+              type="button"
               key={order.id}
               onClick={() => openDetail(order)}
               className="w-full text-left border border-gray-100 rounded-xl px-4 py-3 hover:border-primary-300 hover:bg-primary-50/50 transition-colors"
