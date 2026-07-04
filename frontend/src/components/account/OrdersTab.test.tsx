@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { OrdersTab } from './OrdersTab';
 import { fetchOrders } from '../../api/orders';
 import type { Order } from '../../types';
@@ -42,5 +43,20 @@ describe('OrdersTab', () => {
 
     await waitFor(() => expect(screen.getByText('Failed to fetch orders (401)')).toBeInTheDocument());
     expect(screen.queryByText(/haven.t placed any orders/i)).not.toBeInTheDocument();
+  });
+
+  it('retries the fetch and renders the list when Retry is clicked after a failure', async () => {
+    const user = userEvent.setup();
+    mockFetchOrders.mockRejectedValueOnce(new Error('Failed to fetch orders (500)'));
+    mockFetchOrders.mockResolvedValueOnce([order]);
+
+    render(<OrdersTab token="token-abc" userId={42} />);
+
+    await waitFor(() => expect(screen.getByText('Failed to fetch orders (500)')).toBeInTheDocument());
+
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+
+    await waitFor(() => expect(screen.getByText('Order #1')).toBeInTheDocument());
+    expect(mockFetchOrders).toHaveBeenCalledTimes(2);
   });
 });

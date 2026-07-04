@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchOrders, fetchOrderById } from '../../api/orders';
 import { OrderDetailModal } from './OrderDetailModal';
 import type { Order } from '../../types';
@@ -21,12 +21,18 @@ export function OrdersTab({ token, userId }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Order | null>(null);
 
-  useEffect(() => {
+  const loadOrders = useCallback(() => {
+    setLoading(true);
+    setError(null);
     fetchOrders(token)
       .then(setOrders)
       .catch(e => setError(e instanceof Error ? e.message : 'Failed to load orders'))
       .finally(() => setLoading(false));
-  }, [token, userId]);
+  }, [token]);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders, userId]);
 
   const openDetail = async (order: Order) => {
     if (order.orderItems) { setSelected(order); return; }
@@ -44,7 +50,18 @@ export function OrdersTab({ token, userId }: Props) {
     </div>
   );
 
-  if (error) return <p className="text-red-600 text-sm">{error}</p>;
+  if (error) return (
+    <div className="text-center py-12">
+      <p className="text-red-600 text-sm mb-3">{error}</p>
+      <button
+        type="button"
+        onClick={loadOrders}
+        className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+      >
+        Retry
+      </button>
+    </div>
+  );
 
   return (
     <>
