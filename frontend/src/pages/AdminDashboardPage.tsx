@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { OverviewTab } from '../components/admin/OverviewTab';
 import { OrdersTab } from '../components/admin/OrdersTab';
@@ -18,39 +17,16 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ];
 
 export function AdminDashboardPage() {
-  const { user, token, logout } = useAuth();
-  const navigate = useNavigate();
+  const { token } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  const handleLogout = async () => {
-    setLoggingOut(true);
-    await logout();
-    navigate('/', { replace: true });
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="text-2xl font-bold text-amber-600">🏗️ BuildNest</Link>
-            <span className="text-gray-300">/</span>
-            <span className="text-gray-700 font-semibold">Admin</span>
-            <span className="ml-1 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-bold uppercase">Admin</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-sm text-gray-500 hover:text-gray-800">View store</Link>
-            <span className="text-sm text-gray-400">@{user?.username}</span>
-            <button onClick={handleLogout} disabled={loggingOut}
-              className="text-sm text-gray-500 hover:text-red-600 disabled:opacity-60 transition-colors">
-              {loggingOut ? 'Signing out…' : 'Sign out'}
-            </button>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="mb-6 flex items-center gap-2">
+          <h1 className="text-lg font-semibold text-gray-900">Admin Dashboard</h1>
+          <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-bold uppercase">Admin</span>
+        </div>
         <div className="flex flex-col sm:flex-row gap-6">
           <nav className="sm:w-52 flex-shrink-0">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 mb-2">Dashboard</p>

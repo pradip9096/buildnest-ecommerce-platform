@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { ProfileTab } from '../components/account/ProfileTab';
 import { OrdersTab } from '../components/account/OrdersTab';
@@ -18,36 +17,11 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ];
 
 export function AccountPage() {
-  const { user, token, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  const handleLogout = async () => {
-    setLoggingOut(true);
-    await logout();
-    navigate('/', { replace: true });
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="text-2xl font-bold text-amber-600">🏗️ BuildNest</Link>
-            <span className="text-gray-300">/</span>
-            <span className="text-gray-600 font-medium">Account</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link to="/cart" className="text-sm text-gray-500 hover:text-gray-800">🛒 Cart</Link>
-            <button onClick={handleLogout} disabled={loggingOut}
-              className="text-sm text-gray-500 hover:text-red-600 disabled:opacity-60 transition-colors">
-              {loggingOut ? 'Signing out…' : 'Sign out'}
-            </button>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-6 flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-lg font-bold text-amber-700">

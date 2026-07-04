@@ -105,17 +105,10 @@ export function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          <Link to="/" className="text-2xl font-bold text-amber-600">🏗️ BuildNest</Link>
-          <span className="text-gray-300">/</span>
-          <Link to="/cart" className="text-gray-500 hover:text-gray-700">Cart</Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-600 font-medium">Checkout</span>
-        </div>
-      </header>
-
       <main className="max-w-3xl mx-auto px-4 py-8">
+        <div className="text-sm text-gray-500 mb-4">
+          <Link to="/cart" className="hover:text-gray-700">← Back to Cart</Link>
+        </div>
         <CheckoutStepper currentStep={step} />
 
         <div className="flex flex-col lg:flex-row gap-6">

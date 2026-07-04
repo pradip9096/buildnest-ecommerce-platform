@@ -56,14 +56,6 @@ export function CartPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="max-w-5xl mx-auto flex items-center gap-3">
-          <Link to="/" className="text-2xl font-bold text-amber-600">🏗️ BuildNest</Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-600 font-medium">Cart</span>
-        </div>
-      </header>
-
       <main className="max-w-5xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
           Shopping Cart

@@ -25,13 +25,12 @@ function filtersFromSearchParams(params: URLSearchParams): ProductFilters {
 export function ProductListingPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<ProductFilters>(() => filtersFromSearchParams(searchParams));
-  const [searchInput, setSearchInput] = useState(() => searchParams.get('search') ?? '');
 
   const { products, totalItems, totalPages, loading, error } = useProducts(filters);
   const { categories, loading: categoriesLoading } = useCategories();
 
-  // Keep filters/search box in sync when the URL changes from outside a form
-  // handler in this component — e.g. browser back/forward through search history.
+  // Keep filters in sync when the URL changes — e.g. a search from the global
+  // Navbar, or browser back/forward through search history.
   const urlKeyword = searchParams.get('search') ?? '';
   const urlCategoryIds = searchParams.getAll('category').map(Number).filter(n => !Number.isNaN(n)).join(',');
   useEffect(() => {
@@ -41,7 +40,6 @@ export function ProductListingPage() {
       categoryIds: urlCategoryIds ? urlCategoryIds.split(',').map(Number) : [],
       page: 0,
     }));
-    setSearchInput(urlKeyword);
   }, [urlKeyword, urlCategoryIds]);
 
   const setPage = useCallback((page: number) => {
@@ -63,20 +61,7 @@ export function ProductListingPage() {
     });
   }, [setSearchParams]);
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const keyword = searchInput.trim();
-    setFilters(f => ({ ...f, keyword, page: 0 }));
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      if (keyword) next.set('search', keyword);
-      else next.delete('search');
-      return next;
-    });
-  }
-
   function handleClearSearch() {
-    setSearchInput('');
     setFilters(f => ({ ...f, keyword: '', page: 0 }));
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
@@ -87,49 +72,22 @@ export function ProductListingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center gap-4">
-          <h1 className="text-xl font-bold text-gray-900 shrink-0">🏗️ BuildNest</h1>
-
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="flex-1 flex gap-2 w-full sm:max-w-lg">
-            <div className="relative flex-1">
-              <input
-                type="search"
-                value={searchInput}
-                onChange={e => setSearchInput(e.target.value)}
-                placeholder="Search products…"
-                className="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              {filters.keyword && (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
-                  aria-label="Clear search"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              Search
-            </button>
-          </form>
-        </div>
-      </header>
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <p className="text-sm text-gray-500">
             {loading ? 'Loading…' : `${totalItems.toLocaleString()} product${totalItems !== 1 ? 's' : ''}`}
             {filters.keyword && (
-              <span> for &ldquo;<strong className="text-gray-700">{filters.keyword}</strong>&rdquo;</span>
+              <>
+                <span> for &ldquo;<strong className="text-gray-700">{filters.keyword}</strong>&rdquo;</span>
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="ml-2 text-indigo-600 hover:underline"
+                >
+                  Clear
+                </button>
+              </>
             )}
           </p>
           <SortDropdown value={filters.sort} onChange={setSort} />

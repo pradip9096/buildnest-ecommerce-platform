@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useCategories } from '../hooks/useCategories';
 import { useFeaturedProducts } from '../hooks/useFeaturedProducts';
 import { ProductGrid } from '../components/product/ProductGrid';
@@ -13,45 +12,11 @@ const PROMO_BANNER = {
 };
 
 export function HomePage() {
-  const [searchInput, setSearchInput] = useState('');
-  const navigate = useNavigate();
   const { categories, loading: categoriesLoading } = useCategories();
   const { products: featuredProducts, loading: featuredLoading } = useFeaturedProducts();
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const keyword = searchInput.trim();
-    navigate(keyword ? `/products?search=${encodeURIComponent(keyword)}` : '/products');
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center gap-4">
-          <Link to="/" className="text-xl font-bold text-gray-900 shrink-0">🏗️ BuildNest</Link>
-
-          <form onSubmit={handleSearch} className="flex-1 flex gap-2 w-full sm:max-w-lg">
-            <input
-              type="search"
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-              placeholder="Search products…"
-              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              Search
-            </button>
-          </form>
-
-          <Link to="/products" className="text-sm text-gray-500 hover:text-gray-800 shrink-0">
-            Shop All
-          </Link>
-        </div>
-      </header>
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
         <section className="bg-indigo-600 rounded-2xl px-8 py-12 sm:py-16 text-center text-white">
           <h1 className="text-2xl sm:text-4xl font-bold mb-3">{PROMO_BANNER.headline}</h1>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useProduct } from '../hooks/useProduct';
 import { useReviews } from '../hooks/useReviews';
 import { useAuth } from '../hooks/useAuth';
@@ -36,7 +36,6 @@ function ProductDetailSkeleton() {
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const productId = Number(id);
 
   const { product, loading: productLoading, error: productError } = useProduct(productId);
@@ -111,13 +110,6 @@ export function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4">
-        <Link to="/" className="text-xl font-bold text-gray-900 hover:text-indigo-600">🏗️ BuildNest</Link>
-        <button onClick={() => navigate(-1)} className="ml-auto text-sm text-gray-500 hover:text-gray-900">
-          ← Back
-        </button>
-      </header>
-
       <main className="max-w-6xl mx-auto px-4 py-8">
         <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5 flex-wrap">
           <Link to="/" className="hover:text-indigo-600">Home</Link>
