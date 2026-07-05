@@ -1,5 +1,6 @@
 package com.example.buildnest_ecommerce.service.audit;
 
+import com.example.buildnest_ecommerce.model.dto.AuditLogPageDTO;
 import com.example.buildnest_ecommerce.model.entity.AuditLog;
 import com.example.buildnest_ecommerce.repository.AuditLogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -108,8 +108,8 @@ public class AuditLogService implements IAuditLogService {
      * @return Page of audit logs
      */
     @Cacheable(value = "auditLogs", key = "'user-' + #userId + '-page-' + #pageable.pageNumber")
-    public Page<AuditLog> getAuditLogsByUserId(Long userId, Pageable pageable) {
-        return auditLogRepository.findByUserId(userId, pageable);
+    public AuditLogPageDTO getAuditLogsByUserId(Long userId, Pageable pageable) {
+        return AuditLogPageDTO.from(auditLogRepository.findByUserId(userId, pageable));
     }
 
     /**
@@ -121,8 +121,8 @@ public class AuditLogService implements IAuditLogService {
      * @return Page of audit logs
      */
     @Cacheable(value = "auditLogs", key = "'action-' + #action + '-page-' + #pageable.pageNumber")
-    public Page<AuditLog> getAuditLogsByAction(String action, Pageable pageable) {
-        return auditLogRepository.findByAction(action, pageable);
+    public AuditLogPageDTO getAuditLogsByAction(String action, Pageable pageable) {
+        return AuditLogPageDTO.from(auditLogRepository.findByAction(action, pageable));
     }
 
     /**
@@ -135,8 +135,8 @@ public class AuditLogService implements IAuditLogService {
      * @return Page of audit logs
      */
     @Cacheable(value = "auditLogs", key = "'entity-' + #entityType + '-' + #entityId + '-page-' + #pageable.pageNumber")
-    public Page<AuditLog> getAuditLogsByEntity(String entityType, Long entityId, Pageable pageable) {
-        return auditLogRepository.findByEntityTypeAndEntityId(entityType, entityId, pageable);
+    public AuditLogPageDTO getAuditLogsByEntity(String entityType, Long entityId, Pageable pageable) {
+        return AuditLogPageDTO.from(auditLogRepository.findByEntityTypeAndEntityId(entityType, entityId, pageable));
     }
 
     /**
@@ -149,8 +149,8 @@ public class AuditLogService implements IAuditLogService {
      * @return Page of audit logs
      */
     @Cacheable(value = "auditLogs", key = "'range-' + #start + '-' + #end + '-page-' + #pageable.pageNumber")
-    public Page<AuditLog> getAuditLogsByDateRange(LocalDateTime start, LocalDateTime end, Pageable pageable) {
-        return auditLogRepository.findByTimestampBetween(start, end, pageable);
+    public AuditLogPageDTO getAuditLogsByDateRange(LocalDateTime start, LocalDateTime end, Pageable pageable) {
+        return AuditLogPageDTO.from(auditLogRepository.findByTimestampBetween(start, end, pageable));
     }
 
     /**
@@ -161,7 +161,7 @@ public class AuditLogService implements IAuditLogService {
      * @return Page of audit logs
      */
     @Cacheable(value = "auditLogs", key = "'all-page-' + #pageable.pageNumber")
-    public Page<AuditLog> getAllAuditLogs(Pageable pageable) {
-        return auditLogRepository.findAll(pageable);
+    public AuditLogPageDTO getAllAuditLogs(Pageable pageable) {
+        return AuditLogPageDTO.from(auditLogRepository.findAll(pageable));
     }
 }

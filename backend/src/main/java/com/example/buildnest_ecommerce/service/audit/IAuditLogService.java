@@ -1,7 +1,6 @@
 package com.example.buildnest_ecommerce.service.audit;
 
-import com.example.buildnest_ecommerce.model.entity.AuditLog;
-import org.springframework.data.domain.Page;
+import com.example.buildnest_ecommerce.model.dto.AuditLogPageDTO;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
@@ -53,7 +52,7 @@ public interface IAuditLogService {
      * @param pageable Pagination parameters
      * @return Page of audit logs
      */
-    Page<AuditLog> getAuditLogsByUserId(Long userId, Pageable pageable);
+    AuditLogPageDTO getAuditLogsByUserId(Long userId, Pageable pageable);
 
     /**
      * Get audit logs filtered by action type.
@@ -62,7 +61,7 @@ public interface IAuditLogService {
      * @param pageable Pagination parameters
      * @return Page of audit logs
      */
-    Page<AuditLog> getAuditLogsByAction(String action, Pageable pageable);
+    AuditLogPageDTO getAuditLogsByAction(String action, Pageable pageable);
 
     /**
      * Get audit logs filtered by entity.
@@ -72,7 +71,7 @@ public interface IAuditLogService {
      * @param pageable   Pagination parameters
      * @return Page of audit logs
      */
-    Page<AuditLog> getAuditLogsByEntity(String entityType, Long entityId, Pageable pageable);
+    AuditLogPageDTO getAuditLogsByEntity(String entityType, Long entityId, Pageable pageable);
 
     /**
      * Get audit logs within a date range.
@@ -82,7 +81,7 @@ public interface IAuditLogService {
      * @param pageable Pagination parameters
      * @return Page of audit logs
      */
-    Page<AuditLog> getAuditLogsByDateRange(LocalDateTime start, LocalDateTime end, Pageable pageable);
+    AuditLogPageDTO getAuditLogsByDateRange(LocalDateTime start, LocalDateTime end, Pageable pageable);
 
     /**
      * Get all audit logs with pagination.
@@ -90,5 +89,5 @@ public interface IAuditLogService {
      * @param pageable Pagination parameters
      * @return Page of audit logs
      */
-    Page<AuditLog> getAllAuditLogs(Pageable pageable);
+    AuditLogPageDTO getAllAuditLogs(Pageable pageable);
 }

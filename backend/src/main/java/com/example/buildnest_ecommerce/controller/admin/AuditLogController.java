@@ -1,9 +1,8 @@
 package com.example.buildnest_ecommerce.controller.admin;
 
-import com.example.buildnest_ecommerce.model.entity.AuditLog;
+import com.example.buildnest_ecommerce.model.dto.AuditLogPageDTO;
 import com.example.buildnest_ecommerce.service.audit.AuditLogService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +21,7 @@ public class AuditLogController {
     private final AuditLogService auditLogService;
 
     @GetMapping
-    public ResponseEntity<Page<AuditLog>> getAuditLogs(@RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<AuditLogPageDTO> getAuditLogs(@RequestParam(defaultValue = "0") int page,
                                                        @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(auditLogService.getAllAuditLogs(pageable));
