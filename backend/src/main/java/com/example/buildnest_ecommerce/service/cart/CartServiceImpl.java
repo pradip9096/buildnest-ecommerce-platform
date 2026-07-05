@@ -82,8 +82,17 @@ public class CartServiceImpl implements CartService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
-        Cart cart = cartRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Cart not found for user: " + userId));
+        Cart cart = cartRepository.findByUser(user).orElse(null);
+
+        if (cart == null) {
+            log.debug("No cart row yet for user {}; returning empty cart", userId);
+            CartResponseDTO emptyResponse = new CartResponseDTO();
+            emptyResponse.setCartId(null);
+            emptyResponse.setUserId(user.getId());
+            emptyResponse.setItems(new ArrayList<>());
+            emptyResponse.setTotalAmount(0.0);
+            return emptyResponse;
+        }
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<CartItemResponseDTO> itemDTOs = new ArrayList<>();

@@ -226,12 +226,20 @@ class CartServiceImplTest {
     }
 
     @Test
-    void testGetCartByUserIdCartNotFoundThrows() {
+    void testGetCartByUserIdNoCartRowReturnsEmptyCartNotThrow() {
+        // Regression test for #303: a brand-new user with no cart row yet must get
+        // an empty cart back, not a "not found" exception (which the controller
+        // surfaces as a 404 error banner instead of the normal empty-cart UI).
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(cartRepository.findByUser(testUser)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> cartService.getCartByUserId(1L));
-        assertTrue(ex.getMessage().contains("Cart not found"));
+        CartResponseDTO result = cartService.getCartByUserId(1L);
+
+        assertNotNull(result);
+        assertNull(result.getCartId(), "cartId is null when no cart row exists yet");
+        assertEquals(1L, result.getUserId());
+        assertTrue(result.getItems().isEmpty(), "items must be empty, not null, for a brand-new user");
+        assertEquals(0.0, result.getTotalAmount());
     }
 
     @Test

@@ -106,17 +106,21 @@ public class WishlistServiceImpl implements WishlistService {
         public Wishlist getWishlist(Long userId) {
                 log.debug("Fetching wishlist for user {}", userId);
                 return wishlistRepository.findByUserId(userId)
-                                .orElseThrow(() -> new ResourceNotFoundException(
-                                                "Wishlist not found for user: " + userId));
+                                .orElseGet(() -> {
+                                        log.debug("No wishlist row yet for user {}; returning empty wishlist", userId);
+                                        return Wishlist.builder().build();
+                                });
         }
 
         @Override
         public Set<Product> getWishlistProducts(Long userId) {
                 log.debug("Fetching wishlist products for user {}", userId);
-                Wishlist wishlist = wishlistRepository.findByUserId(userId)
-                                .orElseThrow(() -> new ResourceNotFoundException(
-                                                "Wishlist not found for user: " + userId));
-                return wishlist.getProducts();
+                return wishlistRepository.findByUserId(userId)
+                                .map(Wishlist::getProducts)
+                                .orElseGet(() -> {
+                                        log.debug("No wishlist row yet for user {}; returning empty product set", userId);
+                                        return Set.of();
+                                });
         }
 
         @Override

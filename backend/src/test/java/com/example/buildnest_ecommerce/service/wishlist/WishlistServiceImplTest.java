@@ -118,11 +118,14 @@ class WishlistServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should throw when wishlist missing")
-    void testMissingWishlistThrows() {
+    @DisplayName("getWishlist returns an empty wishlist (not a throw) for a brand-new user with no row yet (#303)")
+    void testGetWishlistNoRowReturnsEmptyNotThrow() {
         when(wishlistRepository.findByUserId(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> wishlistService.getWishlist(1L));
+        Wishlist result = wishlistService.getWishlist(1L);
+
+        assertNotNull(result);
+        assertTrue(result.getProducts().isEmpty(), "a brand-new user's wishlist must be empty, not an error");
     }
 
     @Test
@@ -211,11 +214,14 @@ class WishlistServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should throw when wishlist not found on getWishlistProducts")
-    void testGetWishlistProductsWishlistNotFound() {
+    @DisplayName("getWishlistProducts returns an empty set (not a throw) for a brand-new user with no row yet (#303)")
+    void testGetWishlistProductsNoRowReturnsEmptySetNotThrow() {
         when(wishlistRepository.findByUserId(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> wishlistService.getWishlistProducts(1L));
+        Set<Product> products = wishlistService.getWishlistProducts(1L);
+
+        assertNotNull(products);
+        assertTrue(products.isEmpty(), "a brand-new user's wishlist products must be empty, not an error");
     }
 
     @Test
