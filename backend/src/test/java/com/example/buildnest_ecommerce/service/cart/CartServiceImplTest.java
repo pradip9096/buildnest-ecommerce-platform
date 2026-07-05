@@ -188,6 +188,46 @@ class CartServiceImplTest {
     }
 
     @Test
+    void testAddToCartNewItemSnapshotsDiscountPriceWhenSet() {
+        Product discountedProduct = new Product();
+        discountedProduct.setId(2L);
+        discountedProduct.setName("Discounted Product");
+        discountedProduct.setPrice(BigDecimal.valueOf(380.00));
+        discountedProduct.setDiscountPrice(BigDecimal.valueOf(350.00));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(cartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
+        when(productRepository.findById(2L)).thenReturn(Optional.of(discountedProduct));
+
+        cartService.addToCart(1L, 2L, 1);
+
+        ArgumentCaptor<CartItem> captor = ArgumentCaptor.forClass(CartItem.class);
+        verify(cartItemRepository).save(captor.capture());
+        assertEquals(BigDecimal.valueOf(350.00), captor.getValue().getPrice(),
+                "cart item must snapshot discountPrice, not full price, when discountPrice is set (#305)");
+    }
+
+    @Test
+    void testAddToCartNewItemUsesFullPriceWhenNoDiscount() {
+        Product fullPriceProduct = new Product();
+        fullPriceProduct.setId(3L);
+        fullPriceProduct.setName("Full Price Product");
+        fullPriceProduct.setPrice(BigDecimal.valueOf(200.00));
+        fullPriceProduct.setDiscountPrice(null);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(cartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
+        when(productRepository.findById(3L)).thenReturn(Optional.of(fullPriceProduct));
+
+        cartService.addToCart(1L, 3L, 1);
+
+        ArgumentCaptor<CartItem> captor = ArgumentCaptor.forClass(CartItem.class);
+        verify(cartItemRepository).save(captor.capture());
+        assertEquals(BigDecimal.valueOf(200.00), captor.getValue().getPrice(),
+                "cart item must snapshot full price when discountPrice is null (#305)");
+    }
+
+    @Test
     void testAddToCartExistingItemIncrementsQuantity() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(cartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));

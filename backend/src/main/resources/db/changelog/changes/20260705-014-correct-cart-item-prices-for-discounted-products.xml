@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #305 (CART-01): CartServiceImpl.addToCart snapshotted product.price on every
+         add-to-cart, never checking product.discount_price. Existing, not-yet-checked-out
+         cart_items rows for discounted products were overpriced relative to the product's
+         advertised (discounted) price. This changeset re-snapshots price from the product's
+         current discount_price for exactly the rows the bug affected. Historical order_items
+         (already-billed/settled records) are deliberately NOT touched here — retroactively
+         changing a settled financial record requires an explicit refund/accounting decision,
+         not a silent code-driven data correction. See docs/reports/cart-price-correction-2026-07-05.md
+         for the read-only report identifying potentially affected historical orders. -->
+    <changeSet id="20260705-014-correct-cart-item-prices-for-discounted-products" author="buildnest-team">
+        <!-- Neither "products" nor "cart_items" is created by any Liquibase changeset in this
+             repo — same drift class documented in 20260704-012-alter-product-add-is-featured.xml.
+             In the test profile, Liquibase runs before Hibernate's create-drop creates these
+             tables, so they do not exist yet here; guard so this changeset no-ops there instead
+             of failing every app/test startup, and actually runs in environments (e.g. production)
+             where the tables already exist. -->
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="products"/>
+            <tableExists tableName="cart_items"/>
+        </preConditions>
+
+        <comment>Re-snapshot cart_items.price from products.discount_price for rows still priced at full price (#305)</comment>
+
+        <sql>
+            UPDATE cart_items
+            SET price = (SELECT p.discount_price FROM products p WHERE p.id = cart_items.product_id)
+            WHERE product_id IN (
+                SELECT p.id FROM products p
+                WHERE p.discount_price IS NOT NULL
+                  AND p.discount_price &lt; p.price
+            )
+            AND price = (SELECT p.price FROM products p WHERE p.id = cart_items.product_id)
+        </sql>
+
+        <rollback>
+            <sql>
+                UPDATE cart_items
+                SET price = (SELECT p.price FROM products p WHERE p.id = cart_items.product_id)
+                WHERE product_id IN (
+                    SELECT p.id FROM products p
+                    WHERE p.discount_price IS NOT NULL
+                      AND p.discount_price &lt; p.price
+                )
+                AND price = (SELECT p.discount_price FROM products p WHERE p.id = cart_items.product_id)
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -22,5 +22,6 @@
     <include file="db/changelog/changes/20260704-011-fix-decor-category-encoding.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260704-012-alter-product-add-is-featured.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260704-013-seed-default-shipping-method.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260705-014-correct-cart-item-prices-for-discounted-products.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>
