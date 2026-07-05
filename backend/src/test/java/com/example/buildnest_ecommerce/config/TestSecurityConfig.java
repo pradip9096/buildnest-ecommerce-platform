@@ -26,6 +26,18 @@ import java.util.Arrays;
 /**
  * Test security configuration - disables HTTPS enforcement for test
  * environment.
+ *
+ * <p>{@code SecurityConfig} is {@code @Profile("!test")} and never loads during a test run, so
+ * this class stands in for it. It shares {@link SecurityHeaderPolicies#MAIN_CSP} and
+ * {@link SecurityHeaderPolicies#HSTS_MAX_AGE_SECONDS} with the real config so the two can't
+ * silently drift apart again (#312).
+ *
+ * <p><b>Deliberate divergence, not drift:</b> unlike {@code SecurityConfig}'s two filter chains
+ * (a Swagger-isolated chain with a permissive CSP, plus this strict main-chain policy), this
+ * test config uses a single chain for everything, including Swagger paths. Swagger's
+ * documentation-only, developer-facing purpose makes its CSP isolation immaterial to what tests
+ * verify (access — {@code permitAll} — is preserved identically here); only the main chain's
+ * strict policy needs test coverage, since that's the one protecting real API responses.
  */
 @TestConfiguration
 @EnableWebSecurity
@@ -68,11 +80,12 @@ public class TestSecurityConfig {
                 // Skip HTTPS enforcement for test environment (HTTP allowed for testing)
                 // Security headers for OWASP compliance
                 .headers(headers -> headers
-                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(SecurityHeaderPolicies.MAIN_CSP))
                         .frameOptions(frameOptions -> frameOptions.deny())
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
-                                .maxAgeInSeconds(31536000)))
+                                .preload(true)
+                                .maxAgeInSeconds(SecurityHeaderPolicies.HSTS_MAX_AGE_SECONDS)))
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration corsConfig = new CorsConfiguration();
                     corsConfig.setAllowedOrigins(Arrays.asList("*"));

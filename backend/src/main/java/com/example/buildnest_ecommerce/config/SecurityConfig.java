@@ -110,9 +110,7 @@ public class SecurityConfig {
         http
                 .securityMatcher("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
                 .headers(headers -> headers
-                        .contentSecurityPolicy(csp -> csp.policyDirectives(
-                                "default-src 'self'; script-src 'self' 'unsafe-inline'; " +
-                                "style-src 'self' 'unsafe-inline'; img-src 'self' data:"))
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(SecurityHeaderPolicies.SWAGGER_CSP))
                         .frameOptions(frameOptions -> frameOptions.deny()))
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .csrf(csrf -> csrf.disable());
@@ -132,14 +130,12 @@ public class SecurityConfig {
         http
                 // Security headers for OWASP compliance
                 .headers(headers -> headers
-                        .contentSecurityPolicy(csp -> csp.policyDirectives(
-                                "default-src 'self'; script-src 'self'; style-src 'self'; " +
-                                "frame-ancestors 'none'; form-action 'self'"))
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(SecurityHeaderPolicies.MAIN_CSP))
                         .frameOptions(frameOptions -> frameOptions.deny())
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
                                 .preload(true)
-                                .maxAgeInSeconds(31536000)))
+                                .maxAgeInSeconds(SecurityHeaderPolicies.HSTS_MAX_AGE_SECONDS)))
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration corsConfig = new CorsConfiguration();
                     // Allow specific origins in production (RQ-SEC-03 - 1.3 CRITICAL HTTPS
