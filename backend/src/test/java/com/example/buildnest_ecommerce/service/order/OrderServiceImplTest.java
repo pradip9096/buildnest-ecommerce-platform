@@ -73,6 +73,32 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("getAllOrders does not NPE and includes the order when is_deleted is null (#306)")
+    void testGetAllOrdersNullIsDeletedDoesNotThrow() {
+        Order nullFlagOrder = new Order();
+        nullFlagOrder.setUser(user);
+        nullFlagOrder.setIsDeleted(null);
+
+        when(orderRepository.findAll()).thenReturn(List.of(nullFlagOrder));
+
+        List<Order> result = orderService.getAllOrders();
+        assertEquals(1, result.size(), "a null is_deleted flag must not exclude the order or throw");
+    }
+
+    @Test
+    @DisplayName("getOrdersByUserId does not NPE and includes the order when is_deleted is null (#306)")
+    void testGetOrdersByUserIdNullIsDeletedDoesNotThrow() {
+        Order nullFlagOrder = new Order();
+        nullFlagOrder.setUser(user);
+        nullFlagOrder.setIsDeleted(null);
+
+        when(orderRepository.findAll()).thenReturn(List.of(nullFlagOrder));
+
+        List<Order> result = orderService.getOrdersByUserId(user.getId());
+        assertEquals(1, result.size(), "a null is_deleted flag must not exclude the order or throw");
+    }
+
+    @Test
     @DisplayName("Should get order by id")
     void testGetOrderById() {
         when(orderRepository.findById(100L)).thenReturn(Optional.of(order));

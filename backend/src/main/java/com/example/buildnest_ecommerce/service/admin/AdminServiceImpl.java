@@ -26,7 +26,7 @@ public class AdminServiceImpl implements AdminService {
     public List<AdminUserDto> getAllUsers() {
         log.info("Fetching all non-deleted users");
         return userRepository.findAll().stream()
-                .filter(u -> !u.getIsDeleted())
+                .filter(u -> !Boolean.TRUE.equals(u.getIsDeleted()))
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -79,7 +79,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public Long getTotalUsers() {
         return userRepository.findAll().stream()
-                .filter(u -> !u.getIsDeleted())
+                .filter(u -> !Boolean.TRUE.equals(u.getIsDeleted()))
                 .count();
     }
     
@@ -91,7 +91,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public Long getTotalOrders() {
         return orderRepository.findAll().stream()
-                .filter(o -> !o.getIsDeleted())
+                .filter(o -> !Boolean.TRUE.equals(o.getIsDeleted()))
                 .count();
     }
     

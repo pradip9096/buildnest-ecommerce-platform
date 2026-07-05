@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
     public User getUserByUsername(String username) {
         log.info("Fetching user with username: {}", username);
         return userRepository.findAll().stream()
-                .filter(u -> u.getUsername().equals(username) && !u.getIsDeleted())
+                .filter(u -> u.getUsername().equals(username) && !Boolean.TRUE.equals(u.getIsDeleted()))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
     }
@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
     public User getUserByEmail(String email) {
         log.info("Fetching user with email: {}", email);
         return userRepository.findAll().stream()
-                .filter(u -> u.getEmail().equals(email) && !u.getIsDeleted())
+                .filter(u -> u.getEmail().equals(email) && !Boolean.TRUE.equals(u.getIsDeleted()))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
     }

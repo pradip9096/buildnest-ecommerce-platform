@@ -7,12 +7,14 @@ import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.service.admin.AdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/admin/users")
 @PreAuthorize("hasRole('ADMIN')")
@@ -28,6 +30,7 @@ public class AdminUserController {
             List<AdminUserDto> users = adminService.getAllUsers();
             return ResponseEntity.ok(new ApiResponse(true, "Users retrieved successfully", users));
         } catch (Exception e) {
+            log.error("Error retrieving users", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false, "Error retrieving users", null));
         }
@@ -40,6 +43,7 @@ public class AdminUserController {
             AdminUserDto user = adminService.getUserById(id);
             return ResponseEntity.ok(new ApiResponse(true, "User retrieved successfully", user));
         } catch (Exception e) {
+            log.error("Error retrieving user with id: {}", id, e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse(false, "User not found", null));
         }
@@ -52,6 +56,7 @@ public class AdminUserController {
             AdminUserDto updatedUser = adminService.updateUserByAdmin(id, updateDTO);
             return ResponseEntity.ok(new ApiResponse(true, "User updated successfully", updatedUser));
         } catch (Exception e) {
+            log.error("Error updating user with id: {}", id, e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse(false, "Error updating user: " + e.getMessage(), null));
         }
@@ -64,6 +69,7 @@ public class AdminUserController {
             adminService.deleteUser(id);
             return ResponseEntity.ok(new ApiResponse(true, "User deleted successfully", null));
         } catch (Exception e) {
+            log.error("Error deleting user with id: {}", id, e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse(false, "Error deleting user", null));
         }

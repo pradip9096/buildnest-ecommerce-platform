@@ -3,6 +3,7 @@ package com.example.buildnest_ecommerce.controller.admin;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.service.admin.AdminService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/admin/reports")
 @PreAuthorize("hasRole('ADMIN')")
@@ -29,6 +31,7 @@ public class AdminReportController {
             
             return ResponseEntity.ok(new ApiResponse(true, "Dashboard statistics retrieved", stats));
         } catch (Exception e) {
+            log.error("Error retrieving dashboard statistics", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false, "Error retrieving dashboard statistics", null));
         }
@@ -42,6 +45,7 @@ public class AdminReportController {
             data.put("totalUsers", count);
             return ResponseEntity.ok(new ApiResponse(true, "User count retrieved", data));
         } catch (Exception e) {
+            log.error("Error retrieving user count", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false, "Error retrieving user count", null));
         }
@@ -55,6 +59,7 @@ public class AdminReportController {
             data.put("totalProducts", count);
             return ResponseEntity.ok(new ApiResponse(true, "Product count retrieved", data));
         } catch (Exception e) {
+            log.error("Error retrieving product count", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false, "Error retrieving product count", null));
         }
@@ -68,6 +73,7 @@ public class AdminReportController {
             data.put("totalOrders", count);
             return ResponseEntity.ok(new ApiResponse(true, "Order count retrieved", data));
         } catch (Exception e) {
+            log.error("Error retrieving order count", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false, "Error retrieving order count", null));
         }
@@ -81,6 +87,7 @@ public class AdminReportController {
             data.put("totalRevenue", revenue);
             return ResponseEntity.ok(new ApiResponse(true, "Revenue retrieved", data));
         } catch (Exception e) {
+            log.error("Error retrieving revenue", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false, "Error retrieving revenue", null));
         }

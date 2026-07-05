@@ -106,6 +106,30 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("getUserByUsername does not NPE and finds the user when is_deleted is null (#306)")
+    void testGetUserByUsernameNullIsDeletedDoesNotThrow() {
+        User user = new User();
+        user.setUsername("legacyuser");
+        user.setIsDeleted(null);
+        when(userRepository.findAll()).thenReturn(List.of(user));
+
+        User found = userService.getUserByUsername("legacyuser");
+        assertEquals("legacyuser", found.getUsername());
+    }
+
+    @Test
+    @DisplayName("getUserByEmail does not NPE and finds the user when is_deleted is null (#306)")
+    void testGetUserByEmailNullIsDeletedDoesNotThrow() {
+        User user = new User();
+        user.setEmail("legacy@b.com");
+        user.setIsDeleted(null);
+        when(userRepository.findAll()).thenReturn(List.of(user));
+
+        User found = userService.getUserByEmail("legacy@b.com");
+        assertEquals("legacy@b.com", found.getEmail());
+    }
+
+    @Test
     @DisplayName("Should map response dto")
     void testGetUserResponseById() {
         User user = new User();

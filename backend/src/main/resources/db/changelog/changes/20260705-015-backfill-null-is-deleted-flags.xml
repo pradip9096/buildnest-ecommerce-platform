@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #306 (ADM-04): at least one legacy `users` row has is_deleted = NULL rather than
+         false, which throws an NPE on `!user.getIsDeleted()` (auto-unboxing a null Boolean),
+         breaking the Admin Overview and Users tabs. The `is_deleted`/`deleted_at` columns on
+         `users` and `orders` are not created by any Liquibase changeset in this repo (same
+         drift class as #241/#289/#305's products/cart_items precedents) — guarded so this
+         no-ops in any environment where Liquibase runs before Hibernate creates the column. -->
+    <changeSet id="20260705-015-backfill-null-is-deleted-flags" author="buildnest-team">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="users" columnName="is_deleted"/>
+            <columnExists tableName="orders" columnName="is_deleted"/>
+        </preConditions>
+
+        <comment>Backfill NULL is_deleted to false on users and orders (#306)</comment>
+
+        <update tableName="users">
+            <column name="is_deleted" valueBoolean="false"/>
+            <where>is_deleted IS NULL</where>
+        </update>
+
+        <update tableName="orders">
+            <column name="is_deleted" valueBoolean="false"/>
+            <where>is_deleted IS NULL</where>
+        </update>
+
+        <!-- Rollback intentionally re-nulls only rows this changeset touched: not possible to
+             distinguish "was NULL before this ran" from "was legitimately false already" after
+             the fact, so rollback is a no-op by design. Backfilling NULL -> false is one-directional
+             and safe (false was always the intended default per each entity's field initializer). -->
+        <rollback/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -199,6 +199,31 @@ class AdminServiceImplTest {
     }
 
     @Test
+    void getTotalUsers_nullIsDeleted_doesNotThrowAndCountsAsNotDeleted() {
+        // Regression test for #306: a legacy row with is_deleted = NULL must not NPE on
+        // !user.getIsDeleted() auto-unboxing; a null flag is treated as "not deleted".
+        User nullFlagUser = new User();
+        nullFlagUser.setIsDeleted(null);
+
+        when(userRepository.findAll()).thenReturn(List.of(nullFlagUser));
+
+        assertEquals(1L, service.getTotalUsers(), "a null is_deleted flag must count as not-deleted, not throw");
+    }
+
+    @Test
+    void getAllUsers_nullIsDeleted_doesNotThrowAndIncludesUser() {
+        User nullFlagUser = new User();
+        nullFlagUser.setId(1L);
+        nullFlagUser.setIsDeleted(null);
+
+        when(userRepository.findAll()).thenReturn(List.of(nullFlagUser));
+
+        List<AdminUserDto> users = service.getAllUsers();
+
+        assertEquals(1, users.size(), "a null is_deleted flag must not exclude the user or throw");
+    }
+
+    @Test
     void getTotalProducts_delegatesToRepository() {
         when(productRepository.count()).thenReturn(7L);
 
@@ -215,6 +240,16 @@ class AdminServiceImplTest {
         when(orderRepository.findAll()).thenReturn(List.of(activeOrder, deletedOrder));
 
         assertEquals(1L, service.getTotalOrders(), "only non-deleted orders must be counted");
+    }
+
+    @Test
+    void getTotalOrders_nullIsDeleted_doesNotThrowAndCountsAsNotDeleted() {
+        Order nullFlagOrder = new Order();
+        nullFlagOrder.setIsDeleted(null);
+
+        when(orderRepository.findAll()).thenReturn(List.of(nullFlagOrder));
+
+        assertEquals(1L, service.getTotalOrders(), "a null is_deleted flag must count as not-deleted, not throw");
     }
 
     @Test

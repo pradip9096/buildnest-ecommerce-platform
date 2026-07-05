@@ -68,7 +68,7 @@ public class OrderServiceImpl implements OrderService {
     public List<Order> getAllOrders() {
         log.info("Fetching all non-deleted orders");
         return orderRepository.findAll().stream()
-                .filter(o -> !o.getIsDeleted())
+                .filter(o -> !Boolean.TRUE.equals(o.getIsDeleted()))
                 .collect(Collectors.toList());
     }
 
@@ -150,7 +150,7 @@ public class OrderServiceImpl implements OrderService {
     public List<Order> getOrdersByUserId(Long userId) {
         log.info("Fetching non-deleted orders for user: {}", userId);
         return orderRepository.findAll().stream()
-                .filter(o -> o.getUser().getId().equals(userId) && !o.getIsDeleted())
+                .filter(o -> o.getUser().getId().equals(userId) && !Boolean.TRUE.equals(o.getIsDeleted()))
                 .collect(Collectors.toList());
     }
 
