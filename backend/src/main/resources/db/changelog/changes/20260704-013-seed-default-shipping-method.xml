@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #304 (SHIP-02): shipping_methods has zero rows in a fresh environment,
+         blocking every checkout at the shipping step. Seed one default, always-active,
+         flat-rate method so a fresh deploy can process orders immediately. -->
+    <changeSet id="20260704-013-seed-default-shipping-method" author="buildnest-team">
+        <comment>Seed a default active shipping method so checkout is functional on a fresh deploy (#304)</comment>
+
+        <insert tableName="shipping_methods">
+            <column name="name" value="Standard Delivery"/>
+            <column name="description" value="Flat-rate delivery to any serviceable postal code"/>
+            <column name="base_cost" valueNumeric="50.00"/>
+            <column name="cost_per_kg" valueNumeric="10.00"/>
+            <column name="estimated_days_min" valueNumeric="3"/>
+            <column name="estimated_days_max" valueNumeric="7"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="shipping_methods">
+                <where>name = 'Standard Delivery'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

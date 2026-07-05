@@ -21,5 +21,6 @@
     <include file="db/changelog/changes/20260630-010-alter-inventory-add-reservation-expires-at.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260704-011-fix-decor-category-encoding.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260704-012-alter-product-add-is-featured.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260704-013-seed-default-shipping-method.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

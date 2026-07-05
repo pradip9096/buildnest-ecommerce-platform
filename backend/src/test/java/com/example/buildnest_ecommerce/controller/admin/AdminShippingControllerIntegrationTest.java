@@ -248,4 +248,10 @@ class AdminShippingControllerIntegrationTest {
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isNotFound());
     }
+
+    // Regression test for #304 (default shipping method seed) lives in
+    // ShippingMethodSeedMigrationTest — a plain @SpringBootTest here can't verify it,
+    // because this profile's spring.jpa.hibernate.ddl-auto=create-drop runs Hibernate's
+    // schema generation *after* Liquibase and drops/recreates every entity-mapped table
+    // (including shipping_methods), wiping the Liquibase-seeded row before any test body runs.
 }
