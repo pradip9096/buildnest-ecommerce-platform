@@ -27,19 +27,19 @@ beforeEach(() => {
 });
 
 describe('useCart', () => {
-  it('does not fetch when userId or token is missing', () => {
-    renderHook(() => useCart(null, null));
+  it('does not fetch when userId is missing', () => {
+    renderHook(() => useCart(null));
     expect(mockFetchCart).not.toHaveBeenCalled();
   });
 
-  it('loads the cart on mount when userId and token are present', async () => {
+  it('loads the cart on mount when userId is present', async () => {
     mockFetchCart.mockResolvedValue(emptyCart);
 
-    const { result } = renderHook(() => useCart(42, 'token-abc'));
+    const { result } = renderHook(() => useCart(42));
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    expect(mockFetchCart).toHaveBeenCalledWith(42, 'token-abc');
+    expect(mockFetchCart).toHaveBeenCalledWith(42);
     expect(result.current.cart).toEqual(emptyCart);
     expect(result.current.error).toBeNull();
   });
@@ -47,7 +47,7 @@ describe('useCart', () => {
   it('surfaces an error message when the cart fails to load', async () => {
     mockFetchCart.mockRejectedValue(new Error('Failed to fetch cart (500)'));
 
-    const { result } = renderHook(() => useCart(42, 'token-abc'));
+    const { result } = renderHook(() => useCart(42));
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -59,12 +59,12 @@ describe('useCart', () => {
     mockFetchCart.mockResolvedValueOnce(emptyCart).mockResolvedValueOnce(cartWithItem);
     mockAddToCart.mockResolvedValue(undefined);
 
-    const { result } = renderHook(() => useCart(42, 'token-abc'));
+    const { result } = renderHook(() => useCart(42));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     await result.current.addItem(5, 1);
 
-    expect(mockAddToCart).toHaveBeenCalledWith(42, 5, 1, 'token-abc');
+    expect(mockAddToCart).toHaveBeenCalledWith(42, 5, 1);
     expect(mockFetchCart).toHaveBeenCalledTimes(2);
     await waitFor(() => expect(result.current.cart).toEqual(cartWithItem));
   });
@@ -73,12 +73,12 @@ describe('useCart', () => {
     mockFetchCart.mockResolvedValueOnce(cartWithItem).mockResolvedValueOnce(emptyCart);
     mockRemoveCartItem.mockResolvedValue(undefined);
 
-    const { result } = renderHook(() => useCart(42, 'token-abc'));
+    const { result } = renderHook(() => useCart(42));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     await result.current.removeItem(9);
 
-    expect(mockRemoveCartItem).toHaveBeenCalledWith(9, 'token-abc');
+    expect(mockRemoveCartItem).toHaveBeenCalledWith(9);
     expect(mockFetchCart).toHaveBeenCalledTimes(2);
     await waitFor(() => expect(result.current.cart).toEqual(emptyCart));
   });

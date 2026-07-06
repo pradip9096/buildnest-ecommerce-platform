@@ -47,7 +47,7 @@ export function ProductDetailPage() {
     fetchProducts().then(setAllProducts).catch(() => {});
   }, []);
 
-  const { user, token, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
   const [cartAdding, setCartAdding] = useState(false);
@@ -72,14 +72,14 @@ export function ProductDetailPage() {
   }, [product]);
 
   async function handleAddToCart() {
-    if (!isAuthenticated || !user || !token) {
+    if (!isAuthenticated || !user) {
       setCartMessage('Please sign in to add items to your cart.');
       setTimeout(() => setCartMessage(null), 4000);
       return;
     }
     setCartAdding(true);
     try {
-      await addToCart(user.id, product!.id, quantity, token);
+      await addToCart(user.id, product!.id, quantity);
       setCartMessage(`Added ${quantity} item${quantity > 1 ? 's' : ''} to your cart.`);
       setTimeout(() => setCartMessage(null), 4000);
     } catch {

@@ -78,7 +78,7 @@ public abstract class BaseApiTest {
             promoteToAdmin(username);
         }
 
-        // Login
+        // Login — tokens travel as httpOnly cookies (SEC-15), not in the JSON body
         String loginBody = String.format("{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
         return RestAssured.given()
                 .contentType(io.restassured.http.ContentType.JSON)
@@ -87,7 +87,7 @@ public abstract class BaseApiTest {
                 .then()
                 .statusCode(200)
                 .extract()
-                .path("data.accessToken");
+                .cookie("access_token");
     }
 
     @Transactional

@@ -3,9 +3,10 @@ package com.example.buildnest_ecommerce.controller.auth;
 import com.example.buildnest_ecommerce.aspect.Auditable;
 import com.example.buildnest_ecommerce.model.payload.LoginRequest;
 import com.example.buildnest_ecommerce.model.payload.RegisterRequest;
-import com.example.buildnest_ecommerce.model.payload.RefreshTokenRequest;
 import com.example.buildnest_ecommerce.model.payload.AuthResponse;
+import com.example.buildnest_ecommerce.model.payload.AuthUserResponse;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
+import com.example.buildnest_ecommerce.security.AuthCookieService;
 import com.example.buildnest_ecommerce.service.auth.AuthService;
 import com.example.buildnest_ecommerce.service.token.RefreshTokenService;
 import com.example.buildnest_ecommerce.util.RateLimitUtil;
@@ -20,8 +21,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -33,12 +37,13 @@ public class AuthController {
     private final AuthService authService;
     private final RefreshTokenService refreshTokenService;
     private final RateLimitUtil rateLimitUtil;
+    private final AuthCookieService authCookieService;
 
     @PostMapping("/login")
     @Auditable(action = "LOGIN", entityType = "AUTH")
-    @Operation(summary = "Login", description = "Authenticate user and return access/refresh tokens")
+    @Operation(summary = "Login", description = "Authenticate user; access/refresh tokens are set as httpOnly cookies")
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Login successful", content = @Content(schema = @Schema(implementation = ApiResponse.class), examples = @ExampleObject(value = "{\"success\":true,\"message\":\"Login successful\",\"data\":{\"accessToken\":\"jwt\",\"refreshToken\":\"refresh\",\"tokenType\":\"Bearer\",\"username\":\"buildnest_user\"}}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Login successful", content = @Content(schema = @Schema(implementation = ApiResponse.class), examples = @ExampleObject(value = "{\"success\":true,\"message\":\"Login successful\",\"data\":{\"userId\":1,\"username\":\"buildnest_user\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid credentials"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "429", description = "Too many login attempts")
     })
@@ -53,7 +58,12 @@ public class AuthController {
         try {
             log.info("Login attempt for user: {}", loginRequest.getUsername());
             AuthResponse authResponse = authService.login(loginRequest.getUsername(), loginRequest.getPassword());
-            return ResponseEntity.ok(new ApiResponse(true, "Login successful", authResponse));
+            ResponseCookie accessCookie = authCookieService.buildAccessTokenCookie(authResponse.getAccessToken());
+            ResponseCookie refreshCookie = authCookieService.buildRefreshTokenCookie(authResponse.getRefreshToken());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                    .body(new ApiResponse(true, "Login successful", AuthUserResponse.from(authResponse)));
         } catch (Exception e) {
             log.error("Login failed: ", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -89,10 +99,15 @@ public class AuthController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid refresh token"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "429", description = "Too many refresh attempts")
     })
-    public ResponseEntity<ApiResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest,
+    public ResponseEntity<ApiResponse> refreshToken(
+            @CookieValue(value = "refresh_token", required = false) String refreshToken,
             HttpServletRequest request) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(false, "Token refresh failed: Missing refresh token", null));
+        }
         try {
-            var tokenOpt = refreshTokenService.findByToken(refreshTokenRequest.getRefreshToken());
+            var tokenOpt = refreshTokenService.findByToken(refreshToken);
             if (tokenOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new ApiResponse(false, "Token refresh failed: Invalid refresh token", null));
@@ -106,8 +121,13 @@ public class AuthController {
             }
 
             log.info("Refresh token request");
-            AuthResponse authResponse = authService.refreshAccessToken(refreshTokenRequest.getRefreshToken());
-            return ResponseEntity.ok(new ApiResponse(true, "Token refreshed successfully", authResponse));
+            AuthResponse authResponse = authService.refreshAccessToken(refreshToken);
+            ResponseCookie accessCookie = authCookieService.buildAccessTokenCookie(authResponse.getAccessToken());
+            ResponseCookie refreshCookie = authCookieService.buildRefreshTokenCookie(authResponse.getRefreshToken());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                    .body(new ApiResponse(true, "Token refreshed successfully", AuthUserResponse.from(authResponse)));
         } catch (Exception e) {
             log.error("Token refresh failed: ", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -146,15 +166,35 @@ public class AuthController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Logout successful"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Logout failed")
     })
-    public ResponseEntity<ApiResponse> logout(@RequestBody(required = false) RefreshTokenRequest refreshTokenRequest) {
+    public ResponseEntity<ApiResponse> logout(
+            @CookieValue(value = "refresh_token", required = false) String refreshToken) {
+        ResponseCookie clearAccessCookie = authCookieService.clearAccessTokenCookie();
+        ResponseCookie clearRefreshCookie = authCookieService.clearRefreshTokenCookie();
         try {
-            String refreshToken = refreshTokenRequest != null ? refreshTokenRequest.getRefreshToken() : null;
             authService.logout(refreshToken);
-            return ResponseEntity.ok(new ApiResponse(true, "Logout successful", null));
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
+                    .body(new ApiResponse(true, "Logout successful", null));
         } catch (Exception e) {
             log.error("Logout failed: ", e);
+            // Always clear cookies client-side, even if server-side revocation failed —
+            // the browser must never keep hold of a stale token after a logout attempt.
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
                     .body(new ApiResponse(false, "Logout failed", null));
         }
+    }
+
+    @GetMapping("/csrf")
+    @Operation(summary = "Bootstrap CSRF token", description = "Forces resolution of the CSRF token, triggering the XSRF-TOKEN cookie to be set. Call once at app startup before any mutating request.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "CSRF cookie set")
+    })
+    public ResponseEntity<Void> csrf(CsrfToken csrfToken) {
+        // Touching the token forces CsrfFilter to resolve and set the XSRF-TOKEN cookie.
+        csrfToken.getToken();
+        return ResponseEntity.noContent().build();
     }
 }

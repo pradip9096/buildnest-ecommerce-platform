@@ -11,7 +11,6 @@ export class ApiError extends Error {
 }
 
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
-  token?: string;
   body?: unknown;
 }
 
@@ -22,20 +21,30 @@ function resolveFallback(fallback: FallbackMessage | undefined, status: number):
   return fallback ?? `Request failed (${status})`;
 }
 
-function buildHeaders(token: string | undefined, hasBody: boolean, extra?: HeadersInit): HeadersInit {
+/** Reads the non-httpOnly XSRF-TOKEN cookie set by the backend's double-submit CSRF repository. */
+function getCsrfToken(): string | undefined {
+  const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
+
+function buildHeaders(method: string | undefined, hasBody: boolean, extra?: HeadersInit): HeadersInit {
   const headers: Record<string, string> = {};
   if (hasBody) headers['Content-Type'] = 'application/json';
-  if (token) headers.Authorization = `Bearer ${token}`;
+  const isSafeMethod = !method || method === 'GET' || method === 'HEAD';
+  if (!isSafeMethod) {
+    const csrfToken = getCsrfToken();
+    if (csrfToken) headers['X-XSRF-TOKEN'] = csrfToken;
+  }
   return { ...headers, ...extra };
 }
 
 /**
- * Called on a 401 response to an authenticated request. Should attempt a
- * token refresh and return the new access token, or `null` if refresh itself
- * failed (the caller is responsible for any resulting logout). Registered by
- * `AuthContext` so this module never depends on it directly.
+ * Called on a 401 response. Should attempt a silent cookie-based token refresh
+ * and return whether it succeeded (the caller is responsible for any resulting
+ * logout on failure). Registered by `AuthContext` so this module never depends
+ * on it directly.
  */
-type UnauthorizedHandler = () => Promise<string | null>;
+type UnauthorizedHandler = () => Promise<boolean>;
 
 let unauthorizedHandler: UnauthorizedHandler | null = null;
 
@@ -48,9 +57,8 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): voi
  * Throws `ApiError` on a non-2xx response, preferring the backend's own
  * `ApiResponse.message` when the error body includes one.
  *
- * A 401 response to a token-bearing request triggers one silent refresh
- * attempt (via the registered unauthorized handler) and retry before the
- * error is thrown.
+ * A 401 response triggers one silent refresh attempt (via the registered
+ * unauthorized handler) and retry before the error is thrown.
  */
 export async function request<T>(
   path: string,
@@ -58,19 +66,21 @@ export async function request<T>(
   fallbackMessage?: FallbackMessage,
   isRetry = false
 ): Promise<T> {
-  const { token, body, headers, ...rest } = options;
+  const { body, headers, method, ...rest } = options;
   const hasBody = body !== undefined;
 
   const res = await fetch(path, {
     ...rest,
-    headers: buildHeaders(token, hasBody, headers),
+    method,
+    credentials: 'include',
+    headers: buildHeaders(method, hasBody, headers),
     body: hasBody ? JSON.stringify(body) : undefined,
   });
 
-  if (res.status === 401 && token && !isRetry && unauthorizedHandler) {
-    const newToken = await unauthorizedHandler();
-    if (newToken) {
-      return request<T>(path, { ...options, token: newToken }, fallbackMessage, true);
+  if (res.status === 401 && !isRetry && unauthorizedHandler) {
+    const refreshed = await unauthorizedHandler();
+    if (refreshed) {
+      return request<T>(path, options, fallbackMessage, true);
     }
   }
 

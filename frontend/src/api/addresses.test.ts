@@ -40,10 +40,12 @@ describe('api/addresses', () => {
       const body: ApiResponse<Address[]> = { success: true, message: 'ok', data: [address] };
       vi.mocked(fetch).mockResolvedValue(jsonResponse(body, true));
 
-      const result = await fetchAddresses('token-abc');
+      const result = await fetchAddresses();
 
       expect(fetch).toHaveBeenCalledWith('/api/user/addresses', {
-        headers: { Authorization: 'Bearer token-abc' },
+        method: undefined,
+        credentials: 'include',
+        headers: {},
         body: undefined,
       });
       expect(result).toEqual([address]);
@@ -52,7 +54,7 @@ describe('api/addresses', () => {
     it('throws on a non-2xx response', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
 
-      await expect(fetchAddresses('expired-token')).rejects.toThrow('Failed to fetch addresses (401)');
+      await expect(fetchAddresses()).rejects.toThrow('Failed to fetch addresses (401)');
     });
   });
 
@@ -61,7 +63,7 @@ describe('api/addresses', () => {
       const body: ApiResponse<Address> = { success: true, message: 'ok', data: address };
       vi.mocked(fetch).mockResolvedValue(jsonResponse(body, true));
 
-      const result = await createAddress(input, 'token-abc');
+      const result = await createAddress(input);
 
       expect(result).toEqual(address);
     });
@@ -69,7 +71,7 @@ describe('api/addresses', () => {
     it('throws on a non-2xx response', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 400));
 
-      await expect(createAddress(input, 'token-abc')).rejects.toThrow('Failed to create address (400)');
+      await expect(createAddress(input)).rejects.toThrow('Failed to create address (400)');
     });
   });
 
@@ -78,7 +80,7 @@ describe('api/addresses', () => {
       const body: ApiResponse<Address> = { success: true, message: 'ok', data: address };
       vi.mocked(fetch).mockResolvedValue(jsonResponse(body, true));
 
-      const result = await updateAddress(1, input, 'token-abc');
+      const result = await updateAddress(1, input);
 
       expect(fetch).toHaveBeenCalledWith('/api/user/addresses/1', expect.objectContaining({ method: 'PUT' }));
       expect(result).toEqual(address);
@@ -87,7 +89,7 @@ describe('api/addresses', () => {
     it('throws on a non-2xx response', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 404));
 
-      await expect(updateAddress(1, input, 'token-abc')).rejects.toThrow('Failed to update address (404)');
+      await expect(updateAddress(1, input)).rejects.toThrow('Failed to update address (404)');
     });
   });
 
@@ -95,14 +97,14 @@ describe('api/addresses', () => {
     it('resolves on success', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({ success: true }, true));
 
-      await expect(deleteAddress(1, 'token-abc')).resolves.toBeUndefined();
+      await expect(deleteAddress(1)).resolves.toBeUndefined();
       expect(fetch).toHaveBeenCalledWith('/api/user/addresses/1', expect.objectContaining({ method: 'DELETE' }));
     });
 
     it('throws on a non-2xx response', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 403));
 
-      await expect(deleteAddress(1, 'token-abc')).rejects.toThrow('Failed to delete address (403)');
+      await expect(deleteAddress(1)).rejects.toThrow('Failed to delete address (403)');
     });
   });
 
@@ -111,7 +113,7 @@ describe('api/addresses', () => {
       const body: ApiResponse<Address> = { success: true, message: 'ok', data: address };
       vi.mocked(fetch).mockResolvedValue(jsonResponse(body, true));
 
-      const result = await setDefaultAddress(1, 'token-abc');
+      const result = await setDefaultAddress(1);
 
       expect(fetch).toHaveBeenCalledWith('/api/user/addresses/1/default', expect.objectContaining({ method: 'PUT' }));
       expect(result).toEqual(address);
@@ -120,7 +122,7 @@ describe('api/addresses', () => {
     it('throws on a non-2xx response', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 404));
 
-      await expect(setDefaultAddress(1, 'token-abc')).rejects.toThrow('Failed to set default address (404)');
+      await expect(setDefaultAddress(1)).rejects.toThrow('Failed to set default address (404)');
     });
   });
 });

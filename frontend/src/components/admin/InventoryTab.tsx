@@ -3,18 +3,16 @@ import { useAsync } from '../../hooks/useAsync';
 import { fetchAdminInventory, type InventoryItem } from '../../api/admin';
 import { InventoryAdjustModal } from './InventoryAdjustModal';
 
-interface Props { token: string; }
-
 const STATUS_COLORS: Record<string, string> = {
   IN_STOCK:     'bg-green-100 text-green-800',
   LOW_STOCK:    'bg-yellow-100 text-yellow-800',
   OUT_OF_STOCK: 'bg-red-100 text-red-800',
 };
 
-export function InventoryTab({ token }: Props) {
+export function InventoryTab() {
   const { data, loading, error, reload } = useAsync<InventoryItem[]>(
-    () => fetchAdminInventory(token),
-    [token]
+    () => fetchAdminInventory(),
+    []
   );
   const items = data ?? [];
   const [adjusting, setAdjusting] = useState<InventoryItem | null>(null);
@@ -30,7 +28,6 @@ export function InventoryTab({ token }: Props) {
       {adjusting && (
         <InventoryAdjustModal
           item={adjusting}
-          token={token}
           onClose={() => setAdjusting(null)}
           onSuccess={() => { setAdjusting(null); reload(); }}
         />

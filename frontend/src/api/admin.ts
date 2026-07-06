@@ -9,8 +9,8 @@ export interface DashboardStats {
   totalRevenue: number;
 }
 
-export async function fetchDashboardStats(token: string): Promise<DashboardStats> {
-  return requestData<DashboardStats>('/api/admin/reports/dashboard', { token }, 'Failed to load dashboard stats');
+export async function fetchDashboardStats(): Promise<DashboardStats> {
+  return requestData<DashboardStats>('/api/admin/reports/dashboard', {}, 'Failed to load dashboard stats');
 }
 
 // ── Orders ───────────────────────────────────────────────────────────────────
@@ -24,7 +24,6 @@ export interface AdminOrder {
 }
 
 export async function fetchAdminOrders(
-  token: string,
   params: { status?: string; page?: number; size?: number } = {}
 ): Promise<{ content: AdminOrder[]; totalElements: number; totalPages: number }> {
   const q = new URLSearchParams();
@@ -33,20 +32,19 @@ export async function fetchAdminOrders(
   q.set('size', String(params.size ?? 20));
   const data = await requestData<{ content: AdminOrder[]; totalElements: number; totalPages: number }>(
     `/api/v1/admin/orders?${q}`,
-    { token },
+    {},
     'Failed to load orders'
   );
   return data ?? { content: [], totalElements: 0, totalPages: 0 };
 }
 
 export async function updateOrderStatus(
-  token: string,
   orderId: number,
   status: string
 ): Promise<void> {
   await request(
     `/api/v1/admin/orders/${orderId}/status`,
-    { method: 'PATCH', token, body: { status } },
+    { method: 'PATCH', body: { status } },
     'Failed to update status'
   );
 }
@@ -62,20 +60,19 @@ export interface InventoryItem {
   status: string;
 }
 
-export async function fetchAdminInventory(token: string): Promise<InventoryItem[]> {
-  const data = await requestData<InventoryItem[]>('/api/v1/admin/inventory', { token }, 'Failed to load inventory');
+export async function fetchAdminInventory(): Promise<InventoryItem[]> {
+  const data = await requestData<InventoryItem[]>('/api/v1/admin/inventory', {}, 'Failed to load inventory');
   return Array.isArray(data) ? data : [];
 }
 
 export async function adjustInventory(
-  token: string,
   productId: number,
   delta: number,
   reason: string
 ): Promise<void> {
   await request(
     `/api/v1/admin/inventory/${productId}`,
-    { method: 'PATCH', token, body: { delta, reason } },
+    { method: 'PATCH', body: { delta, reason } },
     'Failed to adjust inventory'
   );
 }
@@ -92,13 +89,13 @@ export interface AdminUser {
   enabled?: boolean;
 }
 
-export async function fetchAdminUsers(token: string): Promise<AdminUser[]> {
-  const data = await requestData<AdminUser[]>('/api/admin/users', { token }, 'Failed to load users');
+export async function fetchAdminUsers(): Promise<AdminUser[]> {
+  const data = await requestData<AdminUser[]>('/api/admin/users', {}, 'Failed to load users');
   return Array.isArray(data) ? data : [];
 }
 
-export async function deleteAdminUser(token: string, userId: number): Promise<void> {
-  await request(`/api/admin/users/${userId}`, { method: 'DELETE', token }, 'Failed to disable user');
+export async function deleteAdminUser(userId: number): Promise<void> {
+  await request(`/api/admin/users/${userId}`, { method: 'DELETE' }, 'Failed to disable user');
 }
 
 // ── Audit Log ────────────────────────────────────────────────────────────────
@@ -130,14 +127,13 @@ interface RawAuditLogPage {
 }
 
 export async function fetchAuditLogs(
-  token: string,
   page = 0,
   size = 20
 ): Promise<AuditLogPage> {
   // AuditLogController returns Page<AuditLog> directly, not wrapped in ApiResponse
   const body = await request<RawAuditLogPage>(
     `/api/admin/audit?page=${page}&size=${size}`,
-    { token },
+    {},
     'Failed to load audit logs'
   );
   return {

@@ -17,7 +17,7 @@ const STATUS_LABEL: Record<string, string> = {
 export function OrderConfirmationPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const { token, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const [order, setOrder] = useState<Order | null>(
     (location.state as { order?: Order } | null)?.order ?? null
@@ -26,13 +26,13 @@ export function OrderConfirmationPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (order || !id || !token) return;
+    if (order || !id) return;
     setLoading(true);
-    fetchOrderById(Number(id), token)
+    fetchOrderById(Number(id))
       .then(setOrder)
       .catch(e => setError(e instanceof Error ? e.message : 'Failed to load order'))
       .finally(() => setLoading(false));
-  }, [id, token, order]);
+  }, [id, order]);
 
   useEffect(() => {
     document.title = order ? `Order #${order.id} — BuildNest` : 'Order Confirmation — BuildNest';

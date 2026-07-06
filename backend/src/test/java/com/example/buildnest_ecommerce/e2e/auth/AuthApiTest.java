@@ -49,9 +49,10 @@ public class AuthApiTest extends BaseApiTest {
                 .post("/api/auth/login")
                 .then()
                 .statusCode(HttpStatus.OK.value())
-                .body("data.accessToken", notNullValue())
-                .body("data.refreshToken", notNullValue())
-                .body("data.tokenType", equalTo("Bearer"))
+                .cookie("access_token", notNullValue())
+                .cookie("refresh_token", notNullValue())
+                .body("data.accessToken", nullValue())
+                .body("data.refreshToken", nullValue())
                 .body("data.username", equalTo(username));
     }
 

@@ -142,10 +142,11 @@ export interface UserProfile {
   roles?: string[];
 }
 
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
+/**
+ * Login/refresh response body. Tokens travel as httpOnly cookies (SEC-15),
+ * never in this JSON body.
+ */
+export interface AuthUserResponse {
   userId: number;
   username: string;
 }

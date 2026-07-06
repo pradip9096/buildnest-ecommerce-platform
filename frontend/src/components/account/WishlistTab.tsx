@@ -5,12 +5,12 @@ import { fetchWishlist, removeFromWishlist } from '../../api/wishlist';
 import { addToCart } from '../../api/cart';
 import type { Product } from '../../types';
 
-interface Props { token: string; userId: number; }
+interface Props { userId: number; }
 
-export function WishlistTab({ token, userId }: Props) {
+export function WishlistTab({ userId }: Props) {
   const { data, loading, error, setData } = useAsync<Product[]>(
-    () => fetchWishlist(token),
-    [token]
+    () => fetchWishlist(),
+    []
   );
   const items = data ?? [];
   const [removing, setRemoving] = useState<number | null>(null);
@@ -20,7 +20,7 @@ export function WishlistTab({ token, userId }: Props) {
   const handleRemove = async (productId: number) => {
     setRemoving(productId);
     try {
-      await removeFromWishlist(productId, token);
+      await removeFromWishlist(productId);
       setData(prev => (prev ?? []).filter(p => p.id !== productId));
     } catch {
       // silently ignore
@@ -32,8 +32,8 @@ export function WishlistTab({ token, userId }: Props) {
   const handleMoveToCart = async (product: Product) => {
     setMovingToCart(product.id);
     try {
-      await addToCart(userId, product.id, 1, token);
-      await removeFromWishlist(product.id, token);
+      await addToCart(userId, product.id, 1);
+      await removeFromWishlist(product.id);
       setData(prev => (prev ?? []).filter(p => p.id !== product.id));
       setFeedback({ id: product.id, msg: `${product.name} moved to cart.` });
       setTimeout(() => setFeedback(null), 3000);

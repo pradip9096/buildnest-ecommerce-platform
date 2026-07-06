@@ -14,12 +14,12 @@ const STATUS_COLOR: Record<string, string> = {
   PAYMENT_FAILED: 'bg-red-100 text-red-700',
 };
 
-interface Props { token: string; userId: number; }
+interface Props { userId: number; }
 
-export function OrdersTab({ token, userId }: Props) {
+export function OrdersTab({ userId }: Props) {
   const { data, loading, error, reload } = useAsync<Order[]>(
-    () => fetchOrders(token),
-    [token, userId]
+    () => fetchOrders(),
+    [userId]
   );
   const orders = data ?? [];
   const [selected, setSelected] = useState<Order | null>(null);
@@ -27,7 +27,7 @@ export function OrdersTab({ token, userId }: Props) {
   const openDetail = async (order: Order) => {
     if (order.orderItems) { setSelected(order); return; }
     try {
-      const detail = await fetchOrderById(order.id, token);
+      const detail = await fetchOrderById(order.id);
       setSelected(detail);
     } catch {
       setSelected(order);

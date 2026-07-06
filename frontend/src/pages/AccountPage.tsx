@@ -17,7 +17,7 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ];
 
 export function AccountPage() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
 
   return (
@@ -58,11 +58,11 @@ export function AccountPage() {
 
           {/* Tab content */}
           <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 min-h-[400px]">
-            {activeTab === 'profile'   && token && <ProfileTab token={token} />}
-            {activeTab === 'orders'    && token && user && <OrdersTab token={token} userId={user.id} />}
-            {activeTab === 'addresses' && token && <AddressesTab token={token} />}
-            {activeTab === 'wishlist'  && token && user && <WishlistTab token={token} userId={user.id} />}
-            {activeTab === 'security'  && token && <SecurityTab token={token} />}
+            {activeTab === 'profile'   && <ProfileTab />}
+            {activeTab === 'orders'    && user && <OrdersTab userId={user.id} />}
+            {activeTab === 'addresses' && <AddressesTab />}
+            {activeTab === 'wishlist'  && user && <WishlistTab userId={user.id} />}
+            {activeTab === 'security'  && <SecurityTab />}
           </div>
         </div>
       </main>

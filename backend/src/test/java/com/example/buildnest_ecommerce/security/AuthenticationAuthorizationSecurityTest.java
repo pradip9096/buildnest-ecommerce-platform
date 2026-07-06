@@ -50,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({ TestElasticsearchConfig.class, TestSecurityConfig.class })
+@Import({ TestElasticsearchConfig.class, TestSecurityConfig.class, com.example.buildnest_ecommerce.config.CsrfDefaultMockMvcConfig.class })
 @Transactional
 @SuppressWarnings("removal")
 class AuthenticationAuthorizationSecurityTest {
@@ -342,17 +342,16 @@ class AuthenticationAuthorizationSecurityTest {
                                 .thenReturn(new AuthResponse("access-token", "refresh-token", "Bearer",
                                                 testUser.getId(), testUser.getUsername()));
 
-                String response = mockMvc.perform(post("/api/auth/login")
+                // Tokens travel as httpOnly cookies (SEC-15), never in the JSON body —
+                // verify they're set as cookies and absent from the response body.
+                mockMvc.perform(post("/api/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(loginRequest))
                                 .andExpect(status().isOk())
-                                .andReturn()
-                                .getResponse()
-                                .getContentAsString();
-
-                // Verify token is unique and cannot be reused for privilege escalation
-                assert response.contains("accessToken");
-                assert response.contains("refreshToken");
+                                .andExpect(cookie().exists("access_token"))
+                                .andExpect(cookie().exists("refresh_token"))
+                                .andExpect(jsonPath("$.data.accessToken").doesNotExist())
+                                .andExpect(jsonPath("$.data.refreshToken").doesNotExist());
 
                 // Token should be tied to user identity and cannot be used by another session
                 // without proper authentication

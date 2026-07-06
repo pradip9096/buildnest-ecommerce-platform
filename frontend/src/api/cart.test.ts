@@ -22,10 +22,12 @@ describe('api/cart', () => {
       const body: ApiResponse<Cart> = { success: true, message: 'ok', data: cart };
       vi.mocked(fetch).mockResolvedValue(jsonResponse(body, true));
 
-      const result = await fetchCart(42, 'token-abc');
+      const result = await fetchCart(42);
 
       expect(fetch).toHaveBeenCalledWith('/api/user/cart/42', {
-        headers: { Authorization: 'Bearer token-abc' },
+        method: undefined,
+        credentials: 'include',
+        headers: {},
         body: undefined,
       });
       expect(result).toEqual(cart);
@@ -34,7 +36,7 @@ describe('api/cart', () => {
     it('throws with the status code on a non-2xx response', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
 
-      await expect(fetchCart(42, 'expired-token')).rejects.toThrow('Failed to fetch cart (401)');
+      await expect(fetchCart(42)).rejects.toThrow('Failed to fetch cart (401)');
     });
   });
 
@@ -42,7 +44,7 @@ describe('api/cart', () => {
     it('posts the item and does not throw on success', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({ success: true }, true));
 
-      await expect(addToCart(42, 5, 2, 'token-abc')).resolves.toBeUndefined();
+      await expect(addToCart(42, 5, 2)).resolves.toBeUndefined();
 
       expect(fetch).toHaveBeenCalledWith('/api/user/cart/add?userId=42', expect.objectContaining({
         method: 'POST',
@@ -53,7 +55,7 @@ describe('api/cart', () => {
     it('throws on a non-2xx response', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 409));
 
-      await expect(addToCart(42, 5, 2, 'token-abc')).rejects.toThrow('Failed to add item (409)');
+      await expect(addToCart(42, 5, 2)).rejects.toThrow('Failed to add item (409)');
     });
   });
 
@@ -61,7 +63,7 @@ describe('api/cart', () => {
     it('throws on a non-2xx response', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 404));
 
-      await expect(removeCartItem(9, 'token-abc')).rejects.toThrow('Failed to remove item (404)');
+      await expect(removeCartItem(9)).rejects.toThrow('Failed to remove item (404)');
     });
   });
 
@@ -69,7 +71,7 @@ describe('api/cart', () => {
     it('resolves on success', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({ success: true }, true));
 
-      await expect(clearCart(42, 'token-abc')).resolves.toBeUndefined();
+      await expect(clearCart(42)).resolves.toBeUndefined();
     });
   });
 });

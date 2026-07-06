@@ -22,16 +22,16 @@ describe('OrdersTab', () => {
   it('renders the order list on success', async () => {
     mockFetchOrders.mockResolvedValue([order]);
 
-    render(<OrdersTab token="token-abc" userId={42} />);
+    render(<OrdersTab userId={42} />);
 
     await waitFor(() => expect(screen.getByText('Order #1')).toBeInTheDocument());
-    expect(mockFetchOrders).toHaveBeenCalledWith('token-abc');
+    expect(mockFetchOrders).toHaveBeenCalledWith();
   });
 
   it('shows the genuine empty state only when the fetch actually succeeds with zero orders', async () => {
     mockFetchOrders.mockResolvedValue([]);
 
-    render(<OrdersTab token="token-abc" userId={42} />);
+    render(<OrdersTab userId={42} />);
 
     await waitFor(() => expect(screen.getByText(/haven.t placed any orders/i)).toBeInTheDocument());
   });
@@ -39,7 +39,7 @@ describe('OrdersTab', () => {
   it('surfaces an error instead of the false empty state when the fetch fails (e.g. an expired token)', async () => {
     mockFetchOrders.mockRejectedValue(new Error('Failed to fetch orders (401)'));
 
-    render(<OrdersTab token="expired-token" userId={42} />);
+    render(<OrdersTab userId={42} />);
 
     await waitFor(() => expect(screen.getByText('Failed to fetch orders (401)')).toBeInTheDocument());
     expect(screen.queryByText(/haven.t placed any orders/i)).not.toBeInTheDocument();
@@ -50,7 +50,7 @@ describe('OrdersTab', () => {
     mockFetchOrders.mockRejectedValueOnce(new Error('Failed to fetch orders (500)'));
     mockFetchOrders.mockResolvedValueOnce([order]);
 
-    render(<OrdersTab token="token-abc" userId={42} />);
+    render(<OrdersTab userId={42} />);
 
     await waitFor(() => expect(screen.getByText('Failed to fetch orders (500)')).toBeInTheDocument());
 

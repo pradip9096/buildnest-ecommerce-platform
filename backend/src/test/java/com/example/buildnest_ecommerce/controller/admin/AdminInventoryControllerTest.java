@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(AdminInventoryController.class)
 @ActiveProfiles("test")
-@Import({ TestSecurityConfig.class, JwtAuthenticationEntryPoint.class })
+@Import({ TestSecurityConfig.class, JwtAuthenticationEntryPoint.class, com.example.buildnest_ecommerce.config.CsrfDefaultMockMvcConfig.class })
 @SuppressWarnings({ "null", "removal" })
 class AdminInventoryControllerTest {
 

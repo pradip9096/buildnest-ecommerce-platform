@@ -1,9 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { changePassword } from '../../api/user';
 
-interface Props { token: string; }
-
-export function SecurityTab({ token }: Props) {
+export function SecurityTab() {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNew, setConfirmNew] = useState('');
@@ -17,7 +15,7 @@ export function SecurityTab({ token }: Props) {
     if (newPassword !== confirmNew) { setError('New passwords do not match'); return; }
     setSaving(true); setError(null);
     try {
-      await changePassword(token, oldPassword, newPassword);
+      await changePassword(oldPassword, newPassword);
       setSuccess(true);
       setOldPassword(''); setNewPassword(''); setConfirmNew('');
       setTimeout(() => setSuccess(false), 4000);

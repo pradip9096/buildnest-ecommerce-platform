@@ -1,12 +1,11 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { apiLogin, apiLogout, apiRefresh, apiRegister } from '../api/auth';
+import { apiFetchCsrf, apiLogin, apiLogout, apiRefresh, apiRegister } from '../api/auth';
 import { fetchProfile } from '../api/user';
 import { setUnauthorizedHandler } from '../api/client';
-import type { AuthUser, AuthTokens } from '../types';
+import type { AuthUser } from '../types';
 
 interface AuthContextValue {
   user: AuthUser | null;
-  token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
@@ -22,67 +21,27 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const json = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map(c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
-        .join('')
-    );
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
-
-// The JWT deliberately carries only subject/issuedAt/expiration (see spring-security.md) —
-// it never contains the user's id or roles. Those must come from the login response or
-// GET /api/user/profile, never decoded from the token.
-function isTokenExpired(token: string): boolean {
-  const payload = decodeJwtPayload(token);
-  if (!payload) return true;
-  const exp = payload['exp'] as number | undefined;
-  return exp !== undefined && exp * 1000 < Date.now();
-}
-
 function normalizeRoles(roles: string[] | undefined): string[] {
   return (roles ?? []).map(r => r.replace('ROLE_', ''));
 }
 
-function storeTokens(tokens: AuthTokens) {
-  localStorage.setItem('access_token', tokens.accessToken);
-  if (tokens.refreshToken) localStorage.setItem('refresh_token', tokens.refreshToken);
-}
-
-function clearTokens() {
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('refresh_token');
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
 
     async function restoreSession() {
-      const stored = localStorage.getItem('access_token');
-      if (!stored || isTokenExpired(stored)) {
-        if (stored) clearTokens();
-        setLoading(false);
-        return;
-      }
+      // Tokens are httpOnly cookies (SEC-15) — unreadable from JS, so rehydration
+      // relies entirely on whether the browser still holds a valid session cookie.
+      await apiFetchCsrf().catch(() => {});
       try {
-        const profile = await fetchProfile(stored);
+        const profile = await fetchProfile();
         if (cancelled) return;
         setUser({ id: profile.id, username: profile.username, roles: normalizeRoles(profile.roles) });
-        setToken(stored);
       } catch {
-        if (!cancelled) clearTokens();
+        // no valid session — stay logged out
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -95,25 +54,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {
-    const tokens = await apiLogin(username, password);
-    storeTokens(tokens);
-    setToken(tokens.accessToken);
+    const authUser = await apiLogin(username, password);
     // Roles are never in the JWT or the login response (see spring-security.md) —
-    // fetch the profile to get the authoritative role list.
-    const profile = await fetchProfile(tokens.accessToken).catch(() => null);
-    setUser({
-      id: tokens.userId,
-      username: tokens.username,
-      roles: normalizeRoles(profile?.roles),
-    });
+    // fetch the profile to get the authoritative role list. If that fetch fails
+    // right after a successful login (e.g. a network blip), fall back to the
+    // login response's identity fields with no roles rather than failing the
+    // whole login — auth already succeeded at this point.
+    try {
+      const profile = await fetchProfile();
+      setUser({ id: profile.id, username: profile.username, roles: normalizeRoles(profile.roles) });
+    } catch {
+      setUser({ id: authUser.userId, username: authUser.username, roles: [] });
+    }
   }, []);
 
   const logout = useCallback(async () => {
-    const refreshToken = localStorage.getItem('refresh_token');
-    await apiLogout(refreshToken).catch(() => {});
-    clearTokens();
+    await apiLogout().catch(() => {});
     setUser(null);
-    setToken(null);
   }, []);
 
   // Registered with the shared HTTP client so a 401 on any authenticated
@@ -121,24 +78,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // user to reload the page (or losing in-progress work) the moment the
   // short-lived access token expires mid-session.
   useEffect(() => {
-    const handleUnauthorized = async (): Promise<string | null> => {
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (!refreshToken) {
-        clearTokens();
-        setUser(null);
-        setToken(null);
-        return null;
-      }
+    const handleUnauthorized = async (): Promise<boolean> => {
       try {
-        const tokens = await apiRefresh(refreshToken);
-        storeTokens(tokens);
-        setToken(tokens.accessToken);
-        return tokens.accessToken;
+        await apiRefresh();
+        return true;
       } catch {
-        clearTokens();
         setUser(null);
-        setToken(null);
-        return null;
+        return false;
       }
     };
 
@@ -157,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!user, loading, login, logout, register }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );

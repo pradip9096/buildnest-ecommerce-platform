@@ -4,9 +4,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { useCart } from '../../hooks/useCart';
 
 export function Navbar() {
-  const { user, token, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const { cart } = useCart(user?.id ?? null, token);
+  const { cart } = useCart(user?.id ?? null);
   const cartCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
 
   const [searchInput, setSearchInput] = useState('');

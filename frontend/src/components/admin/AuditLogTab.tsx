@@ -2,13 +2,11 @@ import { useState } from 'react';
 import { useAsync } from '../../hooks/useAsync';
 import { fetchAuditLogs, type AuditLogEntry, type AuditLogPage } from '../../api/admin';
 
-interface Props { token: string; }
-
-export function AuditLogTab({ token }: Props) {
+export function AuditLogTab() {
   const [page, setPage] = useState(0);
   const { data, loading, error } = useAsync<AuditLogPage>(
-    () => fetchAuditLogs(token, page, 20),
-    [token, page]
+    () => fetchAuditLogs(page, 20),
+    [page]
   );
   const entries: AuditLogEntry[] = data?.content ?? [];
   const totalPages = data?.totalPages ?? 0;

@@ -84,4 +84,70 @@ class JwtAuthenticationFilterTest {
 
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
+
+    @Test
+    void setsAuthenticationFromAccessTokenCookieWhenNoHeaderPresent() throws Exception {
+        JwtTokenProvider tokenProvider = mock(JwtTokenProvider.class);
+        UserDetailsService userDetailsService = mock(UserDetailsService.class);
+
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter();
+        ReflectionTestUtils.setField(filter, "tokenProvider", tokenProvider);
+        ReflectionTestUtils.setField(filter, "userDetailsService", userDetailsService);
+
+        when(tokenProvider.validateToken("cookie-token")).thenReturn(true);
+        when(tokenProvider.getUsernameFromToken("cookie-token")).thenReturn("user");
+        when(userDetailsService.loadUserByUsername("user"))
+                .thenReturn(new CustomUserDetails(1L, "user", "u@example.com", "pass",
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")), true, true, true, true));
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setCookies(new jakarta.servlet.http.Cookie("access_token", "cookie-token"));
+
+        filter.doFilterInternal(request, new MockHttpServletResponse(), new MockFilterChain());
+
+        assertNotNull(SecurityContextHolder.getContext().getAuthentication());
+        assertEquals("user", SecurityContextHolder.getContext().getAuthentication().getName());
+    }
+
+    @Test
+    void prefersAuthorizationHeaderOverCookieWhenBothPresent() throws Exception {
+        JwtTokenProvider tokenProvider = mock(JwtTokenProvider.class);
+        UserDetailsService userDetailsService = mock(UserDetailsService.class);
+
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter();
+        ReflectionTestUtils.setField(filter, "tokenProvider", tokenProvider);
+        ReflectionTestUtils.setField(filter, "userDetailsService", userDetailsService);
+
+        when(tokenProvider.validateToken("header-token")).thenReturn(true);
+        when(tokenProvider.getUsernameFromToken("header-token")).thenReturn("user");
+        when(userDetailsService.loadUserByUsername("user"))
+                .thenReturn(new CustomUserDetails(1L, "user", "u@example.com", "pass",
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")), true, true, true, true));
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer header-token");
+        request.setCookies(new jakarta.servlet.http.Cookie("access_token", "cookie-token"));
+
+        filter.doFilterInternal(request, new MockHttpServletResponse(), new MockFilterChain());
+
+        verify(tokenProvider).validateToken("header-token");
+        verify(tokenProvider, never()).validateToken("cookie-token");
+    }
+
+    @Test
+    void skipsAuthenticationWhenNeitherHeaderNorCookiePresent() throws Exception {
+        JwtTokenProvider tokenProvider = mock(JwtTokenProvider.class);
+        UserDetailsService userDetailsService = mock(UserDetailsService.class);
+
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter();
+        ReflectionTestUtils.setField(filter, "tokenProvider", tokenProvider);
+        ReflectionTestUtils.setField(filter, "userDetailsService", userDetailsService);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        filter.doFilterInternal(request, new MockHttpServletResponse(), new MockFilterChain());
+
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        verifyNoInteractions(tokenProvider);
+    }
 }

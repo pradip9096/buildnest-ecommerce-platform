@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
 import { OverviewTab } from '../components/admin/OverviewTab';
 import { OrdersTab } from '../components/admin/OrdersTab';
 import { InventoryTab } from '../components/admin/InventoryTab';
@@ -17,7 +16,6 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ];
 
 export function AdminDashboardPage() {
-  const { token } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
 
   return (
@@ -51,15 +49,11 @@ export function AdminDashboardPage() {
           </nav>
 
           <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 min-h-[500px]">
-            {token && (
-              <>
-                {activeTab === 'overview'  && <OverviewTab  token={token} />}
-                {activeTab === 'orders'    && <OrdersTab    token={token} />}
-                {activeTab === 'inventory' && <InventoryTab token={token} />}
-                {activeTab === 'users'     && <UsersTab     token={token} />}
-                {activeTab === 'audit'     && <AuditLogTab  token={token} />}
-              </>
-            )}
+            {activeTab === 'overview'  && <OverviewTab />}
+            {activeTab === 'orders'    && <OrdersTab />}
+            {activeTab === 'inventory' && <InventoryTab />}
+            {activeTab === 'users'     && <UsersTab />}
+            {activeTab === 'audit'     && <AuditLogTab />}
           </div>
         </div>
       </main>

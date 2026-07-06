@@ -43,7 +43,7 @@ import org.mockito.Mockito;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestElasticsearchConfig.class, TestSecurityConfig.class})
+@Import({TestElasticsearchConfig.class, TestSecurityConfig.class, com.example.buildnest_ecommerce.config.CsrfDefaultMockMvcConfig.class})
 @Transactional
 @DisplayName("AdminSearchController integration tests")
 class AdminSearchControllerIntegrationTest {

@@ -23,7 +23,6 @@ const mockFetchCart = vi.mocked(fetchCart);
 function authState(overrides: Partial<ReturnType<typeof useAuth>>) {
   return {
     user: null,
-    token: null,
     isAuthenticated: false,
     loading: false,
     login: vi.fn(),
@@ -68,7 +67,7 @@ describe('Navbar', () => {
 
   it('shows the username and an account dropdown when authenticated', async () => {
     const user: AuthUser = { id: 1, username: 'alice', roles: ['USER'] };
-    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user, token: 'token-abc' }));
+    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user }));
 
     renderNavbar();
 
@@ -84,7 +83,7 @@ describe('Navbar', () => {
 
   it('shows an Admin link in the dropdown only for users with the ADMIN role', async () => {
     const user: AuthUser = { id: 1, username: 'bob', roles: ['ADMIN'] };
-    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user, token: 'token-abc' }));
+    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user }));
 
     renderNavbar();
 
@@ -96,7 +95,7 @@ describe('Navbar', () => {
   it('calls logout and navigates home when Sign out is clicked', async () => {
     const logout = vi.fn().mockResolvedValue(undefined);
     const user: AuthUser = { id: 1, username: 'alice', roles: ['USER'] };
-    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user, token: 'token-abc', logout }));
+    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user, logout }));
 
     renderNavbar();
 
@@ -109,7 +108,7 @@ describe('Navbar', () => {
 
   it('shows the cart item count as a badge when the cart has items', async () => {
     const user: AuthUser = { id: 1, username: 'alice', roles: ['USER'] };
-    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user, token: 'token-abc' }));
+    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user }));
     mockFetchCart.mockResolvedValue({
       cartId: 1,
       userId: 1,

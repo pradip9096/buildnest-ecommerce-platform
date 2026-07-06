@@ -22,10 +22,12 @@ describe('api/orders', () => {
       const body: ApiResponse<Order[]> = { success: true, message: 'ok', data: [order] };
       vi.mocked(fetch).mockResolvedValue(jsonResponse(body, true));
 
-      const result = await fetchOrders('token-abc');
+      const result = await fetchOrders();
 
       expect(fetch).toHaveBeenCalledWith('/api/user/orders', {
-        headers: { Authorization: 'Bearer token-abc' },
+        method: undefined,
+        credentials: 'include',
+        headers: {},
         body: undefined,
       });
       expect(result).toEqual([order]);
@@ -34,14 +36,14 @@ describe('api/orders', () => {
     it('throws instead of silently returning an empty list on a non-2xx response', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
 
-      await expect(fetchOrders('expired-token')).rejects.toThrow('Failed to fetch orders (401)');
+      await expect(fetchOrders()).rejects.toThrow('Failed to fetch orders (401)');
     });
 
     it('returns an empty array when data is absent on an otherwise successful response', async () => {
       const body = { success: true, message: 'ok', data: null };
       vi.mocked(fetch).mockResolvedValue(jsonResponse(body, true));
 
-      const result = await fetchOrders('token-abc');
+      const result = await fetchOrders();
 
       expect(result).toEqual([]);
     });
@@ -52,7 +54,7 @@ describe('api/orders', () => {
       const body: ApiResponse<Order> = { success: true, message: 'ok', data: order };
       vi.mocked(fetch).mockResolvedValue(jsonResponse(body, true));
 
-      const result = await fetchOrderById(1, 'token-abc');
+      const result = await fetchOrderById(1);
 
       expect(result).toEqual(order);
     });
@@ -60,7 +62,7 @@ describe('api/orders', () => {
     it('throws on a non-2xx response', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 404));
 
-      await expect(fetchOrderById(1, 'token-abc')).rejects.toThrow('Failed to fetch order (404)');
+      await expect(fetchOrderById(1)).rejects.toThrow('Failed to fetch order (404)');
     });
   });
 });

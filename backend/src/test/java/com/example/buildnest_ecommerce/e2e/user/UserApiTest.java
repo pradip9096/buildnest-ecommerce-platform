@@ -46,7 +46,7 @@ public class UserApiTest extends BaseApiTest {
                                 .post("/api/auth/login")
                                 .then()
                                 .statusCode(HttpStatus.OK.value())
-                                .extract().path("data.accessToken");
+                                .extract().cookie("access_token");
 
                 // Get Profile
                 given()

@@ -2,12 +2,10 @@ import { useState } from 'react';
 import { useAsync } from '../../hooks/useAsync';
 import { fetchAdminUsers, deleteAdminUser, type AdminUser } from '../../api/admin';
 
-interface Props { token: string; }
-
-export function UsersTab({ token }: Props) {
+export function UsersTab() {
   const { data, loading, error, setData } = useAsync<AdminUser[]>(
-    () => fetchAdminUsers(token),
-    [token]
+    () => fetchAdminUsers(),
+    []
   );
   const users = data ?? [];
   const [disabling, setDisabling] = useState<number | null>(null);
@@ -17,7 +15,7 @@ export function UsersTab({ token }: Props) {
     if (!confirm(`Disable account for @${user.username}? This action can be reversed by re-enabling the account in the database.`)) return;
     setDisabling(user.id);
     try {
-      await deleteAdminUser(token, user.id);
+      await deleteAdminUser(user.id);
       setData(prev => (prev ?? []).map(u => u.id === user.id ? { ...u, enabled: false } : u));
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Failed to disable user');

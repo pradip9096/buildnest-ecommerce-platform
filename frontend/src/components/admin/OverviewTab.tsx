@@ -1,8 +1,6 @@
 import { useAsync } from '../../hooks/useAsync';
 import { fetchDashboardStats, type DashboardStats } from '../../api/admin';
 
-interface Props { token: string; }
-
 const STAT_CARDS = [
   { key: 'totalUsers'    as const, label: 'Total Users',    icon: '👥', color: 'bg-blue-50 text-blue-700',   border: 'border-blue-200' },
   { key: 'totalProducts' as const, label: 'Products',       icon: '📦', color: 'bg-amber-50 text-amber-700', border: 'border-amber-200' },
@@ -10,10 +8,10 @@ const STAT_CARDS = [
   { key: 'totalRevenue'  as const, label: 'Total Revenue',  icon: '💰', color: 'bg-purple-50 text-purple-700',border: 'border-purple-200' },
 ];
 
-export function OverviewTab({ token }: Props) {
+export function OverviewTab() {
   const { data: stats, loading, error } = useAsync<DashboardStats>(
-    () => fetchDashboardStats(token),
-    [token]
+    () => fetchDashboardStats(),
+    []
   );
 
   if (loading) return (

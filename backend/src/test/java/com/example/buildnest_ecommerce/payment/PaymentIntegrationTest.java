@@ -57,7 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, TestElasticsearchConfig.class})
+@Import({TestSecurityConfig.class, TestElasticsearchConfig.class, com.example.buildnest_ecommerce.config.CsrfDefaultMockMvcConfig.class})
 @Transactional
 @DisplayName("Payment flow integration tests (PAY-01, #98)")
 class PaymentIntegrationTest {

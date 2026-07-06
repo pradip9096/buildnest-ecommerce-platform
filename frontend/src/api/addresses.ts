@@ -14,15 +14,15 @@ export interface CreateAddressInput {
 
 export type UpdateAddressInput = CreateAddressInput;
 
-export async function fetchAddresses(token: string): Promise<Address[]> {
-  const data = await requestData<Address[]>(BASE, { token }, s => `Failed to fetch addresses (${s})`);
+export async function fetchAddresses(): Promise<Address[]> {
+  const data = await requestData<Address[]>(BASE, {}, s => `Failed to fetch addresses (${s})`);
   return data ?? [];
 }
 
-export async function createAddress(input: CreateAddressInput, token: string): Promise<Address> {
+export async function createAddress(input: CreateAddressInput): Promise<Address> {
   const data = await requestData<Address>(
     BASE,
-    { method: 'POST', token, body: input },
+    { method: 'POST', body: input },
     s => `Failed to create address (${s})`
   );
   if (!data) throw new Error(`Failed to create address`);
@@ -31,26 +31,25 @@ export async function createAddress(input: CreateAddressInput, token: string): P
 
 export async function updateAddress(
   id: number,
-  input: UpdateAddressInput,
-  token: string
+  input: UpdateAddressInput
 ): Promise<Address> {
   const data = await requestData<Address>(
     `${BASE}/${id}`,
-    { method: 'PUT', token, body: input },
+    { method: 'PUT', body: input },
     s => `Failed to update address (${s})`
   );
   if (!data) throw new Error(`Failed to update address`);
   return data;
 }
 
-export async function deleteAddress(id: number, token: string): Promise<void> {
-  await request(`${BASE}/${id}`, { method: 'DELETE', token }, s => `Failed to delete address (${s})`);
+export async function deleteAddress(id: number): Promise<void> {
+  await request(`${BASE}/${id}`, { method: 'DELETE' }, s => `Failed to delete address (${s})`);
 }
 
-export async function setDefaultAddress(id: number, token: string): Promise<Address> {
+export async function setDefaultAddress(id: number): Promise<Address> {
   const data = await requestData<Address>(
     `${BASE}/${id}/default`,
-    { method: 'PUT', token },
+    { method: 'PUT' },
     s => `Failed to set default address (${s})`
   );
   if (!data) throw new Error(`Failed to set default address`);

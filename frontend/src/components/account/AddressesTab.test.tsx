@@ -44,17 +44,17 @@ describe('AddressesTab', () => {
   it('renders the address list on success', async () => {
     mockFetchAddresses.mockResolvedValue([address]);
 
-    render(<AddressesTab token="token-abc" />);
+    render(<AddressesTab />);
 
     await waitFor(() => expect(screen.getByText('123 Main Street')).toBeInTheDocument());
     expect(screen.getByText('Default')).toBeInTheDocument();
-    expect(mockFetchAddresses).toHaveBeenCalledWith('token-abc');
+    expect(mockFetchAddresses).toHaveBeenCalledWith();
   });
 
   it('shows the empty state when there are no saved addresses', async () => {
     mockFetchAddresses.mockResolvedValue([]);
 
-    render(<AddressesTab token="token-abc" />);
+    render(<AddressesTab />);
 
     await waitFor(() => expect(screen.getByText('No saved addresses yet')).toBeInTheDocument());
   });
@@ -63,7 +63,7 @@ describe('AddressesTab', () => {
     mockFetchAddresses.mockRejectedValueOnce(new Error('Failed to fetch addresses (500)'));
     mockFetchAddresses.mockResolvedValueOnce([address]);
 
-    render(<AddressesTab token="token-abc" />);
+    render(<AddressesTab />);
 
     await waitFor(() => expect(screen.getByText('Failed to fetch addresses (500)')).toBeInTheDocument());
 
@@ -76,7 +76,7 @@ describe('AddressesTab', () => {
     mockFetchAddresses.mockResolvedValueOnce([]).mockResolvedValueOnce([address]);
     mockCreateAddress.mockResolvedValue(address);
 
-    render(<AddressesTab token="token-abc" />);
+    render(<AddressesTab />);
     await waitFor(() => expect(screen.getByText('No saved addresses yet')).toBeInTheDocument());
 
     const user = userEvent.setup();
@@ -88,8 +88,7 @@ describe('AddressesTab', () => {
     await user.click(screen.getByRole('button', { name: 'Save address' }));
 
     await waitFor(() => expect(mockCreateAddress).toHaveBeenCalledWith(
-      expect.objectContaining({ streetAddress: '123 Main Street', city: 'Mumbai' }),
-      'token-abc'
+      expect.objectContaining({ streetAddress: '123 Main Street', city: 'Mumbai' })
     ));
     await waitFor(() => expect(screen.getByText('123 Main Street')).toBeInTheDocument());
   });
@@ -98,13 +97,13 @@ describe('AddressesTab', () => {
     mockFetchAddresses.mockResolvedValueOnce([address, secondAddress]).mockResolvedValueOnce([address]);
     mockDeleteAddress.mockResolvedValue(undefined);
 
-    render(<AddressesTab token="token-abc" />);
+    render(<AddressesTab />);
     await waitFor(() => expect(screen.getByText('456 Second Street')).toBeInTheDocument());
 
     const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
     await userEvent.setup().click(deleteButtons[1]);
 
-    await waitFor(() => expect(mockDeleteAddress).toHaveBeenCalledWith(2, 'token-abc'));
+    await waitFor(() => expect(mockDeleteAddress).toHaveBeenCalledWith(2));
     await waitFor(() => expect(screen.queryByText('456 Second Street')).not.toBeInTheDocument());
   });
 
@@ -114,11 +113,11 @@ describe('AddressesTab', () => {
       .mockResolvedValueOnce([{ ...address, isDefault: false }, { ...secondAddress, isDefault: true }]);
     mockSetDefaultAddress.mockResolvedValue({ ...secondAddress, isDefault: true });
 
-    render(<AddressesTab token="token-abc" />);
+    render(<AddressesTab />);
     await waitFor(() => expect(screen.getByText('456 Second Street')).toBeInTheDocument());
 
     await userEvent.setup().click(screen.getByRole('button', { name: 'Set as default' }));
 
-    await waitFor(() => expect(mockSetDefaultAddress).toHaveBeenCalledWith(2, 'token-abc'));
+    await waitFor(() => expect(mockSetDefaultAddress).toHaveBeenCalledWith(2));
   });
 });

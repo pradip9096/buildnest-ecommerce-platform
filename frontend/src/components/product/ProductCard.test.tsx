@@ -21,7 +21,6 @@ const mockAddToCart = vi.mocked(addToCart);
 function authState(overrides: Partial<ReturnType<typeof useAuth>>) {
   return {
     user: null,
-    token: null,
     isAuthenticated: false,
     loading: false,
     login: vi.fn(),
@@ -88,20 +87,20 @@ describe('ProductCard — quick add to cart', () => {
 
   it('calls addToCart with quantity 1 and shows success feedback when authenticated', async () => {
     const user: AuthUser = { id: 42, username: 'alice', roles: ['USER'] };
-    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user, token: 'token-abc' }));
+    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user }));
     mockAddToCart.mockResolvedValue(undefined);
 
     renderCard();
 
     await userEvent.setup().click(screen.getByRole('button', { name: 'Add to Cart' }));
 
-    expect(mockAddToCart).toHaveBeenCalledWith(42, 1, 1, 'token-abc');
+    expect(mockAddToCart).toHaveBeenCalledWith(42, 1, 1);
     expect(await screen.findByRole('button', { name: 'Added ✓' })).toBeInTheDocument();
   });
 
   it('shows an error state when the API call fails', async () => {
     const user: AuthUser = { id: 42, username: 'alice', roles: ['USER'] };
-    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user, token: 'token-abc' }));
+    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user }));
     mockAddToCart.mockRejectedValue(new Error('Failed to add item (500)'));
 
     renderCard();
@@ -113,7 +112,7 @@ describe('ProductCard — quick add to cart', () => {
 
   it('reverts to the idle label after the feedback window elapses', async () => {
     const user: AuthUser = { id: 42, username: 'alice', roles: ['USER'] };
-    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user, token: 'token-abc' }));
+    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user }));
     mockAddToCart.mockResolvedValue(undefined);
 
     renderCard();
@@ -130,7 +129,7 @@ describe('ProductCard — quick add to cart', () => {
 
   it('does not navigate away from the listing page when the button is clicked', async () => {
     const user: AuthUser = { id: 42, username: 'alice', roles: ['USER'] };
-    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user, token: 'token-abc' }));
+    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user }));
     mockAddToCart.mockResolvedValue(undefined);
 
     render(

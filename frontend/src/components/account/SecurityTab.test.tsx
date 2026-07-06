@@ -23,19 +23,19 @@ async function fillAndSubmit(oldPassword: string, newPassword: string, confirm =
 }
 
 describe('SecurityTab', () => {
-  it('calls changePassword with only the token and passwords — no userId', async () => {
+  it('calls changePassword with only the two passwords — no token, no userId', async () => {
     mockChangePassword.mockResolvedValue(undefined);
 
-    render(<SecurityTab token="token-abc" />);
+    render(<SecurityTab />);
     await fillAndSubmit('oldPass123456', 'newPass123456');
 
-    expect(mockChangePassword).toHaveBeenCalledWith('token-abc', 'oldPass123456', 'newPass123456');
+    expect(mockChangePassword).toHaveBeenCalledWith('oldPass123456', 'newPass123456');
   });
 
   it('shows a confirmation message on success', async () => {
     mockChangePassword.mockResolvedValue(undefined);
 
-    render(<SecurityTab token="token-abc" />);
+    render(<SecurityTab />);
     await fillAndSubmit('oldPass123456', 'newPass123456');
 
     expect(await screen.findByText('Password changed successfully.')).toBeInTheDocument();
@@ -44,14 +44,14 @@ describe('SecurityTab', () => {
   it('shows a clear error message when the current password is wrong', async () => {
     mockChangePassword.mockRejectedValue(new Error('Old password is incorrect'));
 
-    render(<SecurityTab token="token-abc" />);
+    render(<SecurityTab />);
     await fillAndSubmit('wrongPassword', 'newPass123456');
 
     expect(await screen.findByText('Old password is incorrect')).toBeInTheDocument();
   });
 
   it('validates new password length before calling the API', async () => {
-    render(<SecurityTab token="token-abc" />);
+    render(<SecurityTab />);
     await fillAndSubmit('oldPass123456', 'short', 'short');
 
     expect(screen.getByText('New password must be at least 12 characters')).toBeInTheDocument();
@@ -59,7 +59,7 @@ describe('SecurityTab', () => {
   });
 
   it('validates that new password and confirmation match before calling the API', async () => {
-    render(<SecurityTab token="token-abc" />);
+    render(<SecurityTab />);
     await fillAndSubmit('oldPass123456', 'newPass123456', 'differentPass1234');
 
     expect(screen.getByText('New passwords do not match')).toBeInTheDocument();
@@ -69,7 +69,7 @@ describe('SecurityTab', () => {
   it('clears the password fields after a successful change', async () => {
     mockChangePassword.mockResolvedValue(undefined);
 
-    render(<SecurityTab token="token-abc" />);
+    render(<SecurityTab />);
     await fillAndSubmit('oldPass123456', 'newPass123456');
 
     await waitFor(() => {

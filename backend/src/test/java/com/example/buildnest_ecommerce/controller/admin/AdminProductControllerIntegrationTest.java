@@ -50,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestElasticsearchConfig.class, TestSecurityConfig.class})
+@Import({TestElasticsearchConfig.class, TestSecurityConfig.class, com.example.buildnest_ecommerce.config.CsrfDefaultMockMvcConfig.class})
 @Transactional
 class AdminProductControllerIntegrationTest {
 

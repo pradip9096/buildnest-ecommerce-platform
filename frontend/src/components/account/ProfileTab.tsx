@@ -3,12 +3,10 @@ import { useAsync } from '../../hooks/useAsync';
 import { fetchProfile, updateProfile } from '../../api/user';
 import type { UserProfile } from '../../types';
 
-interface Props { token: string; }
-
-export function ProfileTab({ token }: Props) {
+export function ProfileTab() {
   const { data: profile, loading, error: loadError, setData: setProfile } = useAsync<UserProfile>(
-    () => fetchProfile(token),
-    [token]
+    () => fetchProfile(),
+    []
   );
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -31,7 +29,7 @@ export function ProfileTab({ token }: Props) {
     e.preventDefault();
     setSaving(true); setSaveError(null); setSuccess(false);
     try {
-      const updated = await updateProfile(token, form);
+      const updated = await updateProfile(form);
       setProfile(updated);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);

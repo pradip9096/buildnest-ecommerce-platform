@@ -4,6 +4,7 @@ import com.example.buildnest_ecommerce.security.Jwt.JwtAuthenticationEntryPoint;
 import com.example.buildnest_ecommerce.security.Jwt.JwtAuthenticationFilter;
 import com.example.buildnest_ecommerce.security.AdminRateLimitFilter;
 import com.example.buildnest_ecommerce.security.HttpsEnforcementFilter;
+import com.example.buildnest_ecommerce.security.NonClearingCsrfTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,8 +20,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import jakarta.annotation.PostConstruct;
 import org.springframework.core.annotation.Order;
@@ -144,23 +148,40 @@ public class SecurityConfig {
                     origins.addAll(Arrays.asList(corsAllowedOrigins));
                     corsConfig.setAllowedOrigins(origins);
                     corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
+                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-XSRF-TOKEN"));
                     corsConfig.setExposedHeaders(Arrays.asList("Authorization"));
                     corsConfig.setAllowCredentials(true);
                     corsConfig.setMaxAge(3600L);
                     return corsConfig;
                 }))
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf
+                        // NonClearingCsrfTokenRepository works around a confirmed Spring Security
+                        // defect (GH-12141): CsrfAuthenticationStrategy clears the XSRF-TOKEN cookie on
+                        // every authentication event but fails to regenerate it in the same
+                        // request/response cycle. JwtAuthenticationFilter re-authenticates on every
+                        // single stateless request, so this fired constantly and wiped the cookie
+                        // before the browser could ever use it. See NonClearingCsrfTokenRepository's
+                        // javadoc for the full rationale.
+                        .csrfTokenRepository(new NonClearingCsrfTokenRepository(
+                                CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                        // Plain (non-Xor) handler: the SPA reads the raw XSRF-TOKEN cookie value via JS
+                        // and echoes it back verbatim as the X-XSRF-TOKEN header. XorCsrfTokenRequestAttributeHandler
+                        // expects a masked header value for BREACH protection, which is incompatible
+                        // with sending the raw cookie value directly — confirmed empirically (raw value
+                        // rejected with 403 under Xor).
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                        .ignoringRequestMatchers("/api/auth/login", "/api/auth/register"))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy()))
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/*/reviews").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/*/reviews/summary").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/*/reviews/top-helpful").permitAll()
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/csrf").permitAll()
                         .requestMatchers("/api/password/forgot", "/api/password/reset").permitAll()
                         .requestMatchers("/api/password/change").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/v1/webhooks/**").permitAll()

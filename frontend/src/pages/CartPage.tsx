@@ -5,10 +5,9 @@ import { useCart } from '../hooks/useCart';
 import { CartItemRow } from '../components/cart/CartItemRow';
 
 export function CartPage() {
-  const { user, token, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { cart, loading, error, addItem, removeItem, reload } = useCart(
-    user?.id ?? null,
-    token
+    user?.id ?? null
   );
   const [removingId, setRemovingId] = useState<number | null>(null);
   const [coupon, setCoupon] = useState('');

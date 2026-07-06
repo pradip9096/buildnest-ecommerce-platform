@@ -4,7 +4,6 @@ import com.example.buildnest_ecommerce.config.TestElasticsearchConfig;
 import com.example.buildnest_ecommerce.config.TestSecurityConfig;
 import com.example.buildnest_ecommerce.model.payload.LoginRequest;
 import com.example.buildnest_ecommerce.model.payload.RegisterRequest;
-import com.example.buildnest_ecommerce.model.payload.RefreshTokenRequest;
 import com.example.buildnest_ecommerce.model.payload.AuthResponse;
 import com.example.buildnest_ecommerce.model.entity.RefreshToken;
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchAuditLogRepository;
@@ -14,6 +13,7 @@ import com.example.buildnest_ecommerce.service.ratelimit.RateLimiterService;
 import com.example.buildnest_ecommerce.service.token.RefreshTokenService;
 import com.example.buildnest_ecommerce.util.RateLimitUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +35,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -84,11 +85,58 @@ class AuthControllerTest {
         loginRequest.setUsername("testuser");
         loginRequest.setPassword("password123");
 
+        when(authService.login("testuser", "password123"))
+                .thenReturn(new AuthResponse("access-jwt", "refresh-uuid", "Bearer", 1L, "testuser"));
+
         mockMvc.perform(post("/api/auth/login")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").doesNotExist())
+                .andExpect(jsonPath("$.data.refreshToken").doesNotExist())
+                .andExpect(jsonPath("$.data.username").value("testuser"))
+                .andExpect(cookie().exists("access_token"))
+                .andExpect(cookie().value("access_token", "access-jwt"))
+                .andExpect(cookie().httpOnly("access_token", true))
+                .andExpect(cookie().path("access_token", "/"))
+                .andExpect(cookie().exists("refresh_token"))
+                .andExpect(cookie().value("refresh_token", "refresh-uuid"))
+                .andExpect(cookie().httpOnly("refresh_token", true))
+                .andExpect(cookie().path("refresh_token", "/api/auth"));
+    }
+
+    @Test
+    void testLoginWithoutCsrfTokenStillSucceeds() throws Exception {
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setUsername("testuser");
+        loginRequest.setPassword("password123");
+
+        when(authService.login("testuser", "password123"))
+                .thenReturn(new AuthResponse("access-jwt", "refresh-uuid", "Bearer", 1L, "testuser"));
+
+        // /api/auth/login is CSRF-exempt (pre-auth, no session cookie exists yet to forge)
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void testLogoutWithoutCsrfTokenIsForbidden() throws Exception {
+        // /api/auth/logout is cookie-driven and must be CSRF-protected — a forged
+        // cross-site request must not be able to log the victim out or rotate their tokens.
+        mockMvc.perform(post("/api/auth/logout")
+                .with(user("test").roles("USER"))
+                .cookie(new Cookie("refresh_token", "refresh-123")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testCsrfBootstrapEndpoint() throws Exception {
+        mockMvc.perform(get("/api/auth/csrf"))
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().exists("XSRF-TOKEN"));
     }
 
     @Test
@@ -153,43 +201,42 @@ class AuthControllerTest {
 
     @Test
     void testRefreshTokenSuccess() throws Exception {
-        RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
-        refreshTokenRequest.setRefreshToken("refresh-123");
-
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUserId(1L);
         when(refreshTokenService.findByToken("refresh-123")).thenReturn(Optional.of(refreshToken));
         when(authService.refreshAccessToken("refresh-123"))
-                .thenReturn(new AuthResponse("access", "refresh", "Bearer", 1L, "user"));
+                .thenReturn(new AuthResponse("new-access", "new-refresh", "Bearer", 1L, "user"));
 
         mockMvc.perform(post("/api/auth/refresh")
                 .with(user("test").roles("USER"))
                 .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(refreshTokenRequest)))
-                .andExpect(status().isOk());
+                .cookie(new Cookie("refresh_token", "refresh-123")))
+                .andExpect(status().isOk())
+                .andExpect(cookie().value("access_token", "new-access"))
+                .andExpect(cookie().value("refresh_token", "new-refresh"));
+    }
+
+    @Test
+    void testRefreshTokenMissingCookie() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(user("test").roles("USER"))
+                .with(csrf()))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
     void testRefreshTokenInvalid() throws Exception {
-        RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
-        refreshTokenRequest.setRefreshToken("missing");
-
         when(refreshTokenService.findByToken("missing")).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/auth/refresh")
                 .with(user("test").roles("USER"))
                 .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(refreshTokenRequest)))
+                .cookie(new Cookie("refresh_token", "missing")))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void testRefreshTokenRateLimited() throws Exception {
-        RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
-        refreshTokenRequest.setRefreshToken("refresh-123");
-
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUserId(1L);
         when(refreshTokenService.findByToken("refresh-123")).thenReturn(Optional.of(refreshToken));
@@ -199,17 +246,13 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/refresh")
                 .with(user("test").roles("USER"))
                 .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(refreshTokenRequest)))
+                .cookie(new Cookie("refresh_token", "refresh-123")))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(header().exists("Retry-After"));
     }
 
     @Test
     void testRefreshTokenException() throws Exception {
-        RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
-        refreshTokenRequest.setRefreshToken("refresh-123");
-
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUserId(1L);
         when(refreshTokenService.findByToken("refresh-123")).thenReturn(Optional.of(refreshToken));
@@ -218,8 +261,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/refresh")
                 .with(user("test").roles("USER"))
                 .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(refreshTokenRequest)))
+                .cookie(new Cookie("refresh_token", "refresh-123")))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -229,6 +271,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/validate-token")
                 .with(user("test").roles("USER"))
+                .with(csrf())
                 .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk());
     }
@@ -239,6 +282,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/validate-token")
                 .with(user("test").roles("USER"))
+                .with(csrf())
                 .header("Authorization", "raw-token"))
                 .andExpect(status().isOk());
     }
@@ -249,6 +293,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/validate-token")
                 .with(user("test").roles("USER"))
+                .with(csrf())
                 .header("Authorization", "Bearer token"))
                 .andExpect(status().isUnauthorized());
     }
@@ -259,6 +304,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/validate-token")
                 .with(user("test").roles("USER"))
+                .with(csrf())
                 .header("Authorization", "Bearer token"))
                 .andExpect(status().isUnauthorized());
     }
@@ -281,15 +327,13 @@ class AuthControllerTest {
 
     @Test
     void testLogoutSuccessAndFailure() throws Exception {
-        RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
-        refreshTokenRequest.setRefreshToken("refresh-123");
-
         mockMvc.perform(post("/api/auth/logout")
                 .with(user("test").roles("USER"))
                 .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(refreshTokenRequest)))
-                .andExpect(status().isOk());
+                .cookie(new Cookie("refresh_token", "refresh-123")))
+                .andExpect(status().isOk())
+                .andExpect(cookie().maxAge("access_token", 0))
+                .andExpect(cookie().maxAge("refresh_token", 0));
 
         mockMvc.perform(post("/api/auth/logout")
                 .with(user("test").roles("USER"))
@@ -301,8 +345,9 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/logout")
                 .with(user("test").roles("USER"))
                 .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(refreshTokenRequest)))
-                .andExpect(status().isInternalServerError());
+                .cookie(new Cookie("refresh_token", "refresh-123")))
+                .andExpect(status().isInternalServerError())
+                .andExpect(cookie().maxAge("access_token", 0))
+                .andExpect(cookie().maxAge("refresh_token", 0));
     }
 }

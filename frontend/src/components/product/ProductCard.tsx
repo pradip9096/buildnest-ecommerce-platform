@@ -28,7 +28,7 @@ const BUTTON_STYLE: Record<AddState, string> = {
 };
 
 export function ProductCard({ product, linkable = true }: Props) {
-  const { user, token, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [addState, setAddState] = useState<AddState>('idle');
   const displayPrice = product.discountPrice ?? product.price;
   const hasDiscount = product.discountPrice != null && product.discountPrice < product.price;
@@ -38,7 +38,7 @@ export function ProductCard({ product, linkable = true }: Props) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!isAuthenticated || !user || !token) {
+    if (!isAuthenticated || !user) {
       setAddState('signin');
       setTimeout(() => setAddState('idle'), 2000);
       return;
@@ -46,7 +46,7 @@ export function ProductCard({ product, linkable = true }: Props) {
 
     setAddState('loading');
     try {
-      await addToCart(user.id, product.id, 1, token);
+      await addToCart(user.id, product.id, 1);
       setAddState('added');
     } catch {
       setAddState('error');

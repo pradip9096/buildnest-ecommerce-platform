@@ -3,12 +3,11 @@ import { adjustInventory, type InventoryItem } from '../../api/admin';
 
 interface Props {
   item: InventoryItem;
-  token: string;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function InventoryAdjustModal({ item, token, onClose, onSuccess }: Props) {
+export function InventoryAdjustModal({ item, onClose, onSuccess }: Props) {
   const [delta, setDelta] = useState('');
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +21,7 @@ export function InventoryAdjustModal({ item, token, onClose, onSuccess }: Props)
     setLoading(true);
     setError(null);
     try {
-      await adjustInventory(token, item.productId, n, reason.trim());
+      await adjustInventory(item.productId, n, reason.trim());
       onSuccess();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to adjust inventory');

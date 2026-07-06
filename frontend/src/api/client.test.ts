@@ -12,6 +12,7 @@ function jsonResponse(body: unknown, ok: boolean, status = 200): Response {
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn());
+  document.cookie = 'XSRF-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 });
 
 afterEach(() => {
@@ -20,22 +21,44 @@ afterEach(() => {
 
 describe('api/client', () => {
   describe('request', () => {
-    it('sends a GET with no body and no Content-Type header by default', async () => {
+    it('sends a GET with no body and no Content-Type header by default, with credentials included', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({ ok: true }, true));
 
       const result = await request<{ ok: boolean }>('/api/thing');
 
-      expect(fetch).toHaveBeenCalledWith('/api/thing', { headers: {}, body: undefined });
+      expect(fetch).toHaveBeenCalledWith('/api/thing', {
+        method: undefined,
+        credentials: 'include',
+        headers: {},
+        body: undefined,
+      });
       expect(result).toEqual({ ok: true });
     });
 
-    it('injects the Authorization header when a token is provided', async () => {
+    it('attaches the X-XSRF-TOKEN header from the cookie on a mutating request', async () => {
+      document.cookie = 'XSRF-TOKEN=abc123';
       vi.mocked(fetch).mockResolvedValue(jsonResponse({ ok: true }, true));
 
-      await request('/api/thing', { token: 'abc123' });
+      await request('/api/thing', { method: 'POST' });
 
       expect(fetch).toHaveBeenCalledWith('/api/thing', {
-        headers: { Authorization: 'Bearer abc123' },
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'X-XSRF-TOKEN': 'abc123' },
+        body: undefined,
+      });
+    });
+
+    it('does not attach X-XSRF-TOKEN on a GET request', async () => {
+      document.cookie = 'XSRF-TOKEN=abc123';
+      vi.mocked(fetch).mockResolvedValue(jsonResponse({ ok: true }, true));
+
+      await request('/api/thing', { method: 'GET' });
+
+      expect(fetch).toHaveBeenCalledWith('/api/thing', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {},
         body: undefined,
       });
     });
@@ -47,6 +70,7 @@ describe('api/client', () => {
 
       expect(fetch).toHaveBeenCalledWith('/api/thing', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ a: 1 }),
       });
@@ -109,59 +133,43 @@ describe('api/client', () => {
   });
 
   describe('401 refresh-and-retry', () => {
-    it('retries once with the refreshed token when the unauthorized handler resolves one', async () => {
+    it('retries once when the unauthorized handler successfully refreshes', async () => {
       vi.mocked(fetch)
         .mockResolvedValueOnce(jsonResponse({}, false, 401))
         .mockResolvedValueOnce(jsonResponse({ ok: true }, true));
-      const handler = vi.fn().mockResolvedValue('new-token');
+      const handler = vi.fn().mockResolvedValue(true);
       setUnauthorizedHandler(handler);
 
-      const result = await request<{ ok: boolean }>('/api/thing', { token: 'expired-token' });
+      const result = await request<{ ok: boolean }>('/api/thing');
 
       expect(handler).toHaveBeenCalledTimes(1);
       expect(fetch).toHaveBeenCalledTimes(2);
-      expect(fetch).toHaveBeenNthCalledWith(2, '/api/thing', {
-        headers: { Authorization: 'Bearer new-token' },
-        body: undefined,
-      });
       expect(result).toEqual({ ok: true });
     });
 
     it('throws the original 401 error when the unauthorized handler cannot refresh', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
-      const handler = vi.fn().mockResolvedValue(null);
+      const handler = vi.fn().mockResolvedValue(false);
       setUnauthorizedHandler(handler);
 
-      await expect(request('/api/thing', { token: 'expired-token' }, 'Session expired')).rejects.toThrow(
-        'Session expired'
-      );
+      await expect(request('/api/thing', {}, 'Session expired')).rejects.toThrow('Session expired');
       expect(fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('does not retry more than once even if the refreshed token also gets a 401', async () => {
+    it('does not retry more than once even if the retried request also gets a 401', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
-      const handler = vi.fn().mockResolvedValue('still-bad-token');
-      setUnauthorizedHandler(handler);
-
-      await expect(request('/api/thing', { token: 'expired-token' })).rejects.toThrow(ApiError);
-      expect(handler).toHaveBeenCalledTimes(1);
-      expect(fetch).toHaveBeenCalledTimes(2);
-    });
-
-    it('does not invoke the handler for a 401 on a request with no token', async () => {
-      vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
-      const handler = vi.fn().mockResolvedValue('new-token');
+      const handler = vi.fn().mockResolvedValue(true);
       setUnauthorizedHandler(handler);
 
       await expect(request('/api/thing')).rejects.toThrow(ApiError);
-      expect(handler).not.toHaveBeenCalled();
-      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(fetch).toHaveBeenCalledTimes(2);
     });
 
     it('throws the original 401 error when no handler is registered', async () => {
       vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
 
-      await expect(request('/api/thing', { token: 'expired-token' })).rejects.toThrow(ApiError);
+      await expect(request('/api/thing')).rejects.toThrow(ApiError);
       expect(fetch).toHaveBeenCalledTimes(1);
     });
   });

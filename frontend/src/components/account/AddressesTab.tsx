@@ -8,10 +8,6 @@ import {
 } from '../../api/addresses';
 import type { Address } from '../../types';
 
-interface Props {
-  token: string;
-}
-
 const EMPTY_FORM: CreateAddressInput = {
   streetAddress: '',
   city: '',
@@ -21,7 +17,7 @@ const EMPTY_FORM: CreateAddressInput = {
   addressType: 'SHIPPING',
 };
 
-export function AddressesTab({ token }: Props) {
+export function AddressesTab() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,11 +30,11 @@ export function AddressesTab({ token }: Props) {
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    fetchAddresses(token)
+    fetchAddresses()
       .then(setAddresses)
       .catch(e => setError(e instanceof Error ? e.message : 'Failed to load addresses'))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     load();
@@ -49,7 +45,7 @@ export function AddressesTab({ token }: Props) {
     setSaving(true);
     setFormError(null);
     try {
-      await createAddress(form, token);
+      await createAddress(form);
       setForm(EMPTY_FORM);
       setShowForm(false);
       load();
@@ -63,7 +59,7 @@ export function AddressesTab({ token }: Props) {
   const handleDelete = async (id: number) => {
     setActioningId(id);
     try {
-      await deleteAddress(id, token);
+      await deleteAddress(id);
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete address');
@@ -75,7 +71,7 @@ export function AddressesTab({ token }: Props) {
   const handleSetDefault = async (id: number) => {
     setActioningId(id);
     try {
-      await setDefaultAddress(id, token);
+      await setDefaultAddress(id);
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to set default address');

@@ -17,8 +17,8 @@ import { createAddress } from '../api/addresses';
 import type { CheckoutSession, ShippingOption } from '../types';
 
 export function CheckoutPage() {
-  const { user, token, isAuthenticated } = useAuth();
-  const { cart } = useCart(user?.id ?? null, token);
+  const { user, isAuthenticated } = useAuth();
+  const { cart } = useCart(user?.id ?? null);
   const navigate = useNavigate();
 
   const [step, setStep] = useState(0);
@@ -29,13 +29,13 @@ export function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token || step !== 1) return;
+    if (step !== 1) return;
     setShippingLoading(true);
-    fetchShippingOptions(token)
+    fetchShippingOptions()
       .then(setShippingOptions)
       .catch(e => setError(e instanceof Error ? e.message : 'Failed to load shipping options'))
       .finally(() => setShippingLoading(false));
-  }, [token, step]);
+  }, [step]);
 
   if (!isAuthenticated) {
     return (
@@ -56,15 +56,14 @@ export function CheckoutPage() {
   }
 
   const handleAddressNext = async (address: AddressSubmission) => {
-    if (!token) return;
     setActionLoading(true);
     setError(null);
     try {
-      const savedAddress = await createAddress(address, token);
-      const sess = await setCheckoutAddress(savedAddress.id, token);
+      const savedAddress = await createAddress(address);
+      const sess = await setCheckoutAddress(savedAddress.id);
       setSession(sess);
       setStep(1);
-      await fetchShippingOptions(token, address.postalCode).then(setShippingOptions).catch(() => {});
+      await fetchShippingOptions(address.postalCode).then(setShippingOptions).catch(() => {});
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save address');
     } finally {
@@ -73,13 +72,12 @@ export function CheckoutPage() {
   };
 
   const handleShippingNext = async (shippingMethodId: number) => {
-    if (!token) return;
     setActionLoading(true);
     setError(null);
     try {
-      const sess = await selectCheckoutShipping(shippingMethodId, token);
+      const sess = await selectCheckoutShipping(shippingMethodId);
       setSession(sess);
-      const paymentSess = await initiateCheckoutPayment(token);
+      const paymentSess = await initiateCheckoutPayment();
       setSession(paymentSess);
       setStep(2);
     } catch (e) {
@@ -90,11 +88,10 @@ export function CheckoutPage() {
   };
 
   const handlePay = async () => {
-    if (!token) return;
     setActionLoading(true);
     setError(null);
     try {
-      const order = await confirmCheckout(token);
+      const order = await confirmCheckout();
       navigate(`/orders/${order.id}`, { state: { order } });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to confirm order');

@@ -1,19 +1,19 @@
 import { request, requestData } from './client';
 import type { Product } from '../types';
 
-export async function fetchWishlist(token: string): Promise<Product[]> {
-  const data = await requestData<Product[]>('/api/user/wishlist', { token }, 'Failed to load wishlist');
+export async function fetchWishlist(): Promise<Product[]> {
+  const data = await requestData<Product[]>('/api/user/wishlist', {}, 'Failed to load wishlist');
   return data ?? [];
 }
 
-export async function addToWishlist(productId: number, token: string): Promise<void> {
-  await request(`/api/user/wishlist/items/${productId}`, { method: 'POST', token }, 'Failed to add to wishlist');
+export async function addToWishlist(productId: number): Promise<void> {
+  await request(`/api/user/wishlist/items/${productId}`, { method: 'POST' }, 'Failed to add to wishlist');
 }
 
-export async function removeFromWishlist(productId: number, token: string): Promise<void> {
+export async function removeFromWishlist(productId: number): Promise<void> {
   await request(
     `/api/user/wishlist/items/${productId}`,
-    { method: 'DELETE', token },
+    { method: 'DELETE' },
     'Failed to remove from wishlist'
   );
 }

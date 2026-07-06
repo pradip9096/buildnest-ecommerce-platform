@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, TestElasticsearchConfig.class})
+@Import({TestSecurityConfig.class, TestElasticsearchConfig.class, com.example.buildnest_ecommerce.config.CsrfDefaultMockMvcConfig.class})
 @DisplayName("PaymentWebhookController integration tests")
 class PaymentWebhookControllerIntegrationTest {
 
