@@ -563,8 +563,9 @@
 							<excludes>
 								<exclude>**/model/dto/**</exclude>
 								<exclude>**/model/payload/**</exclude>
-								<exclude>**/model/entity/**</exclude>
-								<exclude>**/model/elasticsearch/**</exclude>
+								<!-- model/entity and model/elasticsearch are intentionally NOT excluded here:
+								     kept in sync with the plugin-level default excludes below, so this report
+								     reflects the same scope the jacoco-check gate (ci profile) enforces. -->
 								<exclude>**/config/**</exclude>
 								<exclude>**/*Application.class</exclude>
 								<exclude>**/exception/ResourceNotFoundException.class</exclude>
