@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #81 (PROD-01): per-variant inventory tracking. A row now tracks stock for
+         either a product with no variants (product_id set, variant_id null) or a single
+         variant (variant_id set, product_id null) — never both. Reuses the existing
+         reservation/threshold/low-stock logic on Inventory instead of duplicating it. -->
+    <changeSet id="20260706-016-alter-inventory-add-variant-support" author="buildnest-team">
+        <!-- Also require product_variants to already exist (same drift-guard reasoning as
+             20260624-002): in the test profile Liquibase runs before Hibernate's create-drop
+             creates products/product_variants, so this FK would fail without the guard. -->
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="inventory" columnName="variant_id"/>
+            </not>
+            <tableExists tableName="product_variants"/>
+        </preConditions>
+
+        <comment>Add nullable variant_id to inventory and relax product_id to nullable (PROD-01, #81)</comment>
+
+        <addColumn tableName="inventory">
+            <column name="variant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <dropNotNullConstraint tableName="inventory" columnName="product_id" columnDataType="BIGINT"/>
+
+        <addForeignKeyConstraint
+            constraintName="fk_inventory_variant"
+            baseTableName="inventory" baseColumnNames="variant_id"
+            referencedTableName="product_variants" referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <createIndex tableName="inventory" indexName="idx_inventory_variant_id">
+            <column name="variant_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="inventory" constraintName="fk_inventory_variant"/>
+            <dropIndex tableName="inventory" indexName="idx_inventory_variant_id"/>
+            <dropColumn tableName="inventory" columnName="variant_id"/>
+            <addNotNullConstraint tableName="inventory" columnName="product_id" columnDataType="BIGINT"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,6 +33,7 @@ class ProductTest {
                 "SKU-123",
                 category,
                 inventory,
+                new ArrayList<>(),
                 "http://image.url",
                 expiryDate,
                 true,

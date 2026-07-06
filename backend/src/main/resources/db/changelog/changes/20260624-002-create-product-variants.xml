@@ -7,6 +7,16 @@
 
     <!-- Issue #104 / #81 (PROD-01): Product variant support (size, colour) -->
     <changeSet id="20260624-002-create-product-variants" author="buildnest-team">
+        <!-- "products" (plural) is not created by any Liquibase changeset in this repo — same
+             drift class as #241 and the categories/inventory precedents (see
+             docs/wiki/learned-lessons/known-table-drift-list-should-be-checked-before-writing-changesets.md).
+             In the test profile, Liquibase runs before Hibernate's create-drop creates the table,
+             so it does not exist yet here; Hibernate creates product_variants directly from the
+             ProductVariant entity in that profile instead. -->
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="products"/>
+        </preConditions>
+
         <comment>Create product_variants table for size/colour variants (PROD-01, #81)</comment>
 
         <createTable tableName="product_variants">
@@ -24,9 +34,9 @@
             <column name="price_adjustment" type="DECIMAL(19,2)" defaultValueNumeric="0.00">
                 <constraints nullable="false"/>
             </column>
-            <column name="stock_quantity" type="INT" defaultValueNumeric="0">
-                <constraints nullable="false"/>
-            </column>
+            <!-- No stock_quantity column here: per-variant stock is tracked via the shared
+                 inventory table (inventory.variant_id), reusing existing reservation/threshold/
+                 low-stock logic instead of duplicating it — see ADR discussion in #81. -->
             <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
                 <constraints nullable="false"/>
             </column>
@@ -41,7 +51,7 @@
         <addForeignKeyConstraint
             constraintName="fk_variants_product"
             baseTableName="product_variants" baseColumnNames="product_id"
-            referencedTableName="product" referencedColumnNames="id"
+            referencedTableName="products" referencedColumnNames="id"
             onDelete="CASCADE"/>
 
         <createIndex tableName="product_variants" indexName="idx_variants_product_id">

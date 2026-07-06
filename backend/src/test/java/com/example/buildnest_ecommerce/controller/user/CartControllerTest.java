@@ -11,6 +11,7 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 class CartControllerTest {
@@ -52,7 +53,7 @@ class CartControllerTest {
     void handlesAdditionalErrors() {
         CartService cartService = mock(CartService.class);
         doThrow(new RuntimeException("add"))
-                .when(cartService).addToCart(eq(1L), eq(10L), eq(2));
+                .when(cartService).addToCart(eq(1L), eq(10L), isNull(), eq(2));
         doThrow(new RuntimeException("remove"))
                 .when(cartService).removeItemFromCart(eq(5L), eq(1L));
         doThrow(new RuntimeException("clear"))

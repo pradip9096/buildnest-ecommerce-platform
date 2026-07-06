@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #81 (PROD-01): cart items reference a specific variant when the product
+         added to cart has variants. Nullable — products without variants leave this null. -->
+    <changeSet id="20260706-017-alter-cart-items-add-variant-id" author="buildnest-team">
+        <!-- "cart_items" (plural) is not created by any Liquibase changeset in this repo —
+             same drift class as "products" (see
+             docs/wiki/learned-lessons/known-table-drift-list-should-be-checked-before-writing-changesets.md).
+             In the test profile, Liquibase runs before Hibernate's create-drop creates the
+             table, so it does not exist yet here. -->
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="cart_items"/>
+            <tableExists tableName="product_variants"/>
+        </preConditions>
+
+        <comment>Add nullable variant_id to cart_items (PROD-01, #81)</comment>
+
+        <addColumn tableName="cart_items">
+            <column name="variant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint
+            constraintName="fk_cart_items_variant"
+            baseTableName="cart_items" baseColumnNames="variant_id"
+            referencedTableName="product_variants" referencedColumnNames="id"
+            onDelete="RESTRICT"/>
+
+        <createIndex tableName="cart_items" indexName="idx_cart_items_variant_id">
+            <column name="variant_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="cart_items" constraintName="fk_cart_items_variant"/>
+            <dropIndex tableName="cart_items" indexName="idx_cart_items_variant_id"/>
+            <dropColumn tableName="cart_items" columnName="variant_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

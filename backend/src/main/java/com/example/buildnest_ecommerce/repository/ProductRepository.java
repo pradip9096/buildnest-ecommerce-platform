@@ -33,27 +33,27 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
          * inventory.
          */
         @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))")
-        @EntityGraph(attributePaths = { "category", "inventory" })
+        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
         List<Product> findByNameContainingIgnoreCase(@Param("name") String name);
 
         /**
          * Find product by ID with eager loading of category and inventory.
          * Prevents N+1 queries when accessing product relationships.
          */
-        @EntityGraph(attributePaths = { "category", "inventory" })
+        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
         Optional<Product> findById(Long id);
 
         /**
          * Find all active products with eager loading of related entities.
          * Prevents N+1 queries for bulk product retrieval.
          */
-        @EntityGraph(attributePaths = { "category", "inventory" })
+        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
         List<Product> findByIsActiveTrue();
 
         /**
          * Find active, admin-curated featured products for home page merchandising.
          */
-        @EntityGraph(attributePaths = { "category", "inventory" })
+        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
         List<Product> findByIsFeaturedTrueAndIsActiveTrue();
 
         /**
@@ -73,7 +73,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                                             (COALESCE(p.inventory.quantityInStock, 0) - COALESCE(p.inventory.quantityReserved, 0)) > 0))
                         AND (:isActive IS NULL OR p.isActive = :isActive)
                         """)
-        @EntityGraph(attributePaths = { "category", "inventory" })
+        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
         Page<Product> advancedSearch(
                         @Param("query") String query,
                         @Param("categoryId") Long categoryId,
@@ -99,7 +99,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
          * Find products by category with pagination
          */
         @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.isActive = true")
-        @EntityGraph(attributePaths = { "category", "inventory" })
+        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
         Page<Product> findByCategory(@Param("categoryId") Long categoryId, Pageable pageable);
 
         /**
@@ -115,10 +115,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                 return findExpiringSoonByDate(LocalDate.now().plusDays(safeDays));
         }
 
-        @EntityGraph(attributePaths = { "category", "inventory" })
+        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
         Page<Product> findAll(Pageable pageable);
 
-        @EntityGraph(attributePaths = { "category", "inventory" })
+        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
         List<Product> findAll();
 
         /**

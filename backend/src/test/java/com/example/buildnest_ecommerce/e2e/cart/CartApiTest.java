@@ -26,7 +26,7 @@ public class CartApiTest extends BaseApiTest {
         @Test
         public void testCartOperations() {
                 // 1. Add item to cart
-                AddItemRequest addRequest = new AddItemRequest(productId, 2);
+                AddItemRequest addRequest = new AddItemRequest(productId, null, 2);
 
                 RestAssured.given()
                                 .header("Authorization", "Bearer " + token)

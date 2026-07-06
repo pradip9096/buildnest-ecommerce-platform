@@ -11,6 +11,8 @@ import lombok.ToString;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 @Entity
@@ -19,8 +21,8 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = { "category", "inventory", "createdAt", "updatedAt" })
-@ToString(exclude = { "category", "inventory" })
+@EqualsAndHashCode(exclude = { "category", "inventory", "variants", "createdAt", "updatedAt" })
+@ToString(exclude = { "category", "inventory", "variants" })
 public class Product implements AggregateRoot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,6 +53,10 @@ public class Product implements AggregateRoot {
     @JsonIgnoreProperties({ "product", "hibernateLazyInitializer", "handler" })
     @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, fetch = jakarta.persistence.FetchType.LAZY)
     private Inventory inventory;
+
+    @JsonIgnoreProperties({ "product", "hibernateLazyInitializer", "handler" })
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = jakarta.persistence.FetchType.LAZY, orphanRemoval = true)
+    private List<ProductVariant> variants = new ArrayList<>();
 
     @Column(name = "image_url")
     private String imageUrl;

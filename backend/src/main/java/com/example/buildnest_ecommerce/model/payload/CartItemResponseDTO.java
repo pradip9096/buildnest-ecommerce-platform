@@ -11,6 +11,8 @@ public class CartItemResponseDTO {
     private Long cartItemId;
     private Long productId;
     private String productName;
+    private Long variantId;
+    private String variantSku;
     private Integer quantity;
     private Double price;
     private Double itemTotal;

@@ -47,7 +47,7 @@ public class CartController {
             @Parameter(description = "User ID", example = "1", required = true) @RequestParam Long userId,
             @Parameter(description = "Product details to add to cart", required = true) @RequestBody AddItemRequest request) {
         try {
-            cartService.addToCart(userId, request.getProductId(), request.getQuantity());
+            cartService.addToCart(userId, request.getProductId(), request.getVariantId(), request.getQuantity());
             return ResponseEntity.ok(new ApiResponse(true, "Item added to cart successfully", null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

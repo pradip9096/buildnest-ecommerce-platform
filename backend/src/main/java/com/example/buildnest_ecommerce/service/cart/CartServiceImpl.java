@@ -3,13 +3,16 @@ package com.example.buildnest_ecommerce.service.cart;
 import com.example.buildnest_ecommerce.model.entity.Cart;
 import com.example.buildnest_ecommerce.model.entity.CartItem;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.model.entity.ProductVariant;
 import com.example.buildnest_ecommerce.model.entity.User;
 import com.example.buildnest_ecommerce.model.payload.CartItemResponseDTO;
 import com.example.buildnest_ecommerce.model.payload.CartResponseDTO;
 import com.example.buildnest_ecommerce.repository.CartRepository;
 import com.example.buildnest_ecommerce.repository.CartItemRepository;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
+import com.example.buildnest_ecommerce.repository.ProductVariantRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import java.util.Objects;
 import com.example.buildnest_ecommerce.exception.AccessDeniedException;
 import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -30,18 +33,34 @@ public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
+    private final ProductVariantRepository productVariantRepository;
     private final UserRepository userRepository;
 
     @Override
     @Transactional
     public Cart addToCart(Long userId, Long productId, Integer quantity) {
-        log.info("Adding product {} to cart for user {}", productId, userId);
+        return addToCart(userId, productId, null, quantity);
+    }
+
+    @Override
+    @Transactional
+    public Cart addToCart(Long userId, Long productId, Long variantId, Integer quantity) {
+        log.info("Adding product {} (variant {}) to cart for user {}", productId, variantId, userId);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+
+        ProductVariant variant = null;
+        if (variantId != null) {
+            variant = productVariantRepository.findById(variantId)
+                    .orElseThrow(() -> new RuntimeException("Variant not found with id: " + variantId));
+            if (!variant.getProduct().getId().equals(productId)) {
+                throw new RuntimeException("Variant " + variantId + " does not belong to product " + productId);
+            }
+        }
 
         Cart cart = cartRepository.findByUser(user).orElse(null);
 
@@ -52,9 +71,11 @@ public class CartServiceImpl implements CartService {
             cart = cartRepository.save(cart);
         }
 
-        // Check if product already exists in cart
+        // Check if this exact product+variant combination already exists in cart
+        final Long finalVariantId = variantId;
         CartItem existingItem = cart.getItems().stream()
-                .filter(item -> item.getProduct().getId().equals(productId))
+                .filter(item -> item.getProduct().getId().equals(productId)
+                        && Objects.equals(item.getVariant() != null ? item.getVariant().getId() : null, finalVariantId))
                 .findFirst()
                 .orElse(null);
 
@@ -65,8 +86,10 @@ public class CartServiceImpl implements CartService {
             CartItem item = new CartItem();
             item.setCart(cart);
             item.setProduct(product);
+            item.setVariant(variant);
             item.setQuantity(quantity);
-            item.setPrice(product.getDiscountPrice() != null ? product.getDiscountPrice() : product.getPrice());
+            item.setPrice(variant != null ? variant.getEffectivePrice()
+                    : (product.getDiscountPrice() != null ? product.getDiscountPrice() : product.getPrice()));
             cart.getItems().add(item);
             cartItemRepository.save(item);
         }
@@ -102,6 +125,10 @@ public class CartServiceImpl implements CartService {
             dto.setCartItemId(item.getId());
             dto.setProductId(item.getProduct().getId());
             dto.setProductName(item.getProduct().getName());
+            if (item.getVariant() != null) {
+                dto.setVariantId(item.getVariant().getId());
+                dto.setVariantSku(item.getVariant().getSku());
+            }
             dto.setQuantity(item.getQuantity());
             dto.setPrice(item.getPrice().doubleValue());
 

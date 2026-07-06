@@ -2,9 +2,13 @@ package com.example.buildnest_ecommerce.controller.admin;
 
 import com.example.buildnest_ecommerce.aspect.Auditable;
 import com.example.buildnest_ecommerce.model.dto.CreateProductRequest;
+import com.example.buildnest_ecommerce.model.dto.CreateProductVariantRequest;
+import com.example.buildnest_ecommerce.model.dto.UpdateProductVariantRequest;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.model.entity.ProductVariant;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.service.product.ProductService;
+import com.example.buildnest_ecommerce.service.product.ProductVariantService;
 import com.example.buildnest_ecommerce.service.storage.StorageException;
 import com.example.buildnest_ecommerce.service.storage.StorageService;
 import jakarta.validation.Valid;
@@ -25,6 +29,7 @@ import java.util.List;
 public class AdminProductController {
 
     private final ProductService productService;
+    private final ProductVariantService productVariantService;
     private final StorageService storageService;
 
     @GetMapping
@@ -103,6 +108,60 @@ public class AdminProductController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false, "Error uploading image: " + e.getMessage(), null));
+        }
+    }
+
+    // ─── VARIANTS (PROD-01, #81) ───
+
+    @GetMapping("/{productId}/variants")
+    @Auditable(action = "ADMIN_LIST_PRODUCT_VARIANTS", entityType = "PRODUCT_VARIANT")
+    public ResponseEntity<ApiResponse> getVariants(@PathVariable Long productId) {
+        try {
+            List<ProductVariant> variants = productVariantService.getVariantsByProduct(productId);
+            return ResponseEntity.ok(new ApiResponse(true, "Variants retrieved successfully", variants));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Error retrieving variants", null));
+        }
+    }
+
+    @PostMapping("/{productId}/variants")
+    @Auditable(action = "ADMIN_CREATE_PRODUCT_VARIANT", entityType = "PRODUCT_VARIANT")
+    public ResponseEntity<ApiResponse> createVariant(@PathVariable Long productId,
+                                                      @Valid @RequestBody CreateProductVariantRequest request) {
+        try {
+            ProductVariant variant = productVariantService.createVariant(productId, request);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new ApiResponse(true, "Variant created successfully", variant));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, "Error creating variant: " + e.getMessage(), null));
+        }
+    }
+
+    @PutMapping("/{productId}/variants/{variantId}")
+    @Auditable(action = "ADMIN_UPDATE_PRODUCT_VARIANT", entityType = "PRODUCT_VARIANT")
+    public ResponseEntity<ApiResponse> updateVariant(@PathVariable Long productId,
+                                                      @PathVariable Long variantId,
+                                                      @Valid @RequestBody UpdateProductVariantRequest request) {
+        try {
+            ProductVariant variant = productVariantService.updateVariant(variantId, request);
+            return ResponseEntity.ok(new ApiResponse(true, "Variant updated successfully", variant));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, "Error updating variant: " + e.getMessage(), null));
+        }
+    }
+
+    @DeleteMapping("/{productId}/variants/{variantId}")
+    @Auditable(action = "ADMIN_DELETE_PRODUCT_VARIANT", entityType = "PRODUCT_VARIANT")
+    public ResponseEntity<ApiResponse> deleteVariant(@PathVariable Long productId, @PathVariable Long variantId) {
+        try {
+            productVariantService.deleteVariant(variantId);
+            return ResponseEntity.ok(new ApiResponse(true, "Variant deactivated successfully", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, "Error deleting variant: " + e.getMessage(), null));
         }
     }
 }

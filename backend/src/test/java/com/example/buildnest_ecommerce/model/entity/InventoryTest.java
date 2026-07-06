@@ -23,6 +23,7 @@ class InventoryTest {
         Inventory inventory = new Inventory(
                 10L,
                 product,
+                null,
                 100,
                 10,
                 20,

@@ -4,6 +4,7 @@ import com.example.buildnest_ecommerce.model.dto.CreateProductRequest;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.service.product.ProductService;
+import com.example.buildnest_ecommerce.service.product.ProductVariantService;
 import com.example.buildnest_ecommerce.service.storage.StorageException;
 import com.example.buildnest_ecommerce.service.storage.StorageService;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,14 +23,16 @@ import static org.mockito.Mockito.*;
 class AdminProductControllerTest {
 
     private ProductService productService;
+    private ProductVariantService productVariantService;
     private StorageService storageService;
     private AdminProductController controller;
 
     @BeforeEach
     void setUp() {
         productService = mock(ProductService.class);
+        productVariantService = mock(ProductVariantService.class);
         storageService = mock(StorageService.class);
-        controller = new AdminProductController(productService, storageService);
+        controller = new AdminProductController(productService, productVariantService, storageService);
     }
 
     @Test

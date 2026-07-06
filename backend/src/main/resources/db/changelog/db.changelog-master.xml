@@ -24,5 +24,7 @@
     <include file="db/changelog/changes/20260704-013-seed-default-shipping-method.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260705-014-correct-cart-item-prices-for-discounted-products.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260705-015-backfill-null-is-deleted-flags.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260706-016-alter-inventory-add-variant-support.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260706-017-alter-cart-items-add-variant-id.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

@@ -25,6 +25,11 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     Inventory findByProductId(Long productId);
 
     /**
+     * Find inventory for a specific product variant (PROD-01, #81).
+     */
+    Optional<Inventory> findByVariantId(Long variantId);
+
+    /**
      * Find all products with specific status (RQ-INV-STAT-01, RQ-INV-STAT-02,
      * RQ-INV-STAT-03).
      */

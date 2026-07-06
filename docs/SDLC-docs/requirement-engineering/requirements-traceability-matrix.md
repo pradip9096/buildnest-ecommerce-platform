@@ -188,6 +188,7 @@ The RTM serves to:
 | FR-PROD-04 | Admin product CRUD | High | Ph-1 | §4.7.3, §5.1.3 | `AdminProductController`, `AdminServiceImpl` | `AdminProductControllerTest` | Test | ✅ Implemented |
 | FR-PROD-05 | Versioned APIs (v1 deprecated; v2 current) with sunset headers | Medium | Ph-1 | §4.7.2, §4.6.1 | `ProductControllerV1`, `ProductControllerV2`, `ApiSunsetInterceptor` | `ProductControllerV1Test`, `ApiSunsetInterceptorTest` | Inspection | ✅ Implemented |
 | FR-PROD-06 | Redis product cache with 5-min TTL | Medium | Ph-1 | §4.5.4, §4.6.1 | `ProductServiceImpl` — `@Cacheable("products")`, `CacheConfig` | `ProductServiceImplTest`, `CacheMetricsUtilTest` | Test | ✅ Implemented |
+| FR-PROD-08 | Product variants (size, colour) with independent per-variant inventory; cart items pinned to a variant | High | Ph-1 | §4.7.3 | `ProductVariant`, `ProductVariantServiceImpl`, `AdminProductController` (nested `/variants` endpoints), `CartServiceImpl.addToCart(userId, productId, variantId, quantity)` | `ProductVariantServiceImplTest`, `AdminProductVariantControllerIntegrationTest` | Test | ✅ Implemented (#81) |
 | FR-PROD-07 | Redis category cache with 1-hour TTL | Low | Ph-1 | §4.5.4 | `CategoryServiceImpl` — `@Cacheable("categories")`, `CacheConfig` | `CategoryServiceImplTest` | Test | ✅ Implemented |
 
 ### 6.3 Shopping Cart Operations (FG-03)
@@ -464,6 +465,7 @@ The RTM serves to:
 | `ProductControllerV2` | FR-PROD-01, FR-PROD-02, FR-PROD-03 |
 | `AdminProductController` | FR-PROD-04, FR-ADM-08 |
 | `ProductServiceImpl` | FR-PROD-01, FR-PROD-02, FR-PROD-03, FR-PROD-04, FR-PROD-06 |
+| `ProductVariantServiceImpl`, `AdminProductController` (variant endpoints) | FR-PROD-08 |
 | `ApiSunsetInterceptor` | FR-PROD-05, UR-05 |
 | `CartController` + `CartServiceImpl` | FR-CART-01 to FR-CART-05 |
 | `Cart` entity | FR-CART-06 |
@@ -521,6 +523,7 @@ The RTM serves to:
 | `ProductRepositoryTest`, `ProductRepositoryDefaultMethodTest` | FR-PROD-01, FR-PROD-02 |
 | `ApiSunsetInterceptorTest` | FR-PROD-05, UR-05 |
 | `ProductApiTest` (E2E) | FR-PROD-01 to FR-PROD-05 (**TIR-01 defect present**) |
+| `ProductVariantServiceImplTest`, `AdminProductVariantControllerIntegrationTest` | FR-PROD-08 |
 | `CartControllerTest` | FR-CART-01 to FR-CART-05 |
 | `CartServiceImplTest`, `CartServiceImplEnhancedTest` | FR-CART-01 to FR-CART-05 |
 | `CartRepositoryTest` | FR-CART-02, FR-CART-06 |

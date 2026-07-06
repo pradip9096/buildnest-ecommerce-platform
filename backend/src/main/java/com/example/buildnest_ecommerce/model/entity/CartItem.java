@@ -2,18 +2,22 @@ package com.example.buildnest_ecommerce.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import java.math.BigDecimal;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = "cart")
+@EqualsAndHashCode(exclude = { "cart", "product", "variant" })
+@ToString(exclude = { "cart", "product", "variant" })
 @Entity
 @Table(name = "cart_items")
-public class CartItem {
+public class CartItem implements AggregateRoot {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +30,12 @@ public class CartItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
-    
+
+    // Nullable: only set when the product added to cart has variants (PROD-01, #81)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "variant_id")
+    private ProductVariant variant;
+
     @Column(nullable = false)
     private Integer quantity;
     

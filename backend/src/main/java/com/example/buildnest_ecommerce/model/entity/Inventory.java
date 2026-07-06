@@ -20,17 +20,29 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = { "product", "thresholdBreaches", "updatedAt", "lastRestocked", "lastThresholdBreach" })
-@ToString(exclude = { "product", "thresholdBreaches" })
-public class Inventory {
+@EqualsAndHashCode(exclude = { "product", "variant", "thresholdBreaches", "updatedAt", "lastRestocked",
+        "lastThresholdBreach" })
+@ToString(exclude = { "product", "variant", "thresholdBreaches" })
+public class Inventory implements AggregateRoot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Nullable: a row tracks stock for either a product with no variants, or a
+     * single variant (see {@link #variant}) — never both. Historically this
+     * column was NOT NULL (1 row per product); it was relaxed to support
+     * per-variant inventory (PROD-01, #81).
+     */
     @JsonIgnore
     @OneToOne(fetch = jakarta.persistence.FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id")
     private Product product;
+
+    @JsonIgnore
+    @OneToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @JoinColumn(name = "variant_id")
+    private ProductVariant variant;
 
     @Column(nullable = false)
     private Integer quantityInStock;
