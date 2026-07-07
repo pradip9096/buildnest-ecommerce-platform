@@ -557,6 +557,7 @@ This system has no direct hardware interfaces. It runs as a containerised applic
 | FR-ADM-06 | The system shall allow admins to configure inventory alert thresholds | Medium | Ph-2 | Test |
 | FR-ADM-07 | The system shall allow admins to manage webhook subscriptions | Low | Ph-2 | Test |
 | FR-ADM-08 | Access to all `/api/admin/**` endpoints shall require the `ADMIN` role | High | Ph-1 | Test |
+| FR-ADM-09 | The system shall allow admins to create, update, and delete product categories, including hierarchical parent/child relationships, and shall prevent deletion of a category that still has products or subcategories referencing it | Medium | Ph-1 | Test |
 
 #### 3.2.9 Monitoring and Observability (FG-09)
 
@@ -883,7 +884,7 @@ Test integrity requirements define the properties that the test suite itself mus
 | Payment (FR-PAY-01–05) | 5 | Ph-2 | 3 High, 1 Medium, 1 High | Test, Inspection |
 | Inventory (FR-INV-01–07) | 7 | Ph-1 / Ph-2 | 3 High, 4 Medium | Test |
 | Reviews / Wishlists (FR-REV, FR-WISH) | 5 | Ph-1 | 0 High, 3 Medium, 2 Low | Test |
-| Admin Operations (FR-ADM-01–08) | 8 | Ph-1 / Ph-2 | 2 High, 5 Medium, 1 Low | Test |
+| Admin Operations (FR-ADM-01–09) | 9 | Ph-1 / Ph-2 | 2 High, 6 Medium, 1 Low | Test |
 | Monitoring (FR-MON-01–08) | 8 | Ph-1 / Ph-2 | 3 High, 3 Medium, 2 Low | Test, Inspection |
 | Frontend (FR-FE-01–30) | 30 | Ph-2 | 15 High, 10 Medium, 5 Low | Test, Inspection, Demonstration |
 | **Total Functional** | **95** | | | |

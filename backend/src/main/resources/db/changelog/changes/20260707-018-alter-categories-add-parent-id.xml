@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #68 (ADM-02): add hierarchical (parent/child) category support for the
+         admin category management endpoints. -->
+    <changeSet id="20260707-018-alter-categories-add-parent-id" author="buildnest-team">
+        <!-- "categories" is not created by any Liquibase changeset in this repo — it exists in the
+             real dev MySQL DB only via Hibernate ddl-auto drift (same class of issue as #241 and
+             the 20260704-011 changeset). In the test profile, Liquibase runs before Hibernate's
+             create-drop schema generation, so the table does not exist yet at this point — skip cleanly. -->
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="categories"/>
+        </preConditions>
+
+        <comment>Add nullable self-referencing parent_id column to categories for hierarchical category support (ADM-02, #68)</comment>
+
+        <addColumn tableName="categories">
+            <column name="parent_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint
+            constraintName="fk_categories_parent"
+            baseTableName="categories"    baseColumnNames="parent_id"
+            referencedTableName="categories" referencedColumnNames="id"/>
+
+        <createIndex indexName="idx_categories_parent_id" tableName="categories">
+            <column name="parent_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="categories" constraintName="fk_categories_parent"/>
+            <dropIndex indexName="idx_categories_parent_id" tableName="categories"/>
+            <dropColumn tableName="categories" columnName="parent_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

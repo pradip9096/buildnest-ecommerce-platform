@@ -18,6 +18,10 @@ class CategoryTest {
         LocalDateTime now = LocalDateTime.now();
         Set<Product> products = new HashSet<>();
 
+        Category parent = new Category();
+        parent.setId(1L);
+        Set<Category> subcategories = new HashSet<>();
+
         Category category = new Category(
                 10L,
                 "Electronics",
@@ -27,7 +31,9 @@ class CategoryTest {
                 50,
                 now,
                 now,
-                products);
+                products,
+                parent,
+                subcategories);
 
         assertEquals(10L, category.getId());
         assertEquals("Electronics", category.getName());
@@ -38,6 +44,8 @@ class CategoryTest {
         assertEquals(now, category.getCreatedAt());
         assertEquals(now, category.getUpdatedAt());
         assertEquals(products, category.getProducts());
+        assertEquals(parent, category.getParentCategory());
+        assertEquals(subcategories, category.getSubcategories());
     }
 
     @Test
@@ -194,5 +202,48 @@ class CategoryTest {
 
         category.setIsActive(false);
         assertFalse(category.getIsActive());
+    }
+
+    @Test
+    @DisplayName("Should set and get parentCategory and subcategories")
+    void testParentCategoryAndSubcategories() {
+        Category parent = new Category();
+        parent.setId(1L);
+        parent.setName("Tools");
+
+        Category child = new Category();
+        child.setId(2L);
+        child.setName("Power Tools");
+        child.setParentCategory(parent);
+
+        Set<Category> subcategories = new HashSet<>();
+        subcategories.add(child);
+        parent.setSubcategories(subcategories);
+
+        assertEquals(parent, child.getParentCategory());
+        assertEquals(subcategories, parent.getSubcategories());
+    }
+
+    @Test
+    @DisplayName("Should test equals excludes parentCategory and subcategories")
+    void testEqualsExcludesParentAndSubcategories() {
+        Category parent1 = new Category();
+        parent1.setId(1L);
+
+        Category parent2 = new Category();
+        parent2.setId(2L);
+
+        Category cat1 = new Category();
+        cat1.setId(1L);
+        cat1.setName("Electronics");
+        cat1.setParentCategory(parent1);
+
+        Category cat2 = new Category();
+        cat2.setId(1L);
+        cat2.setName("Electronics");
+        cat2.setParentCategory(parent2); // Different parent
+
+        // Should still be equal because parentCategory is excluded
+        assertEquals(cat1, cat2);
     }
 }

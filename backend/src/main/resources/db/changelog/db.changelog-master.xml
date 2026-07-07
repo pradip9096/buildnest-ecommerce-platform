@@ -26,5 +26,6 @@
     <include file="db/changelog/changes/20260705-015-backfill-null-is-deleted-flags.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260706-016-alter-inventory-add-variant-support.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260706-017-alter-cart-items-add-variant-id.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260707-018-alter-categories-add-parent-id.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

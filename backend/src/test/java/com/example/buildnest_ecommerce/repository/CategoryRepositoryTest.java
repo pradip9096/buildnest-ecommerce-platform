@@ -163,9 +163,15 @@ class CategoryRepositoryTest {
     }
 
     @Test
-    @DisplayName("TC-CAT-REPO-005: Delete category with products (cascade)")
+    @DisplayName("TC-CAT-REPO-005: Deleting a category with products fails at the JPA layer (ADM-02, #68)")
     void testDeleteCategoryWithProducts() {
         // Arrange
+        // Category.products no longer cascades REMOVE (ADM-02, #68) — deleting a category
+        // that products still reference must not silently delete those products. This is
+        // a defense-in-depth backstop below CategoryServiceImpl.deleteCategory's explicit
+        // guard: even a direct repository-level delete (bypassing the service) is rejected
+        // by Hibernate's own flush-time consistency check, since a Product row would be
+        // left pointing at a category that no longer exists.
         Category categoryToDelete = new Category();
         categoryToDelete.setName("To Be Deleted");
         categoryToDelete.setDescription("This category will be deleted");
@@ -190,13 +196,13 @@ class CategoryRepositoryTest {
 
         // Act
         categoryRepository.deleteById(categoryId);
-        entityManager.flush();
+
+        // Assert - the flush rejects the delete because a product still references the category
+        assertThrows(IllegalStateException.class, () -> entityManager.flush());
         entityManager.clear();
 
-        // Assert - Category should be deleted
-        assertFalse(categoryRepository.findById(categoryId).isPresent());
-
-        // Product should also be deleted due to cascade
-        assertNull(entityManager.find(Product.class, productId));
+        // Both rows survive — neither the category nor the product was deleted
+        assertTrue(categoryRepository.findById(categoryId).isPresent());
+        assertNotNull(entityManager.find(Product.class, productId));
     }
 }

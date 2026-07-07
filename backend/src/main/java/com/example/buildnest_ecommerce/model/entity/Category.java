@@ -19,9 +19,9 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = { "products", "createdAt", "updatedAt" })
-@ToString(exclude = "products")
-public class Category {
+@EqualsAndHashCode(exclude = { "products", "parentCategory", "subcategories", "createdAt", "updatedAt" })
+@ToString(exclude = { "products", "parentCategory", "subcategories" })
+public class Category implements AggregateRoot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -48,6 +48,15 @@ public class Category {
     private LocalDateTime updatedAt;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private Set<Product> products;
+
+    @JsonIgnoreProperties({ "parentCategory", "subcategories", "products" })
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Category parentCategory;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "parentCategory", fetch = FetchType.LAZY)
+    private Set<Category> subcategories;
 }

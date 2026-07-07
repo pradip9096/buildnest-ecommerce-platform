@@ -6,5 +6,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    java.util.Optional<com.example.buildnest_ecommerce.model.entity.Category> findByName(String name);
+    java.util.Optional<Category> findByName(String name);
+
+    /**
+     * Count direct child categories, used to block category deletion while
+     * subcategories still reference it as their parent (ADM-02, #68).
+     */
+    long countByParentCategoryId(Long parentCategoryId);
 }

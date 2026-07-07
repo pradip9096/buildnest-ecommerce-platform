@@ -19,6 +19,12 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
         /**
+         * Count products belonging to a category, used to block category deletion
+         * while products still reference it (ADM-02, #68).
+         */
+        long countByCategoryId(Long categoryId);
+
+        /**
          * Find products with stock below threshold for inventory monitoring
          */
         @Query("SELECT p FROM Product p WHERE " +

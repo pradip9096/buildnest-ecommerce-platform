@@ -260,6 +260,7 @@ The RTM serves to:
 | FR-ADM-06 | Admin configures inventory alert thresholds | Medium | Ph-2 | §4.7.3 | `AdminInventoryThresholdController`, `InventoryThresholdManagementService` | `AdminInventoryThresholdControllerTest`, `InventoryThresholdManagementServiceTest` | Test | 🟡 Partial (controller + service exist; feature toggle deferred) |
 | FR-ADM-07 | Admin manages webhook subscriptions | Low | Ph-2 | §4.7.3 | `WebhookAdminController`, `WebhookServiceImpl` | `WebhookAdminControllerTest`, `WebhookServiceImplTest` | Test | 🔵 Pending Ph-2 |
 | FR-ADM-08 | All `/api/admin/**` requires `ADMIN` role | High | Ph-1 | §5.1.3 | `SecurityConfig` — `.requestMatchers("/api/admin/**").hasRole("ADMIN")` | `AuthenticationAuthorizationSecurityTest`, `RBACTest` | Test | ✅ Implemented |
+| FR-ADM-09 | Admin CRUD for product categories with hierarchical parent/child support; deletion blocked while products or subcategories still reference the category | Medium | Ph-1 | §4.7.3 | `Category` (`parentCategory`/`subcategories`), `CategoryServiceImpl`, `AdminCategoryController` | `CategoryServiceImplTest`, `CategoryTest`, `AdminCategoryControllerIntegrationTest` | Test | ✅ Implemented (#68) |
 
 ### 6.9 Monitoring and Observability (FG-09)
 
@@ -468,6 +469,7 @@ The RTM serves to:
 | `ProductServiceImpl` | FR-PROD-01, FR-PROD-02, FR-PROD-03, FR-PROD-04, FR-PROD-06 |
 | `ProductVariantServiceImpl`, `AdminProductController` (variant endpoints) | FR-PROD-08 |
 | `ProductImageServiceImpl`, `AdminProductController` (image endpoints) | FR-PROD-09 |
+| `CategoryServiceImpl`, `AdminCategoryController` | FR-ADM-09, FR-ADM-08 |
 | `ApiSunsetInterceptor` | FR-PROD-05, UR-05 |
 | `CartController` + `CartServiceImpl` | FR-CART-01 to FR-CART-05 |
 | `Cart` entity | FR-CART-06 |
@@ -527,6 +529,7 @@ The RTM serves to:
 | `ProductApiTest` (E2E) | FR-PROD-01 to FR-PROD-05 (**TIR-01 defect present**) |
 | `ProductVariantServiceImplTest`, `AdminProductVariantControllerIntegrationTest` | FR-PROD-08 |
 | `ProductImageServiceImplTest`, `AdminProductImageControllerIntegrationTest` | FR-PROD-09 |
+| `CategoryServiceImplTest`, `CategoryTest`, `AdminCategoryControllerIntegrationTest` | FR-ADM-09 |
 | `CartControllerTest` | FR-CART-01 to FR-CART-05 |
 | `CartServiceImplTest`, `CartServiceImplEnhancedTest` | FR-CART-01 to FR-CART-05 |
 | `CartRepositoryTest` | FR-CART-02, FR-CART-06 |
