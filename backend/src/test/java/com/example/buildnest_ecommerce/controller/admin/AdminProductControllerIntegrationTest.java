@@ -263,8 +263,8 @@ class AdminProductControllerIntegrationTest {
     // ─── IMAGE UPLOAD ─────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("TC-ADM-01-010: POST /api/v1/admin/products/{id}/images — valid JPEG → 200 with updated imageUrl")
-    void uploadImage_validJpeg_returns200() throws Exception {
+    @DisplayName("TC-ADM-01-010: POST /api/v1/admin/products/{id}/images — valid JPEG → 201, creates gallery image")
+    void uploadImage_validJpeg_returns201() throws Exception {
         Product product = savedProduct("Product With Image");
         MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg",
                 "fake-jpeg-bytes".getBytes());
@@ -273,8 +273,10 @@ class AdminProductControllerIntegrationTest {
         mockMvc.perform(multipart(BASE_URL + "/" + product.getId() + "/images")
                         .file(file)
                         .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success", is(true)));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.data.imageUrl", is("/uploads/photo.jpg")))
+                .andExpect(jsonPath("$.data.isPrimary", is(true)));
     }
 
     @Test

@@ -3,14 +3,16 @@ package com.example.buildnest_ecommerce.controller.admin;
 import com.example.buildnest_ecommerce.aspect.Auditable;
 import com.example.buildnest_ecommerce.model.dto.CreateProductRequest;
 import com.example.buildnest_ecommerce.model.dto.CreateProductVariantRequest;
+import com.example.buildnest_ecommerce.model.dto.ReorderProductImagesRequest;
 import com.example.buildnest_ecommerce.model.dto.UpdateProductVariantRequest;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.model.entity.ProductImage;
 import com.example.buildnest_ecommerce.model.entity.ProductVariant;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
+import com.example.buildnest_ecommerce.service.product.ProductImageService;
 import com.example.buildnest_ecommerce.service.product.ProductService;
 import com.example.buildnest_ecommerce.service.product.ProductVariantService;
 import com.example.buildnest_ecommerce.service.storage.StorageException;
-import com.example.buildnest_ecommerce.service.storage.StorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,7 +32,7 @@ public class AdminProductController {
 
     private final ProductService productService;
     private final ProductVariantService productVariantService;
-    private final StorageService storageService;
+    private final ProductImageService productImageService;
 
     @GetMapping
     @Auditable(action = "ADMIN_LIST_PRODUCTS", entityType = "PRODUCT")
@@ -94,20 +96,63 @@ public class AdminProductController {
         }
     }
 
+    // ─── IMAGES (PROD-02, #82) ───
+    // NOTE: this endpoint used to replace Product.imageUrl directly (single-image model).
+    // It now appends a ProductImage to the product's gallery instead; the first image
+    // uploaded becomes primary, and Product.imageUrl stays synced to whichever image is
+    // primary, so existing consumers of that field are unaffected.
+
+    @GetMapping("/{id}/images")
+    @Auditable(action = "ADMIN_LIST_PRODUCT_IMAGES", entityType = "PRODUCT_IMAGE")
+    public ResponseEntity<ApiResponse> getImages(@PathVariable Long id) {
+        try {
+            List<ProductImage> images = productImageService.getImagesByProduct(id);
+            return ResponseEntity.ok(new ApiResponse(true, "Images retrieved successfully", images));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Error retrieving images", null));
+        }
+    }
+
     @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Auditable(action = "ADMIN_UPLOAD_PRODUCT_IMAGE", entityType = "PRODUCT")
+    @Auditable(action = "ADMIN_UPLOAD_PRODUCT_IMAGE", entityType = "PRODUCT_IMAGE")
     public ResponseEntity<ApiResponse> uploadProductImage(@PathVariable Long id,
                                                           @RequestParam("file") MultipartFile file) {
         try {
-            String imageUrl = storageService.store(file);
-            Product product = productService.updateProductImage(id, imageUrl);
-            return ResponseEntity.ok(new ApiResponse(true, "Image uploaded successfully", product));
+            ProductImage image = productImageService.uploadImage(id, file);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new ApiResponse(true, "Image uploaded successfully", image));
         } catch (StorageException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse(false, e.getMessage(), null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false, "Error uploading image: " + e.getMessage(), null));
+        }
+    }
+
+    @PatchMapping("/{id}/images/reorder")
+    @Auditable(action = "ADMIN_REORDER_PRODUCT_IMAGES", entityType = "PRODUCT_IMAGE")
+    public ResponseEntity<ApiResponse> reorderImages(@PathVariable Long id,
+                                                      @Valid @RequestBody ReorderProductImagesRequest request) {
+        try {
+            List<ProductImage> images = productImageService.reorderImages(id, request.getImageIds());
+            return ResponseEntity.ok(new ApiResponse(true, "Images reordered successfully", images));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, "Error reordering images: " + e.getMessage(), null));
+        }
+    }
+
+    @DeleteMapping("/{id}/images/{imageId}")
+    @Auditable(action = "ADMIN_DELETE_PRODUCT_IMAGE", entityType = "PRODUCT_IMAGE")
+    public ResponseEntity<ApiResponse> deleteImage(@PathVariable Long id, @PathVariable Long imageId) {
+        try {
+            productImageService.deleteImage(id, imageId);
+            return ResponseEntity.ok(new ApiResponse(true, "Image deleted successfully", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, "Error deleting image: " + e.getMessage(), null));
         }
     }
 

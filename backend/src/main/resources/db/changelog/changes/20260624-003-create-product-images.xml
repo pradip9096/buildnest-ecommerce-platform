@@ -7,6 +7,15 @@
 
     <!-- Issue #104 / #82 (PROD-02): Product image management -->
     <changeSet id="20260624-003-create-product-images" author="buildnest-team">
+        <!-- "products" (plural) is not created by any Liquibase changeset in this repo — same
+             drift class as #241, the categories/inventory precedents, and 20260624-002 (fixed
+             for #81). In the test profile, Liquibase runs before Hibernate's create-drop creates
+             the table, so it does not exist yet here; Hibernate creates product_images directly
+             from the ProductImage entity in that profile instead. -->
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="products"/>
+        </preConditions>
+
         <comment>Create product_images table for multiple product images (PROD-02, #82)</comment>
 
         <createTable tableName="product_images">
@@ -34,7 +43,7 @@
         <addForeignKeyConstraint
             constraintName="fk_images_product"
             baseTableName="product_images" baseColumnNames="product_id"
-            referencedTableName="product" referencedColumnNames="id"
+            referencedTableName="products" referencedColumnNames="id"
             onDelete="CASCADE"/>
 
         <createIndex tableName="product_images" indexName="idx_images_product_id">

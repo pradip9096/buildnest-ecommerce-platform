@@ -2,11 +2,12 @@ package com.example.buildnest_ecommerce.controller.admin;
 
 import com.example.buildnest_ecommerce.model.dto.CreateProductRequest;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.model.entity.ProductImage;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
+import com.example.buildnest_ecommerce.service.product.ProductImageService;
 import com.example.buildnest_ecommerce.service.product.ProductService;
 import com.example.buildnest_ecommerce.service.product.ProductVariantService;
 import com.example.buildnest_ecommerce.service.storage.StorageException;
-import com.example.buildnest_ecommerce.service.storage.StorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -24,15 +25,15 @@ class AdminProductControllerTest {
 
     private ProductService productService;
     private ProductVariantService productVariantService;
-    private StorageService storageService;
+    private ProductImageService productImageService;
     private AdminProductController controller;
 
     @BeforeEach
     void setUp() {
         productService = mock(ProductService.class);
         productVariantService = mock(ProductVariantService.class);
-        storageService = mock(StorageService.class);
-        controller = new AdminProductController(productService, productVariantService, storageService);
+        productImageService = mock(ProductImageService.class);
+        controller = new AdminProductController(productService, productVariantService, productImageService);
     }
 
     @Test
@@ -71,17 +72,16 @@ class AdminProductControllerTest {
     @Test
     void uploadProductImageSuccess() {
         MockMultipartFile file = new MockMultipartFile("file", "img.jpg", "image/jpeg", new byte[]{1, 2, 3});
-        when(storageService.store(file)).thenReturn("/uploads/img.jpg");
-        when(productService.updateProductImage(1L, "/uploads/img.jpg")).thenReturn(new Product());
+        when(productImageService.uploadImage(1L, file)).thenReturn(new ProductImage());
 
         ResponseEntity<ApiResponse> response = controller.uploadProductImage(1L, file);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
     }
 
     @Test
     void uploadProductImageStorageFailure() {
         MockMultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", new byte[]{1});
-        when(storageService.store(file)).thenThrow(new StorageException("Unsupported file type"));
+        when(productImageService.uploadImage(1L, file)).thenThrow(new StorageException("Unsupported file type"));
 
         ResponseEntity<ApiResponse> response = controller.uploadProductImage(1L, file);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -110,9 +110,7 @@ class AdminProductControllerTest {
     @Test
     void uploadProductImage_generalException_returns500() {
         MockMultipartFile file = new MockMultipartFile("file", "img.jpg", "image/jpeg", new byte[]{1});
-        when(storageService.store(file)).thenReturn("/uploads/img.jpg");
-        when(productService.updateProductImage(eq(1L), anyString()))
-                .thenThrow(new RuntimeException("unexpected error"));
+        when(productImageService.uploadImage(1L, file)).thenThrow(new RuntimeException("unexpected error"));
 
         ResponseEntity<ApiResponse> response = controller.uploadProductImage(1L, file);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());

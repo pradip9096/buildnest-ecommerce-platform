@@ -487,6 +487,7 @@ This system has no direct hardware interfaces. It runs as a containerised applic
 | FR-PROD-06 | The system shall cache product data in Redis with a configurable TTL (default: 5 minutes) | Medium | Ph-1 | Test |
 | FR-PROD-07 | The system shall cache category data in Redis with a configurable TTL (default: 1 hour) | Low | Ph-1 | Test |
 | FR-PROD-08 | The system shall support product variants (size, colour) with independent per-variant inventory tracking and cart items pinned to a specific variant | High | Ph-1 | Test |
+| FR-PROD-09 | The system shall allow admins to upload, reorder, and delete multiple images per product, with the first/primary image kept in sync with the product's legacy single-image field | Medium | Ph-1 | Test |
 
 #### 3.2.3 Shopping Cart Operations (FG-03)
 
@@ -876,7 +877,7 @@ Test integrity requirements define the properties that the test suite itself mus
 | Requirement Group | Count | Phase | Priority Distribution | Verification |
 | :--- | :--- | :--- | :--- | :--- |
 | Authentication (FR-AUTH-01–11) | 11 | Ph-1 / Ph-2 | 8 High, 2 Medium, 1 Medium | Test, Inspection |
-| Product Catalogue (FR-PROD-01–08) | 8 | Ph-1 | 3 High, 3 Medium, 2 Low | Test, Inspection |
+| Product Catalogue (FR-PROD-01–09) | 9 | Ph-1 | 3 High, 4 Medium, 2 Low | Test, Inspection |
 | Shopping Cart (FR-CART-01–06) | 6 | Ph-1 | 4 High, 1 Medium, 1 High | Test, Inspection |
 | Checkout (FR-CHK-01–08) | 8 | Ph-1 / Ph-2 | 6 High, 2 Medium | Test |
 | Payment (FR-PAY-01–05) | 5 | Ph-2 | 3 High, 1 Medium, 1 High | Test, Inspection |
