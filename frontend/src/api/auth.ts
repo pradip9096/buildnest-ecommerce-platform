@@ -32,3 +32,26 @@ export async function apiLogout(): Promise<void> {
 export async function apiFetchCsrf(): Promise<void> {
   await fetch('/api/auth/csrf', { credentials: 'include' });
 }
+
+/**
+ * PasswordResetController's /forgot and /reset endpoints read @RequestParam values, not a
+ * JSON body — unlike every other endpoint in this API, so the params travel in the query
+ * string here instead of `client.ts`'s usual JSON-encoded body.
+ */
+export async function apiForgotPassword(email: string): Promise<void> {
+  const params = new URLSearchParams({ email });
+  await requestData<null>(
+    `/api/password/forgot?${params.toString()}`,
+    { method: 'POST' },
+    'Failed to request a password reset'
+  );
+}
+
+export async function apiResetPassword(token: string, newPassword: string): Promise<void> {
+  const params = new URLSearchParams({ token, newPassword });
+  await requestData<null>(
+    `/api/password/reset?${params.toString()}`,
+    { method: 'POST' },
+    'Failed to reset password'
+  );
+}
