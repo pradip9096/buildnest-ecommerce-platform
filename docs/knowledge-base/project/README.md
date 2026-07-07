@@ -20,6 +20,8 @@ For operational lessons extracted from specific sessions (tooling gotchas, one-t
 | [check-mysql-installation-on-wsl2.md](check-mysql-installation-on-wsl2.md) | Verifying MySQL installation state on WSL2 | infrastructure | — |
 | [claude-code-memory-directory.md](claude-code-memory-directory.md) | Memory directory structure, the four memory types, current BuildNest files, and how to shape memory via instruction, feedback, or direct editing | tooling | 2026-07-02 |
 | [loop-engineering-vs-claude-code-loop.md](loop-engineering-vs-claude-code-loop.md) | "Loop engineering" as a 2026 industry trend (generator/verifier, ReAct) vs. Claude Code's narrower `/loop` scheduling skill and the closer `/goal` analog | tooling | 2026-07-02 |
+| [post-implementation-learning-activities.md](post-implementation-learning-activities.md) | Classifies "lessons learned" against retrospective, PIR, postmortem/RCA, AAR, and continuous improvement; maps each onto a GitHub-issue-driven SDLC workflow; the 80/20 activity set for a solo-developer workflow | documentation | 2026-07-04 |
+| [vscode-wsl2-responsiveness-during-heavy-maven-test-runs.md](vscode-wsl2-responsiveness-during-heavy-maven-test-runs.md) | VS Code freezing during `./mvnw test` on WSL2 — candidate mechanisms, evidence gathered against this repo, watcher-exclude + `.wslconfig` fixes, backgrounded-test-run fallback | infrastructure | 2026-07-07 |
 
 ---
 
