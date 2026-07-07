@@ -30,7 +30,7 @@
 
 ## Overview
 
-BuildNest is a full-stack e-commerce platform targeting the home construction and décor market. It exposes a Spring Boot REST API backed by MySQL, Redis, and Elasticsearch, with a React 19 + TypeScript frontend (product listing page live; additional pages in active development).
+BuildNest is a full-stack e-commerce platform targeting the home construction and décor market. It exposes a Spring Boot REST API backed by MySQL, Redis, and Elasticsearch, with a React 19 + TypeScript frontend covering the full customer and admin journey — home, product listing/detail, cart, checkout, order confirmation, login/register, forgot/reset-password, account dashboard, and an admin dashboard.
 
 **Key capabilities:**
 
@@ -89,7 +89,7 @@ Schema changes are managed exclusively through **Liquibase** changesets (`backen
 | Frontend | React 19, Vite, TypeScript, Tailwind CSS v4 |
 | CI/CD | GitHub Actions |
 | Security scanning | OWASP Dependency-Check (CVSS ≥ 7.0 fails build), CodeQL |
-| Test quality | JaCoCo (≥ 50% instruction coverage), PIT mutation testing (≥ 75%) |
+| Test quality | JaCoCo (≥ 85% instruction coverage per package, `ci` profile), PIT mutation testing (≥ 77% mutation score) |
 
 ---
 
@@ -123,7 +123,7 @@ BuildNest/
 │   │       ├── db/changelog/       # Liquibase changesets
 │   │       └── logback-spring.xml
 │   ├── docker-compose.yml
-│   ├── .env.example                # All 62 required variables documented
+│   ├── .env.example                # All 87 required variables documented
 │   └── pom.xml
 ├── frontend/                       # React 19 / Vite / TypeScript / Tailwind CSS v4
 ├── docs/SDLC-docs/                 # SRS, SDD, RTM, Test Plan, SDP, and more
@@ -220,9 +220,15 @@ POST /api/auth/register    → create account
 POST /api/auth/login       → returns { accessToken, refreshToken }
 POST /api/auth/refresh     → rotate refresh token, get new access token
 POST /api/auth/logout      → invalidate refresh token
+
+POST /api/password/forgot  → request a reset token (?email=)
+POST /api/password/reset   → reset with token (?token=&newPassword=)
+POST /api/password/change  → authenticated password change
 ```
 
 Access tokens expire after 15 minutes. Include them as `Authorization: Bearer <token>`.
+
+`/api/password/forgot` and `/api/password/reset` take their parameters as a URL query string, not a JSON body — unlike every other endpoint above.
 
 ### Versioning
 
@@ -232,7 +238,7 @@ Product endpoints are available at `/api/v1/products` (deprecated, sunset header
 
 ## Environment Variables
 
-All 62 required variables are documented with descriptions and example values in `backend/.env.example`. Key groups:
+All 87 required variables are documented with descriptions and example values in `backend/.env.example`. Key groups:
 
 | Group | Variables |
 |---|---|
@@ -246,14 +252,19 @@ All 62 required variables are documented with descriptions and example values in
 
 ## CI/CD
 
-GitHub Actions workflows in `.github/workflows/`:
+GitHub Actions workflows in `.github/workflows/` that actively trigger on `master`:
 
 | Workflow | Trigger | Purpose |
 |---|---|---|
-| `ci.yml` | Push / PR to master | Build, test, JaCoCo coverage gate (≥ 50%) |
-| `security.yml` | Push / PR to master | CodeQL analysis, OWASP Dependency-Check |
-| `deploy.yml` | Push to master | Docker image build and push |
-| `performance.yml` | Manual / schedule | JMeter load test suite |
+| `ci.yml` | Push / PR to master (+ weekly schedule) | Build, test, JaCoCo coverage gate (≥ 85% per package), dependency check. Deploy depends on this workflow completing. |
+| `ci-cd-pipeline.yml` | Push / PR to master (+ weekly schedule) | Broader test orchestration: unit, integration, reliability, security, load, and stress test jobs, plus PIT mutation-score reporting on PRs |
+| `security.yml` | Push / PR to master (+ weekly schedule) | CodeQL analysis, OWASP Dependency-Check, code quality scan |
+| `deploy.yml` | On `ci.yml` completing on master, or manual dispatch | Docker image build and push |
+| `performance.yml` | Manual / weekly schedule | JMeter load test suite |
+
+`ci-cd.yml` also exists in this directory but only triggers on `main`/`develop` branches (a leftover from before the repo's default branch was `master`) — it does not currently run and is not listed above.
+
+**Known overlap:** `ci.yml` and `ci-cd-pipeline.yml` both run on every push/PR to master with genuinely overlapping build/test concerns — this is real, current duplication of CI compute, not just a naming quirk. Worth consolidating; not yet done.
 
 ---
 
@@ -261,11 +272,11 @@ GitHub Actions workflows in `.github/workflows/`:
 
 | Milestone | Scope | Target | Status |
 |---|---|---|---|
-| M1 — Stabilisation | Critical test defect fixes | 2026-07-04 | **Complete** (v0.2.0) |
-| M2 — Quality Foundation | Test coverage, OWASP, env docs | 2026-07-18 | **Complete** (v0.3.0) |
-| M3 — Technical Debt Reduction | ES upgrade, CSP hardening, circuit breaker fallbacks, coverage gate 55% | 2026-08-01 | **Complete** (v0.4.0) |
-| M4 — Feature Development | 50 features (#60–#109) | 2026-10-24 | **In progress** |
-| M5 — Production Readiness | 27 hardening items (#110–#136) | 2026-11-21 | Planned → v1.0.0 |
+| M1 — Stabilisation | Critical test defect fixes | 2026-07-04 | **Complete** (v0.2.0) — 16/16 issues |
+| M2 — Quality Foundation | Test coverage, OWASP, env docs | 2026-07-18 | **Complete** (v0.3.0) — 16/16 issues |
+| M3 — Technical Debt Reduction | ES upgrade, CSP hardening, circuit breaker fallbacks, coverage gate ratchet | 2026-08-01 | **Complete** (v0.4.0) — 13/13 issues |
+| M4 — Feature Development | Core commerce features + bug fixes | 2026-10-24 | **In progress** — 137/150 issues closed |
+| M5 — Production Readiness | Security hardening, deployment, observability, compliance | 2026-11-21 | **In progress** — 29/72 issues closed |
 
 ---
 

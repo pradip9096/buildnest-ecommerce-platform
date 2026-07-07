@@ -22,6 +22,9 @@ For operational lessons extracted from specific sessions (tooling gotchas, one-t
 | [loop-engineering-vs-claude-code-loop.md](loop-engineering-vs-claude-code-loop.md) | "Loop engineering" as a 2026 industry trend (generator/verifier, ReAct) vs. Claude Code's narrower `/loop` scheduling skill and the closer `/goal` analog | tooling | 2026-07-02 |
 | [post-implementation-learning-activities.md](post-implementation-learning-activities.md) | Classifies "lessons learned" against retrospective, PIR, postmortem/RCA, AAR, and continuous improvement; maps each onto a GitHub-issue-driven SDLC workflow; the 80/20 activity set for a solo-developer workflow | documentation | 2026-07-04 |
 | [vscode-wsl2-responsiveness-during-heavy-maven-test-runs.md](vscode-wsl2-responsiveness-during-heavy-maven-test-runs.md) | VS Code freezing during `./mvnw test` on WSL2 — candidate mechanisms, evidence gathered against this repo, watcher-exclude + `.wslconfig` fixes, backgrounded-test-run fallback | infrastructure | 2026-07-07 |
+| [closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md) | Open-loop vs. closed-loop control, negative/positive feedback, PDCA/Kaizen framing, and the amendment-mechanism pattern (trigger + correction + backfilled log) applied to this repo's own rule files | documentation | 2026-07-07 |
+| [compliance-and-production-readiness-closed-loop-patterns.md](compliance-and-production-readiness-closed-loop-patterns.md) | The same closed-loop pattern applied at compliance-program scale (IIA/SOC 2/ISO 27001/NIST CSF) and to "production-grade software" quality attributes and a 6-level requirement-specification structure | documentation | 2026-07-07 |
+| [adaptive-knowledge-governance-advanced-amendment-concepts.md](adaptive-knowledge-governance-advanced-amendment-concepts.md) | 15 concepts extending the base amendment-mechanism pattern — decision logs/ADRs, assumption tracking, traceability matrices, change impact scoring, knowledge ownership — synthesized as an Adaptive Knowledge Governance Framework | documentation | 2026-07-07 |
 
 ---
 
@@ -45,7 +48,30 @@ Files use lowercase hyphen-separated names describing the topic: `<topic-noun>-<
 
 ## Frontmatter Schema
 
-Every article must include:
+Every article must include the fields below (see the Article Template section further down for
+the full copy-paste YAML block combined with the body skeleton):
+
+- `title`, `category`, `tags`, `keywords` — for discoverability and the index table.
+- `objective` — one sentence: what question does this article answer?
+- `audience` — who reads this and in what situation?
+- `scope` — BuildNest-specific, general, or both?
+- `confidence` — how certain is the content?
+- `evidence_strength` — how well-evidenced is the claim (strong = reproduced/cited, moderate = observed once, weak = inferred)?
+
+---
+
+## Article Template
+
+Copy this as the starting point for a new Topic-format article (this KB's default — see Format
+Selection below if you're genuinely writing a Q&A instead). It combines the frontmatter schema
+above with the Topic anatomy from
+[Structural Anatomy](../learning/knowledge-organization-formats-qa-topic-chapter.md#structural-anatomy):
+
+Each section below is tagged with the same necessity vocabulary used in
+[development-workflow.md](../../../.claude/rules/common/development-workflow.md#necessity-tags)
+(Mandatory / Mandatory if Applicable / Conditionally Required / Recommended / Optional) — reused
+here for one consistent necessity language across the repo, not to add ceremony. Delete any tag
+comment before publishing; it's authoring guidance, not part of the article.
 
 ```markdown
 ---
@@ -61,21 +87,146 @@ last_updated: YYYY-MM-DD
 confidence: high|medium|low
 evidence_strength: strong|moderate|weak
 related_articles: []
-status: published|draft
+status: draft
 ---
+
+# <Title>
+
+<!-- Table of Contents — Conditionally Required: add one only once the article outgrows a
+     single-scroll skim (see Size Discipline below), not before. -->
+
+## What Is It? <!-- Mandatory -->
+
+<Definition. One or two paragraphs — the narrow point the hourglass intro is narrowing toward.>
+
+## Why It Matters <!-- Mandatory -->
+
+<Motivation — what problem this solves, what breaks without it, why a reader should keep reading.>
+
+## How It Works <!-- Mandatory -->
+
+<The core mechanism. Use a diagram or table wherever it clarifies more than prose would. May be
+decomposed into tagged `###` sub-sections if the topic genuinely has multiple distinct mechanisms
+or steps (e.g. triggers, workflow stages, a template artifact) — see
+[Closed-Loop Feedback and Amendment Mechanisms for Process Documents](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md)'s
+own sub-structure for a real precedent. Don't pre-decompose by default; let it emerge from what
+this specific topic actually needs. If you find yourself reaching for many such sub-sections,
+that's the same signal from "When to Split" below — ask whether this is still one topic before
+adding more.>
+
+## When to Use It <!-- Mandatory -->
+
+<Concrete triggers/conditions — not "use this sometimes," but the specific signals that mean this
+applies now.>
+
+## Examples <!-- Mandatory if Applicable -->
+
+<At least one worked example. Prefer a real one from this repo's own history if `evidence_strength`
+is meant to be strong or moderate — label any generic/illustrative example explicitly as such if
+the article also contains real, citable ones, so a reader can't confuse the two. Skip only for a
+genuinely abstract/definitional topic where a worked example wouldn't add anything. Same
+sub-section note as "How It Works" applies if multiple distinct examples are needed.>
+
+## Synthesis <!-- Mandatory -->
+
+<Closing — genuinely tie it together, don't just restate. This is the widening-back-out half of
+the hourglass; "See also" below is a separate, later element, not a substitute for this one.>
+
+## Quick Reference <!-- Conditionally Required -->
+
+<Worth adding once an article grows past a few sections; skip for a short one — a lookup table of
+short question/answer pairs for skimming.>
+
+## References <!-- Mandatory if Applicable -->
+
+<Required whenever the article cites a named standard, framework, or external claim — see
+`~/.claude/CLAUDE.md`'s "Verifying Standards, Best Practices, and Anti-Patterns" section for when a
+claim needs to be verified before being asserted, not just cited from memory. Skip entirely if the
+article makes no such claims.>
+
+## Related Articles <!-- Recommended -->
+
+<Same-folder link: `[[bare-filename]]`. Cross-folder link: `[Title](../folder/file.md)`. List the
+same targets in the `related_articles` frontmatter field too.>
 ```
 
-- `objective` — one sentence: what question does this article answer?
-- `audience` — who reads this and in what situation?
-- `scope` — BuildNest-specific, general, or both?
-- `confidence` — how certain is the content?
-- `evidence_strength` — how well-evidenced is the claim (strong = reproduced/cited, moderate = observed once, weak = inferred)?
+Start with `status: draft` and flip to `published` once the article is actually complete — not
+before. Delete any section above that genuinely doesn't apply rather than leaving it as an empty
+placeholder; the template is a starting shape, not a mandatory checklist every article must fill
+every box of.
 
 ---
 
-## Contributing
+## Authoring Guidelines
+
+Actionable rules for creating or editing an article — not a formal requirement specification.
+This KB is maintained by a small team (a human + an AI assistant), so the guidance below optimizes
+for "an author can check this in one glance," not for audit/traceability ceremony.
+
+### Format Selection
+
+Before writing, pick the right format for the reader's actual intent — see
+[Differences Between Q&A, Topic, and Chapter](../learning/knowledge-organization-formats-qa-topic-chapter.md)
+for the full decision framework:
+
+- **Q&A** — answers one specific question, standalone, no reading order.
+- **Topic** — this KB's default format. Maps one concept fully. No mandatory reading order.
+- **Chapter** — a sequential, dependent unit of a larger curriculum. This KB does not currently
+  use this format — if you find yourself writing prerequisites, learning objectives, and
+  exercises, you're writing a chapter, not a KB article; that belongs in a different location
+  (e.g. `docs/knowledge-base/learning/` still applies, but structure it explicitly as a chapter
+  sequence, not a lone Topic file).
+
+### Article Structure
+
+Once you've picked Topic (this KB's default), structure the article as:
+**What is it? → Why it matters → How it works → When to use it → Examples → Synthesis/Closing →
+See also.** See
+[Structural Anatomy](../learning/knowledge-organization-formats-qa-topic-chapter.md#structural-anatomy)
+for the full breakdown, including why the "Synthesis/Closing" element matters and shouldn't be
+skipped: the whole shape is an hourglass — broad context narrowing to the specific concept, a
+developed middle, then widening back out to a real synthesis at the close, not just a pointer
+list. "See also" is *not* a substitute for that closing synthesis — it's the separate, final
+element for pointing elsewhere.
+
+### Size Discipline
+
+There is no hard line-count limit — see
+[Why Keep a Topic Article Short](../learning/knowledge-organization-formats-qa-topic-chapter.md#why-keep-a-topic-article-short)
+for the reasoning (this is a documented target derived from first principles, not a rule copied
+from elsewhere in this repo). In practice, most articles in this KB land in the ~90–200 line
+range. If a draft is running well past that, it's a signal to check the next section before
+publishing, not just a soft ceiling to shrug at.
+
+### When to Split (One Topic Per File)
+
+One topic per file — split if an article covers two unrelated subjects. Concrete signals, adapted
+from the same article's Topic-vs-Chapter criteria and applied here to *splitting within* the Topic
+format rather than changing format entirely:
+
+- A whole section could stand alone and be linked to from elsewhere, independent of the rest of
+  the article.
+- The section's actual audience differs from the article's stated `audience` frontmatter field.
+- Removing the section wouldn't make the remaining article incomplete — it would just make it
+  about one thing instead of two.
+- You catch yourself writing a sentence like "this is a different topic, but related, so I'll
+  include it here anyway."
+
+When in doubt, split and cross-link both directions (`related_articles` in frontmatter, plus a
+one-line pointer in the body) rather than leaving one article to cover both.
+
+### Cross-Referencing Between Articles
+
+- **Same-folder link** (e.g. two articles both in `project/`): use a bare wikilink, `[[filename-without-extension]]`.
+- **Cross-folder link** (e.g. a `project/` article linking into `learning/`, or vice versa): use an
+  explicit relative markdown link, `[Title](../learning/filename.md)` — not a bare wikilink. This
+  KB has no automated link resolver; a bare `[[name]]` written in a different folder than its
+  target is genuinely ambiguous about which folder to search, so don't rely on it working.
+- List every cross-referenced article in the `related_articles` frontmatter field too, using the
+  same folder-relative path convention, so the relationship is machine-readable, not just prose.
+
+### Housekeeping
 
 - Add a row to the index table above when creating a new article.
-- One topic per file — split if an article covers two unrelated subjects.
 - Update `last_updated` in frontmatter on any substantive edit.
 - Cross-reference `docs/wiki/learned-lessons/` for operational lessons rather than duplicating content here.
