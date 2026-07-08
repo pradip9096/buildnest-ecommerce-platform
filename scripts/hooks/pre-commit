@@ -1,0 +1,374 @@
+#!/usr/bin/env bash
+# Grep-based checks for rules in .claude/rules/ that are mechanically detectable.
+# Scans only staged files (git diff --cached). Exits non-zero on any violation.
+#
+# Install (one time per clone): ./scripts/setup-git-hooks.sh
+#
+# Each check lists the rule file it enforces so a failure can be traced back
+# to the rule doc without duplicating the rationale here.
+
+set -uo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root" || exit 1
+
+staged_files=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged_files" ] && exit 0
+
+violations=0
+
+fail() {
+    local rule_file="$1"
+    local message="$2"
+    local matches="$3"
+    echo ""
+    echo "FAIL [$rule_file]: $message"
+    printf "%b" "$matches" | sed "s/^/    /"
+    violations=$((violations + 1))
+}
+
+filter() {
+    # $1 = extended regex for filenames to include
+    echo "$staged_files" | grep -E "$1" || true
+}
+
+# --- jpa.md: ddl-auto must never be update/create outside test profiles ---
+files=$(filter '\.ya?ml$' | grep -v -- '-test\.ya\?ml$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -nE 'ddl-auto[[:space:]]*:[[:space:]]*(update|create)')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "spring/jpa.md" \
+        "ddl-auto must be 'validate' outside test profiles — schema changes go through Liquibase" "$matches"
+fi
+
+# --- liquibase.md: new changesets must include a <rollback> block ---
+files=$(filter 'db/changelog/changes/.*\.xml$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        git diff --cached --diff-filter=A --name-only | grep -qx "$f" || continue
+        content=$(git show ":$f" 2>/dev/null)
+        echo "$content" | grep -q '<changeSet' || continue
+        echo "$content" | grep -q '<rollback' || matches="${matches}${f}\n"
+    done
+    [ -n "$matches" ] && fail "spring/liquibase.md" \
+        "new changeset file has no <rollback> block — rollback is mandatory" "$matches"
+fi
+
+# --- liquibase.md: author must be buildnest-team ---
+files=$(filter 'db/changelog/changes/.*\.xml$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        git diff --cached --diff-filter=A --name-only | grep -qx "$f" || continue
+        content=$(git show ":$f" 2>/dev/null)
+        echo "$content" | grep -q '<changeSet' || continue
+        echo "$content" | grep -q 'author="buildnest-team"' || matches="${matches}${f}\n"
+    done
+    [ -n "$matches" ] && fail "spring/liquibase.md" \
+        "changeset author must be \"buildnest-team\", not a personal name" "$matches"
+fi
+
+# --- liquibase.md: never use failOnError="false" ---
+files=$(filter 'db/changelog/.*\.xml$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -nE 'failOnError="false"')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "spring/liquibase.md" \
+        "failOnError=\"false\" hides real failures — not allowed" "$matches"
+fi
+
+# --- spring-security.md: CORS wildcard combined with allowCredentials=true ---
+# (scoped to src/main — permissive wildcard CORS in test-only security config has no real browser
+# to exploit and is a common, harmless test-fixture pattern)
+files=$(filter '^backend/src/main/.*\.java$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        content=$(git show ":$f" 2>/dev/null)
+        if echo "$content" | grep -qE 'setAllowedOrigins?\(.*\*' && echo "$content" | grep -qE 'setAllowCredentials\(true\)'; then
+            matches="${matches}${f}\n"
+        fi
+    done
+    [ -n "$matches" ] && fail "spring/spring-security.md" \
+        "CORS wildcard origin combined with allowCredentials=true — browser will reject, and it defeats origin restriction" "$matches"
+fi
+
+# --- spring-security.md: JWT default secret must not appear outside dev/test config ---
+files=$(filter '\.ya?ml$|\.properties$' | grep -v -- '-test\.\|-dev\.')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -n 'mySecretKeyForJwtTokenGenerationAndValidation')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "spring/spring-security.md" \
+        "default JWT secret must never appear outside dev/test config" "$matches"
+fi
+
+# --- spring-security.md / java/security.md: no System.out/printStackTrace in security/ ---
+files=$(filter '^backend/.*security/.*\.java$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -nE 'System\.(out|err)\.print|printStackTrace\(')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "spring/spring-security.md" \
+        "use log.error(), never System.out/println/printStackTrace in security/ classes" "$matches"
+fi
+
+# --- common/security.md, java/security.md: hardcoded secret-looking literals ---
+files=$(filter '\.java$|\.ya?ml$|\.properties$|\.ts$|\.tsx$|\.js$|\.jsx$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -nE 'sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|-----BEGIN (RSA |EC )?PRIVATE KEY-----')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "common/security.md" \
+        "possible hardcoded secret/private key literal" "$matches"
+fi
+
+# --- typescript/coding-style.md: no console.log in production code ---
+files=$(filter '\.tsx?$|\.jsx?$' | grep -vE '\.test\.|__tests__|\.spec\.')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -n 'console\.log(')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "typescript/coding-style.md" \
+        "console.log in production code — use a logging library" "$matches"
+fi
+
+# --- react/security.md: dangerouslySetInnerHTML without DOMPurify in same file ---
+files=$(filter '\.tsx?$|\.jsx?$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        content=$(git show ":$f" 2>/dev/null)
+        if echo "$content" | grep -q 'dangerouslySetInnerHTML' && ! echo "$content" | grep -q 'DOMPurify'; then
+            matches="${matches}${f}\n"
+        fi
+    done
+    [ -n "$matches" ] && fail "react/security.md" \
+        "dangerouslySetInnerHTML used without DOMPurify sanitization in the same file" "$matches"
+fi
+
+# --- react/security.md: target="_blank" without rel="noopener" ---
+files=$(filter '\.tsx?$|\.jsx?$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -nE 'target="_blank"' | grep -v 'noopener')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "react/security.md" \
+        "target=\"_blank\" without rel=\"noopener noreferrer\"" "$matches"
+fi
+
+# --- resilience4j.md: no resilience4j.* properties in yml (programmatic config only) ---
+files=$(filter '\.ya?ml$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -nE '^\s*resilience4j\s*:')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "spring/resilience4j.md" \
+        "resilience4j config belongs in ResilienceConfig.java (programmatic), not application.yml" "$matches"
+fi
+
+# --- rate-limiting.md: no second Redis INCR counter pattern outside RateLimiterService ---
+files=$(filter '^backend/.*\.java$' | grep -v 'RateLimiterService\.java$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -nE 'redisTemplate\.opsForValue\(\)\.increment')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "spring/rate-limiting.md" \
+        "Redis INCR counter pattern used outside RateLimiterService — always call RateLimiterService.isAllowed()" "$matches"
+fi
+
+# --- spring-security.md, java/patterns.md: no @Autowired field injection ---
+files=$(filter '\.java$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -nB1 -E '^\s*private\s' | grep -B1 -E '^\s*@Autowired\s*$' | grep -E '^[0-9]+[-:]')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "spring/spring-security.md" \
+        "@Autowired field injection — use constructor injection" "$matches"
+fi
+
+# --- jpa.md: CascadeType.REMOVE/ALL on @ManyToOne or @ManyToMany ---
+files=$(filter '^backend/.*model/entity/.*\.java$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -nE '@(ManyToOne|ManyToMany)\([^)]*Cascade(Type\.(REMOVE|ALL)|\.ALL)')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "spring/jpa.md" \
+        "CascadeType.REMOVE/ALL on @ManyToOne or @ManyToMany deletes shared entities" "$matches"
+fi
+
+# --- jpa.md: FetchType.EAGER on @OneToMany or @ManyToMany ---
+files=$(filter '^backend/.*model/entity/.*\.java$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -nE '@(OneToMany|ManyToMany)\([^)]*FetchType\.EAGER')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "spring/jpa.md" \
+        "FetchType.EAGER on @OneToMany/@ManyToMany forces a Cartesian product join" "$matches"
+fi
+
+# --- jpa.md: @Data on @Entity classes ---
+files=$(filter '^backend/.*model/entity/.*\.java$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        content=$(git show ":$f" 2>/dev/null)
+        if echo "$content" | grep -q '^@Data' && echo "$content" | grep -q '@Entity'; then
+            matches="${matches}${f}\n"
+        fi
+    done
+    [ -n "$matches" ] && fail "spring/jpa.md" \
+        "@Data on an @Entity generates equals/hashCode over lazy associations — use @Getter/@Setter instead" "$matches"
+fi
+
+# --- java/coding-style.md: Optional used as a method parameter ---
+files=$(filter '\.java$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -nE '\([^)]*Optional<[^>]+>\s+\w+[^)]*\)')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "java/coding-style.md" \
+        "Optional used as a method parameter type — never use Optional as a field or parameter" "$matches"
+fi
+
+## --- Bucket 2: cross-file / structural checks (still regex-based, not true AST) ---
+
+# --- jpa.md: entities must implement AggregateRoot ---
+files=$(filter '^backend/.*model/entity/.*\.java$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        content=$(git show ":$f" 2>/dev/null)
+        echo "$content" | grep -q '@Entity' || continue
+        echo "$content" | perl -0777 -ne 'exit(1) unless /class\s+\w+[^{]*implements[^{]*\bAggregateRoot\b/s' \
+            || matches="${matches}${f}\n"
+    done
+    [ -n "$matches" ] && fail "spring/jpa.md" \
+        "@Entity class does not implement AggregateRoot" "$matches"
+fi
+
+# --- jpa.md: @Transactional never on controllers or repositories ---
+# (scoped to src/main — @Transactional on a *test* class is the standard Spring pattern for
+# auto-rollback-per-test, not a transaction-boundary violation)
+files=$(filter '^backend/src/main/.*/(controller|repository)/.*\.java$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        [ -f "$f" ] || continue
+        m=$(git show ":$f" 2>/dev/null | grep -nE '@Transactional')
+        [ -n "$m" ] && matches="${matches}${f}:${m}\n"
+    done
+    [ -n "$matches" ] && fail "spring/jpa.md" \
+        "@Transactional on a controller or repository — transaction boundaries belong in the service layer" "$matches"
+fi
+
+# --- spring-security.md: JwtTokenProvider.validateToken must catch all 5 JJWT exception types ---
+files=$(filter 'JwtTokenProvider\.java$')
+if [ -n "$files" ]; then
+    matches=""
+    required="SecurityException MalformedJwtException ExpiredJwtException UnsupportedJwtException IllegalArgumentException"
+    for f in $files; do
+        [ -f "$f" ] || continue
+        content=$(git show ":$f" 2>/dev/null)
+        echo "$content" | grep -q 'validateToken' || continue
+        missing=""
+        for exc in $required; do
+            echo "$content" | grep -q "catch\s*(\s*$exc" || missing="${missing}${exc} "
+        done
+        [ -n "$missing" ] && matches="${matches}${f}: missing catch for: ${missing}\n"
+    done
+    [ -n "$matches" ] && fail "spring/spring-security.md" \
+        "validateToken() must explicitly catch all 5 JJWT exception types, not a broad catch" "$matches"
+fi
+
+# --- liquibase.md: one <changeSet> per file unless documented as tightly coupled ---
+files=$(filter 'db/changelog/changes/.*\.xml$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        git diff --cached --diff-filter=A --name-only | grep -qx "$f" || continue
+        content=$(git show ":$f" 2>/dev/null)
+        count=$(echo "$content" | grep -c '<changeSet')
+        if [ "$count" -gt 1 ] && ! echo "$content" | grep -qi 'coupled'; then
+            matches="${matches}${f}: ${count} changeSets, no coupling justification in comments\n"
+        fi
+    done
+    [ -n "$matches" ] && fail "spring/liquibase.md" \
+        "multiple changeSets in one file without a documented coupling reason" "$matches"
+fi
+
+# --- liquibase.md: NOT NULL addColumn must specify a default value ---
+files=$(filter 'db/changelog/changes/.*\.xml$')
+if [ -n "$files" ]; then
+    matches=""
+    for f in $files; do
+        git diff --cached --diff-filter=A --name-only | grep -qx "$f" || continue
+        content=$(git show ":$f" 2>/dev/null)
+        bad=$(echo "$content" | perl -0777 -ne '
+            my @blocks = /(<column\b[^>]*>.*?<\/column>|<column\b[^\/]*\/>)/gs;
+            for (@blocks) {
+                if (/nullable="false"/ && !/defaultValue/) {
+                    print "  $_\n";
+                }
+            }
+        ')
+        [ -n "$bad" ] && matches="${matches}${f}:\n${bad}\n"
+    done
+    [ -n "$matches" ] && fail "spring/liquibase.md" \
+        "NOT NULL addColumn without a defaultValue — fails on tables with existing rows" "$matches"
+fi
+
+if [ "$violations" -gt 0 ]; then
+    echo ""
+    echo "$violations rule-check violation(s) found. Fix the above or, if a match is a false positive,"
+    echo "discuss updating scripts/hooks/pre-commit — do not bypass with --no-verify."
+    exit 1
+fi
+
+exit 0

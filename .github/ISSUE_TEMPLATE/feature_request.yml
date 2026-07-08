@@ -1,0 +1,59 @@
+name: Feature Request
+description: Propose a new capability or enhancement for BuildNest
+title: "[Feature]: "
+labels:
+  - "type: feature"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests are judged by acceptance criteria, not a fix checklist — "done" for a new capability means the criteria below are met, not that a specific bug stopped reproducing.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A 1-2 sentence description of the capability being requested.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why this is needed — the user story, business driver, or gap it closes. Reference the SRS/SDD requirement ID if one exists.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: The concrete, testable conditions that define "done" for this feature. Use GitHub task list syntax.
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation-notes
+    attributes:
+      label: Implementation Notes
+      description: Known constraints, affected modules/files, design decisions already made, or open questions that need a decision before starting.
+    validations:
+      required: false
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of Scope
+      description: Explicitly note anything adjacent that this feature deliberately does NOT cover, to prevent scope creep during implementation.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        After submitting, apply the appropriate `priority: *`, `phase: M*`, and `domain: *` labels — GitHub issue forms cannot set these automatically from field input.
