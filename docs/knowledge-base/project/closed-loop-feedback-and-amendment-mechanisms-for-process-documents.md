@@ -12,6 +12,9 @@ confidence: high
 evidence_strength: strong
 related_articles:
   - quality-gate-ratchet-pattern.md
+  - feedback-loop-taxonomy-substrate-instance-stage-symmetry.md
+  - feedback-loop-enforcement-and-safety-vocabulary.md
+  - feedback-loop-enforcement-extensions-funnels-and-epistemics.md
   - ../learning/capa-corrective-and-preventive-action.md
   - ../learning/process-improvement-frameworks.md
   - post-implementation-learning-activities.md
@@ -33,8 +36,8 @@ status: published
 - [The General Amendment Lifecycle](#the-general-amendment-lifecycle)
 - [Related Concepts and Processes](#related-concepts-and-processes) — includes "Also Known As" naming equivalents (PDCA, Kaizen, ISO 9001, Agile, DevOps, ITIL, CMMI, etc.)
 - [Reusable Knowledge: Feedback Loop Through Amendments and Continuous Improvement](#reusable-knowledge-feedback-loop-through-amendments-and-continuous-improvement)
-- [Advanced Governance Concepts](#advanced-governance-concepts) — split into [[adaptive-knowledge-governance-advanced-amendment-concepts]]
-- [The Same Loop at Compliance-Program and Software-Quality-Attribute Scale](#the-same-loop-at-compliance-program-and-software-quality-attribute-scale) — split into [[compliance-and-production-readiness-closed-loop-patterns]]
+- [Advanced Governance Concepts](#advanced-governance-concepts) — split into [Advanced Amendment Concepts: Toward an Adaptive Knowledge Governance Framework](adaptive-knowledge-governance-advanced-amendment-concepts.md)
+- [The Same Loop at Compliance-Program and Software-Quality-Attribute Scale](#the-same-loop-at-compliance-program-and-software-quality-attribute-scale) — split into [Closed-Loop Patterns in Compliance and Production-Readiness Programs](compliance-and-production-readiness-closed-loop-patterns.md)
 - [Quick Reference](#quick-reference)
 - [References](#references)
 
@@ -89,7 +92,7 @@ Control theory distinguishes two feedback directions:
   stale rule).
 - **Positive feedback** — the signal reinforces the deviation, amplifying it further (a microphone
   shrieking near its own speaker; a rule violation going unaddressed and becoming precedent for
-  the next violation, per the [[quality-gate-ratchet-pattern]] article's discussion of broken-windows
+  the next violation, per the [Quality Gate Ratchet Pattern](quality-gate-ratchet-pattern.md) article's discussion of broken-windows
   theory).
 
 An amendment mechanism is deliberately engineered **negative feedback**: a real gap (the error
@@ -97,7 +100,7 @@ signal) is fed back into the document (the correction), pulling it back toward m
 
 ## The Ratchet Mechanism — A Special Case
 
-The [[quality-gate-ratchet-pattern]] article covers this in depth for BuildNest's PIT mutation
+The [Quality Gate Ratchet Pattern](quality-gate-ratchet-pattern.md) article covers this in depth for BuildNest's PIT mutation
 score gate. In this framework, a ratchet is a closed-loop feedback mechanism with an added
 constraint: the correction is allowed to move the target in only one direction. Ordinary negative
 feedback pulls a system back toward a fixed target from either side; a ratchet's target itself
@@ -218,7 +221,7 @@ it:
 | **Change Management Process** | Formal control over *any* change to a defined baseline (not just documents) — typically includes a change request, impact assessment, and approval gate | The Review/Approve step above, informally |
 | **Document Lifecycle Management** | Treats a document itself as having versioned states (draft → published → superseded), independent of its content | This KB's own frontmatter (`status: draft\|published`, `last_updated`) |
 | **Configuration Management** | Tracks the state of controlled artifacts (not just docs — code, infra, environments) and how they change over time | Liquibase changesets are configuration management for schema; this repo's `.claude/rules/*.md` files are configuration management for process |
-| **Lessons Learned Process** | The activity that *generates* the feedback signal — see [[post-implementation-learning-activities]] for how it relates to retrospectives, PIR, and RCA | `definition-of-done.md` item 5, run after every issue |
+| **Lessons Learned Process** | The activity that *generates* the feedback signal — see [Post-Implementation Learning and Continuous Improvement Activities](post-implementation-learning-activities.md) for how it relates to retrospectives, PIR, and RCA | `definition-of-done.md` item 5, run after every issue |
 | **Corrective and Preventive Action (CAPA)** | A structured lifecycle for turning one incident into a systemic fix, distinguishing correction (fix the instance) from corrective action (fix the cause) — see [CAPA – Corrective and Preventive Action](../learning/capa-corrective-and-preventive-action.md) | Each rule-file amendment is closer to CAPA's "preventive action" than its "correction" — it changes the system that would otherwise reproduce the same gap |
 | **Knowledge Base Evolution Process** | The specific case of this lifecycle applied to a knowledge base itself — articles get superseded, merged, or corrected as understanding improves | This KB's own `README.md` "Contributing" section and frontmatter schema |
 | **Governance Feedback Loop** | The organizational-level version: how an institution's rules get updated based on how they actually perform once enforced | The scope difference between this repo's per-file logs (local governance) and industry standards like ISO 9001's mandated "continual improvement" clause (formal governance) |
@@ -587,7 +590,7 @@ tracking, traceability matrices, change impact scoring, and more) extend it towa
 called an **Adaptive Knowledge Governance Framework**. That material is substantial enough to
 warrant its own article rather than extending this one further:
 
-**See [[adaptive-knowledge-governance-advanced-amendment-concepts]]** for all 15 concepts, the
+**See [Advanced Amendment Concepts: Toward an Adaptive Knowledge Governance Framework](adaptive-knowledge-governance-advanced-amendment-concepts.md)** for all 15 concepts, the
 detailed variant of the amendment lifecycle, and the framework synthesis.
 
 ## The Same Loop at Compliance-Program and Software-Quality-Attribute Scale
@@ -598,7 +601,7 @@ software" quality attributes are described, just at a much larger scale than a s
 That material is substantial enough to warrant its own article rather than extending this one
 further:
 
-**See [[compliance-and-production-readiness-closed-loop-patterns]]** for the full/lean/agentic
+**See [Closed-Loop Patterns in Compliance and Production-Readiness Programs](compliance-and-production-readiness-closed-loop-patterns.md)** for the full/lean/agentic
 compliance-lifecycle versions, the canonical production-grade quality-attribute list, and the
 6-level requirement-specification structure.
 
@@ -610,12 +613,12 @@ compliance-lifecycle versions, the canonical production-grade quality-attribute 
 | What's the name for the correcting signal? | Negative feedback |
 | What's the name for a rule violation that goes unaddressed and compounds? | Positive feedback / broken-windows spiral |
 | What's the continuous-improvement name for this loop? | PDCA (Deming), Kaizen, or a retrospective, depending on cadence/formality |
-| What's the special case where the target only ever tightens? | A ratchet mechanism — see [[quality-gate-ratchet-pattern]] |
+| What's the special case where the target only ever tightens? | A ratchet mechanism — see [Quality Gate Ratchet Pattern](quality-gate-ratchet-pattern.md) |
 | What closes the loop for a specific rule file? | An amendment mechanism: trigger + correction procedure + durable log |
 | Why must the log be backfilled, not started empty? | An empty log is indistinguishable from an unused mechanism — backfilling proves it describes real history |
-| Where does decision-log/rationale preservation, assumption tracking, traceability matrices, and change impact scoring live? | [[adaptive-knowledge-governance-advanced-amendment-concepts]] — split out as its own article |
-| What's the umbrella name combining amendment management, change control, knowledge management, and traceability? | The Adaptive Knowledge Governance Framework — see [[adaptive-knowledge-governance-advanced-amendment-concepts]]'s Synthesis |
-| Where does the compliance-program / production-grade-software version of this same loop live? | [[compliance-and-production-readiness-closed-loop-patterns]] — split out as its own article |
+| Where does decision-log/rationale preservation, assumption tracking, traceability matrices, and change impact scoring live? | [Advanced Amendment Concepts: Toward an Adaptive Knowledge Governance Framework](adaptive-knowledge-governance-advanced-amendment-concepts.md) — split out as its own article |
+| What's the umbrella name combining amendment management, change control, knowledge management, and traceability? | The Adaptive Knowledge Governance Framework — see [Advanced Amendment Concepts: Toward an Adaptive Knowledge Governance Framework](adaptive-knowledge-governance-advanced-amendment-concepts.md)'s Synthesis |
+| Where does the compliance-program / production-grade-software version of this same loop live? | [Closed-Loop Patterns in Compliance and Production-Readiness Programs](compliance-and-production-readiness-closed-loop-patterns.md) — split out as its own article |
 
 ## References
 
@@ -624,7 +627,10 @@ compliance-lifecycle versions, the canonical production-grade quality-attribute 
 - Imai, M. (1986). *Kaizen: The Key to Japan's Competitive Success*. McGraw-Hill. — continuous incremental improvement.
 - Ford, N. & Parsons, R. (2017). *Building Evolutionary Architectures*. O'Reilly. — fitness functions as engineered feedback in software systems.
 - International Organization for Standardization. *ISO 9001:2015 — Quality management systems — Requirements*. — "continual improvement" clause referenced in "Related Concepts and Processes" / "Also Known As."
-- [[quality-gate-ratchet-pattern]] — the one-way (ratchet) special case of this article's general closed-loop pattern, applied to BuildNest's PIT mutation gate.
-- [[compliance-and-production-readiness-closed-loop-patterns]] — the same closed-loop pattern applied at compliance-program and software-quality-attribute scale, split into its own article to keep this one's scope to process documents specifically.
-- [[adaptive-knowledge-governance-advanced-amendment-concepts]] — the 15-concept extension (decision logs, assumption tracking, traceability matrices, change impact scoring, and more), split into its own article for the same reason.
+- [Quality Gate Ratchet Pattern](quality-gate-ratchet-pattern.md) — the one-way (ratchet) special case of this article's general closed-loop pattern, applied to BuildNest's PIT mutation gate.
+- [Feedback Loop Taxonomy: Substrate, Instance, Stage, and Symmetry](feedback-loop-taxonomy-substrate-instance-stage-symmetry.md) — places this article's closed-loop control and PDCA content within a broader structural map alongside iteration, control flow, live monitoring, and the ratchet mechanism.
+- [Feedback Loop Extension: Enforcement and Safety Vocabulary](feedback-loop-enforcement-and-safety-vocabulary.md) — guardrails, quality gates, and enforcement mechanisms built on this article's open-loop/closed-loop distinction.
+- [Feedback Loop Enforcement Extensions: Funnels and Epistemic Awareness](feedback-loop-enforcement-extensions-funnels-and-epistemics.md) — applies this article's open-loop/closed-loop distinction to a funnel: a multi-stage filter/quality-gate pipeline that's open-loop by default unless wrapped in a feedback loop one level up.
+- [Closed-Loop Patterns in Compliance and Production-Readiness Programs](compliance-and-production-readiness-closed-loop-patterns.md) — the same closed-loop pattern applied at compliance-program and software-quality-attribute scale, split into its own article to keep this one's scope to process documents specifically.
+- [Advanced Amendment Concepts: Toward an Adaptive Knowledge Governance Framework](adaptive-knowledge-governance-advanced-amendment-concepts.md) — the 15-concept extension (decision logs, assumption tracking, traceability matrices, change impact scoring, and more), split into its own article for the same reason.
 - `~/.claude/rules/definition-of-done.md`, `.claude/rules/common/development-workflow.md`, `.claude/rules/common/git-workflow.md`, `~/.claude/CLAUDE.md` — this repo's own live amendment mechanisms, each with a backfilled log.

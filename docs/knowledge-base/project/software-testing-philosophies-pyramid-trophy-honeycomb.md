@@ -27,7 +27,7 @@ wasting effort on tests that rarely catch real bugs, or leaving the actual risk 
 under-tested.
 
 This is why BuildNest's own process documents deliberately avoid hardcoding one shape:
-[[quality-gate-ratchet-pattern]] and `.claude/rules/definition-of-done.md` point to each
+[Quality Gate Ratchet Pattern](quality-gate-ratchet-pattern.md) and `.claude/rules/definition-of-done.md` point to each
 project's own `testing.md` for the specific required test types, rather than mandating a
 single universal philosophy at the global-checklist level.
 

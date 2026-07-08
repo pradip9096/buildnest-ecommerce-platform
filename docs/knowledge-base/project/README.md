@@ -10,7 +10,7 @@ For operational lessons extracted from specific sessions (tooling gotchas, one-t
 
 | File | Topic | Category | Last Updated |
 |---|---|---|---|
-| [quality-gate-ratchet-pattern.md](quality-gate-ratchet-pattern.md) | Fitness functions, ratchet mechanism, PIT mutation threshold schedule, broken-windows rationale | quality-engineering | 2026-07-01 |
+| [quality-gate-ratchet-pattern.md](quality-gate-ratchet-pattern.md) | Fitness functions, ratchet mechanism, PIT mutation threshold schedule, broken-windows rationale, ratchet-vs-supersede/continuous-improvement/evolution distinctions | quality-engineering | 2026-07-08 |
 | [claude-code-extension-mechanisms.md](claude-code-extension-mechanisms.md) | Claude Code hooks, MCP servers, slash commands, skills — extension points and when to use each | tooling | — |
 | [claude-code-hooks-reference.md](claude-code-hooks-reference.md) | Hook types, event lifecycle, settings.json configuration | tooling | — |
 | [claude-code-progressive-disclosure.md](claude-code-progressive-disclosure.md) | Progressive disclosure pattern in Claude Code UX | tooling | — |
@@ -25,6 +25,18 @@ For operational lessons extracted from specific sessions (tooling gotchas, one-t
 | [closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md) | Open-loop vs. closed-loop control, negative/positive feedback, PDCA/Kaizen framing, and the amendment-mechanism pattern (trigger + correction + backfilled log) applied to this repo's own rule files | documentation | 2026-07-07 |
 | [compliance-and-production-readiness-closed-loop-patterns.md](compliance-and-production-readiness-closed-loop-patterns.md) | The same closed-loop pattern applied at compliance-program scale (IIA/SOC 2/ISO 27001/NIST CSF) and to "production-grade software" quality attributes and a 6-level requirement-specification structure | documentation | 2026-07-07 |
 | [adaptive-knowledge-governance-advanced-amendment-concepts.md](adaptive-knowledge-governance-advanced-amendment-concepts.md) | 15 concepts extending the base amendment-mechanism pattern — decision logs/ADRs, assumption tracking, traceability matrices, change impact scoring, knowledge ownership — synthesized as an Adaptive Knowledge Governance Framework | documentation | 2026-07-07 |
+| [feedback-loop-taxonomy-substrate-instance-stage-symmetry.md](feedback-loop-taxonomy-substrate-instance-stage-symmetry.md) | **Base article.** Structural map placing feedback loop, iteration, control flow, closed-loop control, continuous improvement, live monitoring, and the ratchet mechanism on one taxonomy (substrate / whole-loop instance / single stage / symmetry-breaking modifier). See the companion extensions below for further vocabulary mapped onto the same taxonomy | documentation | 2026-07-08 |
+| [feedback-loop-substrate-dynamics-extrema-and-cyclical-process.md](feedback-loop-substrate-dynamics-extrema-and-cyclical-process.md) | Companion to the base taxonomy, one layer beneath control flow/iteration: dynamic vs. cyclical process, dynamical systems theory vs. control theory. See its own companion below for extremum/optimum/equilibrium | documentation | 2026-07-08 |
+| [feedback-loop-extrema-equilibria-and-physics-grounding.md](feedback-loop-extrema-equilibria-and-physics-grounding.md) | Companion to the substrate companion: extremum vs. optimum, extremum principles (stationary action, Fermat's least time, thermodynamic potentials, minimum total potential energy), equilibrium (stable/unstable, steady state vs. true equilibrium, Nash equilibrium), and the Onsager/Prigogine near-vs-far-from-equilibrium caveat | documentation | 2026-07-08 |
+| [feedback-loop-evaluative-dimensions-and-quality-disciplines.md](feedback-loop-evaluative-dimensions-and-quality-disciplines.md) | Companion to the base taxonomy: efficiency, effectiveness, excellence, optimization, and satisficing (evaluative dimensions — the corrective to treating optimization as the universal goal); quality assurance/control/management (a domain instance); refinement, progression, improvement, sustainable growth (trajectory descriptors) | documentation | 2026-07-08 |
+| [feedback-loop-enforcement-and-safety-vocabulary.md](feedback-loop-enforcement-and-safety-vocabulary.md) | Companion to the base taxonomy: guardrails, quality gates, checkpoints, prerequisites, fallback, safety nets, filters, parameters, criteria, negative detection patterns, tightening mechanisms, enforcement mechanisms, mechanical floors, the self-improving loop, and the fixed-parameter vs. unknown/decision-variable distinction (optimization vs. root-finding). See its own companion below for the funnel and epistemic-awareness material | documentation | 2026-07-08 |
+| [feedback-loop-enforcement-extensions-funnels-and-epistemics.md](feedback-loop-enforcement-extensions-funnels-and-epistemics.md) | Companion to the enforcement-and-safety companion: the funnel (open-loop-by-default filter chain; population throughput vs. single-instance trajectory), and known unknown vs. unknown known (loop observability vs. loop correctness — Polanyi's tacit knowledge vs. Žižek's disavowal) | documentation | 2026-07-08 |
+| [feedback-loop-cycle-vocabulary-personal-archetypes-and-change-theory.md](feedback-loop-cycle-vocabulary-personal-archetypes-and-change-theory.md) | Companion to the base taxonomy: virtuous circle, self-correction, self-perpetuating; a personal-development domain instance (Prokopton, go-getter, self-actualizer); the Watzlawick first-order/second-order change distinction behind a ~40-verb "tune vs. redesign" cluster; quality attributes; and a three-way breakdown of "adaptation" (adaptive control vs. contextual vs. evolutionary) | documentation | 2026-07-08 |
+| [feedback-loop-domain-instance-machine-learning-training.md](feedback-loop-domain-instance-machine-learning-training.md) | Companion to the base taxonomy: forward propagation, backpropagation, the chain rule, and gradient descent as a fifth domain instance — the neural-network training loop. See its own companion below for the optimization-landscape depth | documentation | 2026-07-08 |
+| [feedback-loop-ml-training-optimization-landscape.md](feedback-loop-ml-training-optimization-landscape.md) | Companion to the ML-training companion: local vs. global minima, the critical-point/saddle-point precision, why saddle points dominate in high dimension (curse of dimensionality), and minimization/maximization as the same sign-flipped operation | documentation | 2026-07-08 |
+| [feedback-loop-ml-search-strategy-and-generalization.md](feedback-loop-ml-search-strategy-and-generalization.md) | Companion to the optimization-landscape companion: exploration vs. exploitation (the framework behind momentum/noise/annealing/restarts), the bias-variance trade-off, and regularization as a fourth, softer boundary-setting mechanism | documentation | 2026-07-08 |
+| [feedback-loop-domain-instance-agentic-reflection-loops.md](feedback-loop-domain-instance-agentic-reflection-loops.md) | Companion to the base taxonomy: generate/verify/reflect (and self-reflection) in LLM agents as a sixth domain instance; introduces parametric-vs-contextual correction, iteration-granularity, and grounded-vs-self-referential verification as new axes | documentation | 2026-07-08 |
+| [feedback-loop-control-engineering-pid-hysteresis-and-delay.md](feedback-loop-control-engineering-pid-hysteresis-and-delay.md) | Companion to the base taxonomy — opens up "closed-loop control system": PID's three-way decomposition of the compare stage (proportional/integral/derivative), feedback delay/latency as the cause of oscillation and overshoot, hysteresis as a third asymmetry distinct from the ratchet, feedforward control, statistical process control, and a translation table to standard control-engineering vocabulary (setpoint/process variable/manipulated variable) | documentation | 2026-07-08 |
 
 ---
 
@@ -146,8 +158,10 @@ article makes no such claims.>
 
 ## Related Articles <!-- Recommended -->
 
-<Same-folder link: `[[bare-filename]]`. Cross-folder link: `[Title](../folder/file.md)`. List the
-same targets in the `related_articles` frontmatter field too.>
+<Same-folder link: `[Title](bare-filename.md)`. Cross-folder link: `[Title](../folder/file.md)`.
+Always use a real relative markdown link, never a bare `[[wikilink]]` — see Cross-Referencing
+Between Articles below for why. List the same targets in the `related_articles` frontmatter field
+too.>
 ```
 
 Start with `status: draft` and flip to `published` once the article is actually complete — not
@@ -217,13 +231,18 @@ one-line pointer in the body) rather than leaving one article to cover both.
 
 ### Cross-Referencing Between Articles
 
-- **Same-folder link** (e.g. two articles both in `project/`): use a bare wikilink, `[[filename-without-extension]]`.
-- **Cross-folder link** (e.g. a `project/` article linking into `learning/`, or vice versa): use an
-  explicit relative markdown link, `[Title](../learning/filename.md)` — not a bare wikilink. This
-  KB has no automated link resolver; a bare `[[name]]` written in a different folder than its
-  target is genuinely ambiguous about which folder to search, so don't rely on it working.
-- List every cross-referenced article in the `related_articles` frontmatter field too, using the
-  same folder-relative path convention, so the relationship is machine-readable, not just prose.
+Always use a real relative markdown link — `[Title](filename.md)` for a same-folder target,
+`[Title](../learning/filename.md)` for a cross-folder one. **Do not use a bare `[[wikilink]]`
+anywhere in this KB.** This convention previously recommended bare wikilinks for same-folder
+targets; that guidance was reversed on 2026-07-08 after a session found it produces links that
+render as literal double-bracket text — not clickable — in GitHub, VS Code's default markdown
+preview, and every other standard renderer this KB is actually read in. This KB has no automated
+`[[wikilink]]` resolver, so a bare `[[name]]` never worked reliably even for same-folder targets,
+and was actively misleading for cross-folder ones (genuinely ambiguous which folder to search). A
+real relative link has zero downside and works everywhere.
+
+List every cross-referenced article in the `related_articles` frontmatter field too, using the
+same folder-relative path convention, so the relationship is machine-readable, not just prose.
 
 ### Housekeeping
 

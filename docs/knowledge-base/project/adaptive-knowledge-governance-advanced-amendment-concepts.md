@@ -5,7 +5,7 @@ tags: [amendment-mechanism, decision-log, adr, assumption-tracking, traceability
 keywords: [decision log, architecture decision record, assumption register, edge case registry, knowledge maturity levels, deprecation review, lessons learned repository, traceability matrix, feedback source classification, change impact scoring, preventive improvement loop, amendment lifecycle states, knowledge ownership, continuous improvement metrics, adaptive knowledge governance framework]
 objective: Extend the core amendment-mechanism pattern with 15 additional, independently-adoptable governance concepts (decision logs, assumption tracking, traceability matrices, change impact scoring, etc.) that together form what could be called an Adaptive Knowledge Governance Framework.
 audience: engineers or teams whose amendment mechanism (see the base article) has matured past a simple trigger/correction/log and needs more structure — decision rationale, assumption validation, traceability, or governance metrics
-scope: general, project-agnostic — extends [[closed-loop-feedback-and-amendment-mechanisms-for-process-documents]] rather than repeating its control-theory/continuous-improvement foundation
+scope: general, project-agnostic — extends [Closed-Loop Feedback and Amendment Mechanisms for Process Documents](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md) rather than repeating its control-theory/continuous-improvement foundation
 source_conversations: [Session 2026-07-07]
 last_updated: 2026-07-07
 confidence: high
@@ -18,7 +18,7 @@ status: published
 
 # Advanced Amendment Concepts: Toward an Adaptive Knowledge Governance Framework
 
-This article extends [[closed-loop-feedback-and-amendment-mechanisms-for-process-documents]]'s
+This article extends [Closed-Loop Feedback and Amendment Mechanisms for Process Documents](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md)'s
 core amendment mechanism (trigger + correction + log) with 15 additional concepts, split into its
 own article because the base article had grown past a comfortable single-read length. Read the
 base article first — it covers the control-theory and continuous-improvement foundation this one
@@ -439,7 +439,7 @@ graph TD
 ```
 
 This is the same 8-step loop from
-[[closed-loop-feedback-and-amendment-mechanisms-for-process-documents]]'s "The General Amendment
+[Closed-Loop Feedback and Amendment Mechanisms for Process Documents](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md)'s "The General Amendment
 Lifecycle," expanded to show what each of "Identify Gaps" and "Analyze Impact" actually decomposes
 into in practice. Treat this as the detailed variant and that article's version as the canonical
 simple one — not as two independently-designed lifecycles.
@@ -466,5 +466,5 @@ that learns and improves over time."**
 
 - Kruchten, P. (2004). "An Ontology of Architectural Design Decisions" — foundational Architecture
   Decision Record (ADR) concept referenced in §1.
-- [[closed-loop-feedback-and-amendment-mechanisms-for-process-documents]] — the base
+- [Closed-Loop Feedback and Amendment Mechanisms for Process Documents](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md) — the base
   amendment-mechanism pattern this article extends.

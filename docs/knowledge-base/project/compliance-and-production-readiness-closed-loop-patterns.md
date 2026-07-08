@@ -3,7 +3,7 @@ title: Closed-Loop Patterns in Compliance and Production-Readiness Programs
 category: documentation
 tags: [compliance, production-readiness, closed-loop, iso-27001, soc-2, nist-csf, continuous-controls-monitoring, quality-attributes, requirements]
 keywords: [gap analysis, remediation, operational readiness, formal audit, continuous monitoring, IIA, SOC 2, ISO 27001, PCI DSS, HIPAA, NIST CSF, CCM, production-grade software, quality attributes, requirement specification levels]
-objective: Show that compliance/audit programs and "production-grade software" both describe the same closed-loop control structure as [[closed-loop-feedback-and-amendment-mechanisms-for-process-documents]], just applied at the compliance-program and software-quality-attribute scale instead of the single-document scale.
+objective: Show that compliance/audit programs and "production-grade software" both describe the same closed-loop control structure as [Closed-Loop Feedback and Amendment Mechanisms for Process Documents](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md), just applied at the compliance-program and software-quality-attribute scale instead of the single-document scale.
 audience: engineers or compliance/audit staff designing a continuous-compliance program, an SRS quality-attribute section, or evaluating what "production-grade" should mean for a given system
 scope: general pattern (compliance frameworks, software quality attributes), no BuildNest-specific worked example — BuildNest's own SRS does not yet fully implement the requirement structure described here (see the honesty note near the bottom)
 source_conversations: [Session 2026-07-07]
@@ -19,7 +19,7 @@ status: published
 # Closed-Loop Patterns in Compliance and Production-Readiness Programs
 
 This article applies the closed-loop control pattern from
-[[closed-loop-feedback-and-amendment-mechanisms-for-process-documents]] at a different scale: a
+[Closed-Loop Feedback and Amendment Mechanisms for Process Documents](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md) at a different scale: a
 compliance program (auditing a whole organization) and a software system's quality-attribute
 posture (what makes it "production-grade"), rather than a single rule file. Read that article
 first for the underlying control-theory and continuous-improvement framing — this one assumes it
@@ -184,6 +184,6 @@ pattern is.
 - NIST, *Cybersecurity Framework (CSF) 2.0*.
 - ISO 9001:2015, *Quality management systems — Requirements* — "continual improvement" clause.
 - ISO/IEC/IEEE 12207:2017, *Software life cycle processes*.
-- [[closed-loop-feedback-and-amendment-mechanisms-for-process-documents]] — the underlying
+- [Closed-Loop Feedback and Amendment Mechanisms for Process Documents](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md) — the underlying
   closed-loop/feedback pattern this article applies at compliance-program and
   quality-attribute scale.
