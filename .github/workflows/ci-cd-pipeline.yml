@@ -486,7 +486,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests, reliability-tests, e2e-tests]
     if: always()
-    
+    defaults:
+      run:
+        working-directory: .
+
     steps:
       - name: Download all test results
         uses: actions/download-artifact@v4
