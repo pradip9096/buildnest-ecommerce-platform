@@ -17,4 +17,119 @@
         <until>2025-06-01Z</until>
     </suppress>
     -->
+
+    <!-- Issue #332: org.apache.httpcomponents:httpcore / httpcore-nio 4.4.16 (CVE-2026-54399,
+         CVE-2026-54428) — CONFIRMED FALSE POSITIVE, verified directly against the NVD detail
+         pages on 2026-07-09. Both CVEs affect Apache HttpComponents Core **5.x** ("5.4.2 and
+         earlier, 5.5-beta1 and earlier") — CVE-2026-54399 is an HTTP/1.1 message-parser resource
+         exhaustion, CVE-2026-54428 is an HTTP/2 HPACK decoder resource exhaustion. This project
+         uses the legacy **4.x** branch (org.apache.httpcomponents:httpcore/httpcore-nio, a
+         different, older artifact lineage from org.apache.httpcomponents.core5:httpcore5) —
+         4.x has no HTTP/2 support at all, so CVE-2026-54428's vulnerable code path doesn't even
+         exist in what we ship. This also has no patched version regardless: 4.4.16 is the last
+         release in the whole legacy 4.x branch (confirmed against Maven Central metadata).
+         Present via two paths: rest-assured 5.5.7 (test scope) -> httpclient 4.5.13 ->
+         httpcore, and elasticsearch-rest-client 8.19.18 (compile scope, production) ->
+         httpcore/httpcore-nio directly — both resolve to the same misidentified 5.x CVE.
+         Originally suppressed here on weaker "test-scope only, no patch available" grounds
+         before the elasticsearch-rest-client compile-scope path was discovered; rewritten with
+         the actual NVD-verified 5.x/4.x generation mismatch, which applies regardless of scope. -->
+    <suppress>
+        <notes>Confirmed false positive, verified against NVD directly — both CVEs affect Apache
+        HttpComponents Core 5.x (different artifact lineage, groupId
+        org.apache.httpcomponents.core5); we use the legacy 4.x branch
+        (org.apache.httpcomponents), which has no HTTP/2 support at all (CVE-2026-54428's
+        vulnerable code path doesn't exist in 4.x). See issue #332.</notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.httpcomponents/httpcore.*@.*$</packageUrl>
+        <cve>CVE-2026-54399</cve>
+        <cve>CVE-2026-54428</cve>
+    </suppress>
+
+    <!-- Issue #332: org.eclipse.angus:angus-activation 2.0.3 (CVE-2025-7962) — CONFIRMED FALSE
+         POSITIVE. CVE-2025-7962 is a real SMTP injection vulnerability, but in the
+         org.eclipse.angus:smtp module (jakarta.mail's SMTP transport), fixed in jakarta.mail
+         2.0.4. This project already runs jakarta.mail 2.0.5 (past the real fix) via
+         spring-boot-starter-mail. dependency-check-maven's CPE matching incorrectly also maps
+         this CVE onto the co-packaged angus-activation artifact within the same project family
+         — confirmed by upstream reports:
+         https://github.com/dependency-check/DependencyCheck/issues/8144 and
+         https://github.com/dependency-check/DependencyCheck/issues/8211 (both titled "[FP]").
+         No angus-activation version bump exists or is needed; the underlying smtp
+         vulnerability is already patched. -->
+    <suppress>
+        <notes>Confirmed false positive — CVE-2025-7962 is in org.eclipse.angus:smtp (fixed in
+        jakarta.mail 2.0.4; this project is on 2.0.5), incorrectly cross-mapped by
+        dependency-check-maven's CPE matching onto the co-packaged angus-activation artifact.
+        See DependencyCheck#8144, #8211. See issue #332.</notes>
+        <packageUrl regex="true">^pkg:maven/org\.eclipse\.angus/angus-activation@.*$</packageUrl>
+        <cve>CVE-2025-7962</cve>
+    </suppress>
+
+    <!-- Issue #332: org.jetbrains.kotlin:kotlin-stdlib (CVE-2026-53914, NVD-rated 9.8 CRITICAL)
+         — CONFIRMED FALSE POSITIVE, verified directly against the NVD detail page
+         (nvd.nist.gov/vuln/detail/CVE-2026-53914) on 2026-07-09. The vulnerability is "unsafe
+         deserialization in the build cache metadata" (CWE-502) — a Kotlin BUILD SYSTEM/compiler
+         tooling flaw (Gradle build cache), fixed in Kotlin 2.4.20. This project does not run the
+         Kotlin compiler or Gradle build cache at all — kotlin-stdlib is consumed purely as a
+         runtime dependency (transitively via okhttp, used by razorpay-java). The vulnerable code
+         path (build cache metadata deserialization) is not present in kotlin-stdlib.jar and is
+         never invoked by this project's usage. dependency-check's CPE match
+         (cpe:2.3:a:jetbrains:kotlin:*, no version bound) covers the whole JetBrains Kotlin
+         product family (compiler + build tooling + stdlib) as one CPE, which is the documented
+         false-positive class for coarse-grained project-level CPEs
+         (dependency-check.github.io docs; also see arxiv.org/pdf/1808.09753). Already on latest
+         stable kotlin-stdlib (2.4.0) independent of this suppression. -->
+    <suppress>
+        <notes>Confirmed false positive, verified against NVD directly — CVE-2026-53914 is a
+        Kotlin build-cache-metadata deserialization flaw (compiler/Gradle tooling), not a
+        kotlin-stdlib runtime issue; this project never runs Kotlin build tooling, only consumes
+        the compiled stdlib jar at runtime. See issue #332.</notes>
+        <packageUrl regex="true">^pkg:maven/org\.jetbrains\.kotlin/kotlin-stdlib.*@.*$</packageUrl>
+        <cve>CVE-2026-53914</cve>
+    </suppress>
+
+    <!-- Issue #332: io.micrometer:micrometer-registry-prometheus (CVE-2026-42154, 7.5 HIGH) —
+         CONFIRMED FALSE POSITIVE, verified directly against the NVD detail page on 2026-07-09.
+         The vulnerability is in the Prometheus SERVER's own /api/v1/read remote-read endpoint
+         (unvalidated snappy-decompressed length -> unbounded memory allocation, CWE-400/770/789),
+         fixed in Prometheus 3.5.3/3.11.3. This project does not run a Prometheus server —
+         micrometer-registry-prometheus is a client-side metrics-exposition library that formats
+         metrics for an external Prometheus server to scrape; it does not implement or expose the
+         remote-read API at all. dependency-check's CPE match
+         (cpe:2.3:a:prometheus:prometheus:*, no version bound) is a vendor/product name collision
+         with the actual Prometheus server product, triggered by "prometheus" appearing in the
+         artifact name. Already on latest stable version (1.17.0) independent of this
+         suppression. -->
+    <suppress>
+        <notes>Confirmed false positive, verified against NVD directly — CVE-2026-42154 is in the
+        Prometheus server's /api/v1/read endpoint; micrometer-registry-prometheus is a
+        client-side exposition library with no such endpoint. Vendor/product name collision
+        ("prometheus" in artifact name). See issue #332.</notes>
+        <packageUrl regex="true">^pkg:maven/io\.micrometer/micrometer-registry-prometheus@.*$</packageUrl>
+        <cve>CVE-2026-42154</cve>
+    </suppress>
+
+    <!-- Issue #332: io.netty:* 4.1.136.Final family (CVE-2026-42582, 7.5 HIGH) — CONFIRMED
+         FALSE POSITIVE, verified directly against the NVD detail page on 2026-07-09. The
+         vulnerability is in the QPACK header decoder (io.netty.handler.codec.http3.QpackDecoder),
+         part of netty-codec-http3, affecting versions 4.2.0.Alpha1 through 4.2.12.Final (fixed in
+         4.2.13.Final). This project is on netty 4.1.136.Final — an entirely different major.minor
+         line, outside the affected 4.2.x range — and does not depend on netty-codec-http3 at all
+         (no HTTP/3 usage anywhere). dependency-check's CPE match (cpe:2.3:a:netty:netty:*, no
+         version bound) covers the whole Netty product as one CPE regardless of module — a real CI
+         run first surfaced this on netty-codec-4.1.136.Final.jar, a sibling module to
+         netty-transport/netty-transport-native-unix-common (originally suppressed) that a local
+         run's NVD snapshot hadn't flagged; broadened from an artifactId-prefix match to cover the
+         whole io.netty groupId at this CVE, since the false-positive reasoning (4.1.x has no
+         HTTP/3 support anywhere in the release) applies uniformly across every netty-* module
+         shipped from the same 4.1.136.Final release, not just the specific ones observed so far. -->
+    <suppress>
+        <notes>Confirmed false positive, verified against NVD directly — CVE-2026-42582 only
+        affects Netty 4.2.0.Alpha1-4.2.12.Final's HTTP/3 QPACK decoder (netty-codec-http3); this
+        project is on netty 4.1.136.Final (different major line, outside the affected range, no
+        HTTP/3 support at all). Covers the whole io.netty groupId at this CVE — applies uniformly
+        across every module shipped from the same 4.1.136.Final release. See issue #332.</notes>
+        <packageUrl regex="true">^pkg:maven/io\.netty/.*@.*$</packageUrl>
+        <cve>CVE-2026-42582</cve>
+    </suppress>
 </suppressions>
