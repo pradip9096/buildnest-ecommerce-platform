@@ -3,8 +3,16 @@ name: BuildNest E-Commerce CI/CD Pipeline
 on:
   push:
     branches: [ main, master, develop ]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
   pull_request:
     branches: [ main, master, develop ]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
   workflow_dispatch:
     inputs:
       pit_debug:
