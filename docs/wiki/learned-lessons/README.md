@@ -74,6 +74,7 @@ section below for the single-occurrence threshold this implies in practice.
 | [verifying-a-stale-premise-can-surface-a-bigger-bug.md](verifying-a-stale-premise-can-surface-a-bigger-bug.md) | Verifying #249's stale "backend expects JSON" premise required reading the whole `changePassword` endpoint — which surfaced an unrelated, unfiled IDOR (client-supplied `userId`, no ownership check) standing next to the filed `priority: low` cosmetic bug | process | 2026-07-04 |
 | [github-actions-working-directory-default-only-applies-to-run-steps.md](github-actions-working-directory-default-only-applies-to-run-steps.md) | `defaults.run.working-directory` only affects `run:` steps, not `uses:` steps — #329's `report-summary` job failed only on its `run:` step, not the preceding `actions/download-artifact` step | tooling | 2026-07-09 |
 | [real-secret-pasted-into-env-example-instead-of-env.md](real-secret-pasted-into-env-example-instead-of-env.md) | A real NVD API key was pasted into the committed `.env.example` instead of the gitignored `.env` — twice in one session; never committed, but the fix and prevention rule generalize | process | 2026-07-09 |
+| [gh-workflow-active-does-not-mean-reachable.md](gh-workflow-active-does-not-mean-reachable.md) | `gh workflow list` reporting a workflow as `active` only means the file is enabled, not that its trigger branches exist — `ci-cd.yml` targets `main`/`develop`, neither of which exists in this repo | tooling | 2026-07-10 |
 
 ## Related Knowledge Base Articles
 
