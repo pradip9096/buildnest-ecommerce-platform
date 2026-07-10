@@ -1,0 +1,80 @@
+name: Bug Report
+description: Report a defect or incorrect behaviour in BuildNest
+title: "[Bug]: "
+labels:
+  - "type: bug"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, verify the bug against the current state of the repo — not just against a report or a prior conversation. Include enough evidence (a failing curl, a stack trace, a DB query result) that anyone reading this can reproduce it without guessing.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A 1-2 sentence description of the defect.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Exact steps to trigger the bug, from a clean starting state.
+      placeholder: |
+        1. Register a new account
+        2. Add "OPC 53 Grade Cement" to cart
+        3. View the cart
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Concrete proof — curl output, DB query results, stack traces, screenshots, code snippets. Not a paraphrase of what you expect is happening.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: root-cause
+    attributes:
+      label: Root Cause
+      description: Why it happens, if known. If unknown, say so explicitly rather than guessing.
+    validations:
+      required: false
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Who/what is affected, and how severely (e.g. blocks all checkouts vs. a cosmetic glitch on one admin tab).
+    validations:
+      required: true
+
+  - type: textarea
+    id: fix-checklist
+    attributes:
+      label: Fix Checklist
+      description: Concrete steps required to close this issue. Use GitHub task list syntax so progress is trackable.
+      value: |
+        - [ ]
+        - [ ] Regression test:
+    validations:
+      required: false
+
+  - type: textarea
+    id: source
+    attributes:
+      label: Source
+      description: Where this was discovered (e.g. a dynamic-analysis report and finding number, a user report, a monitoring alert).
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        After submitting, apply the appropriate `priority: *`, `phase: M*`, and `domain: *` labels — GitHub issue forms cannot set these automatically from field input.

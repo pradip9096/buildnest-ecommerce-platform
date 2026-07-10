@@ -600,8 +600,9 @@ WebhookSubscription  (standalone — no User FK)
 
 | State Type | Storage | Content | Lifetime |
 | :--- | :--- | :--- | :--- |
-| Auth tokens | `localStorage` | JWT refresh token | Persistent until logout |
-| User session | React Context (memory) | JWT access token, user profile | Cleared on page reload; silent refresh restores |
+| Auth tokens | httpOnly `Secure`/`SameSite=Lax` cookies (backend-set, unreadable from JS) | JWT access token, JWT refresh token | Access: matches `jwt.expiration`; Refresh: matches `jwt.refresh-expiration` (SEC-15) |
+| CSRF token | Non-httpOnly `XSRF-TOKEN` cookie (double-submit) | Opaque CSRF token, echoed via `X-XSRF-TOKEN` header | Session-scoped; reissued by `NonClearingCsrfTokenRepository` |
+| User session | React Context (memory) | User profile | Cleared on page reload; rehydrated via profile fetch against the auth cookie |
 | Cart state | React Context / Redux | Cart items, total | Synced with backend on mutation |
 | UI state | Local component state | Form inputs, modal visibility | Component lifecycle |
 | Server cache | React Query / SWR | Product lists, search results | Stale-time configurable (default 5 min) |
@@ -1109,8 +1110,8 @@ Spring Security processes requests through the following chain in order:
 | :--- | :--- | :--- | :--- |
 | 1 | `HttpsEnforcementFilter` | Redirects HTTP → HTTPS | Production only |
 | 2 | CORS Filter | Validates `Origin` header against allowlist (`buildnest.com`) | All |
-| 3 | CSRF Protection | Disabled for stateless JWT API | All |
-| 4 | `JwtAuthenticationFilter` | Extracts JWT from `Authorization: Bearer` header; populates `SecurityContext` | All (non-test) |
+| 3 | CSRF Protection | `CookieCsrfTokenRepository` double-submit pattern; validates `X-XSRF-TOKEN` header against the `XSRF-TOKEN` cookie on all mutating requests except `/api/auth/login` and `/api/auth/register` (SEC-15) | All (non-test) |
+| 4 | `JwtAuthenticationFilter` | Extracts JWT from `Authorization: Bearer` header, falling back to the `access_token` cookie; populates `SecurityContext` | All (non-test) |
 | 5 | `AdminRateLimitFilter` | Enforces rate limits on `/api/admin/**` | All |
 | 6 | Spring Authorization | Role-based path matching; returns 401 / 403 | All |
 

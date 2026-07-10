@@ -3,6 +3,47 @@
 Reusable, actionable lessons extracted from BuildNest development sessions.
 Each file is a standalone reference — read it when you hit the relevant situation.
 
+## Definition
+
+A **lesson learned** is a generalized, evidence-based insight — captured from a real
+experience, positive or negative — that is likely to provide long-term value beyond the
+original discussion. Three formulations, all converging on the same bar:
+
+> "A lesson learned is knowledge or understanding gained by experience. The experience
+> may be positive, as in a successful test or mission, or negative, as in a mishap or
+> failure... A lesson must be significant in that it has a real or assumed impact on
+> operations; valid in that is factually and technically correct; and applicable in
+> that it identifies a specific design, process, or decision that reduces or
+> eliminates the potential for failures and mishaps, or reinforces a positive result."
+
+> "Generalizations based on evaluation experiences with projects, programs, or
+> policies that abstract from the specific circumstances to broader situations.
+> Frequently, lessons highlight strengths or weaknesses in preparation, design, and
+> implementation that affect performance, outcome, and impact."
+
+> "A lesson learned is a generalized, evidence-based insight that captures knowledge,
+> best practices, decision-making rationale, recurring patterns, successful
+> approaches, common pitfalls, implementation experiences, troubleshooting
+> strategies, design considerations, workflows, methodologies, or process
+> improvements that are likely to provide long-term value beyond the original
+> discussion."
+
+Source: [Wikipedia — Lessons learned](https://en.wikipedia.org/wiki/Lessons_learned)
+
+**The three-part admission bar for a file in this directory** (synthesized from all
+three definitions above):
+
+- **Significant** — it has a real or assumed impact on how work gets done here; a
+  one-off typo or a preference with no downstream consequence doesn't qualify.
+- **Valid** — verified against the actual failure/fix, not assumed or reconstructed
+  from memory; factually and technically correct.
+- **Generalized/applicable** — abstracted past the one specific occurrence into a rule
+  that applies the next time the same class of situation comes up, not just a log of
+  "what happened on 2026-07-04."
+
+This is a stricter bar than "anything mildly useful I noticed" — see the Contributing
+section below for the single-occurrence threshold this implies in practice.
+
 ## Index
 
 | File | Topic | Category | Last Updated |
@@ -25,6 +66,14 @@ Each file is a standalone reference — read it when you hit the relevant situat
 | [allargs-constructor-positional-test-fragility.md](allargs-constructor-positional-test-fragility.md) | Adding one field to a Lombok `@AllArgsConstructor` entity/DTO breaks every positional `new X(...)` test call site after that field — prefer builders or setter-based construction in tests | testing | 2026-07-04 |
 | [react-router-searchparams-not-resynced-on-navigation.md](react-router-searchparams-not-resynced-on-navigation.md) | Reading `useSearchParams` only in a `useState` initializer hydrates a fresh page load but leaves state stale on browser back/forward — needs an explicit effect keyed on the param values | tooling | 2026-07-04 |
 | [jwt-excluded-claims-recur-across-fields.md](jwt-excluded-claims-recur-across-fields.md) | `user.id` (#280) and `user.roles` (#292) were the same root cause on two different fields, filed as separate issues — once a "JWT doesn't carry claim A" bug is confirmed, audit the same file for every other claim decoded the same way before closing the bug class | process | 2026-07-04 |
+| [github-issue-multi-domain-labeling.md](github-issue-multi-domain-labeling.md) | An issue about auth logic living in a frontend file needs both `domain: auth` and `domain: frontend` — single-domain labeling makes it silently vanish from a filtered view expecting the other label | process | 2026-07-04 |
+| [vitest-needs-triple-slash-reference-in-vite-config.md](vitest-needs-triple-slash-reference-in-vite-config.md) | Colocating Vitest's `test` block inside `vite.config.ts`'s `defineConfig` needs `/// <reference types="vitest/config" />` as the first line, or the `test` key isn't type-recognized | testing | 2026-07-04 |
+| [rtl-cleanup-needs-explicit-aftereach-with-globals-false.md](rtl-cleanup-needs-explicit-aftereach-with-globals-false.md) | With Vitest `globals: false`, React Testing Library's automatic unmount-after-each-test never fires — needs an explicit `afterEach(cleanup)` in the shared setup file or later tests see leftover DOM from earlier ones | testing | 2026-07-04 |
+| [tailwind-v4-semantic-color-alias-for-recolor-refactors.md](tailwind-v4-semantic-color-alias-for-recolor-refactors.md) | A "unify the brand color, one place to change it later" task needs a `@theme` alias (`--color-primary-50: var(--color-indigo-50)`, etc.) pointing at the chosen palette — a plain find-replace of the color name doesn't satisfy the "one place" requirement | tooling | 2026-07-04 |
+| [fake-timers-cleanup-belongs-in-aftereach-not-test-body.md](fake-timers-cleanup-belongs-in-aftereach-not-test-body.md) | `vi.useRealTimers()` as the last line of a test body never runs if that test fails or times out first — the leftover fake-timer state then cascades into the *next* test's unrelated timeout failure; put the cleanup in `afterEach` instead | testing | 2026-07-04 |
+| [verifying-a-stale-premise-can-surface-a-bigger-bug.md](verifying-a-stale-premise-can-surface-a-bigger-bug.md) | Verifying #249's stale "backend expects JSON" premise required reading the whole `changePassword` endpoint — which surfaced an unrelated, unfiled IDOR (client-supplied `userId`, no ownership check) standing next to the filed `priority: low` cosmetic bug | process | 2026-07-04 |
+| [github-actions-working-directory-default-only-applies-to-run-steps.md](github-actions-working-directory-default-only-applies-to-run-steps.md) | `defaults.run.working-directory` only affects `run:` steps, not `uses:` steps — #329's `report-summary` job failed only on its `run:` step, not the preceding `actions/download-artifact` step | tooling | 2026-07-09 |
+| [real-secret-pasted-into-env-example-instead-of-env.md](real-secret-pasted-into-env-example-instead-of-env.md) | A real NVD API key was pasted into the committed `.env.example` instead of the gitignored `.env` — twice in one session; never committed, but the fix and prevention rule generalize | process | 2026-07-09 |
 | [dependency-check-suppression-schema-and-multi-instance-wiring-gotchas.md](dependency-check-suppression-schema-and-multi-instance-wiring-gotchas.md) | `<until>` must be an attribute on `<suppress>`, not a child element — a schema error here is a silent warning, not a build failure, and voids *every* suppression in the file; also, a POM can have multiple `dependency-check-maven` instances with independently-wired suppression files | tooling | 2026-07-09 |
 | [unbounded-cpe-version-match-is-a-false-positive-signal.md](unbounded-cpe-version-match-is-a-false-positive-signal.md) | A dependency-check finding with no CPE version-range bound is a strong false-positive signal (product-level CPE, not artifact-scoped) — verify against the real NVD CVE page before suppressing at high severity, don't suppress on pattern-matching alone | process | 2026-07-09 |
 | [maven-dependency-bumps-can-introduce-surprise-transitive-changes.md](maven-dependency-bumps-can-introduce-surprise-transitive-changes.md) | A version bump can introduce a new transitive dependency under a renamed groupId (elasticsearch-java 8.19.x → Jackson 3.0.0 under `tools.jackson.core`) or break on a sibling artifact that stopped publishing a JAR (`kotlin-stdlib-common` past 2.0.21) — `dependency:tree` can look clean when a real build still fails | tooling | 2026-07-09 |
@@ -32,6 +81,7 @@ Each file is a standalone reference — read it when you hit the relevant situat
 ## Related Knowledge Base Articles
 
 - [Quality Gate Ratchet Pattern](../../knowledge-base/project/quality-gate-ratchet-pattern.md) — fitness functions, monotonic improvement constraint, PIT threshold schedule
+- [.env.example (Committed Template) vs .env (Local Secrets)](../../knowledge-base/project/env-example-template-vs-env-local-secrets.md) — the durable mechanism behind the real-secret-pasted-into-env-example lesson above
 
 ## Contributing
 
