@@ -6,11 +6,19 @@ on:
       - main
       - master
       - develop
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
   pull_request:
     branches:
       - main
       - master
       - develop
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
   workflow_dispatch:
   schedule:
     - cron: "0 2 * * 1"

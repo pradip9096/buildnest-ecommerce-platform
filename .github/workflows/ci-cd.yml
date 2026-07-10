@@ -5,10 +5,18 @@ on:
     branches:
       - main
       - develop
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
   pull_request:
     branches:
       - main
       - develop
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
 
 defaults:
   run:
