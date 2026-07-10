@@ -294,12 +294,22 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
 
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
       - name: Cache NVD database
         uses: actions/cache@v4
         with:
+          # Keyed on date, not pom.xml (#342): the NVD CVE dataset is external and
+          # updates daily regardless of this project's own dependencies. A pom.xml-hash
+          # key means every dependency bump forces a multi-hour full re-sync from
+          # scratch instead of a fast incremental delta against a warm cache. Do not
+          # reintroduce a hashFiles('**/pom.xml') key here.
           path: ~/.dependency-check/data
-          key: nvd-db-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: nvd-db-${{ runner.os }}-
+          key: nvd-db-${{ runner.os }}-${{ steps.date.outputs.date }}
+          restore-keys: |
+            nvd-db-${{ runner.os }}-
 
       - name: Run OWASP Dependency-Check
         run: ./mvnw verify -Powasp -DskipTests -B
