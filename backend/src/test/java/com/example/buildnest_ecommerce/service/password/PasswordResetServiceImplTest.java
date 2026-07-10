@@ -5,6 +5,7 @@ import com.example.buildnest_ecommerce.model.entity.User;
 import com.example.buildnest_ecommerce.repository.PasswordResetTokenRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import com.example.buildnest_ecommerce.service.audit.AuditLogService;
+import com.example.buildnest_ecommerce.service.notification.INotificationService;
 import com.example.buildnest_ecommerce.service.token.RefreshTokenService;
 import com.example.buildnest_ecommerce.util.ValidationUtil;
 import org.junit.jupiter.api.DisplayName;
@@ -46,6 +47,9 @@ class PasswordResetServiceImplTest {
     @Mock
     private ValidationUtil validationUtil;
 
+    @Mock
+    private INotificationService notificationService;
+
     @InjectMocks
     private PasswordResetServiceImpl passwordResetService;
 
@@ -57,6 +61,7 @@ class PasswordResetServiceImplTest {
         passwordResetService.initiatePasswordReset("missing@example.com");
 
         verify(passwordResetTokenRepository, never()).save(any(PasswordResetToken.class));
+        verify(notificationService, never()).sendPasswordResetEmail(any(), any());
     }
 
     @Test
@@ -74,6 +79,22 @@ class PasswordResetServiceImplTest {
 
         verify(passwordResetTokenRepository).invalidateUserTokens(1L);
         verify(passwordResetTokenRepository).save(any(PasswordResetToken.class));
+    }
+
+    @Test
+    @DisplayName("Should dispatch a real password reset email with the generated token")
+    void testInitiatePasswordResetSendsEmail() {
+        ReflectionTestUtils.setField(passwordResetService, "resetTokenExpirationMs", 60000L);
+
+        User user = new User();
+        user.setId(1L);
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+        when(passwordResetTokenRepository.save(any(PasswordResetToken.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        passwordResetService.initiatePasswordReset("user@example.com");
+
+        verify(notificationService).sendPasswordResetEmail(eq("user@example.com"), any(String.class));
     }
 
     @Test

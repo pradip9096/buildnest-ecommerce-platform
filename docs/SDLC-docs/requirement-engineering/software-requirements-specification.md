@@ -470,7 +470,7 @@ This system has no direct hardware interfaces. It runs as a containerised applic
 | FR-AUTH-05 | The system shall require a minimum 512-bit JWT secret key and fail fast on startup if absent | High | Ph-1 | Test |
 | FR-AUTH-06 | The system shall support token refresh to obtain new access tokens without re-authentication | High | Ph-1 | Test |
 | FR-AUTH-07 | The system shall support user logout by invalidating the associated refresh token | High | Ph-1 | Test |
-| FR-AUTH-08 | The system shall support password reset via email with tokens expiring in 15 minutes (OWASP ASVS 2.1.8 compliant) | Medium | Ph-2 | Test |
+| FR-AUTH-08 | The system shall support password reset via email with tokens expiring in 1 hour, configurable (OWASP ASVS 2.5.6 secure recovery mechanism; see #339 for a proposal to tighten this to align with OWASP's tighter 15–30 min practical guidance) | Medium | Ph-2 | Test |
 | FR-AUTH-09 | The system shall enforce role-based access control (RBAC) with roles: `USER` and `ADMIN` | High | Ph-1 | Test |
 | FR-AUTH-10 | The system shall hash passwords using BCrypt with a minimum of 10 rounds | High | Ph-1 | Inspection |
 | FR-AUTH-11 | The system shall support OAuth2 client integration (Google, GitHub) | Medium | Ph-2 | Test |

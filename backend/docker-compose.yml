@@ -272,6 +272,20 @@ services:
       retries: 5
 
   # ===============================
+  # Mailpit — local SMTP catcher for dev/test email verification (#327)
+  # No real SMTP credentials needed locally: set MAIL_HOST=mailpit, MAIL_PORT=1025
+  # in backend/.env, then view sent emails at http://localhost:8025
+  # ===============================
+  mailpit:
+    image: axllent/mailpit:v1.20
+    container_name: buildnest-mailpit
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    networks:
+      - buildnest-network
+
+  # ===============================
   # Prometheus
   # ===============================
   prometheus:
