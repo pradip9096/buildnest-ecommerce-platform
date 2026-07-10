@@ -5,6 +5,7 @@ import com.example.buildnest_ecommerce.model.entity.User;
 import com.example.buildnest_ecommerce.repository.PasswordResetTokenRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import com.example.buildnest_ecommerce.service.audit.AuditLogService;
+import com.example.buildnest_ecommerce.service.notification.INotificationService;
 import com.example.buildnest_ecommerce.service.token.RefreshTokenService;
 import com.example.buildnest_ecommerce.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     private final AuditLogService auditLogService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final ValidationUtil validationUtil;
+    private final INotificationService notificationService;
 
     @Value("${password.reset.token.expiration:3600000}")
     private long resetTokenExpirationMs; // Default: 1 hour
@@ -63,10 +65,8 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
         passwordResetTokenRepository.save(resetToken);
 
-        // Note: Email sending will be implemented via EmailService
-        // In production, send email with reset link containing token
-        // Example: https://yourapp.com/reset-password?token={token}
-        log.info("Password reset token generated for email: {} (Token would be sent via email in production)", email);
+        notificationService.sendPasswordResetEmail(email, token);
+        log.info("Password reset email dispatched for: {}", email);
     }
 
     @Override
