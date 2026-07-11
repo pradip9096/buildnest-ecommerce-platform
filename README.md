@@ -258,7 +258,7 @@ GitHub Actions workflows in `.github/workflows/` that actively trigger on `maste
 |---|---|---|
 | `ci.yml` | Push / PR to master (+ weekly schedule) | Build, test, JaCoCo coverage gate (≥ 85% per package), dependency check. Deploy depends on this workflow completing. |
 | `ci-cd-pipeline.yml` | Push / PR to master (+ weekly schedule) | Broader test orchestration: unit, integration, reliability, security, load, and stress test jobs, plus PIT mutation-score reporting on PRs |
-| `security.yml` | Push / PR to master (+ weekly schedule) | CodeQL analysis, OWASP Dependency-Check, code quality scan |
+| `security.yml` | Push / PR to master (+ weekly schedule) | OWASP Dependency-Check (results surfaced via GitHub's code-scanning UI using the `codeql-action/upload-sarif` action — this workflow does not run CodeQL's own static-analysis engine, despite the action's name), SonarCloud analysis (`SonarQube Code Analysis` PR check, [dashboard](https://sonarcloud.io/dashboard?id=buildnest-ecommerce)), CheckStyle, SpotBugs |
 | `deploy.yml` | On `ci.yml` completing on master, or manual dispatch | Docker image build and push |
 | `performance.yml` | Manual / weekly schedule | JMeter load test suite |
 
