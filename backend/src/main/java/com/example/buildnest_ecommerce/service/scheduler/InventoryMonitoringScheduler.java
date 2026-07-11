@@ -3,7 +3,6 @@ package com.example.buildnest_ecommerce.service.scheduler;
 import com.example.buildnest_ecommerce.service.inventory.InventoryMonitoringService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,11 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Scheduled task for continuous inventory monitoring (RQ-INV-MON-01).
  * Runs periodic checks of inventory levels and generates alerts.
+ *
+ * Deliberately NOT gated behind {@code elasticsearch.enabled} — pairs with
+ * {@link InventoryMonitoringService}, which has no Elasticsearch dependency
+ * (see #345).
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true", matchIfMissing = false)
 public class InventoryMonitoringScheduler {
 
     private final InventoryMonitoringService inventoryMonitoringService;
