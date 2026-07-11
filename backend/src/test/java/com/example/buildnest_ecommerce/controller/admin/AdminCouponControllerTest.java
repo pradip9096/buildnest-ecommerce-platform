@@ -78,4 +78,37 @@ class AdminCouponControllerTest {
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
+
+    @Test
+    @DisplayName("createCoupon returns 500 Internal Server Error on an unexpected exception")
+    void createCoupon_unexpectedException_returns500() {
+        CouponService couponService = mock(CouponService.class);
+        when(couponService.createCoupon(any(), any(), any(), any(), any(), any()))
+                .thenThrow(new RuntimeException("database is down"));
+
+        AdminCouponController controller = new AdminCouponController(couponService);
+        CreateCouponRequest request = new CreateCouponRequest("SAVE10", Coupon.DiscountType.PERCENTAGE,
+                BigDecimal.TEN, null, null, null);
+
+        var response = controller.createCoupon(request);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("deactivateCoupon returns 500 Internal Server Error on a non-RuntimeException failure")
+    void deactivateCoupon_checkedException_returns500() {
+        // deactivateCoupon() itself declares no checked exceptions, so a mock is the only way
+        // to exercise the generic catch (Exception e) branch below catch (RuntimeException e) —
+        // Answer#answer() declares "throws Throwable", letting a checked Exception escape here.
+        CouponService couponService = mock(CouponService.class);
+        when(couponService.deactivateCoupon(1L)).thenAnswer(invocation -> {
+            throw new Exception("database is down");
+        });
+
+        AdminCouponController controller = new AdminCouponController(couponService);
+        var response = controller.deactivateCoupon(1L);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
 }

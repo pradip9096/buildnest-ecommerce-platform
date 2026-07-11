@@ -222,6 +222,21 @@ class CouponServiceImplTest {
     }
 
     @Test
+    @DisplayName("createCoupon persists the given minOrderValue, usageLimit, and expiresAt when provided")
+    void createCouponPersistsProvidedOptionalFields() {
+        when(couponRepository.findByCode("BIGORDER")).thenReturn(Optional.empty());
+        when(couponRepository.save(any(Coupon.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        LocalDateTime expiry = LocalDateTime.now().plusDays(30);
+        Coupon result = couponService.createCoupon("bigorder", Coupon.DiscountType.FIXED,
+                new BigDecimal("25"), new BigDecimal("150"), 10, expiry);
+
+        assertEquals(0, new BigDecimal("150").compareTo(result.getMinOrderValue()));
+        assertEquals(10, result.getUsageLimit());
+        assertEquals(expiry, result.getExpiresAt());
+    }
+
+    @Test
     @DisplayName("createCoupon throws ValidationException when the code already exists")
     void createCouponThrowsOnDuplicateCode() {
         when(couponRepository.findByCode("SAVE10")).thenReturn(Optional.of(activeCoupon));
