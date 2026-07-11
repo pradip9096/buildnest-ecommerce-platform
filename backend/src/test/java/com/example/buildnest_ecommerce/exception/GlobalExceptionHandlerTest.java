@@ -200,6 +200,28 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("Should handle ValidationException correctly")
+    void testHandleValidationException() {
+        // Arrange
+        ValidationException exception = new ValidationException("Coupon has expired");
+
+        // Act
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleValidationException(
+                exception, webRequest);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+
+        ErrorResponse errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals(400, errorResponse.getStatusCode());
+        assertEquals("Coupon has expired", errorResponse.getMessage());
+        assertEquals("Validation failed", errorResponse.getError());
+        assertEquals("/api/test", errorResponse.getPath());
+    }
+
+    @Test
     @DisplayName("Should use correct HTTP status codes")
     void testHttpStatusCodes() {
         // Test NOT_FOUND
