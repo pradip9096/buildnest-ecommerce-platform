@@ -6,7 +6,7 @@ import org.springframework.context.ApplicationEvent;
 /** Fired after a product is persisted for the first time (SRCH-02, #75). */
 public class ProductCreatedEvent extends ApplicationEvent {
     private static final long serialVersionUID = 1L;
-    private final Product product;
+    private final transient Product product;
 
     public ProductCreatedEvent(Object source, Product product) {
         super(source);

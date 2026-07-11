@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -59,8 +59,8 @@ class AdminOrderControllerIntegrationTest {
     @Autowired JwtTokenProvider jwtTokenProvider;
     @Autowired PasswordEncoder passwordEncoder;
 
-    @MockBean INotificationService notificationService;
-    @MockBean RateLimitUtil rateLimitUtil;
+    @MockitoBean INotificationService notificationService;
+    @MockitoBean RateLimitUtil rateLimitUtil;
 
     private String adminToken;
     private String userToken;
