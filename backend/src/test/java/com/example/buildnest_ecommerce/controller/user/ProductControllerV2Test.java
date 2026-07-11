@@ -3,9 +3,11 @@ package com.example.buildnest_ecommerce.controller.user;
 import com.example.buildnest_ecommerce.model.elasticsearch.ProductDocument;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
+import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import com.example.buildnest_ecommerce.service.analytics.UserEventService;
 import com.example.buildnest_ecommerce.service.product.ProductSearchService;
 import com.example.buildnest_ecommerce.service.product.ProductService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
@@ -13,6 +15,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -22,6 +26,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ProductControllerV2Test {
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     void getAllAndGetById() {
@@ -47,6 +56,24 @@ class ProductControllerV2Test {
         assertEquals(HttpStatus.OK, controller.getProduct(1L).getStatusCode());
 
         verify(userEventService).recordProductView(isNull(), eq(1L));
+    }
+
+    @Test
+    @DisplayName("getProduct — when the caller is authenticated, records a PRODUCT_VIEW event with that user's id")
+    void getProduct_recordsProductViewWithAuthenticatedUserId() {
+        ProductService productService = mock(ProductService.class);
+        UserEventService userEventService = mock(UserEventService.class);
+        when(productService.findById(1L)).thenReturn(new Product());
+
+        CustomUserDetails principal = new CustomUserDetails(9L, "user", "u@example.com", "pass",
+                Collections.emptyList(), true, true, true, true);
+        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(principal, null));
+
+        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.empty(),
+                Optional.of(userEventService));
+        assertEquals(HttpStatus.OK, controller.getProduct(1L).getStatusCode());
+
+        verify(userEventService).recordProductView(eq(9L), eq(1L));
     }
 
     @Test

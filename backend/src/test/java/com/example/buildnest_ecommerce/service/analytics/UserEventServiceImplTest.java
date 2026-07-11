@@ -107,6 +107,14 @@ class UserEventServiceImplTest {
         verifyNoInteractions(repository);
     }
 
+    @Test
+    @DisplayName("recordProductView does not throw when the repository itself fails (not just circuit-breaker rejection)")
+    void recordProductViewDoesNotThrowOnGenericRepositoryFailure() {
+        doThrow(new RuntimeException("Elasticsearch write failed")).when(repository).save(any());
+
+        assertDoesNotThrow(() -> service.recordProductView(1L, 2L));
+    }
+
     private UserBehaviorEvent event(String type, Long productId) {
         return UserBehaviorEvent.builder()
                 .id("id")
@@ -202,5 +210,19 @@ class UserEventServiceImplTest {
         assertEquals(Map.of(), metrics.get("pageViewsPerProduct"));
         assertEquals(0.0, (double) metrics.get("cartAbandonmentRate"));
         verifyNoInteractions(repository);
+    }
+
+    @Test
+    @DisplayName("getBehaviorMetrics returns an empty-but-present shape when the repository itself fails (not just circuit-breaker rejection)")
+    void getBehaviorMetricsReturnsEmptyShapeOnGenericRepositoryFailure() {
+        LocalDateTime start = LocalDateTime.now().minusDays(1);
+        LocalDateTime end = LocalDateTime.now();
+        when(repository.findByEventTypeAndTimestampBetween(anyString(), eq(start), eq(end)))
+                .thenThrow(new RuntimeException("Elasticsearch query failed"));
+
+        Map<String, Object> metrics = service.getBehaviorMetrics(start, end);
+
+        assertEquals(Map.of(), metrics.get("pageViewsPerProduct"));
+        assertEquals(0.0, (double) metrics.get("cartAbandonmentRate"));
     }
 }
