@@ -87,9 +87,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: security-reports
+          # Same bug as the Upload Quality Reports step below (uses: steps don't inherit
+          # defaults.run.working-directory) — found while fixing that one, same file, same
+          # root cause.
           path: |
-            target/dependency-check-report.*
-            target/security-report.*
+            backend/target/dependency-check-report.*
+            backend/target/security-report.*
 
   code-quality:
     name: Code Quality Analysis
@@ -174,8 +177,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: quality-reports
+          # actions/upload-artifact is a `uses:` step, so it does NOT inherit this job's
+          # defaults.run.working-directory: backend (that only applies to `run:` steps) — a
+          # bare `target/...` path resolves relative to GITHUB_WORKSPACE (the repo root), not
+          # backend/. Confirmed on #355's own CI run: none of these three files were ever
+          # actually uploaded ("No files were found... No artifacts will be uploaded"), for
+          # every path in this list, since before #353 touched this step. Same bug class as
+          # lesson_github_actions_working_directory_default_scope (found fixing #329).
           path: |
-            target/spotbugsXml.xml
-            target/checkstyle-result.xml
-            target/sonar/report-task.txt
+            backend/target/spotbugsXml.xml
+            backend/target/checkstyle-result.xml
+            backend/target/sonar/report-task.txt
         continue-on-error: true
