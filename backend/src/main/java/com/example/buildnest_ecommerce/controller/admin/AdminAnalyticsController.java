@@ -2,6 +2,7 @@ package com.example.buildnest_ecommerce.controller.admin;
 
 import com.example.buildnest_ecommerce.model.elasticsearch.ElasticsearchAuditLog;
 import com.example.buildnest_ecommerce.model.elasticsearch.ElasticsearchMetrics;
+import com.example.buildnest_ecommerce.service.analytics.UserEventService;
 import com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchIngestionService;
 import com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchAlertingService;
 import com.example.buildnest_ecommerce.service.admin.AdminAnalyticsService;
@@ -32,6 +33,7 @@ public class AdminAnalyticsController {
     private final ElasticsearchIngestionService ingestionService;
     private final ElasticsearchAlertingService alertingService;
     private final AdminAnalyticsService analyticsService;
+    private final UserEventService userEventService;
 
     /**
      * Get audit logs for a specific user (RQ-ES-EL-02, RQ-ES-VIS-01).
@@ -201,6 +203,23 @@ public class AdminAnalyticsController {
         } catch (Exception e) {
             log.error("Error retrieving API errors by endpoint", e);
             return ResponseEntity.internalServerError().body("Error retrieving API errors");
+        }
+    }
+
+    /**
+     * User behaviour analytics: page views per product, cart abandonment
+     * rate, and conversion-funnel stage counts (ANL-02, #65).
+     */
+    @GetMapping("/behaviour")
+    public ResponseEntity<?> getBehaviorMetrics(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
+        try {
+            Map<String, Object> metrics = userEventService.getBehaviorMetrics(startTime, endTime);
+            return ResponseEntity.ok(metrics);
+        } catch (Exception e) {
+            log.error("Error retrieving user behavior metrics", e);
+            return ResponseEntity.internalServerError().body("Error retrieving behavior metrics");
         }
     }
 }

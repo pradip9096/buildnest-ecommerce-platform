@@ -12,7 +12,9 @@ import com.example.buildnest_ecommerce.repository.CartItemRepository;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.ProductVariantRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import com.example.buildnest_ecommerce.service.analytics.UserEventService;
 import java.util.Objects;
+import java.util.Optional;
 import com.example.buildnest_ecommerce.exception.AccessDeniedException;
 import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ public class CartServiceImpl implements CartService {
     private final ProductRepository productRepository;
     private final ProductVariantRepository productVariantRepository;
     private final UserRepository userRepository;
+    private final Optional<UserEventService> userEventService;
 
     @Override
     @Transactional
@@ -95,6 +98,7 @@ public class CartServiceImpl implements CartService {
         }
 
         log.info("Product added to cart successfully");
+        userEventService.ifPresent(service -> service.recordAddToCart(userId, productId, quantity));
         return cart;
     }
 
