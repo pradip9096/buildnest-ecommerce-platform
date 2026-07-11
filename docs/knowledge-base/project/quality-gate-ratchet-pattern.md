@@ -6,8 +6,8 @@ keywords: [ratchet, fitness function, mutation threshold, monotonic improvement,
 objective: Explain what a quality gate ratchet is, why it works, how it is applied to PIT mutation scoring in BuildNest, how it relates to adjacent concepts (watermark, CAS, append-only log, one-way-door decisions), and what happens when the pattern is applied to a prose/self-attested document instead of a numeric CI gate.
 audience: engineers working on BuildNest test quality or implementing quality gates in any project; anyone designing process documents that want ratchet-like discipline without CI enforcement
 scope: BuildNest-specific ratchet schedule; general pattern applicable to any CI metric; a worked non-CI case study
-source_conversations: [Session 2026-06-30, Session 2026-07-01, Session 2026-07-08]
-last_updated: 2026-07-08
+source_conversations: [Session 2026-06-30, Session 2026-07-01, Session 2026-07-08, Session 2026-07-12]
+last_updated: 2026-07-12
 confidence: high
 evidence_strength: strong
 related_articles:
@@ -15,6 +15,7 @@ related_articles:
   - docs/wiki/learned-lessons/documenting-a-ci-failure-does-not-satisfy-the-merge-confirmation-gate.md
   - feedback-loop-taxonomy-substrate-instance-stage-symmetry.md
   - feedback-loop-ml-training-optimization-landscape.md
+  - devops-toolchain-inventory-and-verified-status.md
 status: published
 ---
 
@@ -165,3 +166,4 @@ This is deliberately **not** framed as a ratchet — it's a supersede-with-asymm
 - [Closed-Loop Feedback and Amendment Mechanisms for Process Documents](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md) — open-loop vs. closed-loop control, PDCA/kaizen, and the amendment-mechanism pattern the ratchet is a special case of.
 - [Feedback Loop Domain Instance: Machine Learning Training](feedback-loop-domain-instance-machine-learning-training.md) — maps forward propagation, backpropagation, and gradient descent onto this article's ratchet/fitness-function vocabulary.
 - [Feedback Loop Domain Depth: ML Training's Optimization Landscape](feedback-loop-ml-training-optimization-landscape.md) — draws the structural parallel between locking in a ratchet too early and gradient descent converging to a local rather than global minimum.
+- [DevOps Toolchain — Inventory, Architecture, and How to Verify a Tool Actually Runs](devops-toolchain-inventory-and-verified-status.md) — the PIT ratchet is one of the genuinely-blocking gates in BuildNest's broader toolchain; that article's blocking-vs-advisory distinction and tool-inventory table assume this one as background.
