@@ -2,7 +2,7 @@
 
 **Category:** Developer Tools > Claude Code  
 **Tags:** `claude-code`, `agents`, `skills`, `hooks`, `mcp`, `commands`, `settings`, `plugins`  
-**Last Updated:** 2026-06-30
+**Last Updated:** 2026-07-11
 
 ---
 
@@ -78,6 +78,45 @@ A built-in skill that enables Claude to self-schedule repeated work. Claude call
 
 ---
 
+## Plugin Marketplaces (Distribution)
+
+A **plugin** bundles one or more of the mechanisms above (commonly hooks + agents + skills + MCP
+servers) into a single installable unit, distributed via a **marketplace**. This is a distribution
+concept, not an eighth mechanism — a plugin is packaging around the seven mechanisms above, not a
+new one.
+
+### Official marketplace — `claude-plugins-official`
+
+Built into Claude Code, available at startup, no setup required.
+
+- Browse: `/plugin` → Discover tab
+- Install: `/plugin install <name>@claude-plugins-official`
+- Web view: [claude.com/plugins](https://claude.com/plugins)
+- Curated by Anthropic — code-intelligence (LSP) plugins, external integrations (GitHub, GitLab,
+  Slack, Jira, Linear, Sentry, Figma, Vercel, Supabase, Firebase), security-review tooling,
+  dev-workflow/PR agents, output styles
+
+### Community marketplace — `claude-plugins-community`
+
+Third-party plugins (`anthropics/claude-plugins-community`), screened by Anthropic's automated
+safety checks before listing — meaningfully more trustworthy than an arbitrary unaffiliated site,
+though still less vetted than the official marketplace.
+
+### Custom marketplaces
+
+Anyone can create and host their own marketplace and point Claude Code at it.
+
+### Unofficial third-party template sites — treat with caution
+
+Sites like `aitmpl.com` market themselves as "Claude Code template" marketplaces but are **not**
+Anthropic-run or safety-screened. Since a hook executes arbitrary shell commands and an agent gets
+real tool access, installing anything from an unvetted third-party source is a security-relevant
+decision — review the actual hook/agent/MCP config before installing, the same way you'd review
+any other unaudited dependency. Prefer the official or community marketplace when an equivalent
+exists there.
+
+---
+
 ## Comparison Table
 
 | Mechanism | What it is | Who triggers it | Token cost at startup | Stored where |
@@ -137,5 +176,5 @@ Start project-scoped. Promote to global only when the same tool proves useful ac
 
 ## See Also
 
-- `docs/knowledge-base/claude-code-hooks-reference.md`
-- `docs/knowledge-base/claude-code-progressive-disclosure.md`
+- [Claude Code Hooks Reference](claude-code-hooks-reference.md)
+- [Claude Code Progressive Disclosure](claude-code-progressive-disclosure.md)

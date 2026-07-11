@@ -7,7 +7,7 @@ objective: Explain why a written rule/process document degrades without a feedba
 audience: engineers designing or maintaining any rule file, checklist, runbook, or process document — in this repo or elsewhere
 scope: general pattern (control theory, continuous improvement) with BuildNest-specific worked examples
 source_conversations: [Session 2026-07-07]
-last_updated: 2026-07-07
+last_updated: 2026-07-11
 confidence: high
 evidence_strength: strong
 related_articles:
@@ -22,6 +22,7 @@ related_articles:
   - compliance-and-production-readiness-closed-loop-patterns.md
   - adaptive-knowledge-governance-advanced-amendment-concepts.md
   - ../learning/knowledge-organization-formats-qa-topic-chapter.md
+  - stable-id-columns-decouple-cross-references-from-display-order.md
 status: published
 ---
 

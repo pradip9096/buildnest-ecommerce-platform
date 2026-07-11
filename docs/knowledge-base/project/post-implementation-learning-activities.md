@@ -11,7 +11,8 @@ last_updated: 2026-07-04
 confidence: high
 evidence_strength: moderate
 related_articles:
-  - docs/wiki/learned-lessons/README.md
+  - ../../wiki/learned-lessons/README.md
+  - research-discovery-phase-before-software-implementation.md
 status: published
 ---
 
