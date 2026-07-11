@@ -8,7 +8,6 @@ import com.example.buildnest_ecommerce.repository.InventoryThresholdBreachEventR
 import com.example.buildnest_ecommerce.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
@@ -17,11 +16,14 @@ import java.util.Map;
 /**
  * Service for monitoring inventory levels and generating alerts (RQ-INV-MON-01,
  * RQ-INV-MON-02, RQ-INV-MON-03).
+ *
+ * Deliberately NOT gated behind {@code elasticsearch.enabled} — this service
+ * is entirely MySQL/JPA-based (queries {@link com.example.buildnest_ecommerce.repository.InventoryRepository})
+ * with no Elasticsearch dependency (see #345).
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true", matchIfMissing = false)
 public class InventoryMonitoringService {
 
     private final InventoryRepository inventoryRepository;

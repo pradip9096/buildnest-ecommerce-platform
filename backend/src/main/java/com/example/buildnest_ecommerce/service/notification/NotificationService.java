@@ -3,7 +3,6 @@ package com.example.buildnest_ecommerce.service.notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpEntity;
@@ -17,10 +16,15 @@ import java.util.*;
  * Multi-channel Notification Service (RQ-ALRT-04).
  * Supports webhook, email, and Slack notifications for alert delivery.
  * Enables authorized personnel notification when thresholds are exceeded.
+ *
+ * Deliberately NOT gated behind {@code elasticsearch.enabled} — despite the
+ * {@code elasticsearch.alert.*} property namespace, this dispatcher has no
+ * Elasticsearch dependency at all and is used by callers (order/payment
+ * event alerts, inventory alerts) that must work regardless of that flag
+ * (see #345).
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true", matchIfMissing = false)
 @RequiredArgsConstructor
 public class NotificationService {
 

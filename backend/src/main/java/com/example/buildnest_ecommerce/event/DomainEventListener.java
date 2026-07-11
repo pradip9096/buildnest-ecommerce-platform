@@ -5,7 +5,6 @@ import com.example.buildnest_ecommerce.service.order.OrderService;
 import com.example.buildnest_ecommerce.service.webhook.WebhookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -13,10 +12,14 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Deliberately NOT gated behind {@code elasticsearch.enabled} — webhook
+ * dispatch and alert notification here have no Elasticsearch dependency and
+ * must fire regardless of that flag (see #345).
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true", matchIfMissing = false)
 public class DomainEventListener {
 
     private final NotificationService notificationService;
