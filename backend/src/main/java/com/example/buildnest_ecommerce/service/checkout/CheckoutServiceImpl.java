@@ -10,6 +10,7 @@ import com.example.buildnest_ecommerce.repository.CartRepository;
 import com.example.buildnest_ecommerce.repository.OrderRepository;
 import com.example.buildnest_ecommerce.repository.ShippingMethodRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import com.example.buildnest_ecommerce.service.analytics.UserEventService;
 import com.example.buildnest_ecommerce.service.cart.CartService;
 import com.example.buildnest_ecommerce.service.inventory.InventoryService;
 import com.example.buildnest_ecommerce.service.payment.PaymentService;
@@ -42,6 +43,7 @@ public class CheckoutServiceImpl implements CheckoutService {
     private final ShippingMethodRepository shippingMethodRepository;
     private final PaymentService paymentService;
     private final CheckoutSessionStore checkoutSessionStore;
+    private final Optional<UserEventService> userEventService;
 
     // ─── Multi-step checkout (CHK-01, #76) ───────────────────────────────────
 
@@ -72,6 +74,7 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .addressId(addressId)
                 .build();
         checkoutSessionStore.save(userId, session);
+        userEventService.ifPresent(service -> service.recordCheckoutStarted(userId));
 
         log.info("Checkout session created for user={}, cartId={}", userId, cart.getId());
         return toDTO(session);

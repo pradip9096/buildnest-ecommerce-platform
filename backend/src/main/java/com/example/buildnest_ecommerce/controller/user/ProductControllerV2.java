@@ -2,8 +2,12 @@ package com.example.buildnest_ecommerce.controller.user;
 
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.security.CustomUserDetails;
+import com.example.buildnest_ecommerce.service.analytics.UserEventService;
 import com.example.buildnest_ecommerce.service.product.ProductSearchService;
 import com.example.buildnest_ecommerce.service.product.ProductService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -34,12 +38,15 @@ public class ProductControllerV2 {
 
         private final ProductService productService;
         private final Optional<ProductSearchService> productSearchService;
+        private final Optional<UserEventService> userEventService;
 
         @Autowired
         public ProductControllerV2(ProductService productService,
-                Optional<ProductSearchService> productSearchService) {
+                Optional<ProductSearchService> productSearchService,
+                Optional<UserEventService> userEventService) {
                 this.productService = productService;
                 this.productSearchService = productSearchService;
+                this.userEventService = userEventService;
         }
 
         @Operation(summary = "Get all products with pagination", description = "Returns paginated list of products with full details wrapped in ApiResponse")
@@ -72,8 +79,26 @@ public class ProductControllerV2 {
         public ResponseEntity<ApiResponse> getProduct(
                         @Parameter(description = "Product ID", example = "123") @PathVariable Long id) {
                 Product product = productService.findById(id);
+                recordProductView(id);
                 return ResponseEntity.ok(
                                 new ApiResponse(true, "Product retrieved successfully", product));
+        }
+
+        /**
+         * Fire-and-forget page-view tracking (ANL-02, #65). Resolves the current
+         * user from the security context directly rather than adding an
+         * {@code Authentication} parameter, so anonymous views (this endpoint is
+         * public) are recorded with a null userId instead of failing/erroring.
+         */
+        private void recordProductView(Long productId) {
+                userEventService.ifPresent(service -> {
+                        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                        Long userId = null;
+                        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
+                                userId = userDetails.getId();
+                        }
+                        service.recordProductView(userId, productId);
+                });
         }
 
         @Operation(summary = "Search products with advanced filters",

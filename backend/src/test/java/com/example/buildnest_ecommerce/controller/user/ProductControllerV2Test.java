@@ -3,6 +3,7 @@ package com.example.buildnest_ecommerce.controller.user;
 import com.example.buildnest_ecommerce.model.elasticsearch.ProductDocument;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
+import com.example.buildnest_ecommerce.service.analytics.UserEventService;
 import com.example.buildnest_ecommerce.service.product.ProductSearchService;
 import com.example.buildnest_ecommerce.service.product.ProductService;
 import org.junit.jupiter.api.DisplayName;
@@ -29,9 +30,23 @@ class ProductControllerV2Test {
         when(productService.findAll(any())).thenReturn(page);
         when(productService.findById(1L)).thenReturn(new Product());
 
-        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.empty());
+        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.empty(), Optional.empty());
         assertEquals(HttpStatus.OK, controller.getAllProducts(0, 10, "id", Sort.Direction.ASC).getStatusCode());
         assertEquals(HttpStatus.OK, controller.getProduct(1L).getStatusCode());
+    }
+
+    @Test
+    @DisplayName("getProduct — when UserEventService bean is present, records a PRODUCT_VIEW event with a null userId (no security context in this unit test)")
+    void getProduct_recordsProductViewWhenUserEventServicePresent() {
+        ProductService productService = mock(ProductService.class);
+        UserEventService userEventService = mock(UserEventService.class);
+        when(productService.findById(1L)).thenReturn(new Product());
+
+        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.empty(),
+                Optional.of(userEventService));
+        assertEquals(HttpStatus.OK, controller.getProduct(1L).getStatusCode());
+
+        verify(userEventService).recordProductView(isNull(), eq(1L));
     }
 
     @Test
@@ -42,7 +57,8 @@ class ProductControllerV2Test {
         Page<ProductDocument> esPage = new PageImpl<>(Collections.emptyList());
         when(searchService.search(any(), any(), any(), any(), any(), any())).thenReturn(esPage);
 
-        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.of(searchService));
+        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.of(searchService),
+                Optional.empty());
         ResponseEntity<ApiResponse> response = controller.searchProducts(
                 "cement", null, null, null, null, 0, 10, "id", Sort.Direction.ASC);
 
@@ -58,7 +74,7 @@ class ProductControllerV2Test {
         when(productService.advancedSearch(any(), any(), any(), any(), any(), any())).thenReturn(page);
         when(productService.findByCategory(eq(1L), any())).thenReturn(page);
 
-        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.empty());
+        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.empty(), Optional.empty());
         assertEquals(HttpStatus.OK,
                 controller
                         .searchProducts("q", 1L, BigDecimal.ONE, BigDecimal.TEN, true, 0, 10, "id", Sort.Direction.DESC)

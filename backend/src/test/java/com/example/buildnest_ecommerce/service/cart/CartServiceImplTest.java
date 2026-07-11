@@ -17,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -52,6 +53,11 @@ class CartServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        // @InjectMocks leaves an unmocked Optional<T> constructor param as null (Spring itself
+        // injects Optional.empty() correctly at runtime; this is purely a Mockito test-construction
+        // gap) — set explicitly so userEventService.ifPresent(...) doesn't NPE.
+        ReflectionTestUtils.setField(cartService, "userEventService", Optional.empty());
+
         testUser = new User();
         testUser.setId(1L);
         testUser.setUsername("testuser");
@@ -105,6 +111,21 @@ class CartServiceImplTest {
         verify(cartRepository).findByUser(testUser);
         verify(productRepository).findById(1L);
         verify(cartItemRepository).save(any(CartItem.class));
+    }
+
+    @Test
+    void testAddToCart_recordsAddToCartEventWhenUserEventServicePresent() {
+        com.example.buildnest_ecommerce.service.analytics.UserEventService userEventService = mock(
+                com.example.buildnest_ecommerce.service.analytics.UserEventService.class);
+        ReflectionTestUtils.setField(cartService, "userEventService", Optional.of(userEventService));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(cartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+
+        cartService.addToCart(1L, 1L, 2);
+
+        verify(userEventService).recordAddToCart(1L, 1L, 2);
     }
 
     @Test

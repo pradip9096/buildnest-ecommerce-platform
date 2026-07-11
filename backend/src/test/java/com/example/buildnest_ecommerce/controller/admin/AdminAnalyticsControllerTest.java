@@ -3,6 +3,7 @@ package com.example.buildnest_ecommerce.controller.admin;
 import com.example.buildnest_ecommerce.model.elasticsearch.ElasticsearchAuditLog;
 import com.example.buildnest_ecommerce.model.elasticsearch.ElasticsearchMetrics;
 import com.example.buildnest_ecommerce.service.admin.AdminAnalyticsService;
+import com.example.buildnest_ecommerce.service.analytics.UserEventService;
 import com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchAlertingService;
 import com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchIngestionService;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ class AdminAnalyticsControllerTest {
         ElasticsearchIngestionService ingestionService = mock(ElasticsearchIngestionService.class);
         ElasticsearchAlertingService alertingService = mock(ElasticsearchAlertingService.class);
         AdminAnalyticsService analyticsService = mock(AdminAnalyticsService.class);
+        UserEventService userEventService = mock(UserEventService.class);
 
         when(ingestionService.getAuditLogsByUser(1L))
                 .thenReturn(Collections.singletonList(new ElasticsearchAuditLog()));
@@ -35,9 +37,10 @@ class AdminAnalyticsControllerTest {
         when(alertingService.getAlertSummary()).thenReturn(Map.of("total", 1));
         when(analyticsService.getApiErrorsByStatusCode(null, null)).thenReturn(Map.of("500", 2));
         when(analyticsService.getApiErrorsByEndpoint(null, null)).thenReturn(Map.of("/api", 3));
+        when(userEventService.getBehaviorMetrics(any(), any())).thenReturn(Map.of("cartAbandonmentRate", 10.0));
 
         AdminAnalyticsController controller = new AdminAnalyticsController(ingestionService, alertingService,
-                analyticsService);
+                analyticsService, userEventService);
 
         assertEquals(HttpStatus.OK, controller.getAuditLogsByUser(1L).getStatusCode());
         assertEquals(HttpStatus.OK, controller.getAuditLogsByAction("LOGIN").getStatusCode());
@@ -50,6 +53,8 @@ class AdminAnalyticsControllerTest {
         assertEquals(HttpStatus.OK, controller.getDashboard().getStatusCode());
         assertEquals(HttpStatus.OK, controller.getApiErrorsByStatusCode(null, null).getStatusCode());
         assertEquals(HttpStatus.OK, controller.getApiErrorsByEndpoint(null, null).getStatusCode());
+        assertEquals(HttpStatus.OK, controller
+                .getBehaviorMetrics(LocalDateTime.now().minusHours(1), LocalDateTime.now()).getStatusCode());
     }
 
     @Test
@@ -57,19 +62,23 @@ class AdminAnalyticsControllerTest {
         ElasticsearchIngestionService ingestionService = mock(ElasticsearchIngestionService.class);
         ElasticsearchAlertingService alertingService = mock(ElasticsearchAlertingService.class);
         AdminAnalyticsService analyticsService = mock(AdminAnalyticsService.class);
+        UserEventService userEventService = mock(UserEventService.class);
 
         when(ingestionService.getAuditLogsByUser(1L)).thenThrow(new RuntimeException("fail"));
         when(ingestionService.getMetricsByTimeRange(any(), any())).thenThrow(new RuntimeException("fail"));
         when(alertingService.getAlertSummary()).thenThrow(new RuntimeException("fail"));
         when(analyticsService.getApiErrorsByStatusCode(any(), any())).thenThrow(new RuntimeException("fail"));
+        when(userEventService.getBehaviorMetrics(any(), any())).thenThrow(new RuntimeException("fail"));
 
         AdminAnalyticsController controller = new AdminAnalyticsController(ingestionService, alertingService,
-                analyticsService);
+                analyticsService, userEventService);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, controller.getAuditLogsByUser(1L).getStatusCode());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, controller
                 .getMetricsByTimeRange(LocalDateTime.now().minusHours(1), LocalDateTime.now()).getStatusCode());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, controller.getAlertSummary().getStatusCode());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, controller.getApiErrorsByStatusCode(null, null).getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, controller
+                .getBehaviorMetrics(LocalDateTime.now().minusHours(1), LocalDateTime.now()).getStatusCode());
     }
 }

@@ -12,6 +12,7 @@ import com.example.buildnest_ecommerce.repository.UserRepository;
 import com.example.buildnest_ecommerce.service.cart.CartService;
 import com.example.buildnest_ecommerce.service.inventory.InventoryService;
 import com.example.buildnest_ecommerce.service.payment.PaymentService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +20,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -45,6 +47,14 @@ class CheckoutServiceImplTest {
 
     @InjectMocks
     private CheckoutServiceImpl checkoutService;
+
+    @BeforeEach
+    void setUp() {
+        // @InjectMocks leaves an unmocked Optional<T> constructor param as null (Spring itself
+        // injects Optional.empty() correctly at runtime; this is purely a Mockito test-construction
+        // gap) — set explicitly so userEventService.ifPresent(...) doesn't NPE.
+        ReflectionTestUtils.setField(checkoutService, "userEventService", Optional.empty());
+    }
 
     private Cart buildCart(Long userId, Long cartId) {
         User user = new User();
@@ -287,6 +297,26 @@ class CheckoutServiceImplTest {
         assertEquals(20L, dto.getAddressId());
         assertEquals(1L, dto.getUserId());
         verify(checkoutSessionStore).save(eq(1L), any(CheckoutSession.class));
+    }
+
+    @Test
+    @DisplayName("setAddress — records a CHECKOUT_STARTED event when UserEventService is present")
+    void setAddress_recordsCheckoutStartedEventWhenUserEventServicePresent() {
+        com.example.buildnest_ecommerce.service.analytics.UserEventService userEventService = mock(
+                com.example.buildnest_ecommerce.service.analytics.UserEventService.class);
+        ReflectionTestUtils.setField(checkoutService, "userEventService", Optional.of(userEventService));
+
+        Address address = buildAddress(20L, 1L);
+        User user = address.getUser();
+        Cart cart = buildCart(1L, 10L);
+
+        when(addressRepository.findById(20L)).thenReturn(Optional.of(address));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
+
+        checkoutService.setAddress(1L, 20L);
+
+        verify(userEventService).recordCheckoutStarted(1L);
     }
 
     @Test
