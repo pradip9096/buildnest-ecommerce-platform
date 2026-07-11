@@ -20,4 +20,6 @@ public class CheckoutSessionDTO {
     private BigDecimal shippingCost;
     private Long orderId;
     private String razorpayOrderId;
+    private String couponCode;
+    private BigDecimal discountAmount;
 }

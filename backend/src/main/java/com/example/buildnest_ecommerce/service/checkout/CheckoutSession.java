@@ -21,4 +21,7 @@ public class CheckoutSession {
     private BigDecimal shippingCost;
     private Long orderId;
     private String razorpayOrderId;
+    private Long couponId;
+    private String couponCode;
+    private BigDecimal discountAmount;
 }
