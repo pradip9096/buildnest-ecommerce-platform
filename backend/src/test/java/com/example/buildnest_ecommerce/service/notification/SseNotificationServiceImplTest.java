@@ -4,6 +4,7 @@ import com.example.buildnest_ecommerce.controller.user.NotificationController;
 import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
@@ -11,13 +12,16 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -188,5 +192,52 @@ class SseNotificationServiceImplTest {
         assertEquals(1, registry.get(1L).size());
         assertTrue(healthyConnection.getResponse().getContentAsString().contains("event:order-status"),
                 "the healthy connection should still have received the event");
+    }
+
+    @Test
+    @DisplayName("onTimeout removes the emitter from the registry")
+    void onTimeoutRemovesEmitterFromRegistry() throws Exception {
+        // Real container timeouts can't be simulated deterministically in a unit test; spy on the
+        // emitter passed through the package-private register(userId, emitter) seam, capture the
+        // Runnable registered via onTimeout(...), and invoke it directly to exercise that exact
+        // callback body (the same one wired to removeEmitter in production).
+        SseEmitter spyEmitter = spy(new SseEmitter(1000L));
+        service.register(1L, spyEmitter);
+
+        ArgumentCaptor<Runnable> timeoutCallback = ArgumentCaptor.forClass(Runnable.class);
+        verify(spyEmitter).onTimeout(timeoutCallback.capture());
+
+        assertTrue(emittersByUser().containsKey(1L));
+        timeoutCallback.getValue().run();
+
+        assertFalse(emittersByUser().containsKey(1L), "user entry should be pruned once the emitter times out");
+    }
+
+    @Test
+    @DisplayName("onError removes the emitter from the registry")
+    void onErrorRemovesEmitterFromRegistry() throws Exception {
+        SseEmitter spyEmitter = spy(new SseEmitter(1000L));
+        service.register(1L, spyEmitter);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Consumer<Throwable>> errorCallback = ArgumentCaptor.forClass(Consumer.class);
+        verify(spyEmitter).onError(errorCallback.capture());
+
+        assertTrue(emittersByUser().containsKey(1L));
+        errorCallback.getValue().accept(new IOException("simulated client disconnect"));
+
+        assertFalse(emittersByUser().containsKey(1L), "user entry should be pruned once the emitter errors");
+    }
+
+    @Test
+    @DisplayName("register removes the emitter immediately if the initial handshake send fails")
+    void registerRemovesEmitterWhenInitialHandshakeFails() throws Exception {
+        SseEmitter alreadyCompleted = new SseEmitter(1000L);
+        alreadyCompleted.complete(); // any send() on it now throws IllegalStateException, even pre-init
+
+        service.register(1L, alreadyCompleted);
+
+        assertFalse(emittersByUser().containsKey(1L),
+                "a handshake-send failure should remove the emitter rather than leaving a dead entry registered");
     }
 }

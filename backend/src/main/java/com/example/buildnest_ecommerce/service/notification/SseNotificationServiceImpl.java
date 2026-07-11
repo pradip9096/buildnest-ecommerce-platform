@@ -30,7 +30,16 @@ public class SseNotificationServiceImpl implements SseNotificationService {
 
     @Override
     public SseEmitter register(Long userId) {
-        SseEmitter emitter = new SseEmitter(EMITTER_TIMEOUT_MS);
+        return register(userId, new SseEmitter(EMITTER_TIMEOUT_MS));
+    }
+
+    /**
+     * Package-private seam so tests can register a pre-built (e.g. spied or
+     * pre-completed) emitter and deterministically exercise the timeout/error
+     * callback bodies and the initial-handshake-failure branch below, none of
+     * which are reachable by driving a real servlet request alone.
+     */
+    SseEmitter register(Long userId, SseEmitter emitter) {
         emittersByUser.computeIfAbsent(userId, id -> new CopyOnWriteArrayList<>()).add(emitter);
 
         emitter.onCompletion(() -> removeEmitter(userId, emitter));
