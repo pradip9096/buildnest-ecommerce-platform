@@ -176,7 +176,8 @@ public class OrderServiceImpl implements OrderService {
             order.setUpdatedAt(LocalDateTime.now());
             Order saved = orderRepository.save(order);
             domainEventPublisher.publish(
-                    new OrderStatusChangedEvent(this, saved.getId(), previousStatus, saved.getStatus().toString()));
+                    new OrderStatusChangedEvent(this, saved.getId(), saved.getUser().getId(), previousStatus,
+                            saved.getStatus().toString()));
             return saved;
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid order status: " + status);
@@ -266,7 +267,8 @@ public class OrderServiceImpl implements OrderService {
         Order saved = orderRepository.save(order);
 
         domainEventPublisher.publish(
-                new OrderStatusChangedEvent(this, saved.getId(), previousStatus, saved.getStatus().name()));
+                new OrderStatusChangedEvent(this, saved.getId(), saved.getUser().getId(), previousStatus,
+                        saved.getStatus().name()));
 
         switch (targetStatus) {
             case CONFIRMED -> notificationService.sendOrderConfirmation(saved);

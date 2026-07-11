@@ -1,6 +1,7 @@
 package com.example.buildnest_ecommerce.service.order;
 
 import com.example.buildnest_ecommerce.event.DomainEventPublisher;
+import com.example.buildnest_ecommerce.event.OrderStatusChangedEvent;
 import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import com.example.buildnest_ecommerce.model.dto.AdminOrderDetailDTO;
 import com.example.buildnest_ecommerce.model.dto.OrderResponseDTO;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -163,6 +165,23 @@ class OrderServiceImplTest {
         Order updated = orderService.updateOrderStatus(100L, "SHIPPED");
         assertEquals(Order.OrderStatus.SHIPPED, updated.getStatus());
         verify(domainEventPublisher).publish(any());
+    }
+
+    @Test
+    @DisplayName("Should publish OrderStatusChangedEvent carrying the order owner's userId (NOTIF-02, #63)")
+    void testUpdateOrderStatusEventCarriesUserId() {
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        orderService.updateOrderStatus(100L, "SHIPPED");
+
+        ArgumentCaptor<OrderStatusChangedEvent> captor = ArgumentCaptor.forClass(OrderStatusChangedEvent.class);
+        verify(domainEventPublisher).publish(captor.capture());
+        OrderStatusChangedEvent event = captor.getValue();
+        assertEquals(100L, event.getOrderId());
+        assertEquals(7L, event.getUserId());
+        assertEquals("PENDING", event.getPreviousStatus());
+        assertEquals("SHIPPED", event.getNewStatus());
     }
 
     @Test

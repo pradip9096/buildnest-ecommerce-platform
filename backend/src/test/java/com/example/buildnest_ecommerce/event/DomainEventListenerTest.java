@@ -117,7 +117,7 @@ class DomainEventListenerTest {
 
     @Test
     void handleOrderStatusChangeShouldDispatchWebhook() {
-        OrderStatusChangedEvent event = new OrderStatusChangedEvent(this, 1L, "PENDING", "CONFIRMED");
+        OrderStatusChangedEvent event = new OrderStatusChangedEvent(this, 1L, 1L, "PENDING", "CONFIRMED");
 
         domainEventListener.handleOrderStatusChange(event);
 
