@@ -12,6 +12,7 @@ import com.example.buildnest_ecommerce.repository.ShippingMethodRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import com.example.buildnest_ecommerce.service.analytics.UserEventService;
 import com.example.buildnest_ecommerce.service.cart.CartService;
+import com.example.buildnest_ecommerce.service.coupon.CouponService;
 import com.example.buildnest_ecommerce.service.inventory.InventoryService;
 import com.example.buildnest_ecommerce.service.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class CheckoutServiceImpl implements CheckoutService {
     private final ShippingMethodRepository shippingMethodRepository;
     private final PaymentService paymentService;
     private final CheckoutSessionStore checkoutSessionStore;
+    private final CouponService couponService;
     private final Optional<UserEventService> userEventService;
 
     // ─── Multi-step checkout (CHK-01, #76) ───────────────────────────────────
@@ -77,6 +79,36 @@ public class CheckoutServiceImpl implements CheckoutService {
         userEventService.ifPresent(service -> service.recordCheckoutStarted(userId));
 
         log.info("Checkout session created for user={}, cartId={}", userId, cart.getId());
+        return toDTO(session);
+    }
+
+    @Override
+    @Transactional
+    public CheckoutSessionDTO applyCoupon(Long userId, String couponCode) {
+        log.info("Applying coupon for user={}, code={}", userId, couponCode);
+
+        Optional<CheckoutSession> opt = checkoutSessionStore.find(userId);
+        if (opt.isEmpty() || (opt.get().getStep() != CheckoutStep.PENDING_SHIPPING
+                && opt.get().getStep() != CheckoutStep.PENDING_PAYMENT)) {
+            String current = opt.map(s -> s.getStep().name()).orElse("NONE");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "A coupon can only be applied before payment is initiated; session is " + current);
+        }
+        CheckoutSession session = opt.get();
+
+        Cart cart = cartRepository.findById(session.getCartId())
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found: " + session.getCartId()));
+        BigDecimal subtotal = cartSubtotal(cart);
+
+        Coupon coupon = couponService.validateCoupon(couponCode, subtotal);
+        BigDecimal discount = couponService.calculateDiscount(coupon, subtotal);
+
+        session.setCouponId(coupon.getId());
+        session.setCouponCode(coupon.getCode());
+        session.setDiscountAmount(discount);
+        checkoutSessionStore.save(userId, session);
+
+        log.info("Coupon {} applied for user={}: discount={}", coupon.getCode(), userId, discount);
         return toDTO(session);
     }
 
@@ -122,7 +154,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         LocalDateTime reservationExpiry = LocalDateTime.now().plusMinutes(RESERVATION_MINUTES);
         reserveInventoryFromCart(cart, reservationExpiry);
 
-        Order order = buildOrderFromCart(cart, session.getShippingCost());
+        Order order = buildOrderFromCart(cart, session.getShippingCost(), session.getDiscountAmount());
         Order savedOrder;
         try {
             savedOrder = orderRepository.save(order);
@@ -174,6 +206,12 @@ public class CheckoutServiceImpl implements CheckoutService {
         order.setUpdatedAt(LocalDateTime.now());
         Order confirmed = orderRepository.save(order);
 
+        // Usage is only consumed on final confirmation, not at apply-time, so an abandoned
+        // checkout session never permanently uses up a limited-use code.
+        if (session.getCouponId() != null) {
+            couponService.incrementUsage(session.getCouponId());
+        }
+
         checkoutSessionStore.delete(userId);
 
         log.info("Checkout confirmed for user={}, orderId={}", userId, confirmed.getId());
@@ -204,15 +242,22 @@ public class CheckoutServiceImpl implements CheckoutService {
         return opt.get();
     }
 
-    private Order buildOrderFromCart(Cart cart, BigDecimal shippingCost) {
-        BigDecimal cartTotal = cart.getItems().stream()
+    private BigDecimal cartSubtotal(Cart cart) {
+        return cart.getItems().stream()
                 .map(CartItem::getTotalPrice)
                 .map(price -> new BigDecimal(price.toString()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 
-        BigDecimal taxAmount = cartTotal.multiply(new BigDecimal("0.05"));
+    private Order buildOrderFromCart(Cart cart, BigDecimal shippingCost, BigDecimal discountAmount) {
+        BigDecimal cartTotal = cartSubtotal(cart);
+        BigDecimal discount = discountAmount != null ? discountAmount : BigDecimal.ZERO;
+        // Tax is computed on the discounted subtotal, matching standard order-of-operations
+        // (discount applied first, then tax, then shipping added on top).
+        BigDecimal discountedSubtotal = cartTotal.subtract(discount).max(BigDecimal.ZERO);
+        BigDecimal taxAmount = discountedSubtotal.multiply(new BigDecimal("0.05"));
         BigDecimal shipping = shippingCost != null ? shippingCost : new BigDecimal("50");
-        BigDecimal finalAmount = cartTotal.add(taxAmount).add(shipping);
+        BigDecimal finalAmount = discountedSubtotal.add(taxAmount).add(shipping);
 
         Order order = new Order();
         order.setUser(cart.getUser());
@@ -222,6 +267,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         order.setTotalAmount(finalAmount);
         order.setTaxAmount(taxAmount);
         order.setShippingAmount(shipping);
+        order.setDiscountAmount(discount);
 
         Set<OrderItem> orderItems = new HashSet<>();
         for (CartItem cartItem : cart.getItems()) {
@@ -248,7 +294,9 @@ public class CheckoutServiceImpl implements CheckoutService {
                 session.getShippingMethodId(),
                 session.getShippingCost(),
                 session.getOrderId(),
-                session.getRazorpayOrderId());
+                session.getRazorpayOrderId(),
+                session.getCouponCode(),
+                session.getDiscountAmount());
     }
 
     // ─── Legacy single-step checkout ─────────────────────────────────────────

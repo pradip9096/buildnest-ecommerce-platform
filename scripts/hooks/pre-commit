@@ -344,6 +344,8 @@ if [ -n "$files" ]; then
 fi
 
 # --- liquibase.md: NOT NULL addColumn must specify a default value ---
+# Scoped to <addColumn> blocks only — a NOT NULL column inside <createTable> is safe by
+# construction (the table has no existing rows yet), so it must not be flagged here.
 files=$(filter 'db/changelog/changes/.*\.xml$')
 if [ -n "$files" ]; then
     matches=""
@@ -351,10 +353,13 @@ if [ -n "$files" ]; then
         git diff --cached --diff-filter=A --name-only | grep -qx "$f" || continue
         content=$(git show ":$f" 2>/dev/null)
         bad=$(echo "$content" | perl -0777 -ne '
-            my @blocks = /(<column\b[^>]*>.*?<\/column>|<column\b[^\/]*\/>)/gs;
-            for (@blocks) {
-                if (/nullable="false"/ && !/defaultValue/) {
-                    print "  $_\n";
+            my @addColumnBlocks = /(<addColumn\b.*?<\/addColumn>)/gs;
+            for my $block (@addColumnBlocks) {
+                my @cols = ($block =~ /(<column\b[^>]*>.*?<\/column>|<column\b[^\/]*\/>)/gs);
+                for (@cols) {
+                    if (/nullable="false"/ && !/defaultValue/) {
+                        print "  $_\n";
+                    }
                 }
             }
         ')

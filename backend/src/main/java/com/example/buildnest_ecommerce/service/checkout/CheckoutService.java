@@ -11,6 +11,13 @@ public interface CheckoutService {
 
     CheckoutSessionDTO setAddress(Long userId, Long addressId);
 
+    /**
+     * Apply a coupon/discount code to the active checkout session (CHK-02,
+     * #77). Only valid before payment has been initiated — once payment is
+     * initiated the order total is locked in with the payment gateway.
+     */
+    CheckoutSessionDTO applyCoupon(Long userId, String couponCode);
+
     CheckoutSessionDTO selectShipping(Long userId, Long shippingMethodId);
 
     CheckoutSessionDTO initiatePayment(Long userId);

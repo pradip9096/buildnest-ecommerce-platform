@@ -9,7 +9,10 @@ import com.example.buildnest_ecommerce.repository.CartRepository;
 import com.example.buildnest_ecommerce.repository.OrderRepository;
 import com.example.buildnest_ecommerce.repository.ShippingMethodRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import com.example.buildnest_ecommerce.exception.ValidationException;
+import com.example.buildnest_ecommerce.model.entity.Coupon;
 import com.example.buildnest_ecommerce.service.cart.CartService;
+import com.example.buildnest_ecommerce.service.coupon.CouponService;
 import com.example.buildnest_ecommerce.service.inventory.InventoryService;
 import com.example.buildnest_ecommerce.service.payment.PaymentService;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +47,7 @@ class CheckoutServiceImplTest {
     @Mock private ShippingMethodRepository shippingMethodRepository;
     @Mock private PaymentService paymentService;
     @Mock private CheckoutSessionStore checkoutSessionStore;
+    @Mock private CouponService couponService;
 
     @InjectMocks
     private CheckoutServiceImpl checkoutService;
@@ -517,5 +521,183 @@ class CheckoutServiceImplTest {
 
         assertThrows(ResponseStatusException.class, () -> checkoutService.confirmCheckout(1L));
         verify(orderRepository, never()).findById(any());
+    }
+
+    // ===== applyCoupon (CHK-02, #77) =====
+
+    private Coupon buildCoupon(Long id, String code, BigDecimal discountValue) {
+        Coupon coupon = new Coupon();
+        coupon.setId(id);
+        coupon.setCode(code);
+        coupon.setDiscountType(Coupon.DiscountType.PERCENTAGE);
+        coupon.setDiscountValue(discountValue);
+        return coupon;
+    }
+
+    @Test
+    @DisplayName("applyCoupon — happy path stores couponId/code/discountAmount on the session at PENDING_SHIPPING")
+    void applyCoupon_happyPathAtPendingShipping_storesDiscountOnSession() {
+        CheckoutSession session = sessionAt(1L, CheckoutStep.PENDING_SHIPPING);
+        when(checkoutSessionStore.find(1L)).thenReturn(Optional.of(session));
+
+        Cart cart = buildCart(1L, 10L);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+
+        Coupon coupon = buildCoupon(7L, "SAVE10", BigDecimal.TEN);
+        when(couponService.validateCoupon(eq("SAVE10"), any(BigDecimal.class))).thenReturn(coupon);
+        when(couponService.calculateDiscount(eq(coupon), any(BigDecimal.class))).thenReturn(new BigDecimal("20.00"));
+
+        CheckoutSessionDTO dto = checkoutService.applyCoupon(1L, "SAVE10");
+
+        assertEquals("SAVE10", dto.getCouponCode());
+        assertEquals(0, new BigDecimal("20.00").compareTo(dto.getDiscountAmount()));
+
+        ArgumentCaptor<CheckoutSession> captor = ArgumentCaptor.forClass(CheckoutSession.class);
+        verify(checkoutSessionStore).save(eq(1L), captor.capture());
+        assertEquals(7L, captor.getValue().getCouponId());
+    }
+
+    @Test
+    @DisplayName("applyCoupon — also allowed at PENDING_PAYMENT (before payment is initiated)")
+    void applyCoupon_allowedAtPendingPayment() {
+        CheckoutSession session = sessionAt(1L, CheckoutStep.PENDING_PAYMENT);
+        when(checkoutSessionStore.find(1L)).thenReturn(Optional.of(session));
+
+        Cart cart = buildCart(1L, 10L);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+
+        Coupon coupon = buildCoupon(7L, "SAVE10", BigDecimal.TEN);
+        when(couponService.validateCoupon(eq("SAVE10"), any(BigDecimal.class))).thenReturn(coupon);
+        when(couponService.calculateDiscount(eq(coupon), any(BigDecimal.class))).thenReturn(new BigDecimal("20.00"));
+
+        assertDoesNotThrow(() -> checkoutService.applyCoupon(1L, "SAVE10"));
+    }
+
+    @Test
+    @DisplayName("applyCoupon — rejected once payment has been initiated (PENDING_CONFIRM)")
+    void applyCoupon_rejectedAtPendingConfirm_throwsConflict() {
+        CheckoutSession session = sessionAt(1L, CheckoutStep.PENDING_CONFIRM);
+        when(checkoutSessionStore.find(1L)).thenReturn(Optional.of(session));
+
+        assertThrows(ResponseStatusException.class, () -> checkoutService.applyCoupon(1L, "SAVE10"));
+        verifyNoInteractions(couponService);
+    }
+
+    @Test
+    @DisplayName("applyCoupon — rejected when there is no active session")
+    void applyCoupon_noSession_throwsConflict() {
+        when(checkoutSessionStore.find(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResponseStatusException.class, () -> checkoutService.applyCoupon(1L, "SAVE10"));
+    }
+
+    @Test
+    @DisplayName("applyCoupon — an invalid coupon's ValidationException propagates without touching the session")
+    void applyCoupon_invalidCoupon_propagatesValidationException() {
+        CheckoutSession session = sessionAt(1L, CheckoutStep.PENDING_SHIPPING);
+        when(checkoutSessionStore.find(1L)).thenReturn(Optional.of(session));
+
+        Cart cart = buildCart(1L, 10L);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+        when(couponService.validateCoupon(eq("EXPIRED"), any(BigDecimal.class)))
+                .thenThrow(new ValidationException("Coupon has expired: EXPIRED"));
+
+        assertThrows(ValidationException.class, () -> checkoutService.applyCoupon(1L, "EXPIRED"));
+        verify(checkoutSessionStore, never()).save(any(), any());
+    }
+
+    // ===== Discount applied through initiatePayment → order.discountAmount =====
+
+    @Test
+    @DisplayName("initiatePayment — applies the session's discountAmount to the created order's total")
+    void initiatePayment_appliesDiscountToOrderTotal() {
+        CheckoutSession session = CheckoutSession.builder()
+                .userId(1L).step(CheckoutStep.PENDING_PAYMENT).cartId(10L)
+                .shippingCost(new BigDecimal("50"))
+                .couponId(7L).couponCode("SAVE10").discountAmount(new BigDecimal("20.00"))
+                .build();
+        when(checkoutSessionStore.find(1L)).thenReturn(Optional.of(session));
+
+        Cart cart = buildCart(1L, 10L); // subtotal = price(100) * qty(2) = 200
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+        when(inventoryService.hasStock(5L, 2)).thenReturn(true);
+        when(orderRepository.save(any(Order.class))).thenAnswer(inv -> {
+            Order o = inv.getArgument(0);
+            o.setId(100L);
+            return o;
+        });
+
+        Payment payment = new Payment();
+        payment.setRazorpayOrderId("razorpay_test");
+        when(paymentService.initiatePayment(eq(100L), any(Double.class))).thenReturn(payment);
+
+        checkoutService.initiatePayment(1L);
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        Order savedOrder = orderCaptor.getValue();
+
+        // subtotal 200 - discount 20 = 180; tax = 180 * 0.05 = 9.00; total = 180 + 9 + 50 = 239.00
+        assertEquals(0, new BigDecimal("20.00").compareTo(savedOrder.getDiscountAmount()));
+        assertEquals(0, new BigDecimal("9.00").compareTo(savedOrder.getTaxAmount()));
+        assertEquals(0, new BigDecimal("239.00").compareTo(savedOrder.getTotalAmount()));
+    }
+
+    @Test
+    @DisplayName("confirmCheckout — increments the applied coupon's usage count")
+    void confirmCheckout_incrementsCouponUsageWhenCouponWasApplied() {
+        CheckoutSession session = CheckoutSession.builder()
+                .userId(1L).step(CheckoutStep.PENDING_CONFIRM)
+                .orderId(100L).cartId(10L).couponId(7L).couponCode("SAVE10")
+                .discountAmount(new BigDecimal("20.00"))
+                .build();
+        when(checkoutSessionStore.find(1L)).thenReturn(Optional.of(session));
+
+        User user = new User();
+        user.setId(1L);
+        Order order = new Order();
+        order.setId(100L);
+        order.setUser(user);
+        order.setOrderNumber("ORD-ABCD1234");
+        order.setTotalAmount(new BigDecimal("239.00"));
+        order.setDiscountAmount(new BigDecimal("20.00"));
+        order.setStatus(Order.OrderStatus.PENDING);
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+
+        Cart cart = buildCart(1L, 10L);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        checkoutService.confirmCheckout(1L);
+
+        verify(couponService).incrementUsage(7L);
+    }
+
+    @Test
+    @DisplayName("confirmCheckout — does not touch CouponService when no coupon was applied")
+    void confirmCheckout_noCouponApplied_doesNotIncrementUsage() {
+        CheckoutSession session = CheckoutSession.builder()
+                .userId(1L).step(CheckoutStep.PENDING_CONFIRM)
+                .orderId(100L).cartId(10L).build();
+        when(checkoutSessionStore.find(1L)).thenReturn(Optional.of(session));
+
+        User user = new User();
+        user.setId(1L);
+        Order order = new Order();
+        order.setId(100L);
+        order.setUser(user);
+        order.setOrderNumber("ORD-ABCD1234");
+        order.setTotalAmount(new BigDecimal("260.00"));
+        order.setDiscountAmount(BigDecimal.ZERO);
+        order.setStatus(Order.OrderStatus.PENDING);
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+
+        Cart cart = buildCart(1L, 10L);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        checkoutService.confirmCheckout(1L);
+
+        verifyNoInteractions(couponService);
     }
 }

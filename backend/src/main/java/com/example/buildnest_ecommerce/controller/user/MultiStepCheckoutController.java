@@ -3,6 +3,7 @@ package com.example.buildnest_ecommerce.controller.user;
 import com.example.buildnest_ecommerce.model.dto.CheckoutSessionDTO;
 import com.example.buildnest_ecommerce.model.dto.OrderResponseDTO;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
+import com.example.buildnest_ecommerce.model.payload.ApplyCouponRequest;
 import com.example.buildnest_ecommerce.model.payload.SelectShippingRequest;
 import com.example.buildnest_ecommerce.model.payload.SetAddressRequest;
 import com.example.buildnest_ecommerce.security.CustomUserDetails;
@@ -47,6 +48,15 @@ public class MultiStepCheckoutController {
 
         CheckoutSessionDTO session = checkoutService.setAddress(currentUser.getId(), request.getAddressId());
         return ResponseEntity.ok(new ApiResponse(true, "Address set. Proceed to shipping selection.", session));
+    }
+
+    @PostMapping("/coupon")
+    public ResponseEntity<ApiResponse> applyCoupon(
+            @Valid @RequestBody ApplyCouponRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        CheckoutSessionDTO session = checkoutService.applyCoupon(currentUser.getId(), request.getCode());
+        return ResponseEntity.ok(new ApiResponse(true, "Coupon applied.", session));
     }
 
     @PostMapping("/shipping")
