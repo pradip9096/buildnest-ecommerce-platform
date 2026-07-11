@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -66,16 +66,16 @@ class InputValidationSecurityTest {
         @Autowired
         private JwtTokenProvider jwtTokenProvider;
 
-        @MockBean
+        @MockitoBean
         private ElasticsearchIngestionService elasticsearchIngestionService;
 
-        @MockBean
+        @MockitoBean
         private ElasticsearchAlertingService elasticsearchAlertingService;
 
-        @MockBean
+        @MockitoBean
         private AdminAnalyticsService adminAnalyticsService;
 
-        @MockBean
+        @MockitoBean
         private NotificationService notificationService;
 
         private User adminUser;

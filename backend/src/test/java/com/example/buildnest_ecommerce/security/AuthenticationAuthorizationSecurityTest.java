@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -70,28 +70,28 @@ class AuthenticationAuthorizationSecurityTest {
         @Autowired
         private JwtTokenProvider jwtTokenProvider;
 
-        @MockBean
+        @MockitoBean
         private RateLimitUtil rateLimitUtil;
 
-        @MockBean
+        @MockitoBean
         private RefreshTokenService refreshTokenService;
 
-        @MockBean
+        @MockitoBean
         private AuthService authService;
 
-        @MockBean
+        @MockitoBean
         private AdminService adminService;
 
-        @MockBean
+        @MockitoBean
         private AdminAnalyticsService adminAnalyticsService;
 
-        @MockBean
+        @MockitoBean
         private ElasticsearchIngestionService elasticsearchIngestionService;
 
-        @MockBean
+        @MockitoBean
         private ElasticsearchAlertingService elasticsearchAlertingService;
 
-        @MockBean
+        @MockitoBean
         private NotificationService notificationService;
 
         private User testUser;

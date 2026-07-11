@@ -6,7 +6,7 @@ import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchAud
 import com.example.buildnest_ecommerce.repository.elasticsearch.ElasticsearchMetricsRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -16,10 +16,10 @@ import org.springframework.test.context.ActiveProfiles;
 @SuppressWarnings("removal")
 class CivilEcommerceApplicationTests {
 
-	@MockBean
+	@MockitoBean
 	private ElasticsearchAuditLogRepository auditLogRepository;
 
-	@MockBean
+	@MockitoBean
 	private ElasticsearchMetricsRepository metricsRepository;
 
 	@Test

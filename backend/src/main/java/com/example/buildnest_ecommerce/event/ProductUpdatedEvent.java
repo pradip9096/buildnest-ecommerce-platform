@@ -6,7 +6,7 @@ import org.springframework.context.ApplicationEvent;
 /** Fired after a product is updated (SRCH-02, #75). */
 public class ProductUpdatedEvent extends ApplicationEvent {
     private static final long serialVersionUID = 1L;
-    private final Product product;
+    private final transient Product product;
 
     public ProductUpdatedEvent(Object source, Product product) {
         super(source);

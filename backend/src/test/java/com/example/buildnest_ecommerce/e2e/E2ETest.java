@@ -16,7 +16,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -45,16 +45,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class E2ETest {
 
     // Mock Elasticsearch and notification services not needed for E2E UI tests
-    @MockBean
+    @MockitoBean
     private ElasticsearchIngestionService elasticsearchIngestionService;
 
-    @MockBean
+    @MockitoBean
     private ElasticsearchAlertingService elasticsearchAlertingService;
 
-    @MockBean
+    @MockitoBean
     private AdminAnalyticsService adminAnalyticsService;
 
-    @MockBean
+    @MockitoBean
     private NotificationService notificationService;
 
     @LocalServerPort
