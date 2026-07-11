@@ -797,6 +797,19 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- SpotBugs Maven Plugin (#353): declared here so `mvn spotbugs:check` resolves at all.
+			     com.github.spotbugs is not one of Maven's default-searched plugin groups
+			     (org.apache.maven.plugins, org.codehaus.mojo, etc.) — a bare CLI goal reference
+			     with no pom.xml declaration fails outright with "No plugin found for prefix
+			     'spotbugs'", which is exactly what silently broke this check before #353.
+			     Deliberately no <executions> binding, matching checkstyle-maven-plugin's setup in
+			     this same file — CI invokes `spotbugs:check` as an explicit standalone step, not on
+			     every build phase, and bare declaration is sufficient for the CLI prefix to resolve. -->
+			<plugin>
+				<groupId>com.github.spotbugs</groupId>
+				<artifactId>spotbugs-maven-plugin</artifactId>
+				<version>4.10.2.0</version>
+			</plugin>
 			<!-- PIT Mutation Testing Plugin (Section 3.1 - EXHAUSTIVE_RECOMMENDATION_REPORT) -->
 			<plugin>
 				<groupId>org.pitest</groupId>

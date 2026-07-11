@@ -10,7 +10,7 @@ For operational lessons extracted from specific sessions (tooling gotchas, one-t
 
 | File | Topic | Category | Last Updated |
 |---|---|---|---|
-| [quality-gate-ratchet-pattern.md](quality-gate-ratchet-pattern.md) | Fitness functions, ratchet mechanism, PIT mutation threshold schedule, broken-windows rationale, ratchet-vs-supersede/continuous-improvement/evolution distinctions | quality-engineering | 2026-07-08 |
+| [quality-gate-ratchet-pattern.md](quality-gate-ratchet-pattern.md) | Fitness functions, ratchet mechanism, PIT mutation threshold schedule, broken-windows rationale, ratchet-vs-supersede/continuous-improvement/evolution distinctions | quality-engineering | 2026-07-12 |
 | [claude-code-extension-mechanisms.md](claude-code-extension-mechanisms.md) | Claude Code hooks, MCP servers, slash commands, skills, and plugin marketplaces (official `claude-plugins-official`, screened community, and caution on unvetted third-party sites) — extension points and when to use each | tooling | 2026-07-11 |
 | [claude-code-hooks-reference.md](claude-code-hooks-reference.md) | Hook types, event lifecycle, settings.json configuration | tooling | — |
 | [claude-code-progressive-disclosure.md](claude-code-progressive-disclosure.md) | Progressive disclosure pattern in Claude Code UX | tooling | — |
@@ -40,6 +40,7 @@ For operational lessons extracted from specific sessions (tooling gotchas, one-t
 | [env-example-template-vs-env-local-secrets.md](env-example-template-vs-env-local-secrets.md) | Why `.env.example` (committed template) and `.env` (gitignored real secrets) are split, how the split works mechanically, and a real incident where a secret was pasted into the wrong file | tooling | 2026-07-09 |
 | [stable-id-columns-decouple-cross-references-from-display-order.md](stable-id-columns-decouple-cross-references-from-display-order.md) | Stable ID columns vs. display order in growable numbered tables — the surrogate-key pattern generalized to any cross-referenced list; worked example: `development-workflow.md`'s Sequence table migration | documentation | 2026-07-11 |
 | [research-discovery-phase-before-software-implementation.md](research-discovery-phase-before-software-implementation.md) | Problem identification, requirements gathering, existing-system assessment, feasibility/solution-option research (context7 vs. web search), and scope definition — the sub-activities of "research before you code," mapped onto `development-workflow.md`'s own `external-research`/`solution-options-adr` step split | documentation | 2026-07-11 |
+| [devops-toolchain-inventory-and-verified-status.md](devops-toolchain-inventory-and-verified-status.md) | Full CI/CD and quality-gate tool inventory (JaCoCo, PIT, Codecov, OWASP Dependency-Check, SonarQube, CheckStyle, SpotBugs, Docker) with verified status per tool; the generalizable failure pattern behind three real incidents (#350/#353/#354) where a tool appeared configured but silently never ran or never surfaced its findings; blocking vs. advisory-only checks; the direct-CLI verification method | tooling | 2026-07-12 |
 
 ---
 
