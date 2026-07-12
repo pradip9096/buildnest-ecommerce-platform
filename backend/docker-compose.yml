@@ -286,6 +286,27 @@ services:
       - buildnest-network
 
   # ===============================
+  # Prometheus config renderer (#324): substitutes __ENVIRONMENT__ in
+  # prometheus.yml.template with the real ENVIRONMENT value before Prometheus starts, since
+  # the pinned v2.52.0 image predates native external_labels env-var substitution
+  # (--enable-feature=expand-external-labels, v2.55+). One-shot: renders into the shared
+  # prometheus_config volume, then exits; the prometheus service waits for it to complete.
+  # ===============================
+  prometheus-config-render:
+    image: alpine:3.20
+    container_name: prometheus-config-render
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-dev}
+    volumes:
+      - ./prometheus.yml.template:/template/prometheus.yml.template:ro
+      - ./alerts.yml:/template/alerts.yml:ro
+      - prometheus_config:/config
+    command: >
+      sh -c "sed \"s/__ENVIRONMENT__/$$ENVIRONMENT/g\" /template/prometheus.yml.template > /config/prometheus.yml &&
+             cp /template/alerts.yml /config/alerts.yml"
+    restart: "no"
+
+  # ===============================
   # Prometheus
   # ===============================
   prometheus:
@@ -297,10 +318,16 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # Previously bind-mounted prometheus.yml alone -- alerts.yml (referenced by this
+      # config's own rule_files: - 'alerts.yml') was never mounted at all, so that reference
+      # was dangling at runtime. Both files now come from the rendered volume above (#324).
+      - prometheus_config:/etc/prometheus:ro
       - prometheus_data:/prometheus
     depends_on:
-      - buildnest-ecommerce
+      prometheus-config-render:
+        condition: service_completed_successfully
+      buildnest-ecommerce:
+        condition: service_started
     networks:
       - buildnest-network
 
@@ -345,6 +372,7 @@ volumes:
   redis_data:
   elasticsearch_data:
   prometheus_data:
+  prometheus_config:
 
 # ===============================
 # Network
