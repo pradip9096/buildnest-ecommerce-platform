@@ -1,0 +1,16 @@
+# Auto-provisions every dashboard JSON committed to docs/monitoring/dashboards/ (#122),
+# bind-mounted into the Grafana container at /etc/grafana/dashboards (see docker-compose.yml).
+# Editing a dashboard in the Grafana UI does not persist back to the source JSON -- treat the
+# committed JSON as the source of truth and re-export after making changes there.
+apiVersion: 1
+
+providers:
+  - name: BuildNest
+    orgId: 1
+    folder: BuildNest
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/dashboards

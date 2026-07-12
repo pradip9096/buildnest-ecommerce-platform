@@ -1,0 +1,61 @@
+{
+  "id": null,
+  "uid": "buildnest-redis",
+  "title": "BuildNest — Redis",
+  "tags": ["buildnest", "redis"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Redis Up",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "redis_up{job=\"redis\"}", "legendFormat": "up" }]
+    },
+    {
+      "id": 2,
+      "title": "Connected Clients",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 0 },
+      "targets": [
+        { "expr": "redis_connected_clients{job=\"redis\"}", "legendFormat": "clients" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Memory Used",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "targets": [
+        { "expr": "redis_memory_used_bytes{job=\"redis\"}", "legendFormat": "used memory" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Commands / sec",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "rate(redis_commands_processed_total{job=\"redis\"}[5m])", "legendFormat": "commands/s" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Cache Hit Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "min": 0 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "rate(redis_keyspace_hits_total{job=\"redis\"}[5m]) / (rate(redis_keyspace_hits_total{job=\"redis\"}[5m]) + rate(redis_keyspace_misses_total{job=\"redis\"}[5m]))",
+          "legendFormat": "hit rate"
+        }
+      ]
+    }
+  ]
+}

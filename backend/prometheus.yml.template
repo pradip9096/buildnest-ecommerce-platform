@@ -46,10 +46,30 @@ scrape_configs:
           service: 'prometheus'
           tier: 'monitoring'
 
-  # mysql/redis/node scrape jobs deliberately removed (#325, decided with the user: Option B).
-  # None of mysqld_exporter, redis_exporter, or node_exporter are deployed anywhere in
-  # docker-compose.yml, so these targets were permanently "down" in Prometheus's own /targets
-  # page -- noise that could mask a real outage among the expected-down noise, and this repo's
-  # observability maturity doesn't yet have anything (e.g. Grafana dashboards, #122) consuming
-  # this data. Re-add a job here, correctly wired to a real exporter service, if/when that
-  # metrics tier is actually planned -- don't restore these as placeholders again.
+  # MySQL metrics (#122) -- re-added now that mysqld-exporter is actually deployed
+  # (docker-compose.yml). See #325 for why this was previously removed.
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysqld-exporter:9104']
+        labels:
+          service: 'mysql'
+          tier: 'database'
+
+  # Redis metrics (#122) -- re-added now that redis-exporter is actually deployed
+  # (docker-compose.yml). See #325 for why this was previously removed.
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+          tier: 'cache'
+
+  # Host-level metrics (#122) -- feeds the HighDiskUsage alert rule (alerts.yml), which was
+  # previously dangling with no exporter. Re-added now that node-exporter is deployed
+  # (docker-compose.yml). See #325 for why this was previously removed.
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'node'
+          tier: 'infrastructure'

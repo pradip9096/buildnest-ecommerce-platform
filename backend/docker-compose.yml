@@ -272,6 +272,60 @@ services:
       retries: 5
 
   # ===============================
+  # mysqld_exporter — feeds the MySQL Grafana dashboard (#122). Re-added after #325 removed
+  # this scrape target: that removal was correct at the time (no exporter was deployed, so the
+  # target was permanently "down" noise), but #122 is exactly the "real metrics tier" #325 said
+  # to wait for.
+  # ===============================
+  mysqld-exporter:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: buildnest-mysqld-exporter
+    environment:
+      DATA_SOURCE_NAME: "root:${MYSQL_ROOT_PASSWORD}@(mysql:3306)/"
+    ports:
+      - "9104:9104"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - buildnest-network
+
+  # ===============================
+  # redis_exporter — feeds the Redis Grafana dashboard (#122). Same re-add rationale as
+  # mysqld-exporter above.
+  # ===============================
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.62.0
+    container_name: buildnest-redis-exporter
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    ports:
+      - "9121:9121"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - buildnest-network
+
+  # ===============================
+  # node_exporter — host-level metrics (disk usage) for the HighDiskUsage alert rule
+  # (alerts.yml), which was previously dangling with no exporter feeding it. Read-only bind
+  # mounts of the host's root filesystem, restricted to the paths the disk-usage alert needs.
+  # ===============================
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: buildnest-node-exporter
+    command:
+      - "--path.rootfs=/host"
+    volumes:
+      - "/:/host:ro,rslave"
+    ports:
+      - "9100:9100"
+    networks:
+      - buildnest-network
+
+  # ===============================
   # Mailpit — local SMTP catcher for dev/test email verification (#327)
   # No real SMTP credentials needed locally: set MAIL_HOST=mailpit, MAIL_PORT=1025
   # in backend/.env, then view sent emails at http://localhost:8025
@@ -328,6 +382,97 @@ services:
         condition: service_completed_successfully
       buildnest-ecommerce:
         condition: service_started
+      mysqld-exporter:
+        condition: service_started
+      redis-exporter:
+        condition: service_started
+      node-exporter:
+        condition: service_started
+    networks:
+      - buildnest-network
+
+  # ===============================
+  # Alertmanager config renderer (#122): substitutes __PLACEHOLDER__ tokens in
+  # alertmanager.yml.template with real env values and strips whichever notification-channel
+  # block (Slack / email) is disabled. Mirrors prometheus-config-render (#324).
+  # ===============================
+  alertmanager-config-render:
+    image: alpine:3.20
+    container_name: alertmanager-config-render
+    environment:
+      SLACK_ENABLED: ${ALERTMANAGER_SLACK_ENABLED:-false}
+      SLACK_WEBHOOK_URL: ${ALERTMANAGER_SLACK_WEBHOOK_URL:-}
+      SLACK_CHANNEL: ${ALERTMANAGER_SLACK_CHANNEL:-#alerts}
+      EMAIL_ENABLED: ${ALERTMANAGER_EMAIL_ENABLED:-false}
+      ALERT_EMAIL_TO: ${ALERTMANAGER_EMAIL_TO:-}
+      ALERT_EMAIL_FROM: ${MAIL_FROM:-alerts@buildnest.local}
+      SMTP_HOST: ${MAIL_HOST:-mailpit}
+      SMTP_PORT: ${MAIL_PORT:-1025}
+      SMTP_USERNAME: ${MAIL_USERNAME:-}
+      SMTP_PASSWORD: ${MAIL_PASSWORD:-}
+    volumes:
+      - ./alertmanager.yml.template:/template/alertmanager.yml.template:ro
+      - alertmanager_config:/config
+    command: >
+      sh -c "sed
+             -e \"s|__SLACK_WEBHOOK_URL__|$$SLACK_WEBHOOK_URL|g\"
+             -e \"s|__SLACK_CHANNEL__|$$SLACK_CHANNEL|g\"
+             -e \"s|__ALERT_EMAIL_TO__|$$ALERT_EMAIL_TO|g\"
+             -e \"s|__ALERT_EMAIL_FROM__|$$ALERT_EMAIL_FROM|g\"
+             -e \"s|__SMTP_HOST__|$$SMTP_HOST|g\"
+             -e \"s|__SMTP_PORT__|$$SMTP_PORT|g\"
+             -e \"s|__SMTP_USERNAME__|$$SMTP_USERNAME|g\"
+             -e \"s|__SMTP_PASSWORD__|$$SMTP_PASSWORD|g\"
+             /template/alertmanager.yml.template > /tmp/rendered.yml &&
+             if [ \"$$SLACK_ENABLED\" != \"true\" ]; then sed -i \"/# BEGIN_SLACK/,/# END_SLACK/d\" /tmp/rendered.yml; fi &&
+             if [ \"$$EMAIL_ENABLED\" != \"true\" ]; then sed -i \"/# BEGIN_EMAIL/,/# END_EMAIL/d\" /tmp/rendered.yml; fi &&
+             cp /tmp/rendered.yml /config/alertmanager.yml"
+    restart: "no"
+
+  # ===============================
+  # Alertmanager — receives firing alerts from Prometheus (prometheus.yml.template's
+  # `alerting.alertmanagers` block already pointed at alertmanager:9093; that reference was
+  # dangling with no such service deployed until now) and routes them to the notification
+  # channel(s) enabled via ALERTMANAGER_SLACK_ENABLED / ALERTMANAGER_EMAIL_ENABLED (#122).
+  # ===============================
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    ports:
+      - "9093:9093"
+    volumes:
+      - alertmanager_config:/etc/alertmanager:ro
+      - alertmanager_data:/alertmanager
+    depends_on:
+      alertmanager-config-render:
+        condition: service_completed_successfully
+    networks:
+      - buildnest-network
+
+  # ===============================
+  # Grafana — dashboards for application, JVM, MySQL, and Redis metrics (#122). Datasource and
+  # dashboards are auto-provisioned (grafana/provisioning/) so the stack is usable immediately
+  # after `docker compose up`, per the AC's "dashboards provisioned automatically" requirement.
+  # ===============================
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../docs/monitoring/dashboards:/etc/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      prometheus:
+        condition: service_started
     networks:
       - buildnest-network
 
@@ -373,6 +518,9 @@ volumes:
   elasticsearch_data:
   prometheus_data:
   prometheus_config:
+  alertmanager_data:
+  alertmanager_config:
+  grafana_data:
 
 # ===============================
 # Network
