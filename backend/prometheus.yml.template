@@ -1,11 +1,10 @@
 # This is a TEMPLATE, not the file Prometheus actually reads -- the prometheus-config-render
 # service (docker-compose.yml) substitutes the environment placeholder below with the real
 # ENVIRONMENT value (.env, defaults to "dev") and writes the rendered result to a shared
-# volume before
-# the prometheus container starts. Native Prometheus env-var substitution for external_labels
-# exists (--enable-feature=expand-external-labels) but only from v2.55+; this repo pins
-# v2.52.0, and bumping to the current 3.x LTS line to get it was judged out of scope for this
-# fix (real breaking-change risk to alerts.yml/behavior, not verified here) -- see #324.
+# volume before the prometheus container starts. Native Prometheus env-var substitution for
+# external_labels exists (--enable-feature=expand-external-labels) but only from v2.55+; this
+# repo pins v2.52.0, and bumping to the current 3.x LTS line to get it was judged out of scope
+# for this fix (real breaking-change risk to alerts.yml/behavior, not verified here) -- see #324.
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
