@@ -46,32 +46,10 @@ scrape_configs:
           service: 'prometheus'
           tier: 'monitoring'
 
-  # MySQL Database Metrics (optional - if using mysqld_exporter)
-  - job_name: 'mysql'
-    static_configs:
-      - targets: ['localhost:9104']
-        labels:
-          service: 'buildnest-database'
-          tier: 'database'
-    scrape_interval: 30s
-    scrape_timeout: 10s
-
-  # Redis Cache Metrics (optional - if using redis_exporter)
-  - job_name: 'redis'
-    static_configs:
-      - targets: ['localhost:9121']
-        labels:
-          service: 'buildnest-cache'
-          tier: 'cache'
-    scrape_interval: 30s
-    scrape_timeout: 10s
-
-  # Node Exporter System Metrics (optional)
-  - job_name: 'node'
-    static_configs:
-      - targets: ['localhost:9100']
-        labels:
-          service: 'system-metrics'
-          tier: 'infrastructure'
-    scrape_interval: 30s
-    scrape_timeout: 10s
+  # mysql/redis/node scrape jobs deliberately removed (#325, decided with the user: Option B).
+  # None of mysqld_exporter, redis_exporter, or node_exporter are deployed anywhere in
+  # docker-compose.yml, so these targets were permanently "down" in Prometheus's own /targets
+  # page -- noise that could mask a real outage among the expected-down noise, and this repo's
+  # observability maturity doesn't yet have anything (e.g. Grafana dashboards, #122) consuming
+  # this data. Re-add a job here, correctly wired to a real exporter service, if/when that
+  # metrics tier is actually planned -- don't restore these as placeholders again.
