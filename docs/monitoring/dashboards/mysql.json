@@ -1,0 +1,61 @@
+{
+  "id": null,
+  "uid": "buildnest-mysql",
+  "title": "BuildNest — MySQL",
+  "tags": ["buildnest", "mysql"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "MySQL Up",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "mysql_up{job=\"mysql\"}", "legendFormat": "up" }]
+    },
+    {
+      "id": 2,
+      "title": "Queries / sec",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 0 },
+      "targets": [
+        { "expr": "rate(mysql_global_status_questions{job=\"mysql\"}[5m])", "legendFormat": "queries/s" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Connections (active / max)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "mysql_global_status_threads_connected{job=\"mysql\"}", "legendFormat": "connected" },
+        { "expr": "mysql_global_variables_max_connections{job=\"mysql\"}", "legendFormat": "max" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Slow Queries",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "rate(mysql_global_status_slow_queries{job=\"mysql\"}[5m])", "legendFormat": "slow queries/s" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "InnoDB Buffer Pool Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "min": 0 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "1 - (mysql_global_status_buffer_pool_pages{job=\"mysql\",state=\"free\"} / mysql_global_status_buffer_pool_pages{job=\"mysql\",state=\"total\"})",
+          "legendFormat": "buffer pool used"
+        }
+      ]
+    }
+  ]
+}

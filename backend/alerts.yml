@@ -15,15 +15,16 @@ groups:
     rules:
       # High HTTP Response Time (p95)
       # PERFORMANCE_OPTIMIZATION_GUIDE - Troubleshooting #2
+      # Threshold matches #122 AC (SRS NFR-OPS-05 / RTM MON-01..05): P95 latency > 500ms.
       - alert: HighAPIResponseTime
-        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="buildnest"}[5m])) > 1
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="buildnest"}[5m])) > 0.5
         for: 5m
         labels:
           severity: warning
           component: api
         annotations:
-          summary: "High API Response Time (p95 > 1 second)"
-          description: "API endpoint response time p95 is {{ $value }}s. Expected < 1s. Check database queries and cache hit rate."
+          summary: "High API Response Time (p95 > 500ms)"
+          description: "API endpoint response time p95 is {{ $value }}s. Expected < 500ms. Check database queries and cache hit rate."
           runbook: "https://docs.buildnest.local/performance-troubleshooting#slow-api"
 
       # Critical High Response Time
@@ -39,6 +40,7 @@ groups:
 
       # High Error Rate
       # PERFORMANCE_OPTIMIZATION_GUIDE - Section 7: Alert Rules
+      # Threshold already matches #122 AC (SRS NFR-OPS-05 / RTM MON-01..05): error rate > 1%.
       - alert: HighErrorRate
         expr: |
           sum(rate(http_server_requests_seconds_count{job="buildnest",status=~"5.."}[5m]))
@@ -114,18 +116,19 @@ groups:
 
       # High Memory Usage
       # PERFORMANCE_OPTIMIZATION_GUIDE - Troubleshooting #1
+      # Threshold matches #122 AC (SRS NFR-OPS-05 / RTM MON-01..05): memory > 85%.
       - alert: HighMemoryUsage
         expr: |
           (jvm_memory_used_bytes{area="heap"})
           /
           (jvm_memory_max_bytes{area="heap"})
-          > 0.80
+          > 0.85
         for: 5m
         labels:
           severity: warning
           component: jvm
         annotations:
-          summary: "High Heap Memory Usage (> 80%)"
+          summary: "High Heap Memory Usage (> 85%)"
           description: "Heap memory usage: {{ $value | humanizePercentage }}. Monitor GC activity."
 
       # Critical Memory Usage
@@ -227,6 +230,9 @@ groups:
           description: "Application unreachable for 1+ minute. Check service status."
 
       # High Disk Usage
+      # Threshold already matches #122 AC (SRS NFR-OPS-05 / RTM MON-01..05): disk > 80%.
+      # Now backed by an actual node-exporter deployment (docker-compose.yml) -- previously
+      # dangling with no exporter feeding node_filesystem_* metrics.
       - alert: HighDiskUsage
         expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) > 0.80
         for: 5m
