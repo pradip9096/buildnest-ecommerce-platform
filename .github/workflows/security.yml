@@ -139,13 +139,24 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.token=$SONAR_TOKEN \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-            || echo "SonarQube analysis failed — check logs above (non-blocking, matching CheckStyle/SpotBugs in this same job)"
+            || echo "SonarQube analysis failed — check logs above (non-blocking, matching SpotBugs in this same job — CheckStyle is now baseline-ratcheted and blocking, see #354)"
 
       - name: Run CheckStyle
         run: |
-          ./mvnw -B checkstyle:check || echo "CheckStyle warnings found (non-blocking)"
+          # Baseline + ratchet (#354), matching the PIT mutation-score pattern already used in
+          # this repo (pom.xml's mutationThreshold, 77%->83% through M5). 8305 is the real,
+          # verified violation count as of #354 -- the ceiling below, not a target. This step
+          # now genuinely blocks the build, but only if the count grows ABOVE this baseline
+          # (maxAllowedViolations fails only when violations > the given number, so a PR that
+          # introduces zero new violations still passes even though 8305 remain). This does not
+          # require fixing the existing 8305 now; it stops the count from growing silently,
+          # which unconditional non-blocking never did. Lower this number as violations are
+          # triaged and fixed -- raising it back up requires a documented reason, mirroring the
+          # one-way-tightening rule already applied to this repo's other quality ratchets.
+          ./mvnw -B checkstyle:check -Dcheckstyle.maxAllowedViolations=8305
 
       - name: Run SpotBugs
+        if: always()
         run: |
           # Non-blocking by design (#353): this is SpotBugs's first-ever genuine run — the
           # goal previously failed to resolve at all ("No plugin found for prefix 'spotbugs'"),
@@ -160,7 +171,15 @@ jobs:
         run: |
           echo "## 📈 Code Quality Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **CheckStyle**: ✅ Enabled" >> $GITHUB_STEP_SUMMARY
+          if [ -f target/checkstyle-result.xml ]; then
+            # grep -o ... | wc -l, not grep -c, per #353's lesson: don't assume the report is
+            # line-oriented (this one currently is, but a format change shouldn't silently break
+            # the count the way -c would).
+            violation_count=$(grep -o "<error " target/checkstyle-result.xml | wc -l)
+            echo "- **CheckStyle**: ✅ Enabled — ${violation_count}/8305 finding(s) (blocking only above the baseline — see #354)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **CheckStyle**: ⚠️ Enabled but no report was generated — check the Run CheckStyle step's log" >> $GITHUB_STEP_SUMMARY
+          fi
           if [ -f target/spotbugsXml.xml ]; then
             # spotbugsXml.xml is emitted as a single unbroken line — `grep -c` counts matching
             # *lines*, not occurrences, and would always report 0 or 1 regardless of the real
