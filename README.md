@@ -88,8 +88,10 @@ Schema changes are managed exclusively through **Liquibase** changesets (`backen
 | Containerisation | Docker, Docker Compose |
 | Frontend | React 19, Vite, TypeScript, Tailwind CSS v4 |
 | CI/CD | GitHub Actions |
-| Security scanning | OWASP Dependency-Check (CVSS ≥ 7.0 fails build), CodeQL |
-| Test quality | JaCoCo (≥ 85% instruction coverage per package, `ci` profile), PIT mutation testing (≥ 77% mutation score) |
+| Security scanning | OWASP Dependency-Check (CVSS ≥ 7.0 fails build; results also surfaced via GitHub's code-scanning UI using the `codeql-action/upload-sarif` action — CodeQL's own static-analysis engine is not run), SonarCloud (`SonarQube Code Analysis` PR check) |
+| Code quality | CheckStyle (**blocking**, baseline + ratchet — fails only above a documented violation ceiling), SpotBugs (non-blocking, untriaged findings) |
+| Test quality | JaCoCo (≥ 85% instruction coverage per package, `ci` profile), PIT mutation testing (≥ 77% mutation score, ratcheting to 83% through M5), Codecov (`codecov/patch` diff-coverage PR check) |
+| Testing frameworks | JUnit 5, Mockito, ArchUnit (naming-convention enforcement), REST Assured, Gatling (load tests) |
 
 ---
 
@@ -203,6 +205,12 @@ All commands run from the `backend/` directory.
 
 # With OWASP Dependency-Check (slow — pulls NVD data)
 ./mvnw verify -Powasp
+
+# CheckStyle (blocking in CI, baseline + ratchet — see CI/CD table)
+./mvnw checkstyle:check -Dcheckstyle.maxAllowedViolations=8305
+
+# SpotBugs (non-blocking in CI, untriaged findings)
+./mvnw spotbugs:check
 ```
 
 Integration tests use an H2 in-memory database and mock all Elasticsearch beans — no running infrastructure required for `./mvnw test`.
