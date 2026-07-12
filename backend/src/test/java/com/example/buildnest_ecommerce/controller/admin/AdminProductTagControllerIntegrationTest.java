@@ -254,7 +254,7 @@ class AdminProductTagControllerIntegrationTest {
         ProductTag tag = new ProductTag();
         String unique = name + "_" + System.nanoTime();
         tag.setName(unique);
-        tag.setSlug(unique.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", ""));
+        tag.setSlug(unique.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-)|(-$)", ""));
         tag.setCreatedAt(LocalDateTime.now());
         return productTagRepository.save(tag);
     }

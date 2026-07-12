@@ -111,6 +111,6 @@ public class ProductTagServiceImpl implements ProductTagService {
         return name.trim()
                 .toLowerCase(Locale.ROOT)
                 .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("^-|-$", "");
+                .replaceAll("(^-)|(-$)", "");
     }
 }
