@@ -272,6 +272,25 @@ services:
       retries: 5
 
   # ===============================
+  # mysqld_exporter config renderer (#122): mysqld_exporter v0.15+ removed DATA_SOURCE_NAME
+  # env var support entirely (confirmed by live testing -- it silently fails to start with
+  # "no user specified in section or parent" / "Error parsing host config: no configuration
+  # found" when only DATA_SOURCE_NAME is set) in favor of a mounted --config.my-cnf file.
+  # Renders my.cnf.template with the real password, mirroring prometheus-config-render (#324).
+  # ===============================
+  mysqld-exporter-config-render:
+    image: alpine:3.20
+    container_name: mysqld-exporter-config-render
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./mysqld-exporter/my.cnf.template:/template/my.cnf.template:ro
+      - mysqld_exporter_config:/config
+    command: >
+      sh -c "sed \"s|__MYSQL_ROOT_PASSWORD__|$$MYSQL_ROOT_PASSWORD|g\" /template/my.cnf.template > /config/my.cnf"
+    restart: "no"
+
+  # ===============================
   # mysqld_exporter — feeds the MySQL Grafana dashboard (#122). Re-added after #325 removed
   # this scrape target: that removal was correct at the time (no exporter was deployed, so the
   # target was permanently "down" noise), but #122 is exactly the "real metrics tier" #325 said
@@ -280,13 +299,17 @@ services:
   mysqld-exporter:
     image: prom/mysqld-exporter:v0.15.1
     container_name: buildnest-mysqld-exporter
-    environment:
-      DATA_SOURCE_NAME: "root:${MYSQL_ROOT_PASSWORD}@(mysql:3306)/"
+    command:
+      - "--config.my-cnf=/etc/mysqld_exporter/my.cnf"
+    volumes:
+      - mysqld_exporter_config:/etc/mysqld_exporter:ro
     ports:
       - "9104:9104"
     depends_on:
       mysql:
         condition: service_healthy
+      mysqld-exporter-config-render:
+        condition: service_completed_successfully
     networks:
       - buildnest-network
 
@@ -311,7 +334,11 @@ services:
   # ===============================
   # node_exporter — host-level metrics (disk usage) for the HighDiskUsage alert rule
   # (alerts.yml), which was previously dangling with no exporter feeding it. Read-only bind
-  # mounts of the host's root filesystem, restricted to the paths the disk-usage alert needs.
+  # mount of the host's root filesystem. Deliberately plain ":ro", not ":ro,rslave" -- rslave
+  # mount propagation requires the host's "/" to already be a shared mount, which isn't
+  # guaranteed under Docker Desktop's WSL2 backend and fails outright there ("path / is
+  # mounted on / but it is not a shared mount"); node_exporter doesn't need to observe new
+  # mounts created on the host after container start, so plain read-only access is sufficient.
   # ===============================
   node-exporter:
     image: prom/node-exporter:v1.8.2
@@ -319,7 +346,7 @@ services:
     command:
       - "--path.rootfs=/host"
     volumes:
-      - "/:/host:ro,rslave"
+      - "/:/host:ro"
     ports:
       - "9100:9100"
     networks:
@@ -413,20 +440,31 @@ services:
     volumes:
       - ./alertmanager.yml.template:/template/alertmanager.yml.template:ro
       - alertmanager_config:/config
-    command: >
-      sh -c "sed
-             -e \"s|__SLACK_WEBHOOK_URL__|$$SLACK_WEBHOOK_URL|g\"
-             -e \"s|__SLACK_CHANNEL__|$$SLACK_CHANNEL|g\"
-             -e \"s|__ALERT_EMAIL_TO__|$$ALERT_EMAIL_TO|g\"
-             -e \"s|__ALERT_EMAIL_FROM__|$$ALERT_EMAIL_FROM|g\"
-             -e \"s|__SMTP_HOST__|$$SMTP_HOST|g\"
-             -e \"s|__SMTP_PORT__|$$SMTP_PORT|g\"
-             -e \"s|__SMTP_USERNAME__|$$SMTP_USERNAME|g\"
-             -e \"s|__SMTP_PASSWORD__|$$SMTP_PASSWORD|g\"
-             /template/alertmanager.yml.template > /tmp/rendered.yml &&
-             if [ \"$$SLACK_ENABLED\" != \"true\" ]; then sed -i \"/# BEGIN_SLACK/,/# END_SLACK/d\" /tmp/rendered.yml; fi &&
-             if [ \"$$EMAIL_ENABLED\" != \"true\" ]; then sed -i \"/# BEGIN_EMAIL/,/# END_EMAIL/d\" /tmp/rendered.yml; fi &&
-             cp /tmp/rendered.yml /config/alertmanager.yml"
+    # A single YAML list item containing a literal block script (rather than the `command: >`
+    # folded-scalar + `sh -c "..."` string form used by prometheus-config-render above) --
+    # that form silently mis-tokenized this longer, multi-`-e`-flag script: YAML's folding
+    # rules preserve newlines on more-indented continuation lines, and combined with the
+    # escaped inner quotes it broke shlex parsing into separate top-level arguments (observed
+    # as `sh: -e: not found` x8 and a `Permission denied` trying to exec the template file
+    # directly). The list + literal-block form passes the whole script as one unambiguous
+    # argv element, avoiding the shlex step entirely.
+    command:
+      - sh
+      - -c
+      - |
+        sed \
+          -e "s|__SLACK_WEBHOOK_URL__|$$SLACK_WEBHOOK_URL|g" \
+          -e "s|__SLACK_CHANNEL__|$$SLACK_CHANNEL|g" \
+          -e "s|__ALERT_EMAIL_TO__|$$ALERT_EMAIL_TO|g" \
+          -e "s|__ALERT_EMAIL_FROM__|$$ALERT_EMAIL_FROM|g" \
+          -e "s|__SMTP_HOST__|$$SMTP_HOST|g" \
+          -e "s|__SMTP_PORT__|$$SMTP_PORT|g" \
+          -e "s|__SMTP_USERNAME__|$$SMTP_USERNAME|g" \
+          -e "s|__SMTP_PASSWORD__|$$SMTP_PASSWORD|g" \
+          /template/alertmanager.yml.template > /tmp/rendered.yml
+        if [ "$$SLACK_ENABLED" != "true" ]; then sed -i "/# BEGIN_SLACK/,/# END_SLACK/d" /tmp/rendered.yml; fi
+        if [ "$$EMAIL_ENABLED" != "true" ]; then sed -i "/# BEGIN_EMAIL/,/# END_EMAIL/d" /tmp/rendered.yml; fi
+        cp /tmp/rendered.yml /config/alertmanager.yml
     restart: "no"
 
   # ===============================
@@ -521,6 +559,7 @@ volumes:
   alertmanager_data:
   alertmanager_config:
   grafana_data:
+  mysqld_exporter_config:
 
 # ===============================
 # Network
