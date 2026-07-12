@@ -43,6 +43,7 @@ For operational lessons extracted from specific sessions (tooling gotchas, one-t
 | [devops-toolchain-inventory-and-verified-status.md](devops-toolchain-inventory-and-verified-status.md) | Full CI/CD and quality-gate tool inventory (JaCoCo, PIT, Codecov, OWASP Dependency-Check, SonarQube, CheckStyle, SpotBugs, Docker) with verified status per tool; the generalizable failure pattern behind three real incidents (#350/#353/#354) where a tool appeared configured but silently never ran or never surfaced its findings; blocking vs. advisory-only checks; the direct-CLI verification method | tooling | 2026-07-12 |
 | [smoke-sanity-and-regression-testing-vs-ci-test-suite-coverage.md](smoke-sanity-and-regression-testing-vs-ci-test-suite-coverage.md) | Why a green CI run doesn't prove a runtime/infra change actually works; the #122→#363 case (3 real bugs — WSL2 mount propagation, YAML command mis-tokenization, an exporter's silently-removed env-var config method — none reachable by syntax validation or the unit/integration suite); smoke vs. sanity vs. regression as three distinct questions; when the step applies and when it doesn't; how to flag an unverifiable-in-this-environment gap honestly | quality-engineering | 2026-07-12 |
 | [external-research-context7-vs-web-search-and-when-to-skip.md](external-research-context7-vs-web-search-and-when-to-skip.md) | What `development-workflow.md`'s `external-research` step covers ("how do I build this," not "which approach"); context7 (official API surface) vs. web search (idiomatic pattern, version-drift catches) tool selection; when to skip; pointer to `claude-code-extension-mechanisms.md` for sourcing a Claude Code capability itself | documentation | 2026-07-12 |
+| [spring-security-cors-configurationsource-precedence-over-webmvc.md](spring-security-cors-configurationsource-precedence-over-webmvc.md) | Why an explicit `corsConfigurationSource` on a Spring Security filter chain makes any `WebMvcConfigurer.addCorsMappings` bean fully unreachable dead code, not merged/layered; the #352 case; the negative/positive-control live-preflight technique for verifying which config actually governs requests | security | 2026-07-12 |
 
 ---
 
@@ -57,6 +58,7 @@ For operational lessons extracted from specific sessions (tooling gotchas, one-t
 | `infrastructure` | Environment setup, Docker, databases, WSL2 |
 | `documentation` | Diagram conventions, doc formats, knowledge organization |
 | `product` | Business model, domain concepts, product decisions |
+| `security` | Auth/authz mechanics, framework-specific security precedence and pitfalls |
 
 ### Naming Convention
 
