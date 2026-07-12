@@ -78,6 +78,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                                     AND (:inStock IS NULL OR (:inStock = false OR
                                             (COALESCE(p.inventory.quantityInStock, 0) - COALESCE(p.inventory.quantityReserved, 0)) > 0))
                         AND (:isActive IS NULL OR p.isActive = :isActive)
+                        AND (:tag IS NULL OR EXISTS (SELECT 1 FROM p.tags t WHERE t.name = :tag))
                         """)
         @EntityGraph(attributePaths = { "category", "inventory", "variants" })
         Page<Product> advancedSearch(
@@ -87,6 +88,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                         @Param("maxPrice") BigDecimal maxPrice,
                         @Param("inStock") Boolean inStock,
                         @Param("isActive") Boolean isActive,
+                        @Param("tag") String tag,
                         Pageable pageable);
 
         /**

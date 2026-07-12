@@ -12,7 +12,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 @Entity
@@ -21,8 +23,8 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = { "category", "inventory", "variants", "createdAt", "updatedAt" })
-@ToString(exclude = { "category", "inventory", "variants" })
+@EqualsAndHashCode(exclude = { "category", "inventory", "variants", "tags", "createdAt", "updatedAt" })
+@ToString(exclude = { "category", "inventory", "variants", "tags" })
 public class Product implements AggregateRoot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -75,4 +77,9 @@ public class Product implements AggregateRoot {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @JsonIgnoreProperties({ "products", "hibernateLazyInitializer", "handler" })
+    @ManyToMany(fetch = jakarta.persistence.FetchType.LAZY)
+    @JoinTable(name = "product_tag_map", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private Set<ProductTag> tags = new HashSet<>();
 }

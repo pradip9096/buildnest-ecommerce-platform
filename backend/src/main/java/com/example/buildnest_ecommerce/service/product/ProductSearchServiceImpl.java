@@ -35,10 +35,10 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     @Override
     public Page<ProductDocument> search(String query, Long categoryId,
             BigDecimal minPrice, BigDecimal maxPrice,
-            Boolean inStock, Pageable pageable) {
+            Boolean inStock, String tag, Pageable pageable) {
         try {
             return elasticsearchCircuitBreaker.executeSupplier(() ->
-                    doSearch(query, categoryId, minPrice, maxPrice, inStock, pageable));
+                    doSearch(query, categoryId, minPrice, maxPrice, inStock, tag, pageable));
         } catch (CallNotPermittedException e) {
             log.warn("Elasticsearch circuit breaker open — returning empty search results");
             return new PageImpl<>(Collections.emptyList(), pageable, 0);
@@ -50,21 +50,23 @@ public class ProductSearchServiceImpl implements ProductSearchService {
 
     private Page<ProductDocument> doSearch(String query, Long categoryId,
             BigDecimal minPrice, BigDecimal maxPrice,
-            Boolean inStock, Pageable pageable) {
+            Boolean inStock, String tag, Pageable pageable) {
 
         Page<ProductDocument> results;
         if (query != null && !query.isBlank()) {
             results = esRepository.fullTextSearch(query, pageable);
         } else if (categoryId != null) {
             results = esRepository.findByCategoryIdAndIsActiveTrue(categoryId, pageable);
+        } else if (tag != null && !tag.isBlank()) {
+            results = esRepository.findByTagsAndIsActiveTrue(tag, pageable);
         } else {
             results = esRepository.findByIsActiveTrue(pageable);
         }
 
-        // Apply in-document price and stock filters (Elasticsearch handles text/category;
-        // price range and stock are filtered here to avoid complex native query construction
+        // Apply in-document price, stock, and tag filters (Elasticsearch handles text/category;
+        // the rest are filtered here to avoid complex native query construction
         // while keeping circuit-breaker protection over the entire search path).
-        if (minPrice == null && maxPrice == null && (inStock == null || !inStock)) {
+        if (minPrice == null && maxPrice == null && (inStock == null || !inStock) && (tag == null || tag.isBlank())) {
             return results;
         }
 
@@ -72,6 +74,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
                 .filter(d -> minPrice == null || (d.getPrice() != null && d.getPrice() >= minPrice.doubleValue()))
                 .filter(d -> maxPrice == null || (d.getPrice() != null && d.getPrice() <= maxPrice.doubleValue()))
                 .filter(d -> inStock == null || !inStock || Boolean.TRUE.equals(d.getInStock()))
+                .filter(d -> tag == null || tag.isBlank() || (d.getTags() != null && d.getTags().contains(tag)))
                 .toList();
         return new PageImpl<>(filtered, pageable, filtered.size());
     }
@@ -138,6 +141,8 @@ public class ProductSearchServiceImpl implements ProductSearchService {
                 .isActive(Boolean.TRUE.equals(product.getIsActive()))
                 .imageUrl(product.getImageUrl())
                 .createdAt(product.getCreatedAt())
+                .tags(product.getTags() == null ? List.of()
+                        : product.getTags().stream().map(t -> t.getName()).toList())
                 .build();
     }
 }

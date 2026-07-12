@@ -31,7 +31,7 @@ public interface ProductService {
     Product findById(Long id);
 
     Page<Product> advancedSearch(String query, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice,
-            Boolean inStock, Pageable pageable);
+            Boolean inStock, String tag, Pageable pageable);
 
     Page<Product> findByCategory(Long categoryId, Pageable pageable);
 

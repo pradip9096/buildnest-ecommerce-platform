@@ -28,5 +28,6 @@
     <include file="db/changelog/changes/20260706-017-alter-cart-items-add-variant-id.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260707-018-alter-categories-add-parent-id.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260711-019-create-coupons.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260712-020-fix-product-tag-map-fk.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>
