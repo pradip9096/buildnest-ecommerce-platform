@@ -111,6 +111,20 @@ class ProductSearchServiceTest {
     }
 
     @Test
+    @DisplayName("search — blank tag string (not null) falls back to findByIsActiveTrue and skips the tag filter")
+    void search_blankTagString_fallsBackToActiveSearchAndSkipsFilter() {
+        PageRequest pr = PageRequest.of(0, 10);
+        when(esRepository.findByIsActiveTrue(pr))
+                .thenReturn(new PageImpl<>(List.of(doc("1", "cement"))));
+
+        Page<ProductDocument> result = service.search(null, null, null, null, null, "   ", pr);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        verify(esRepository).findByIsActiveTrue(pr);
+        verify(esRepository, never()).findByTagsAndIsActiveTrue(any(), any());
+    }
+
+    @Test
     @DisplayName("tag filter applied post-query when a text query is also present")
     void search_withQueryAndTag_filtersDocumentsByTag() {
         PageRequest pr = PageRequest.of(0, 10);
