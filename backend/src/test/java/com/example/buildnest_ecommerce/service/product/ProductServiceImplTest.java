@@ -362,16 +362,16 @@ class ProductServiceImplTest {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Product> expected = new PageImpl<>(List.of(testProduct));
         when(productRepository.advancedSearch("cement", 1L,
-                new BigDecimal("50.00"), new BigDecimal("100.00"), true, true, pageable))
+                new BigDecimal("50.00"), new BigDecimal("100.00"), true, true, null, pageable))
                 .thenReturn(expected);
 
         Page<Product> result = productService.advancedSearch("cement", 1L,
-                new BigDecimal("50.00"), new BigDecimal("100.00"), true, pageable);
+                new BigDecimal("50.00"), new BigDecimal("100.00"), true, null, pageable);
 
         assertEquals(1, result.getContent().size());
         assertEquals(1L, result.getContent().get(0).getId());
         verify(productRepository).advancedSearch("cement", 1L,
-                new BigDecimal("50.00"), new BigDecimal("100.00"), true, true, pageable);
+                new BigDecimal("50.00"), new BigDecimal("100.00"), true, true, null, pageable);
     }
 
     @Test
@@ -452,10 +452,10 @@ class ProductServiceImplTest {
         p.setId(1L); p.setName("Cement Mix");
         Page<Product> expected = new PageImpl<>(List.of(p));
         when(productRepository.advancedSearch("Cement", 1L, new BigDecimal("50"), new BigDecimal("150"),
-                true, true, pageable)).thenReturn(expected);
+                true, true, null, pageable)).thenReturn(expected);
 
         Page<Product> result = productService.advancedSearch("Cement", 1L,
-                new BigDecimal("50"), new BigDecimal("150"), true, pageable);
+                new BigDecimal("50"), new BigDecimal("150"), true, null, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Cement Mix", result.getContent().get(0).getName());
@@ -465,10 +465,10 @@ class ProductServiceImplTest {
     void testAdvancedSearchWithNullFilters() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Product> expected = new PageImpl<>(List.of(testProduct, new Product()));
-        when(productRepository.advancedSearch(null, null, null, null, null, true, pageable))
+        when(productRepository.advancedSearch(null, null, null, null, null, true, null, pageable))
                 .thenReturn(expected);
 
-        Page<Product> result = productService.advancedSearch(null, null, null, null, null, pageable);
+        Page<Product> result = productService.advancedSearch(null, null, null, null, null, null, pageable);
 
         assertEquals(2, result.getTotalElements());
     }
@@ -478,10 +478,10 @@ class ProductServiceImplTest {
         PageRequest pageable = PageRequest.of(0, 10);
         Product p2 = new Product(); p2.setId(2L); p2.setName("Steel Rod");
         Page<Product> expected = new PageImpl<>(List.of(p2));
-        when(productRepository.advancedSearch(null, null, new BigDecimal("150"), null, null, true, pageable))
+        when(productRepository.advancedSearch(null, null, new BigDecimal("150"), null, null, true, null, pageable))
                 .thenReturn(expected);
 
-        Page<Product> result = productService.advancedSearch(null, null, new BigDecimal("150"), null, null, pageable);
+        Page<Product> result = productService.advancedSearch(null, null, new BigDecimal("150"), null, null, null, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals(2L, result.getContent().get(0).getId());
@@ -491,10 +491,10 @@ class ProductServiceImplTest {
     void testAdvancedSearchInStockFalse() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Product> expected = new PageImpl<>(List.of(testProduct, new Product()));
-        when(productRepository.advancedSearch(null, null, null, null, false, true, pageable))
+        when(productRepository.advancedSearch(null, null, null, null, false, true, null, pageable))
                 .thenReturn(expected);
 
-        Page<Product> result = productService.advancedSearch(null, null, null, null, false, pageable);
+        Page<Product> result = productService.advancedSearch(null, null, null, null, false, null, pageable);
 
         assertEquals(2, result.getTotalElements());
     }
@@ -539,10 +539,10 @@ class ProductServiceImplTest {
     void testAdvancedSearchWithCategoryFilter() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Product> expected = new PageImpl<>(List.of(testProduct));
-        when(productRepository.advancedSearch(null, 1L, null, null, null, true, pageable))
+        when(productRepository.advancedSearch(null, 1L, null, null, null, true, null, pageable))
                 .thenReturn(expected);
 
-        Page<Product> result = productService.advancedSearch(null, 1L, null, null, null, pageable);
+        Page<Product> result = productService.advancedSearch(null, 1L, null, null, null, null, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals(1L, result.getContent().get(0).getId());

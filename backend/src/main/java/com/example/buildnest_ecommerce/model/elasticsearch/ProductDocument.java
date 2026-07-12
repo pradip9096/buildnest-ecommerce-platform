@@ -10,6 +10,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Elasticsearch document representing a product in the search index (SRCH-01, #74).
@@ -62,4 +63,7 @@ public class ProductDocument {
 
     @Field(type = FieldType.Date)
     private LocalDateTime createdAt;
+
+    @Field(type = FieldType.Keyword)
+    private List<String> tags;
 }

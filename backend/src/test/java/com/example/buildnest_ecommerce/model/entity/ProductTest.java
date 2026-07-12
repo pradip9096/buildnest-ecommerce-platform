@@ -39,7 +39,8 @@ class ProductTest {
                 true,
                 false,
                 now,
-                now);
+                now,
+                new java.util.HashSet<>());
 
         assertEquals(10L, product.getId());
         assertEquals("Test Product", product.getName());

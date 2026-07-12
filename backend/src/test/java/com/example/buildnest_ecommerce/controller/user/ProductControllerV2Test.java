@@ -82,29 +82,46 @@ class ProductControllerV2Test {
         ProductService productService = mock(ProductService.class);
         ProductSearchService searchService = mock(ProductSearchService.class);
         Page<ProductDocument> esPage = new PageImpl<>(Collections.emptyList());
-        when(searchService.search(any(), any(), any(), any(), any(), any())).thenReturn(esPage);
+        when(searchService.search(any(), any(), any(), any(), any(), any(), any())).thenReturn(esPage);
 
         ProductControllerV2 controller = new ProductControllerV2(productService, Optional.of(searchService),
                 Optional.empty());
         ResponseEntity<ApiResponse> response = controller.searchProducts(
-                "cement", null, null, null, null, 0, 10, "id", Sort.Direction.ASC);
+                "cement", null, null, null, null, null, 0, 10, "id", Sort.Direction.ASC);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(searchService).search(eq("cement"), isNull(), isNull(), isNull(), isNull(), any());
-        verify(productService, never()).advancedSearch(any(), any(), any(), any(), any(), any());
+        verify(searchService).search(eq("cement"), isNull(), isNull(), isNull(), isNull(), isNull(), any());
+        verify(productService, never()).advancedSearch(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("searchProducts — tag param is passed through to the search service")
+    void searchProducts_withTagFilter_passesTagToSearchService() {
+        ProductService productService = mock(ProductService.class);
+        ProductSearchService searchService = mock(ProductSearchService.class);
+        Page<ProductDocument> esPage = new PageImpl<>(Collections.emptyList());
+        when(searchService.search(any(), any(), any(), any(), any(), any(), any())).thenReturn(esPage);
+
+        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.of(searchService),
+                Optional.empty());
+        ResponseEntity<ApiResponse> response = controller.searchProducts(
+                null, null, null, null, null, "eco-friendly", 0, 10, "id", Sort.Direction.ASC);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(searchService).search(isNull(), isNull(), isNull(), isNull(), isNull(), eq("eco-friendly"), any());
     }
 
     @Test
     void searchAndCategoryLimit() {
         ProductService productService = mock(ProductService.class);
         Page<Product> page = new PageImpl<>(Collections.singletonList(new Product()));
-        when(productService.advancedSearch(any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(productService.advancedSearch(any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
         when(productService.findByCategory(eq(1L), any())).thenReturn(page);
 
         ProductControllerV2 controller = new ProductControllerV2(productService, Optional.empty(), Optional.empty());
         assertEquals(HttpStatus.OK,
                 controller
-                        .searchProducts("q", 1L, BigDecimal.ONE, BigDecimal.TEN, true, 0, 10, "id", Sort.Direction.DESC)
+                        .searchProducts("q", 1L, BigDecimal.ONE, BigDecimal.TEN, true, null, 0, 10, "id", Sort.Direction.DESC)
                         .getStatusCode());
 
         ResponseEntity<ApiResponse> response = controller.getProductsByCategory(1L, 0, 200);

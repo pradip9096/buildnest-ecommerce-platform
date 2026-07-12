@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #83 (PROD-03): fk_tag_map_product in 20260624-004-create-product-tags.xml
+         references the legacy singular "product" table (from v001__initial_schema.sql /
+         db.changelog-master.sql), not the "products" table backing the JPA Product entity.
+         That changeset has already run and must not be edited (checksum mismatch) -
+         correct it here instead. -->
+    <changeSet id="20260712-020-fix-product-tag-map-fk" author="buildnest-team">
+        <!-- "products" (plural) is not created by any Liquibase changeset in this repo — same
+             drift class documented in 20260624-002-create-product-variants.xml and
+             docs/wiki/learned-lessons/known-table-drift-list-should-be-checked-before-writing-changesets.md.
+             In the test profile, Liquibase runs before Hibernate's create-drop creates the table,
+             so it does not exist yet here; skip cleanly rather than fail startup. -->
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="products"/>
+        </preConditions>
+
+        <comment>Repoint product_tag_map.fk_tag_map_product from the legacy "product" table to "products" (PROD-03, #83)</comment>
+
+        <dropForeignKeyConstraint
+            baseTableName="product_tag_map"
+            constraintName="fk_tag_map_product"/>
+
+        <addForeignKeyConstraint
+            constraintName="fk_tag_map_product"
+            baseTableName="product_tag_map" baseColumnNames="product_id"
+            referencedTableName="products" referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <rollback>
+            <dropForeignKeyConstraint
+                baseTableName="product_tag_map"
+                constraintName="fk_tag_map_product"/>
+            <addForeignKeyConstraint
+                constraintName="fk_tag_map_product"
+                baseTableName="product_tag_map" baseColumnNames="product_id"
+                referencedTableName="product" referencedColumnNames="id"
+                onDelete="CASCADE"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -22,7 +22,7 @@ public interface ProductSearchService {
      */
     Page<ProductDocument> search(String query, Long categoryId,
             BigDecimal minPrice, BigDecimal maxPrice,
-            Boolean inStock, Pageable pageable);
+            Boolean inStock, String tag, Pageable pageable);
 
     /** Index (or re-index) a single product. */
     void indexProduct(Product product);

@@ -63,11 +63,22 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
         List<Product> findByIsFeaturedTrueAndIsActiveTrue();
 
         /**
-         * Advanced search with multiple filters
-         * Supports filtering by name, category, price range, and stock status
-         * 
+         * Advanced search with multiple filters.
+         * Supports filtering by name, category, price range, stock status,
+         * and tag.
+         *
          * Section 6.1.3: Advanced search implementation
          * Section 2.3.1: Uses index hints for performance optimization
+         *
+         * @param query optional name/description search term
+         * @param categoryId optional category filter
+         * @param minPrice optional minimum price filter
+         * @param maxPrice optional maximum price filter
+         * @param inStock optional in-stock-only filter
+         * @param isActive optional active/inactive filter
+         * @param tag optional tag name filter
+         * @param pageable pagination and sort parameters
+         * @return the matching page of products
          */
         @Query("""
                         SELECT p FROM Product p
@@ -78,6 +89,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                                     AND (:inStock IS NULL OR (:inStock = false OR
                                             (COALESCE(p.inventory.quantityInStock, 0) - COALESCE(p.inventory.quantityReserved, 0)) > 0))
                         AND (:isActive IS NULL OR p.isActive = :isActive)
+                        AND (:tag IS NULL OR EXISTS (SELECT 1 FROM p.tags t WHERE t.name = :tag))
                         """)
         @EntityGraph(attributePaths = { "category", "inventory", "variants" })
         Page<Product> advancedSearch(
@@ -87,6 +99,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                         @Param("maxPrice") BigDecimal maxPrice,
                         @Param("inStock") Boolean inStock,
                         @Param("isActive") Boolean isActive,
+                        @Param("tag") String tag,
                         Pageable pageable);
 
         /**

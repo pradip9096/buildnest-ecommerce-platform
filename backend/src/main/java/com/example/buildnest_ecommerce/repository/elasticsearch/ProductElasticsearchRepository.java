@@ -41,6 +41,8 @@ public interface ProductElasticsearchRepository
 
     Page<ProductDocument> findByCategoryIdAndIsActiveTrue(Long categoryId, Pageable pageable);
 
+    Page<ProductDocument> findByTagsAndIsActiveTrue(String tag, Pageable pageable);
+
     Page<ProductDocument> findByIsActiveTrue(Pageable pageable);
 
     void deleteByProductId(String productId);

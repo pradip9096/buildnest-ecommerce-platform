@@ -110,6 +110,8 @@ public class ProductControllerV2 {
                         @Parameter(description = "Minimum price", example = "100") @RequestParam(required = false) BigDecimal minPrice,
                         @Parameter(description = "Maximum price", example = "5000") @RequestParam(required = false) BigDecimal maxPrice,
                         @Parameter(description = "In stock only", example = "true") @RequestParam(required = false) Boolean inStock,
+                        @Parameter(description = "Tag name", example = "eco-friendly")
+                        @RequestParam(required = false) String tag,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
                         @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
                         @Parameter(description = "Sort by field", example = "price") @RequestParam(defaultValue = "id") String sortBy,
@@ -119,12 +121,12 @@ public class ProductControllerV2 {
 
                 if (productSearchService.isPresent()) {
                         Page<?> results = productSearchService.get()
-                                        .search(query, categoryId, minPrice, maxPrice, inStock, pageable);
+                                        .search(query, categoryId, minPrice, maxPrice, inStock, tag, pageable);
                         return ResponseEntity.ok(new ApiResponse(true, "Products search completed", results));
                 }
 
                 Page<Product> results = productService.advancedSearch(
-                                query, categoryId, minPrice, maxPrice, inStock, pageable);
+                                query, categoryId, minPrice, maxPrice, inStock, tag, pageable);
                 return ResponseEntity.ok(new ApiResponse(true, "Products search completed", results));
         }
 

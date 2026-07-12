@@ -217,10 +217,10 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<Product> advancedSearch(String query, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice,
-            Boolean inStock, Pageable pageable) {
-        log.info("Advanced search (JPA) — query: {}, categoryId: {}, priceRange: {} - {}", query, categoryId,
-                minPrice, maxPrice);
-        return productRepository.advancedSearch(query, categoryId, minPrice, maxPrice, inStock, true, pageable);
+            Boolean inStock, String tag, Pageable pageable) {
+        log.info("Advanced search (JPA) — query: {}, categoryId: {}, priceRange: {} - {}, tag: {}", query, categoryId,
+                minPrice, maxPrice, tag);
+        return productRepository.advancedSearch(query, categoryId, minPrice, maxPrice, inStock, true, tag, pageable);
     }
 
     @Override

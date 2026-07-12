@@ -64,7 +64,7 @@ class ProductSearchServiceTest {
         Page<ProductDocument> expected = new PageImpl<>(List.of(doc("1", "cement")));
         when(esRepository.fullTextSearch("cement", pr)).thenReturn(expected);
 
-        Page<ProductDocument> result = service.search("cement", null, null, null, null, pr);
+        Page<ProductDocument> result = service.search("cement", null, null, null, null, null, pr);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         verify(esRepository).fullTextSearch("cement", pr);
@@ -77,7 +77,7 @@ class ProductSearchServiceTest {
         Page<ProductDocument> expected = new PageImpl<>(List.of(doc("1", "tiles"), doc("2", "paint")));
         when(esRepository.findByIsActiveTrue(pr)).thenReturn(expected);
 
-        Page<ProductDocument> result = service.search(null, null, null, null, null, pr);
+        Page<ProductDocument> result = service.search(null, null, null, null, null, null, pr);
 
         assertThat(result.getTotalElements()).isEqualTo(2);
     }
@@ -89,10 +89,56 @@ class ProductSearchServiceTest {
         when(esRepository.findByCategoryIdAndIsActiveTrue(5L, pr))
                 .thenReturn(new PageImpl<>(List.of(doc("3", "tile"))));
 
-        Page<ProductDocument> result = service.search(null, 5L, null, null, null, pr);
+        Page<ProductDocument> result = service.search(null, 5L, null, null, null, null, pr);
 
         assertThat(result.getContent()).hasSize(1);
         verify(esRepository).findByCategoryIdAndIsActiveTrue(5L, pr);
+    }
+
+    @Test
+    @DisplayName("search with tag (no query/category) — delegates to findByTagsAndIsActiveTrue")
+    void search_withTag_filtersByTag() {
+        PageRequest pr = PageRequest.of(0, 10);
+        ProductDocument tagged = ProductDocument.builder().id("4").price(100.0).isActive(true)
+                .inStock(true).tags(List.of("eco-friendly")).build();
+        when(esRepository.findByTagsAndIsActiveTrue("eco-friendly", pr))
+                .thenReturn(new PageImpl<>(List.of(tagged)));
+
+        Page<ProductDocument> result = service.search(null, null, null, null, null, "eco-friendly", pr);
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(esRepository).findByTagsAndIsActiveTrue("eco-friendly", pr);
+    }
+
+    @Test
+    @DisplayName("search — blank tag string (not null) falls back to findByIsActiveTrue and skips the tag filter")
+    void search_blankTagString_fallsBackToActiveSearchAndSkipsFilter() {
+        PageRequest pr = PageRequest.of(0, 10);
+        when(esRepository.findByIsActiveTrue(pr))
+                .thenReturn(new PageImpl<>(List.of(doc("1", "cement"))));
+
+        Page<ProductDocument> result = service.search(null, null, null, null, null, "   ", pr);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        verify(esRepository).findByIsActiveTrue(pr);
+        verify(esRepository, never()).findByTagsAndIsActiveTrue(any(), any());
+    }
+
+    @Test
+    @DisplayName("tag filter applied post-query when a text query is also present")
+    void search_withQueryAndTag_filtersDocumentsByTag() {
+        PageRequest pr = PageRequest.of(0, 10);
+        ProductDocument tagged = ProductDocument.builder().id("1").price(100.0).isActive(true)
+                .inStock(true).tags(List.of("eco-friendly")).build();
+        ProductDocument untagged = ProductDocument.builder().id("2").price(100.0).isActive(true)
+                .inStock(true).tags(List.of("clearance")).build();
+        when(esRepository.fullTextSearch("cement", pr))
+                .thenReturn(new PageImpl<>(List.of(tagged, untagged)));
+
+        Page<ProductDocument> result = service.search("cement", null, null, null, null, "eco-friendly", pr);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getId()).isEqualTo("1");
     }
 
     @Test
@@ -105,7 +151,7 @@ class ProductSearchServiceTest {
                 .thenReturn(new PageImpl<>(List.of(cheap, expensive)));
 
         Page<ProductDocument> result = service.search("paint", null,
-                new BigDecimal("100"), new BigDecimal("1000"), null, pr);
+                new BigDecimal("100"), new BigDecimal("1000"), null, null, pr);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getId()).isEqualTo("2");
@@ -156,7 +202,7 @@ class ProductSearchServiceTest {
         openBreaker.transitionToOpenState();
         ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, openBreaker);
 
-        Page<ProductDocument> result = svc.search("cement", null, null, null, null, PageRequest.of(0, 10));
+        Page<ProductDocument> result = svc.search("cement", null, null, null, null, null, PageRequest.of(0, 10));
 
         assertThat(result.getContent()).isEmpty();
         assertThat(result.getTotalElements()).isZero();
@@ -169,7 +215,7 @@ class ProductSearchServiceTest {
         when(esRepository.fullTextSearch(any(), any()))
                 .thenThrow(new RuntimeException("ES cluster unreachable"));
 
-        Page<ProductDocument> result = service.search("tile", null, null, null, null, PageRequest.of(0, 10));
+        Page<ProductDocument> result = service.search("tile", null, null, null, null, null, PageRequest.of(0, 10));
 
         assertThat(result.getContent()).isEmpty();
     }
@@ -183,7 +229,7 @@ class ProductSearchServiceTest {
         when(esRepository.findByIsActiveTrue(pr))
                 .thenReturn(new PageImpl<>(List.of(doc("1", "cement"))));
 
-        Page<ProductDocument> result = service.search("   ", null, null, null, null, pr);
+        Page<ProductDocument> result = service.search("   ", null, null, null, null, null, pr);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         verify(esRepository).findByIsActiveTrue(pr);
@@ -197,7 +243,7 @@ class ProductSearchServiceTest {
         when(esRepository.findByCategoryIdAndIsActiveTrue(3L, pr))
                 .thenReturn(new PageImpl<>(List.of(doc("2", "tile"))));
 
-        service.search("  ", 3L, null, null, null, pr);
+        service.search("  ", 3L, null, null, null, null, pr);
 
         verify(esRepository).findByCategoryIdAndIsActiveTrue(3L, pr);
         verify(esRepository, never()).fullTextSearch(any(), any());
@@ -214,7 +260,7 @@ class ProductSearchServiceTest {
         when(esRepository.findByIsActiveTrue(pr))
                 .thenReturn(new PageImpl<>(List.of(inStockDoc, outOfStockDoc)));
 
-        Page<ProductDocument> result = service.search(null, null, null, null, true, pr);
+        Page<ProductDocument> result = service.search(null, null, null, null, true, null, pr);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getId()).isEqualTo("1");
