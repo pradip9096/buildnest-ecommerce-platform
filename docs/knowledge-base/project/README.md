@@ -237,6 +237,44 @@ format rather than changing format entirely:
 When in doubt, split and cross-link both directions (`related_articles` in frontmatter, plus a
 one-line pointer in the body) rather than leaving one article to cover both.
 
+### Extracting Inline Content Out of Other Project Docs (Rule Files, etc.)
+
+This section governs extraction *into* this KB from somewhere else — a `.claude/rules/**/*.md`
+rule file, a `CLAUDE.md`, or any other project doc that isn't itself part of this KB — as
+distinct from "When to Split" above, which governs splitting *within* the KB. It applies
+repo-wide, to any project doc, not to one specific file — this generalizes a narrower version of
+the same rule first written into `development-workflow.md`'s own Amendment Log (2026-07-12,
+entries 18-20) for that file's Sequence table, then found to apply just as directly to a rule
+file with no table at all (`spring-security.md`'s CORS rule, same date).
+
+**Qualitative trigger, not a length cap.** Extract when a paragraph, table cell, or section in
+another doc contains a standalone, generalizable technique, definition, or worked example — the
+kind of thing that would be useful knowledge in a *different* codebase or context, not just a
+cross-reference specific to that doc's own internal structure. Raw length is a weak proxy: a
+doc's own tight, self-referential rule (e.g. "step 2 answers X, not Y — see step 8 for Y") can be
+long and still belong exactly where it is; a short paragraph that happens to restate a reusable
+fact (a framework's documented precedence rule, a verification technique) can be short and still
+be worth extracting. The signal is *duplication of reusable knowledge inline*, not size.
+
+**Mechanics:**
+1. Write the full explanation as its own KB article here, following this README's normal
+   structure/frontmatter/category conventions.
+2. In the source doc, replace the extracted content with a short pointer sentence and a real
+   relative markdown link to the new article (see Cross-Referencing Between Articles below for
+   link format — the same convention applies even though the source doc lives outside this KB).
+3. Add the new article to this README's index table (see Housekeeping below).
+4. If the source doc has its own change-tracking mechanism (e.g. `development-workflow.md`'s
+   Amendment Log), log the extraction there too, per that doc's own rules — this KB's index
+   entry is not a substitute for a source doc's own audit trail.
+
+**Periodically re-check, don't assume a prior pass caught everything.** Citing one doc's fix as
+"the existing pattern" does not verify that doc (or a different one with the same shape) was
+actually already brought up to the same standard — this exact gap surfaced twice in one session
+(`external-research`'s own row hadn't actually been shrunk despite being cited as precedent, and
+`spring-security.md` had the same bloat as `development-workflow.md` with no rule yet saying the
+pattern applied there too). When applying this pattern once, it's worth a quick scan of sibling
+docs (other rule files, other tables) for the same shape before considering the job done.
+
 ### Cross-Referencing Between Articles
 
 Always use a real relative markdown link — `[Title](filename.md)` for a same-folder target,
