@@ -63,11 +63,22 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
         List<Product> findByIsFeaturedTrueAndIsActiveTrue();
 
         /**
-         * Advanced search with multiple filters
-         * Supports filtering by name, category, price range, and stock status
-         * 
+         * Advanced search with multiple filters.
+         * Supports filtering by name, category, price range, stock status,
+         * and tag.
+         *
          * Section 6.1.3: Advanced search implementation
          * Section 2.3.1: Uses index hints for performance optimization
+         *
+         * @param query optional name/description search term
+         * @param categoryId optional category filter
+         * @param minPrice optional minimum price filter
+         * @param maxPrice optional maximum price filter
+         * @param inStock optional in-stock-only filter
+         * @param isActive optional active/inactive filter
+         * @param tag optional tag name filter
+         * @param pageable pagination and sort parameters
+         * @return the matching page of products
          */
         @Query("""
                         SELECT p FROM Product p

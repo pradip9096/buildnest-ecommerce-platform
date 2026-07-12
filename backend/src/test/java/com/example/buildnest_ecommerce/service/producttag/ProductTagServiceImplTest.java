@@ -85,6 +85,20 @@ class ProductTagServiceImplTest {
     }
 
     @Test
+    @DisplayName("Should throw when creating a tag whose derived slug collides with an existing tag")
+    void testCreateTagDuplicateSlugThrows() {
+        ProductTag existing = new ProductTag();
+        existing.setId(1L);
+        existing.setSlug("best-seller");
+        CreateProductTagRequest request = new CreateProductTagRequest("Best Seller");
+        when(productTagRepository.findByName("Best Seller")).thenReturn(Optional.empty());
+        when(productTagRepository.findBySlug("best-seller")).thenReturn(Optional.of(existing));
+
+        assertThrows(IllegalArgumentException.class, () -> productTagService.createTag(request));
+        verify(productTagRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Should update tag name and slug")
     void testUpdateTag() {
         ProductTag existing = new ProductTag();
@@ -101,6 +115,66 @@ class ProductTagServiceImplTest {
         ProductTag updated = productTagService.updateTag(2L, request);
         assertEquals("New Name", updated.getName());
         assertEquals("new-name", updated.getSlug());
+    }
+
+    @Test
+    @DisplayName("Should allow updating a tag to keep its own current name/slug (self-match is not a duplicate)")
+    void testUpdateTagSameNameIsNotADuplicate() {
+        ProductTag existing = new ProductTag();
+        existing.setId(2L);
+        existing.setName("Old Name");
+        existing.setSlug("old-name");
+
+        UpdateProductTagRequest request = new UpdateProductTagRequest("Old Name");
+        when(productTagRepository.findById(2L)).thenReturn(Optional.of(existing));
+        when(productTagRepository.findByName("Old Name")).thenReturn(Optional.of(existing));
+        when(productTagRepository.findBySlug("old-name")).thenReturn(Optional.of(existing));
+        when(productTagRepository.save(any(ProductTag.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ProductTag updated = productTagService.updateTag(2L, request);
+        assertEquals("Old Name", updated.getName());
+        verify(productTagRepository).save(any(ProductTag.class));
+    }
+
+    @Test
+    @DisplayName("Should throw when updating a tag to a name already used by another tag")
+    void testUpdateTagDuplicateNameThrows() {
+        ProductTag existing = new ProductTag();
+        existing.setId(2L);
+        existing.setName("Old Name");
+        existing.setSlug("old-name");
+
+        ProductTag other = new ProductTag();
+        other.setId(5L);
+        other.setName("Taken Name");
+
+        UpdateProductTagRequest request = new UpdateProductTagRequest("Taken Name");
+        when(productTagRepository.findById(2L)).thenReturn(Optional.of(existing));
+        when(productTagRepository.findByName("Taken Name")).thenReturn(Optional.of(other));
+
+        assertThrows(IllegalArgumentException.class, () -> productTagService.updateTag(2L, request));
+        verify(productTagRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw when updating a tag to a slug already used by another tag")
+    void testUpdateTagDuplicateSlugThrows() {
+        ProductTag existing = new ProductTag();
+        existing.setId(2L);
+        existing.setName("Old Name");
+        existing.setSlug("old-name");
+
+        ProductTag other = new ProductTag();
+        other.setId(6L);
+        other.setSlug("taken-slug");
+
+        UpdateProductTagRequest request = new UpdateProductTagRequest("Taken Slug");
+        when(productTagRepository.findById(2L)).thenReturn(Optional.of(existing));
+        when(productTagRepository.findByName("Taken Slug")).thenReturn(Optional.empty());
+        when(productTagRepository.findBySlug("taken-slug")).thenReturn(Optional.of(other));
+
+        assertThrows(IllegalArgumentException.class, () -> productTagService.updateTag(2L, request));
+        verify(productTagRepository, never()).save(any());
     }
 
     @Test
