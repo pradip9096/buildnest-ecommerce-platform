@@ -1,0 +1,12 @@
+{
+  "index_patterns": ["app-logs-*"],
+  "template": {
+    "settings": {
+      "index.lifecycle.name": "app-logs-retention-policy"
+    }
+  },
+  "priority": 200,
+  "_meta": {
+    "description": "Applies the app-logs-retention-policy ILM policy (30-day delete-only retention) to every app-logs-YYYY.MM.dd index Logstash creates. No rollover action is used since Logstash already creates one new index per day (see #326)."
+  }
+}
