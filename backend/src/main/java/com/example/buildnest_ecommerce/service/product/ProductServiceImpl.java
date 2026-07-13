@@ -254,7 +254,9 @@ public class ProductServiceImpl implements ProductService {
     @Cacheable(cacheNames = "relatedProducts", key = "#productId")
     public List<Product> getRelatedProducts(final Long productId) {
         log.info("Fetching related products for id: {}", productId);
-        Product source = getProductById(productId);
+        Product source = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException(
+                        "Product not found with id: " + productId));
         Category category = source.getCategory();
         Long categoryId = category == null ? null : category.getId();
         List<Long> tagIds = source.getTags().stream()
