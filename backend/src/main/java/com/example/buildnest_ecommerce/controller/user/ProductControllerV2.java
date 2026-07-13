@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -147,5 +148,20 @@ public class ProductControllerV2 {
 
                 return ResponseEntity.ok(
                                 new ApiResponse(true, "Category products retrieved successfully", products));
+        }
+
+        @Operation(summary = "Get related products",
+                   description = "Returns up to 8 products related to the given product: same category first, then shared tags (PROD-04)")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Related products retrieved successfully"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Source product not found")
+        })
+        @GetMapping("/{id}/related")
+        public ResponseEntity<ApiResponse> getRelatedProducts(
+                        @Parameter(description = "Product ID", example = "123") @PathVariable Long id) {
+                List<Product> relatedProducts = productService.getRelatedProducts(id);
+
+                return ResponseEntity.ok(
+                                new ApiResponse(true, "Related products retrieved successfully", relatedProducts));
         }
 }

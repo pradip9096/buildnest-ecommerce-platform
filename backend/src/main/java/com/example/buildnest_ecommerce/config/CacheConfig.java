@@ -29,6 +29,7 @@ import java.time.Duration;
  * - "auditLogs": Audit log entries (900s default)
  * - "userPermissions": User role/permission checks (3600s default)
  * - "inventoryItems": Product inventory data (300s default)
+ * - "relatedProducts": Per-product related-products recommendation (300s default)
  * - "rateLimitStats": Rate limit statistics (60s default)
  * - "orders": Order summary data (600s default)
  * - "users": User profile data (1800s default)
@@ -58,6 +59,8 @@ public class CacheConfig {
         private long userPermissionsTtlMs;
         @Value("${cache.ttl.inventory-items:300000}")
         private long inventoryItemsTtlMs;
+        @Value("${cache.ttl.related-products:300000}")
+        private long relatedProductsTtlMs;
 
         /**
          * Configure Redis Cache Manager with custom TTL for different cache regions.
@@ -120,6 +123,12 @@ public class CacheConfig {
                                                 RedisCacheConfiguration.defaultCacheConfig()
                                                                 .serializeValuesWith(jsonSerializer)
                                                                 .entryTtl(Duration.ofMillis(inventoryItemsTtlMs))
+                                                                .disableCachingNullValues())
+                                // Related products cache: TTL from application.properties
+                                .withCacheConfiguration("relatedProducts",
+                                                RedisCacheConfiguration.defaultCacheConfig()
+                                                                .serializeValuesWith(jsonSerializer)
+                                                                .entryTtl(Duration.ofMillis(relatedProductsTtlMs))
                                                                 .disableCachingNullValues())
                                 // Rate limit statistics cache: TTL from application.properties
                                 .withCacheConfiguration("rateLimitStats",

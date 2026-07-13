@@ -6,6 +6,7 @@ import com.example.buildnest_ecommerce.event.ProductDeletedEvent;
 import com.example.buildnest_ecommerce.event.ProductUpdatedEvent;
 import com.example.buildnest_ecommerce.model.dto.CreateProductRequest;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.model.entity.ProductTag;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -227,5 +229,28 @@ public class ProductServiceImpl implements ProductService {
     public Page<Product> findByCategory(Long categoryId, Pageable pageable) {
         log.info("Fetching products by category: {}", categoryId);
         return productRepository.findByCategory(categoryId, pageable);
+    }
+
+    private static final int RELATED_PRODUCTS_LIMIT = 8;
+
+    /**
+     * A JPQL {@code IN} clause rejects an empty collection, so a source
+     * product with no tags is queried against this sentinel instead —
+     * guaranteed not to match any real {@link ProductTag} id.
+     */
+    private static final List<Long> NO_TAGS_SENTINEL = List.of(-1L);
+
+    @Override
+    @Cacheable(cacheNames = "relatedProducts", key = "#productId")
+    public List<Product> getRelatedProducts(Long productId) {
+        log.info("Fetching related products for id: {}", productId);
+        Product source = getProductById(productId);
+        Long categoryId = source.getCategory() != null ? source.getCategory().getId() : null;
+        List<Long> tagIds = source.getTags().stream().map(ProductTag::getId).toList();
+        if (tagIds.isEmpty()) {
+            tagIds = NO_TAGS_SENTINEL;
+        }
+        Pageable limit = PageRequest.of(0, RELATED_PRODUCTS_LIMIT);
+        return productRepository.findRelatedProducts(productId, categoryId, tagIds, limit);
     }
 }
