@@ -3,7 +3,7 @@ title: "An Implicit Single-Valued Association Path in a JPQL WHERE Clause Still 
 category: technical
 tags: [jpa, hibernate, jpql, implicit-join, null-association, optional-filter-pattern]
 keywords: [implicit path navigation inner join, coalesce association null, optional filter or short circuit, p.inventory.field, EntityGraph left join vs implicit path]
-source_conversations: [Session 2026-07-12, issue #83, issue #365]
+source_conversations: ["Session 2026-07-12, issue #83, issue #365"]
 last_updated: 2026-07-12
 confidence: high
 evidence_strength: strong
@@ -11,6 +11,7 @@ root_cause: "an implicit single-valued-association path (p.inventory.field) in a
 impact: high — silently excludes valid rows with no matching association from an 'optional filter' result set in production code, undetected until an unrelated feature's test happened to omit the association; confirmed but unfixed, tracked as #365
 related_lessons:
   - docs/wiki/learned-lessons/jpql-explicit-join-plus-entitygraph-collection-breaks-distinct-pagination.md
+  - docs/wiki/learned-lessons/jpql-in-clause-rejects-empty-collection-use-a-sentinel-value.md
 ---
 
 # An Implicit Single-Valued Association Path in a JPQL WHERE Clause Still Filters Out Null-Association Rows, Even Behind a `:param IS NULL OR` Guard
