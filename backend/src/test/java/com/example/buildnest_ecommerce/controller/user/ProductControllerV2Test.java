@@ -127,4 +127,19 @@ class ProductControllerV2Test {
         ResponseEntity<ApiResponse> response = controller.getProductsByCategory(1L, 0, 200);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
+
+    @Test
+    @DisplayName("getRelatedProducts — delegates to ProductService and returns 200 with the ranked list (PROD-04, #84)")
+    void getRelatedProducts_returnsRankedList() {
+        ProductService productService = mock(ProductService.class);
+        java.util.List<Product> related = Collections.singletonList(new Product());
+        when(productService.getRelatedProducts(1L)).thenReturn(related);
+
+        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.empty(), Optional.empty());
+        ResponseEntity<ApiResponse> response = controller.getRelatedProducts(1L);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(related, response.getBody().getData());
+        verify(productService).getRelatedProducts(1L);
+    }
 }
