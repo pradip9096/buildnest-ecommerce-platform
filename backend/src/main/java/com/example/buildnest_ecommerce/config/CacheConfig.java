@@ -29,7 +29,7 @@ import java.time.Duration;
  * - "auditLogs": Audit log entries (900s default)
  * - "userPermissions": User role/permission checks (3600s default)
  * - "inventoryItems": Product inventory data (300s default)
- * - "relatedProducts": Per-product related-products recommendation (300s default)
+ * - "relatedProducts": Related-products recommendation (300s default)
  * - "rateLimitStats": Rate limit statistics (60s default)
  * - "orders": Order summary data (600s default)
  * - "users": User profile data (1800s default)
@@ -59,8 +59,9 @@ public class CacheConfig {
         private long userPermissionsTtlMs;
         @Value("${cache.ttl.inventory-items:300000}")
         private long inventoryItemsTtlMs;
+        /** TTL for the {@code relatedProducts} cache region (PROD-04, #84). */
         @Value("${cache.ttl.related-products:300000}")
-        private long relatedProductsTtlMs;
+        private long relatedTtlMs;
 
         /**
          * Configure Redis Cache Manager with custom TTL for different cache regions.
@@ -124,12 +125,10 @@ public class CacheConfig {
                                                                 .serializeValuesWith(jsonSerializer)
                                                                 .entryTtl(Duration.ofMillis(inventoryItemsTtlMs))
                                                                 .disableCachingNullValues())
-                                // Related products cache: TTL from application.properties
+                                // Related products cache: TTL from properties
                                 .withCacheConfiguration("relatedProducts",
-                                                RedisCacheConfiguration.defaultCacheConfig()
-                                                                .serializeValuesWith(jsonSerializer)
-                                                                .entryTtl(Duration.ofMillis(relatedProductsTtlMs))
-                                                                .disableCachingNullValues())
+                                                regionConfig(jsonSerializer,
+                                                                relatedTtlMs))
                                 // Rate limit statistics cache: TTL from application.properties
                                 .withCacheConfiguration("rateLimitStats",
                                                 RedisCacheConfiguration.defaultCacheConfig()
@@ -149,5 +148,22 @@ public class CacheConfig {
                                                                 .entryTtl(Duration.ofMillis(usersTtlMs))
                                                                 .disableCachingNullValues())
                                 .build();
+        }
+
+        /**
+         * Builds a {@link RedisCacheConfiguration} for one cache region
+         * (PROD-04, #84).
+         *
+         * @param jsonSerializer the shared value serializer for all regions
+         * @param ttlMs the region's TTL in milliseconds
+         * @return the region's cache configuration
+         */
+        private RedisCacheConfiguration regionConfig(
+                        final SerializationPair<Object> jsonSerializer,
+                        final long ttlMs) {
+                return RedisCacheConfiguration.defaultCacheConfig()
+                                .serializeValuesWith(jsonSerializer)
+                                .entryTtl(Duration.ofMillis(ttlMs))
+                                .disableCachingNullValues();
         }
 }

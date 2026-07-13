@@ -5,6 +5,7 @@ import com.example.buildnest_ecommerce.event.ProductCreatedEvent;
 import com.example.buildnest_ecommerce.event.ProductDeletedEvent;
 import com.example.buildnest_ecommerce.event.ProductUpdatedEvent;
 import com.example.buildnest_ecommerce.model.dto.CreateProductRequest;
+import com.example.buildnest_ecommerce.model.entity.Category;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.entity.ProductTag;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
@@ -231,6 +232,7 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findByCategory(categoryId, pageable);
     }
 
+    /** Maximum number of related products returned (PROD-04, #84). */
     private static final int RELATED_PRODUCTS_LIMIT = 8;
 
     /**
@@ -240,17 +242,29 @@ public class ProductServiceImpl implements ProductService {
      */
     private static final List<Long> NO_TAGS_SENTINEL = List.of(-1L);
 
+    /**
+     * Returns up to {@value #RELATED_PRODUCTS_LIMIT} products related to
+     * {@code productId}: same category first, then shared tags (PROD-04, #84).
+     *
+     * @param productId the ID of the source product (required)
+     * @return the ranked list of related products, possibly empty
+     * @throws RuntimeException if the source product is not found
+     */
     @Override
     @Cacheable(cacheNames = "relatedProducts", key = "#productId")
-    public List<Product> getRelatedProducts(Long productId) {
+    public List<Product> getRelatedProducts(final Long productId) {
         log.info("Fetching related products for id: {}", productId);
         Product source = getProductById(productId);
-        Long categoryId = source.getCategory() != null ? source.getCategory().getId() : null;
-        List<Long> tagIds = source.getTags().stream().map(ProductTag::getId).toList();
+        Category category = source.getCategory();
+        Long categoryId = category == null ? null : category.getId();
+        List<Long> tagIds = source.getTags().stream()
+                .map(ProductTag::getId)
+                .toList();
         if (tagIds.isEmpty()) {
             tagIds = NO_TAGS_SENTINEL;
         }
         Pageable limit = PageRequest.of(0, RELATED_PRODUCTS_LIMIT);
-        return productRepository.findRelatedProducts(productId, categoryId, tagIds, limit);
+        return productRepository.findRelatedProducts(
+                productId, categoryId, tagIds, limit);
     }
 }

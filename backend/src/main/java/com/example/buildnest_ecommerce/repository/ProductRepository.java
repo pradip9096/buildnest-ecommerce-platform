@@ -148,20 +148,30 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
         BigDecimal calculateProductRevenue(@Param("productId") Long productId);
 
         /**
-         * Find products related to {@code productId}: same category ranked ahead of
-         * shared-tag matches, excluding the source product and any
-         * inactive/out-of-stock product (PROD-04, #84). {@code categoryId} may be
-         * null (source product has no category); {@code tagIds} must be non-empty —
-         * callers pass a sentinel value when the source product has no tags, since
-         * an empty JPQL {@code IN} collection is invalid.
+         * Find products related to {@code productId}: same category ranked
+         * ahead of shared-tag matches, excluding the source product and any
+         * inactive/out-of-stock product (PROD-04, #84).
+         *
+         * @param productId the source product's ID, excluded from results
+         * @param categoryId the source product's category ID, may be null
+         * @param tagIds the source product's tag IDs; must be non-empty —
+         *               callers pass a sentinel value when the source
+         *               product has no tags, since an empty JPQL
+         *               {@code IN} collection is invalid
+         * @param pageable caps the result size (e.g. top 8)
+         * @return the ranked list of related products
          */
         @Query("""
                         SELECT p FROM Product p
                         WHERE p.id <> :productId
                         AND p.isActive = true
-                        AND (COALESCE(p.inventory.quantityInStock, 0) - COALESCE(p.inventory.quantityReserved, 0)) > 0
-                        AND (p.category.id = :categoryId OR EXISTS (SELECT 1 FROM p.tags t WHERE t.id IN :tagIds))
-                        ORDER BY CASE WHEN p.category.id = :categoryId THEN 0 ELSE 1 END, p.id
+                        AND (COALESCE(p.inventory.quantityInStock, 0)
+                                - COALESCE(p.inventory.quantityReserved, 0)) > 0
+                        AND (p.category.id = :categoryId
+                                OR EXISTS (SELECT 1 FROM p.tags t
+                                        WHERE t.id IN :tagIds))
+                        ORDER BY CASE WHEN p.category.id = :categoryId
+                                THEN 0 ELSE 1 END, p.id
                         """)
         @EntityGraph(attributePaths = { "category", "inventory", "variants" })
         List<Product> findRelatedProducts(

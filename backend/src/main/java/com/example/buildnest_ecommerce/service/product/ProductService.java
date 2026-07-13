@@ -37,9 +37,7 @@ public interface ProductService {
 
     Product updateProductImage(Long productId, String imageUrl);
 
-    /**
-     * Returns up to 8 products related to {@code productId}: same category
-     * first, then shared tags (PROD-04, #84).
-     */
+    // Returns up to 8 products related to productId: same category first,
+    // then shared tags (PROD-04, #84).
     List<Product> getRelatedProducts(Long productId);
 }
