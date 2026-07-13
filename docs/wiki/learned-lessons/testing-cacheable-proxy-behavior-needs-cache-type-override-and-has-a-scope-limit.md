@@ -11,6 +11,8 @@ root_cause: "this repo's application-test.properties sets spring.cache.type=none
 impact: medium — without the override, a well-intentioned regression test for proxy/caching behavior would give false confidence (either erroring on missing Redis if pointed at the real cacheManager bean, or silently observing no caching at all and misreporting what it verified)
 related_lessons:
   - docs/wiki/learned-lessons/spring-proxy-self-invocation-bypasses-any-aop-annotation-not-just-transactional.md
+  - docs/wiki/learned-lessons/service-layer-mocked-unit-tests-can-fully-cover-a-method-while-its-query-logic-stays-untested.md
+  - docs/wiki/learned-lessons/conditionalonproperty-beans-can-be-systematically-excluded-from-every-test-in-the-suite.md
 ---
 
 # Testing `@Cacheable` Proxy Behavior Requires Overriding the Test Profile's `spring.cache.type=none`, and Such a Test Has a Real Scope Limit Worth Stating Explicitly
