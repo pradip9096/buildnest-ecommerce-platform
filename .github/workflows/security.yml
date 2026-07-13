@@ -132,6 +132,13 @@ jobs:
           # trigger a full, slow OWASP/NVD scan — redundant with the dedicated
           # `dependency-check`/`security-scan` jobs already in this same workflow.
           # Explicitly skip it in this job only.
+          # `sonar.coverage.exclusions` mirrors pom.xml's jacoco-maven-plugin `report`
+          # execution's own <excludes> list exactly (config/**, model/dto, model/payload,
+          # *Application, a handful of logging/exception classes). Without this, Sonar's
+          # new_coverage gate demanded 80% coverage on packages jacoco:report never even
+          # includes data for (they're structurally absent from jacoco.xml, not merely
+          # untested) — any PR touching those packages would fail new_coverage regardless
+          # of test effort (PR #370/#84 hit this for CacheConfig). Keep both lists in sync.
           ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar \
             -Ddependency-check.skip=true \
             -Dsonar.projectKey=buildnest-ecommerce \
@@ -139,6 +146,7 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.token=$SONAR_TOKEN \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.coverage.exclusions=**/model/dto/**,**/model/payload/**,**/config/**,**/*Application.java,**/exception/ResourceNotFoundException.java,**/exception/AccessDeniedException.java,**/exception/PaymentProcessingException.java,**/exception/ExternalServiceException.java,**/util/EventLogger.java,**/util/TransactionLogger.java,**/util/LoggingStandards.java \
             || echo "SonarQube analysis failed — check logs above (non-blocking, matching SpotBugs in this same job — CheckStyle is now baseline-ratcheted and blocking, see #354)"
 
       - name: Run CheckStyle

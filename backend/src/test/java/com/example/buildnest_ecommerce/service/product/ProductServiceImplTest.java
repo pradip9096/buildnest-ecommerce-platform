@@ -559,4 +559,58 @@ class ProductServiceImplTest {
         assertEquals(1, page.getTotalElements());
         assertTrue(page.getContent().isEmpty());
     }
+
+    @Test
+    void testGetRelatedProductsRanksSourceCategoryAndTags() {
+        // Arrange — source product has category 1 and tag 7
+        com.example.buildnest_ecommerce.model.entity.ProductTag tag = new com.example.buildnest_ecommerce.model.entity.ProductTag();
+        tag.setId(7L);
+        tag.setName("eco-friendly");
+        testProduct.setTags(java.util.Set.of(tag));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+
+        Product sameCategoryMatch = new Product();
+        sameCategoryMatch.setId(2L);
+        sameCategoryMatch.setCategory(testCategory);
+
+        Product sharedTagMatch = new Product();
+        sharedTagMatch.setId(3L);
+
+        List<Product> repositoryResult = List.of(sameCategoryMatch, sharedTagMatch);
+
+        ArgumentCaptor<List<Long>> tagIdsCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        when(productRepository.findRelatedProducts(eq(1L), eq(1L), tagIdsCaptor.capture(), pageableCaptor.capture()))
+                .thenReturn(repositoryResult);
+
+        // Act
+        List<Product> result = productService.getRelatedProducts(1L);
+
+        // Assert — same-category result ranked ahead of the shared-tag-only result,
+        // exactly as returned by the ranked repository query
+        assertEquals(2, result.size());
+        assertEquals(2L, result.get(0).getId());
+        assertEquals(3L, result.get(1).getId());
+        assertEquals(List.of(7L), tagIdsCaptor.getValue());
+        assertEquals(8, pageableCaptor.getValue().getPageSize());
+    }
+
+    @Test
+    void testGetRelatedProductsWithNoTagsUsesSentinelTagId() {
+        // Arrange — source product has a category but no tags
+        testProduct.setTags(java.util.Set.of());
+        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+
+        ArgumentCaptor<List<Long>> tagIdsCaptor = ArgumentCaptor.forClass(List.class);
+        when(productRepository.findRelatedProducts(eq(1L), eq(1L), tagIdsCaptor.capture(), any(Pageable.class)))
+                .thenReturn(List.of());
+
+        // Act
+        List<Product> result = productService.getRelatedProducts(1L);
+
+        // Assert — an empty JPQL IN clause is invalid, so a sentinel value that
+        // matches no real tag id must be passed instead
+        assertTrue(result.isEmpty());
+        assertEquals(List.of(-1L), tagIdsCaptor.getValue());
+    }
 }

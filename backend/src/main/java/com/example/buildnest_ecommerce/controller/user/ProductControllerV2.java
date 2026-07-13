@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -147,5 +148,35 @@ public class ProductControllerV2 {
 
                 return ResponseEntity.ok(
                                 new ApiResponse(true, "Category products retrieved successfully", products));
+        }
+
+        /**
+         * Returns up to 8 products related to the given product: same
+         * category first, then shared tags (PROD-04, #84). Final by
+         * omission of any extension hook — not designed to be overridden.
+         *
+         * @param id the source product's ID
+         * @return the ranked list of related products, wrapped in
+         *         {@link ApiResponse}
+         */
+        @Operation(summary = "Get related products",
+                   description = "Same category first, then tags (PROD-04)")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                                        responseCode = "200",
+                                        description = "Retrieved successfully"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                                        responseCode = "404",
+                                        description = "Source not found")
+        })
+        @GetMapping("/{id}/related")
+        public ResponseEntity<ApiResponse> getRelatedProducts(
+                        @Parameter(description = "Product ID", example = "123")
+                        @PathVariable final Long id) {
+                List<Product> related = productService.getRelatedProducts(id);
+                String message = "Related products retrieved successfully";
+
+                return ResponseEntity.ok(
+                                new ApiResponse(true, message, related));
         }
 }

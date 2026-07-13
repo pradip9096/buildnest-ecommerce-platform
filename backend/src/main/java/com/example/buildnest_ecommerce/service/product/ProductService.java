@@ -36,4 +36,8 @@ public interface ProductService {
     Page<Product> findByCategory(Long categoryId, Pageable pageable);
 
     Product updateProductImage(Long productId, String imageUrl);
+
+    // Returns up to 8 products related to productId: same category first,
+    // then shared tags (PROD-04, #84).
+    List<Product> getRelatedProducts(Long productId);
 }

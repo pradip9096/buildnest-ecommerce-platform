@@ -1,0 +1,25 @@
+coverage:
+  status:
+    patch:
+      default:
+        target: 80%
+
+# Mirrors backend/pom.xml's jacoco-maven-plugin `report` execution's own <excludes> list
+# exactly (config/**, model/dto, model/payload, *Application, a handful of logging/exception
+# classes) -- without this, codecov/patch demanded 80% coverage on packages jacoco:report
+# never even includes data for (they're structurally absent from jacoco.xml, not merely
+# untested). PR #370/#84 hit this for CacheConfig -- see the matching comment in
+# .github/workflows/security.yml's sonar.coverage.exclusions for the SonarCloud side of the
+# same fix. Keep all three lists (jacoco excludes, sonar excludes, this file) in sync.
+ignore:
+  - "backend/src/main/java/**/model/dto/**"
+  - "backend/src/main/java/**/model/payload/**"
+  - "backend/src/main/java/**/config/**"
+  - "backend/src/main/java/**/*Application.java"
+  - "backend/src/main/java/**/exception/ResourceNotFoundException.java"
+  - "backend/src/main/java/**/exception/AccessDeniedException.java"
+  - "backend/src/main/java/**/exception/PaymentProcessingException.java"
+  - "backend/src/main/java/**/exception/ExternalServiceException.java"
+  - "backend/src/main/java/**/util/EventLogger.java"
+  - "backend/src/main/java/**/util/TransactionLogger.java"
+  - "backend/src/main/java/**/util/LoggingStandards.java"
