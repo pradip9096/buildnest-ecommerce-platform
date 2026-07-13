@@ -11,6 +11,7 @@ root_cause: "Spring's default proxy-based AOP (JDK dynamic proxy or CGLIB) only 
 impact: medium — ProductServiceImpl.getRelatedProducts called getProductById via 'this', silently skipping getProductById's own @Cacheable on every invocation; not a correctness bug (data was still right) but a real, undetected caching inefficiency that would have shipped unnoticed if SonarCloud's PR analysis hadn't flagged it
 related_lessons:
   - docs/wiki/learned-lessons/checkstyle-ratchet-counts-whole-file-not-diff-add-javadoc-per-new-method.md
+  - docs/wiki/learned-lessons/testing-cacheable-proxy-behavior-needs-cache-type-override-and-has-a-scope-limit.md
 ---
 
 # Spring's Self-Invocation Proxy Gap Applies to Every AOP Annotation, Not Just `@Transactional` — SonarCloud `java:S6809` Catches It for `@Cacheable`
