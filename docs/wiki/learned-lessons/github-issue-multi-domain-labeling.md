@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-04]
 last_updated: 2026-07-04
 confidence: high
 evidence_strength: strong
+root_cause: "domain: labels were treated as a single-select category at filing time even though they describe non-exclusive concerns, so an issue whose code lives in one layer but whose concern names another silently vanished from the other layer's filtered view"
+impact: low — one issue silently missing from a filtered query, caught when the user asked for a frontend-scoped list
 related_lessons:
   - docs/wiki/learned-lessons/github-issue-hygiene.md
 ---

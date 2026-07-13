@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-09]
 last_updated: 2026-07-09
 confidence: high
 evidence_strength: strong
+root_cause: "malformed <until> placement and duplicate dependency-check-maven plugin instances both degrade to a silent warning/no-op instead of a build failure, so suppressions appear wired but are actually discarded"
+impact: medium — CVSS≥7.0 findings kept failing the build with no diagnostic pointing at the actual cause until the log was grepped specifically
 related_lessons: []
 ---
 

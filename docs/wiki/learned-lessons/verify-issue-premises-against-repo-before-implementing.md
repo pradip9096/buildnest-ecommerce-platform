@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-03]
 last_updated: 2026-07-03
 confidence: high
 evidence_strength: strong
+root_cause: "a self-authored issue's technical claims (which workflow file runs a step, which metric gates the build) were written from memory in an earlier session rather than re-verified against the current repo state, and both claims had since drifted or were wrong from the start"
+impact: medium — would have produced code changes to the wrong file gating on the wrong metric had the premises not been checked before implementation
 related_lessons:
   - docs/wiki/learned-lessons/github-issue-hygiene.md
   - docs/wiki/learned-lessons/pit-mutation-testing-patterns.md

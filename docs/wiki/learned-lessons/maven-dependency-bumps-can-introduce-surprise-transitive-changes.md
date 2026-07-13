@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-09]
 last_updated: 2026-07-09
 confidence: high
 evidence_strength: strong
+root_cause: "a version bump changes an artifact's own transitive dependency declarations (a new groupId, or a sibling artifact that stopped publishing a JAR), and mvn dependency:tree resolves the graph without performing the same strict artifact-existence check a real compile/verify does"
+impact: medium — one bump silently pulled in a fresh-CVE Jackson 3.0.0 under a different groupId, the other broke the build outright on a POM-only artifact with no JAR
 related_lessons: []
 ---
 

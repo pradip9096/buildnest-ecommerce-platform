@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-02]
 last_updated: 2026-07-02
 confidence: high
 evidence_strength: strong
+root_cause: "persistent memory files are point-in-time snapshots with no automatic trigger to refresh on issue/milestone closure, and can be written mid-session before later actions in the same conversation change the state they describe"
+impact: medium — stale counts and a closed-issue mislabeled as remaining could silently misinform "what to work on next" decisions across sessions
 related_lessons:
   - docs/wiki/learned-lessons/github-issue-hygiene.md
 ---

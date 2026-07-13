@@ -1,3 +1,17 @@
+---
+title: "`.claude/` Is Gitignored — Rule Files There Are Local-Only, Not Version-Controlled"
+category: process
+tags: [claude-code, gitignore, dotclaude, version-control, tooling-config]
+keywords: [.claude gitignored, rule files not committed, git check-ignore, git ls-files .claude, local-only config]
+source_conversations: [Session 2026-07-07]
+last_updated: 2026-07-07
+confidence: high
+evidence_strength: strong
+root_cause: "the system prompt's framing of project .claude/ files as \"checked into the codebase\" was trusted without verifying against this repo's own .gitignore, which explicitly excludes .claude/ under a comment marking it local-only"
+impact: medium — an entire session's rule-file work (development-workflow.md, git-workflow.md amendments) was built on the false assumption it was shared/durable; no data loss occurred since the files still existed locally, but the assumption was silently wrong until directly checked
+related_lessons: []
+---
+
 # `.claude/` is gitignored — rule files there are local-only, not version-controlled
 
 An entire session was spent building out `.claude/rules/common/development-workflow.md` (necessity

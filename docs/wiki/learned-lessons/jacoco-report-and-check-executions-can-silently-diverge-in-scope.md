@@ -3,6 +3,8 @@ title: JaCoCo report and check executions can silently diverge in scope
 category: testing
 tags: [jacoco, coverage, maven, ci, silent-drift]
 last_updated: 2026-07-06
+root_cause: "JaCoCo's report and jacoco-check executions each carry their own independent <excludes> config that Maven does not keep in sync, so updating the global default excludes left the report execution's stale copy hiding the exact package the enforcement gate was failing on"
+impact: medium — the coverage gate failure and the diagnostic report pointed at different scopes, obscuring the actual cause until the specific bound execution was rerun directly
 ---
 
 # JaCoCo Report and Check Executions Can Silently Diverge in Scope
@@ -24,5 +26,5 @@ Maven executions of the same plugin don't inherit each other's `<configuration>`
 - When a `check` goal fails with no visible cause in the report, don't trust the report's completeness — rerun the specific bound execution directly (e.g. `./mvnw -P ci org.jacoco:jacoco-maven-plugin:VERSION:check@jacoco-check`) to get the actual rule-violation message, since default `-q` verify runs and even non-quiet runs may bury it.
 
 ## Related
-- [[verify-issue-premises-against-repo-before-implementing]]
+- [Verify Issue Premises Against Repo Before Implementing](verify-issue-premises-against-repo-before-implementing.md)
 - `docs/knowledge-base/project/quality-gate-ratchet-pattern.md`

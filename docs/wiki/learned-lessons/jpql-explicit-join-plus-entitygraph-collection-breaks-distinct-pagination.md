@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-12, issue #83]
 last_updated: 2026-07-12
 confidence: high
 evidence_strength: strong
+root_cause: "combining an explicit LEFT JOIN on one collection with an @EntityGraph fetch of a different collection in the same JPQL query produces multiple collection joins, which Hibernate silently resolves via in-memory pagination instead of throwing, corrupting DISTINCT+pagination results with no exception"
+impact: high — silently returned zero/wrong rows for a genuine filter match, a class of bug no CI check would catch without a test asserting real persisted row counts
 related_lessons:
   - docs/wiki/learned-lessons/known-table-drift-list-should-be-checked-before-writing-changesets.md
 ---

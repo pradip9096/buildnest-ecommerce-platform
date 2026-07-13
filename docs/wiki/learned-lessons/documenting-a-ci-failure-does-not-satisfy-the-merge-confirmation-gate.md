@@ -2,6 +2,8 @@
 title: Documenting a pre-existing CI failure in a PR comment does not satisfy the merge-confirmation gate
 date: 2026-07-08
 issue: "#323 / #328"
+root_cause: "a PR comment documenting a pre-existing red check's cause was conflated with the separate, synchronous user-confirmation step the merge-through-red-check policy actually requires"
+impact: low — the merge call was correctly denied and retried after explicit confirmation, no bad merge occurred
 ---
 
 ## What happened
@@ -35,6 +37,7 @@ When a PR has a pre-existing/unrelated red check:
    behavior, not a bug, and surface the summary to the user directly rather than retrying the
    same tool call.
 
-Related: [[feedback_verification_not_authorization]] — the same pattern as "confirming a stale
-issue premise doesn't authorize closing it": confirming a CI failure is unrelated doesn't
-authorize merging past it without a separate explicit go-ahead.
+Related: the "Verification ≠ Authorization" pattern (tracked in this project's auto-memory, not a
+file in this repo) — the same pattern as "confirming a stale issue premise doesn't authorize
+closing it": confirming a CI failure is unrelated doesn't authorize merging past it without a
+separate explicit go-ahead.

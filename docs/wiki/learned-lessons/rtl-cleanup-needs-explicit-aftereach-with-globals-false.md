@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-04]
 last_updated: 2026-07-04
 confidence: high
 evidence_strength: strong
+root_cause: "RTL's automatic unmount-after-each-test cleanup listens for Vitest's global afterEach hook, but the project's globals: false config doesn't inject that global, so cleanup silently never fires without an explicit afterEach(cleanup) in the shared setup file"
+impact: medium — two of five tests in a new suite failed with cross-test DOM pollution, a symptom easy to misdiagnose as a component/test logic bug rather than missing cleanup
 related_lessons:
   - docs/wiki/learned-lessons/vitest-needs-triple-slash-reference-in-vite-config.md
 ---

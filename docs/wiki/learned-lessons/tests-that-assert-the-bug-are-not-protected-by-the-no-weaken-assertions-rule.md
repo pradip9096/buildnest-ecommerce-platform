@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-05]
 last_updated: 2026-07-05
 confidence: high
 evidence_strength: strong
+root_cause: "read-path service methods for lazily-created per-user singleton resources (cart, wishlist) called .orElseThrow() on 'no row yet', a design smell that treats 'doesn't exist yet' and 'is empty' as distinguishable when they should read the same to a caller, and existing tests encoded that exact defect as the expected/passing behavior"
+impact: high — a real user-facing bug (brand-new users got a 'not found' error instead of an empty cart/wishlist) was already codified as passing, green test coverage, which would have permanently blocked a correct fix from landing without recognizing the distinction from assertion-weakening
 related_lessons:
   - docs/wiki/learned-lessons/verify-issue-premises-against-repo-before-implementing.md
   - docs/wiki/learned-lessons/stale-test-classes-false-failures.md

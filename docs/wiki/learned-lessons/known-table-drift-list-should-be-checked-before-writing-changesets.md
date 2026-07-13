@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-05]
 last_updated: 2026-07-05
 confidence: high
 evidence_strength: strong
+root_cause: "a new changeset was written against products/cart_items without first checking an existing sibling changeset's inline comment or carried-forward project memory, both of which already documented that those tables are Hibernate-created drift, not Liquibase-managed"
+impact: low — avoidable rediscovery cost (a standalone probe test) of an already-documented fact; caught before merge with no lasting effect
 related_lessons:
   - docs/wiki/learned-lessons/liquibase-seed-verification-under-hibernate-create-drop.md
   - docs/wiki/learned-lessons/verify-issue-premises-against-repo-before-implementing.md

@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-04]
 last_updated: 2026-07-04
 confidence: high
 evidence_strength: strong
+root_cause: "PasswordResetController.changePassword accepted userId as a client-supplied @RequestParam with no check that it matched the authenticated caller, an IDOR that was only found because verifying a low-priority issue's stale premise required reading the whole method rather than just enough to confirm/refute the stated claim"
+impact: high — an unauthenticated ownership check let any authenticated user change another user's password given that user's current password, a genuine IDOR sitting next to what was filed as a cosmetic low-priority issue
 related_lessons:
   - docs/wiki/learned-lessons/verify-issue-premises-against-repo-before-implementing.md
 ---

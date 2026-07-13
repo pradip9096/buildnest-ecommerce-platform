@@ -1,3 +1,17 @@
+---
+title: "GitHub Actions `working-directory` Default Only Applies to `run:` Steps"
+category: tooling
+tags: [github-actions, ci, working-directory, workflow-config]
+keywords: [defaults.run.working-directory, run steps vs uses steps, report-summary job failure, download-artifact unaffected, GITHUB_STEP_SUMMARY]
+source_conversations: [Session 2026-07-09, issue #329]
+last_updated: 2026-07-09
+confidence: high
+evidence_strength: strong
+root_cause: "a workflow-level defaults.run.working-directory override only affects run: steps, not uses: steps, so a job with no checkout step failed only on its run: step while the preceding uses: step (download-artifact) ran fine — easy to misdiagnose as the whole job needing a checkout"
+impact: low — a CI job (#329) failed with a clear error message and was fixed with a minimal job-level override once the run:-vs-uses: distinction was identified; no wider consequence
+related_lessons: []
+---
+
 # GitHub Actions `working-directory` default only applies to `run:` steps
 
 A workflow- or job-level `defaults.run.working-directory` override affects **only `run:` steps**

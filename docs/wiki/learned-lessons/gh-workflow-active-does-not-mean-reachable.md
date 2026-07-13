@@ -7,6 +7,8 @@ source_conversations: ["#336"]
 last_updated: 2026-07-10
 confidence: high
 evidence_strength: direct-repo-verification
+root_cause: "ci-cd.yml's on: trigger only fires on push/pull_request to main or develop, branches that no longer exist after a main→master rename, so the workflow reports 'active' while being permanently unreachable"
+impact: medium — a class of drift that could recur silently across other workflow files with no lint or warning to surface it
 related_lessons: [github-actions-working-directory-default-only-applies-to-run-steps]
 ---
 

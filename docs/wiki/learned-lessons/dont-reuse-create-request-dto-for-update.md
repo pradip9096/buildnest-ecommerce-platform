@@ -3,6 +3,8 @@ title: Don't reuse a Create*Request DTO for update when field requirements diver
 category: api-design
 tags: [dto, validation, rest, create-vs-update]
 last_updated: 2026-07-06
+root_cause: "the update endpoint reused a Create*Request DTO whose @NotNull fields (initialStockQuantity, minimumStockLevel) were only meaningful for the creation side-effect of seeding a new inventory row, forcing every update to pad or fail validation on fields it never uses"
+impact: low — caught immediately by the integration test for the new endpoint, fixed by splitting into a dedicated Update*Request DTO before merge
 ---
 
 # Don't Reuse a Create*Request DTO for Update When Field Requirements Diverge
@@ -38,4 +40,4 @@ split into a dedicated `Update*Request` DTO with only the fields the update path
 don't force callers to pad requests with values the endpoint will silently discard.
 
 ## Related
-- [[setting-a-cascade-all-mappedby-field-after-save-can-duplicate-insert]]
+- [Setting a cascade=ALL mappedBy field after save() can trigger a duplicate insert](setting-a-cascade-all-mappedby-field-after-save-can-duplicate-insert.md)

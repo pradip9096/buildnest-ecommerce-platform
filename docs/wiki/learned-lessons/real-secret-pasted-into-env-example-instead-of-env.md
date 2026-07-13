@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-09]
 last_updated: 2026-07-09
 confidence: high
 evidence_strength: strong
+root_cause: "the near-identical filenames .env.example and .env invite confusion under time pressure, with nothing in the manual-paste editing workflow flagging that a real value was written into the tracked template rather than the gitignored file — it recurred a second time in the same session after the first fix"
+impact: high — a real API key was staged into a committed, tracked file twice; no actual exposure occurred only because it was caught before being pushed, and a committed instance would have required rotation
 related_lessons:
   - docs/wiki/learned-lessons/dotenv-not-auto-loaded-by-local-processes.md
 ---

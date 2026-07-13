@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-03]
 last_updated: 2026-07-03
 confidence: medium
 evidence_strength: moderate
+root_cause: "an early Bash tool invocation likely ran before PATH was fully initialized, producing a spurious exit-127 for gh that was misread as 'not installed' rather than a shell-startup timing artifact"
+impact: medium — led to routing GitHub writes through the MCP server instead, which then failed authentication on every write call
 related_lessons:
   - docs/wiki/learned-lessons/github-issue-hygiene.md
 ---

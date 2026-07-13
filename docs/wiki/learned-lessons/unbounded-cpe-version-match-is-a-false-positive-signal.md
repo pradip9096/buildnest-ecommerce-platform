@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-09]
 last_updated: 2026-07-09
 confidence: high
 evidence_strength: strong
+root_cause: "dependency-check's CPE analyzer matches on vendor/product name similarity and can hit a whole-product CPE entry with no version range, misattributing a CVE in one component of a multi-artifact umbrella product (e.g. a compiler or server) to an unrelated sibling artifact actually in use"
+impact: medium — four CRITICAL/HIGH findings looked unfixable after upgrading to latest, requiring primary-source CVE verification to correctly identify and defensibly suppress as false positives rather than accepting unwarranted risk
 related_lessons: []
 ---
 

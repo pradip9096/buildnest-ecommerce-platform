@@ -3,7 +3,18 @@
 Reusable, actionable lessons extracted from BuildNest development sessions.
 Each file is a standalone reference — read it when you hit the relevant situation.
 
-## Definition
+This file does two jobs, kept in two separate sections below: **Orientation** (the definition and
+admission bar for a lesson, related KB articles, and contributing rules) and **Index** (the
+manifest — the authoritative list of every lesson file, as one-line rows). See
+[Manifest and Surrogate Pattern for Index Files](../../knowledge-base/project/manifest-and-surrogate-pattern-for-index-files.md)
+and the [README-as-Manifest Blueprint](../../knowledge-base/project/readme-manifest-blueprint.md)
+for why this split exists.
+
+---
+
+## Orientation
+
+### Definition
 
 A **lesson learned** is a generalized, evidence-based insight — captured from a real
 experience, positive or negative — that is likely to provide long-term value beyond the
@@ -41,10 +52,58 @@ three definitions above):
   that applies the next time the same class of situation comes up, not just a log of
   "what happened on 2026-07-04."
 
-This is a stricter bar than "anything mildly useful I noticed" — see the Contributing
-section below for the single-occurrence threshold this implies in practice.
+This is a stricter bar than "anything mildly useful I noticed" — see Contributing below for the
+single-occurrence threshold this implies in practice.
+
+### Related Knowledge Base Articles
+
+- [Quality Gate Ratchet Pattern](../../knowledge-base/project/quality-gate-ratchet-pattern.md) — fitness functions, monotonic improvement constraint, PIT threshold schedule
+- [.env.example (Committed Template) vs .env (Local Secrets)](../../knowledge-base/project/env-example-template-vs-env-local-secrets.md) — the durable mechanism behind the real-secret-pasted-into-env-example lesson below
+
+### Root Cause vs. Impact — Two Fields, Not One
+
+Two properties of a lesson are easy to conflate but answer different questions, and both are
+now required (see Contributing below):
+
+- **Root cause** — *why did this happen*, at the mechanism level, not just the symptom. "Tests
+  failed" is a symptom; "`mvn test` without `clean` ran an orphaned `.class` file for an already-
+  deleted test source" is the root cause. The admission bar's "Valid" criterion already implies
+  this — verified against the actual failure, not assumed — but it wasn't previously a distinct,
+  named field, so it was easy to state the symptom and stop there.
+- **Impact** — *what did it actually cost or risk*, at the level of cost/time/quality/correctness.
+  This is what justifies the admission bar's "Significant" criterion with something concrete
+  instead of a bare assertion. A lightweight rating is enough — this repo is a small team, not a
+  PMO tracking cross-project cost rollups (see the "Elaborate" thread this section originated
+  from for why the heavier PMBOK-style Impact Assessment doesn't fit here wholesale):
+
+  | Impact level | Meaning |
+  |---|---|
+  | `low` | Minor friction, quick to notice and recover from once known |
+  | `medium` | Real time lost (an hour+), or a class of bug that could recur silently |
+  | `high` | Production-facing risk, security-relevant, data integrity, or repeated/compounding cost across multiple issues |
+
+Both fields go in frontmatter (see Contributing) as short, scannable values — `root_cause` as a
+one-sentence mechanism statement, `impact` as one of the three levels above plus an optional
+short clause. Neither replaces the body's `### Problem` / `### Fix` structure already used across
+existing lesson files — they're a frontmatter-level summary a reader can scan without opening the
+file, the same surrogate-record role every other frontmatter field already plays (see
+[Manifest and Surrogate Pattern for Index Files](../../knowledge-base/project/manifest-and-surrogate-pattern-for-index-files.md)).
+
+### Contributing
+
+- One topic per file; consolidate closely related patterns into the same file
+- Frontmatter is required: title, category, tags, keywords, source\_conversations, last\_updated, confidence, evidence\_strength, related\_lessons, root\_cause, impact
+- `root_cause`: one sentence, the underlying mechanism — not the observed symptom
+- `impact`: one of `low` / `medium` / `high` (see Root Cause vs. Impact above), optionally with a short clause, e.g. `impact: high — masked a real IDOR`
+- Update the Index table below when adding or significantly updating a file
+- Do not document a lesson from a single occurrence unless the failure mode is non-obvious or high-cost
+- Cross-referencing another lesson: use a real relative markdown link (`[Title](filename.md)`), never a bare `[[wikilink]]` — this directory has no automated wikilink resolver, same as `docs/knowledge-base/project/`; see that KB's [Cross-Referencing Between Articles](../../knowledge-base/project/README.md#cross-referencing-between-articles) for why bare wikilinks render as literal, non-clickable text in GitHub and every standard markdown viewer
+
+---
 
 ## Index
+
+The manifest — one row per lesson file, no prose beyond this table.
 
 | File | Topic | Category | Last Updated |
 |---|---|---|---|
@@ -81,15 +140,21 @@ section below for the single-occurrence threshold this implies in practice.
 | [maven-dependency-bumps-can-introduce-surprise-transitive-changes.md](maven-dependency-bumps-can-introduce-surprise-transitive-changes.md) | A version bump can introduce a new transitive dependency under a renamed groupId (elasticsearch-java 8.19.x → Jackson 3.0.0 under `tools.jackson.core`) or break on a sibling artifact that stopped publishing a JAR (`kotlin-stdlib-common` past 2.0.21) — `dependency:tree` can look clean when a real build still fails | tooling | 2026-07-09 |
 | [check-sibling-branches-before-filing-a-duplicate-issue.md](check-sibling-branches-before-filing-a-duplicate-issue.md) | #341 was filed as a new Critical CVE issue before checking whether #335, already open in the same working set, was the actual fix — check in-flight sibling PRs before filing a "new" finding | process | 2026-07-10 |
 | [content-keyed-cache-for-externally-sourced-data-forces-unnecessary-refetches.md](content-keyed-cache-for-externally-sourced-data-forces-unnecessary-refetches.md) | The OWASP NVD cache was keyed on `hashFiles('**/pom.xml')` — since the NVD dataset is external and unrelated to project dependencies, every `pom.xml` change forced a full multi-hour re-sync; rekeyed on date instead (#342) | tooling | 2026-07-10 |
-
-## Related Knowledge Base Articles
-
-- [Quality Gate Ratchet Pattern](../../knowledge-base/project/quality-gate-ratchet-pattern.md) — fitness functions, monotonic improvement constraint, PIT threshold schedule
-- [.env.example (Committed Template) vs .env (Local Secrets)](../../knowledge-base/project/env-example-template-vs-env-local-secrets.md) — the durable mechanism behind the real-secret-pasted-into-env-example lesson above
-
-## Contributing
-
-- One topic per file; consolidate closely related patterns into the same file
-- Frontmatter is required: title, category, tags, keywords, source\_conversations, last\_updated, confidence, evidence\_strength, related\_lessons
-- Update this README when adding or significantly updating a file
-- Do not document a lesson from a single occurrence unless the failure mode is non-obvious or high-cost
+| [cascadetype-all-on-oneToMany-can-mask-a-missing-delete-guard.md](cascadetype-all-on-oneToMany-can-mask-a-missing-delete-guard.md) | `CascadeType.ALL` on `Category.products` would cascade-delete products instead of blocking deletion (#68) — a pre-existing test had encoded the wrong cascade behavior as "correct" | jpa | 2026-07-07 |
+| [claude-rules-directory-is-gitignored-not-version-controlled.md](claude-rules-directory-is-gitignored-not-version-controlled.md) | `.claude/` is gitignored — rule files built there are local-only, never shared via git, despite living inside the repo directory tree | process | 2026-07-07 |
+| [closed-issue-status-is-not-evidence-of-implementation.md](closed-issue-status-is-not-evidence-of-implementation.md) | 7 of 20 "closed" duplicate-triage twins had every acceptance-criteria box unchecked and no corresponding code — verify against the codebase, not against another issue's closed status | process | 2026-07-10 |
+| [documenting-a-ci-failure-does-not-satisfy-the-merge-confirmation-gate.md](documenting-a-ci-failure-does-not-satisfy-the-merge-confirmation-gate.md) | A PR comment documenting a pre-existing red check's cause does not substitute for the separate, synchronous explicit user confirmation the merge-through-red-check policy requires | process | 2026-07-08 |
+| [dont-reuse-create-request-dto-for-update.md](dont-reuse-create-request-dto-for-update.md) | Reusing a `Create*Request` DTO for an update endpoint forces every update to pad or fail validation on fields (e.g. initial stock) that only make sense at creation time | api-design | 2026-07-06 |
+| [github-projects-board-retired-not-a-deliberate-original-decision.md](github-projects-board-retired-not-a-deliberate-original-decision.md) | The GitHub Projects board was actively used through #292 then silently drifted out of sync and stopped — later misremembered as a deliberate policy rather than unmanaged drift | process | 2026-07-09 |
+| [hsts-header-only-emitted-on-secure-requests.md](hsts-header-only-emitted-on-secure-requests.md) | `Strict-Transport-Security` returns `null` under plain MockMvc `get()` because Spring Security's header writer only fires when `HttpServletRequest.isSecure()` is true — a test-only false negative, not a broken config | testing | 2026-07-05 |
+| [jacoco-report-and-check-executions-can-silently-diverge-in-scope.md](jacoco-report-and-check-executions-can-silently-diverge-in-scope.md) | JaCoCo's `report` and `jacoco-check` executions each carry independent `<excludes>` config Maven never syncs — updating one left the visible report and the enforcement gate pointing at different scopes | testing | 2026-07-06 |
+| [jpql-explicit-join-plus-entitygraph-collection-breaks-distinct-pagination.md](jpql-explicit-join-plus-entitygraph-collection-breaks-distinct-pagination.md) | An explicit JPQL join on one collection combined with `@EntityGraph` fetching a different collection silently breaks `DISTINCT`/pagination — Hibernate resolves it via in-memory pagination instead of throwing (#83) | technical | 2026-07-12 |
+| [jpql-implicit-singlevalued-path-in-where-acts-as-inner-join-even-under-param-is-null-guard.md](jpql-implicit-singlevalued-path-in-where-acts-as-inner-join-even-under-param-is-null-guard.md) | An implicit single-valued-association path in a JPQL `WHERE` clause still filters out null-association rows even behind a `:param IS NULL OR` guard, since the implicit join runs before the `OR` short-circuit (#83/#365) | technical | 2026-07-12 |
+| [known-table-drift-list-should-be-checked-before-writing-changesets.md](known-table-drift-list-should-be-checked-before-writing-changesets.md) | A new Liquibase changeset was written against `products`/`cart_items` without checking an existing sibling changeset's comment already documenting those tables as Hibernate-created drift | process | 2026-07-05 |
+| [liquibase-seed-verification-under-hibernate-create-drop.md](liquibase-seed-verification-under-hibernate-create-drop.md) | The test profile's `ddl-auto=create-drop` runs Hibernate schema regeneration after Liquibase migrations, wiping a seeded row before any `@SpringBootTest` method runs — a correct changeset looked broken | testing | 2026-07-05 |
+| [no-op-rollback-is-correct-for-non-destructive-null-backfills.md](no-op-rollback-is-correct-for-non-destructive-null-backfills.md) | An empty `<rollback/>` is correct for a NULL-to-default backfill with no audit column to distinguish originally-NULL rows — not a violation of "always write rollback" | process | 2026-07-05 |
+| [profile-excluded-config-classes-need-shared-constants-with-their-test-double.md](profile-excluded-config-classes-need-shared-constants-with-their-test-double.md) | `SecurityConfig`'s `@Profile("!test")` exclusion means the real bean never loads during tests, and its hand-written `TestSecurityConfig` double had no structural mechanism keeping duplicated literal values in sync | architecture | 2026-07-05 |
+| [second-list-typed-bag-collection-on-same-entity-risks-multiplebagfetchexception.md](second-list-typed-bag-collection-on-same-entity-risks-multiplebagfetchexception.md) | Adding a second `List`-typed `@OneToMany` bag collection (`Product.images` alongside `Product.variants`) risks `MultipleBagFetchException` the moment both are fetch-joined together (#81/#82) | jpa | 2026-07-07 |
+| [setting-a-cascade-all-mappedby-field-after-save-can-duplicate-insert.md](setting-a-cascade-all-mappedby-field-after-save-can-duplicate-insert.md) | Setting a `mappedBy`/`cascade=ALL` back-reference field on an already-saved, still-managed parent marks it dirty and triggers a second, duplicate `INSERT` on the next auto-flush | jpa | 2026-07-06 |
+| [spring-boot-run-does-not-read-env-and-checksums-drift-across-fixes.md](spring-boot-run-does-not-read-env-and-checksums-drift-across-fixes.md) | `./mvnw spring-boot:run` doesn't read `.env` (docker-compose-only) and can silently connect to a competing native MySQL instance on the same port; separately, long-lived dev DBs need a checksum reset after legitimately edited changesets | tooling | 2026-07-07 |
+| [tests-that-assert-the-bug-are-not-protected-by-the-no-weaken-assertions-rule.md](tests-that-assert-the-bug-are-not-protected-by-the-no-weaken-assertions-rule.md) | A test that asserts the bug itself (new users getting "not found" instead of an empty cart) is not protected by "never weaken assertions" — it needs rewriting to assert the correct behavior | testing | 2026-07-05 |

@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-04]
 last_updated: 2026-07-04
 confidence: high
 evidence_strength: strong
+root_cause: "AuthContext decoded fields (id, roles) directly from the JWT payload even though this project's token design deliberately excludes them, and fixing the first affected field (#280) wasn't followed by auditing other call sites reading from the same source before #292 (roles always empty, breaking admin checks) was independently rediscovered"
+impact: high — user.roles always resolving empty silently broke the entire admin dashboard's authorization check, undetected because no admin account existed in the dev database to surface it
 related_lessons: []
 ---
 

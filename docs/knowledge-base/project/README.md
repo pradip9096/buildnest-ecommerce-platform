@@ -4,53 +4,20 @@ Durable, reusable knowledge about BuildNest's engineering practices, tooling dec
 
 For operational lessons extracted from specific sessions (tooling gotchas, one-time fixes, process hygiene), see [`docs/wiki/learned-lessons/`](../../wiki/learned-lessons/README.md).
 
----
-
-## Index
-
-| File | Topic | Category | Last Updated |
-|---|---|---|---|
-| [quality-gate-ratchet-pattern.md](quality-gate-ratchet-pattern.md) | Fitness functions, ratchet mechanism, PIT mutation threshold schedule, broken-windows rationale, ratchet-vs-supersede/continuous-improvement/evolution distinctions | quality-engineering | 2026-07-12 |
-| [claude-code-extension-mechanisms.md](claude-code-extension-mechanisms.md) | Claude Code hooks, MCP servers, slash commands, skills, and plugin marketplaces (official `claude-plugins-official`, screened community, and caution on unvetted third-party sites) — extension points and when to use each | tooling | 2026-07-11 |
-| [claude-code-hooks-reference.md](claude-code-hooks-reference.md) | Hook types, event lifecycle, settings.json configuration | tooling | — |
-| [claude-code-progressive-disclosure.md](claude-code-progressive-disclosure.md) | Progressive disclosure pattern in Claude Code UX | tooling | — |
-| [claude-code-session-conversation-turn.md](claude-code-session-conversation-turn.md) | Session and conversation turn semantics in Claude Code | tooling | — |
-| [mermaid-diagram-quality-attributes.md](mermaid-diagram-quality-attributes.md) | Mermaid diagram conventions for quality attribute documentation | documentation | — |
-| [open-core-business-model.md](open-core-business-model.md) | Open-core business model pattern and examples | product | — |
-| [check-mysql-installation-on-wsl2.md](check-mysql-installation-on-wsl2.md) | Verifying MySQL installation state on WSL2 | infrastructure | — |
-| [claude-code-memory-directory.md](claude-code-memory-directory.md) | Memory directory structure, the four memory types, current BuildNest files, and how to shape memory via instruction, feedback, or direct editing | tooling | 2026-07-02 |
-| [loop-engineering-vs-claude-code-loop.md](loop-engineering-vs-claude-code-loop.md) | "Loop engineering" as a 2026 industry trend (generator/verifier, ReAct) vs. Claude Code's narrower `/loop` scheduling skill and the closer `/goal` analog | tooling | 2026-07-02 |
-| [post-implementation-learning-activities.md](post-implementation-learning-activities.md) | Classifies "lessons learned" against retrospective, PIR, postmortem/RCA, AAR, and continuous improvement; maps each onto a GitHub-issue-driven SDLC workflow; the 80/20 activity set for a solo-developer workflow | documentation | 2026-07-04 |
-| [vscode-wsl2-responsiveness-during-heavy-maven-test-runs.md](vscode-wsl2-responsiveness-during-heavy-maven-test-runs.md) | VS Code freezing during `./mvnw test` on WSL2 — candidate mechanisms, evidence gathered against this repo, watcher-exclude + `.wslconfig` fixes, backgrounded-test-run fallback | infrastructure | 2026-07-07 |
-| [closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md) | Open-loop vs. closed-loop control, negative/positive feedback, PDCA/Kaizen framing, and the amendment-mechanism pattern (trigger + correction + backfilled log) applied to this repo's own rule files | documentation | 2026-07-11 |
-| [compliance-and-production-readiness-closed-loop-patterns.md](compliance-and-production-readiness-closed-loop-patterns.md) | The same closed-loop pattern applied at compliance-program scale (IIA/SOC 2/ISO 27001/NIST CSF) and to "production-grade software" quality attributes and a 6-level requirement-specification structure | documentation | 2026-07-07 |
-| [adaptive-knowledge-governance-advanced-amendment-concepts.md](adaptive-knowledge-governance-advanced-amendment-concepts.md) | 15 concepts extending the base amendment-mechanism pattern — decision logs/ADRs, assumption tracking, traceability matrices, change impact scoring, knowledge ownership — synthesized as an Adaptive Knowledge Governance Framework | documentation | 2026-07-07 |
-| [feedback-loop-taxonomy-substrate-instance-stage-symmetry.md](feedback-loop-taxonomy-substrate-instance-stage-symmetry.md) | **Base article.** Structural map placing feedback loop, iteration, control flow, closed-loop control, continuous improvement, live monitoring, and the ratchet mechanism on one taxonomy (substrate / whole-loop instance / single stage / symmetry-breaking modifier). See the companion extensions below for further vocabulary mapped onto the same taxonomy | documentation | 2026-07-08 |
-| [feedback-loop-substrate-dynamics-extrema-and-cyclical-process.md](feedback-loop-substrate-dynamics-extrema-and-cyclical-process.md) | Companion to the base taxonomy, one layer beneath control flow/iteration: dynamic vs. cyclical process, dynamical systems theory vs. control theory. See its own companion below for extremum/optimum/equilibrium | documentation | 2026-07-08 |
-| [feedback-loop-extrema-equilibria-and-physics-grounding.md](feedback-loop-extrema-equilibria-and-physics-grounding.md) | Companion to the substrate companion: extremum vs. optimum, extremum principles (stationary action, Fermat's least time, thermodynamic potentials, minimum total potential energy), equilibrium (stable/unstable, steady state vs. true equilibrium, Nash equilibrium), and the Onsager/Prigogine near-vs-far-from-equilibrium caveat | documentation | 2026-07-08 |
-| [feedback-loop-evaluative-dimensions-and-quality-disciplines.md](feedback-loop-evaluative-dimensions-and-quality-disciplines.md) | Companion to the base taxonomy: efficiency, effectiveness, excellence, optimization, and satisficing (evaluative dimensions — the corrective to treating optimization as the universal goal); quality assurance/control/management (a domain instance); refinement, progression, improvement, sustainable growth (trajectory descriptors) | documentation | 2026-07-08 |
-| [feedback-loop-enforcement-and-safety-vocabulary.md](feedback-loop-enforcement-and-safety-vocabulary.md) | Companion to the base taxonomy: guardrails, quality gates, checkpoints, prerequisites, fallback, safety nets, filters, parameters, criteria, negative detection patterns, tightening mechanisms, enforcement mechanisms, mechanical floors, the self-improving loop, and the fixed-parameter vs. unknown/decision-variable distinction (optimization vs. root-finding). See its own companion below for the funnel and epistemic-awareness material | documentation | 2026-07-08 |
-| [feedback-loop-enforcement-extensions-funnels-and-epistemics.md](feedback-loop-enforcement-extensions-funnels-and-epistemics.md) | Companion to the enforcement-and-safety companion: the funnel (open-loop-by-default filter chain; population throughput vs. single-instance trajectory), and known unknown vs. unknown known (loop observability vs. loop correctness — Polanyi's tacit knowledge vs. Žižek's disavowal) | documentation | 2026-07-08 |
-| [feedback-loop-cycle-vocabulary-personal-archetypes-and-change-theory.md](feedback-loop-cycle-vocabulary-personal-archetypes-and-change-theory.md) | Companion to the base taxonomy: virtuous circle, self-correction, self-perpetuating; a personal-development domain instance (Prokopton, go-getter, self-actualizer); the Watzlawick first-order/second-order change distinction behind a ~40-verb "tune vs. redesign" cluster; quality attributes; and a three-way breakdown of "adaptation" (adaptive control vs. contextual vs. evolutionary) | documentation | 2026-07-08 |
-| [feedback-loop-domain-instance-machine-learning-training.md](feedback-loop-domain-instance-machine-learning-training.md) | Companion to the base taxonomy: forward propagation, backpropagation, the chain rule, and gradient descent as a fifth domain instance — the neural-network training loop. See its own companion below for the optimization-landscape depth | documentation | 2026-07-08 |
-| [feedback-loop-ml-training-optimization-landscape.md](feedback-loop-ml-training-optimization-landscape.md) | Companion to the ML-training companion: local vs. global minima, the critical-point/saddle-point precision, why saddle points dominate in high dimension (curse of dimensionality), and minimization/maximization as the same sign-flipped operation | documentation | 2026-07-08 |
-| [feedback-loop-ml-search-strategy-and-generalization.md](feedback-loop-ml-search-strategy-and-generalization.md) | Companion to the optimization-landscape companion: exploration vs. exploitation (the framework behind momentum/noise/annealing/restarts), the bias-variance trade-off, and regularization as a fourth, softer boundary-setting mechanism | documentation | 2026-07-08 |
-| [feedback-loop-domain-instance-agentic-reflection-loops.md](feedback-loop-domain-instance-agentic-reflection-loops.md) | Companion to the base taxonomy: generate/verify/reflect (and self-reflection) in LLM agents as a sixth domain instance; introduces parametric-vs-contextual correction, iteration-granularity, and grounded-vs-self-referential verification as new axes | documentation | 2026-07-08 |
-| [feedback-loop-control-engineering-pid-hysteresis-and-delay.md](feedback-loop-control-engineering-pid-hysteresis-and-delay.md) | Companion to the base taxonomy — opens up "closed-loop control system": PID's three-way decomposition of the compare stage (proportional/integral/derivative), feedback delay/latency as the cause of oscillation and overshoot, hysteresis as a third asymmetry distinct from the ratchet, feedforward control, statistical process control, and a translation table to standard control-engineering vocabulary (setpoint/process variable/manipulated variable) | documentation | 2026-07-08 |
-| [env-example-template-vs-env-local-secrets.md](env-example-template-vs-env-local-secrets.md) | Why `.env.example` (committed template) and `.env` (gitignored real secrets) are split, how the split works mechanically, and a real incident where a secret was pasted into the wrong file | tooling | 2026-07-09 |
-| [stable-id-columns-decouple-cross-references-from-display-order.md](stable-id-columns-decouple-cross-references-from-display-order.md) | Stable ID columns vs. display order in growable numbered tables — the surrogate-key pattern generalized to any cross-referenced list; worked example: `development-workflow.md`'s Sequence table migration | documentation | 2026-07-11 |
-| [research-discovery-phase-before-software-implementation.md](research-discovery-phase-before-software-implementation.md) | Problem identification, requirements gathering, existing-system assessment, feasibility/solution-option research (context7 vs. web search), and scope definition — the sub-activities of "research before you code," mapped onto `development-workflow.md`'s own `external-research`/`solution-options-adr` step split | documentation | 2026-07-11 |
-| [devops-toolchain-inventory-and-verified-status.md](devops-toolchain-inventory-and-verified-status.md) | Full CI/CD and quality-gate tool inventory (JaCoCo, PIT, Codecov, OWASP Dependency-Check, SonarQube, CheckStyle, SpotBugs, Docker) with verified status per tool; the generalizable failure pattern behind three real incidents (#350/#353/#354) where a tool appeared configured but silently never ran or never surfaced its findings; blocking vs. advisory-only checks; the direct-CLI verification method | tooling | 2026-07-12 |
-| [smoke-sanity-and-regression-testing-vs-ci-test-suite-coverage.md](smoke-sanity-and-regression-testing-vs-ci-test-suite-coverage.md) | Why a green CI run doesn't prove a runtime/infra change actually works; the #122→#363 case (3 real bugs — WSL2 mount propagation, YAML command mis-tokenization, an exporter's silently-removed env-var config method — none reachable by syntax validation or the unit/integration suite); smoke vs. sanity vs. regression as three distinct questions; when the step applies and when it doesn't; how to flag an unverifiable-in-this-environment gap honestly | quality-engineering | 2026-07-12 |
-| [external-research-context7-vs-web-search-and-when-to-skip.md](external-research-context7-vs-web-search-and-when-to-skip.md) | What `development-workflow.md`'s `external-research` step covers ("how do I build this," not "which approach"); context7 (official API surface) vs. web search (idiomatic pattern, version-drift catches) tool selection; when to skip; pointer to `claude-code-extension-mechanisms.md` for sourcing a Claude Code capability itself | documentation | 2026-07-12 |
-| [spring-security-cors-configurationsource-precedence-over-webmvc.md](spring-security-cors-configurationsource-precedence-over-webmvc.md) | Why an explicit `corsConfigurationSource` on a Spring Security filter chain makes any `WebMvcConfigurer.addCorsMappings` bean fully unreachable dead code, not merged/layered; the #352 case; the negative/positive-control live-preflight technique for verifying which config actually governs requests | security | 2026-07-12 |
-| [content-extraction-dry-ssot-as-the-decision-principle.md](content-extraction-dry-ssot-as-the-decision-principle.md) | Why DRY/SSOT (not size, not a 7-item principle list) is the actual test for whether to extract content into a KB article; SoC as the complementary container-side question; abstraction/progressive-disclosure/indirection/modular-docs as consequences of extraction, not reasons for it; worked counter-example (`create-project-board` is the longest row and correctly stays inline) | documentation | 2026-07-12 |
+This file does two distinct jobs, kept in two separate sections below: **Orientation** (what this
+KB is, how to categorize and author an article) and **Index** (the manifest — the authoritative
+list of every article, as one-line surrogate rows). See
+[Manifest and Surrogate Pattern for Index Files](manifest-and-surrogate-pattern-for-index-files.md)
+for why this split matters — orientation content is prose that can grow; the Index table is a
+manifest and should stay a clean, scannable set of rows, not accumulate explanation of its own.
 
 ---
 
-## Taxonomy
+## Orientation
 
-### Categories
+### Taxonomy
+
+#### Categories
 
 | Category | Description |
 |---|---|
@@ -61,13 +28,11 @@ For operational lessons extracted from specific sessions (tooling gotchas, one-t
 | `product` | Business model, domain concepts, product decisions |
 | `security` | Auth/authz mechanics, framework-specific security precedence and pitfalls |
 
-### Naming Convention
+#### Naming Convention
 
 Files use lowercase hyphen-separated names describing the topic: `<topic-noun>-<qualifier>.md`. Avoid dates in filenames — use `last_updated` in frontmatter instead.
 
----
-
-## Frontmatter Schema
+### Frontmatter Schema
 
 Every article must include the fields below (see the Article Template section further down for
 the full copy-paste YAML block combined with the body skeleton):
@@ -79,9 +44,7 @@ the full copy-paste YAML block combined with the body skeleton):
 - `confidence` — how certain is the content?
 - `evidence_strength` — how well-evidenced is the claim (strong = reproduced/cited, moderate = observed once, weak = inferred)?
 
----
-
-## Article Template
+### Article Template
 
 Copy this as the starting point for a new Topic-format article (this KB's default — see Format
 Selection below if you're genuinely writing a Q&A instead). It combines the frontmatter schema
@@ -178,15 +141,13 @@ before. Delete any section above that genuinely doesn't apply rather than leavin
 placeholder; the template is a starting shape, not a mandatory checklist every article must fill
 every box of.
 
----
-
-## Authoring Guidelines
+### Authoring Guidelines
 
 Actionable rules for creating or editing an article — not a formal requirement specification.
 This KB is maintained by a small team (a human + an AI assistant), so the guidance below optimizes
 for "an author can check this in one glance," not for audit/traceability ceremony.
 
-### Format Selection
+#### Format Selection
 
 Before writing, pick the right format for the reader's actual intent — see
 [Differences Between Q&A, Topic, and Chapter](../learning/knowledge-organization-formats-qa-topic-chapter.md)
@@ -200,7 +161,7 @@ for the full decision framework:
   (e.g. `docs/knowledge-base/learning/` still applies, but structure it explicitly as a chapter
   sequence, not a lone Topic file).
 
-### Article Structure
+#### Article Structure
 
 Once you've picked Topic (this KB's default), structure the article as:
 **What is it? → Why it matters → How it works → When to use it → Examples → Synthesis/Closing →
@@ -212,7 +173,7 @@ developed middle, then widening back out to a real synthesis at the close, not j
 list. "See also" is *not* a substitute for that closing synthesis — it's the separate, final
 element for pointing elsewhere.
 
-### Size Discipline
+#### Size Discipline
 
 There is no hard line-count limit — see
 [Why Keep a Topic Article Short](../learning/knowledge-organization-formats-qa-topic-chapter.md#why-keep-a-topic-article-short)
@@ -221,7 +182,7 @@ from elsewhere in this repo). In practice, most articles in this KB land in the 
 range. If a draft is running well past that, it's a signal to check the next section before
 publishing, not just a soft ceiling to shrug at.
 
-### When to Split (One Topic Per File)
+#### When to Split (One Topic Per File)
 
 One topic per file — split if an article covers two unrelated subjects. Concrete signals, adapted
 from the same article's Topic-vs-Chapter criteria and applied here to *splitting within* the Topic
@@ -238,7 +199,7 @@ format rather than changing format entirely:
 When in doubt, split and cross-link both directions (`related_articles` in frontmatter, plus a
 one-line pointer in the body) rather than leaving one article to cover both.
 
-### Extracting Inline Content Out of Other Project Docs (Rule Files, etc.)
+#### Extracting Inline Content Out of Other Project Docs (Rule Files, etc.)
 
 This section governs extraction *into* this KB from somewhere else — a `.claude/rules/**/*.md`
 rule file, a `CLAUDE.md`, or any other project doc that isn't itself part of this KB — as
@@ -281,7 +242,7 @@ for the underlying *why* behind the qualitative trigger above — DRY/SSOT and S
 Concerns are the actual decision principles; abstraction, progressive disclosure, indirection,
 and "modular documentation" describe the resulting shape, not the reason to produce it.
 
-### Cross-Referencing Between Articles
+#### Cross-Referencing Between Articles
 
 Always use a real relative markdown link — `[Title](filename.md)` for a same-folder target,
 `[Title](../learning/filename.md)` for a cross-folder one. **Do not use a bare `[[wikilink]]`
@@ -296,8 +257,56 @@ real relative link has zero downside and works everywhere.
 List every cross-referenced article in the `related_articles` frontmatter field too, using the
 same folder-relative path convention, so the relationship is machine-readable, not just prose.
 
-### Housekeeping
+#### Housekeeping
 
-- Add a row to the index table above when creating a new article.
+- Add a row to the Index table below when creating a new article.
 - Update `last_updated` in frontmatter on any substantive edit.
 - Cross-reference `docs/wiki/learned-lessons/` for operational lessons rather than duplicating content here.
+
+---
+
+## Index
+
+The manifest — one row per article, no prose beyond this table. See
+[Manifest and Surrogate Pattern for Index Files](manifest-and-surrogate-pattern-for-index-files.md)
+for why this section is kept separate from Orientation above.
+
+| File | Topic | Category | Last Updated |
+|---|---|---|---|
+| [quality-gate-ratchet-pattern.md](quality-gate-ratchet-pattern.md) | Fitness functions, ratchet mechanism, PIT mutation threshold schedule, broken-windows rationale, ratchet-vs-supersede/continuous-improvement/evolution distinctions | quality-engineering | 2026-07-12 |
+| [claude-code-extension-mechanisms.md](claude-code-extension-mechanisms.md) | Claude Code hooks, MCP servers, slash commands, skills, and plugin marketplaces (official `claude-plugins-official`, screened community, and caution on unvetted third-party sites) — extension points and when to use each | tooling | 2026-07-11 |
+| [claude-code-hooks-reference.md](claude-code-hooks-reference.md) | Hook types, event lifecycle, settings.json configuration | tooling | — |
+| [claude-code-progressive-disclosure.md](claude-code-progressive-disclosure.md) | Progressive disclosure pattern in Claude Code UX | tooling | — |
+| [claude-code-session-conversation-turn.md](claude-code-session-conversation-turn.md) | Session and conversation turn semantics in Claude Code | tooling | — |
+| [mermaid-diagram-quality-attributes.md](mermaid-diagram-quality-attributes.md) | Mermaid diagram conventions for quality attribute documentation | documentation | — |
+| [open-core-business-model.md](open-core-business-model.md) | Open-core business model pattern and examples | product | — |
+| [check-mysql-installation-on-wsl2.md](check-mysql-installation-on-wsl2.md) | Verifying MySQL installation state on WSL2 | infrastructure | — |
+| [claude-code-memory-directory.md](claude-code-memory-directory.md) | Memory directory structure, the four memory types, current BuildNest files, and how to shape memory via instruction, feedback, or direct editing | tooling | 2026-07-02 |
+| [loop-engineering-vs-claude-code-loop.md](loop-engineering-vs-claude-code-loop.md) | "Loop engineering" as a 2026 industry trend (generator/verifier, ReAct) vs. Claude Code's narrower `/loop` scheduling skill and the closer `/goal` analog | tooling | 2026-07-02 |
+| [post-implementation-learning-activities.md](post-implementation-learning-activities.md) | Classifies "lessons learned" against retrospective, PIR, postmortem/RCA, AAR, and continuous improvement; maps each onto a GitHub-issue-driven SDLC workflow; the 80/20 activity set for a solo-developer workflow | documentation | 2026-07-04 |
+| [vscode-wsl2-responsiveness-during-heavy-maven-test-runs.md](vscode-wsl2-responsiveness-during-heavy-maven-test-runs.md) | VS Code freezing during `./mvnw test` on WSL2 — candidate mechanisms, evidence gathered against this repo, watcher-exclude + `.wslconfig` fixes, backgrounded-test-run fallback | infrastructure | 2026-07-07 |
+| [closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md](closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md) | Open-loop vs. closed-loop control, negative/positive feedback, PDCA/Kaizen framing, and the amendment-mechanism pattern (trigger + correction + backfilled log) applied to this repo's own rule files | documentation | 2026-07-11 |
+| [compliance-and-production-readiness-closed-loop-patterns.md](compliance-and-production-readiness-closed-loop-patterns.md) | The same closed-loop pattern applied at compliance-program scale (IIA/SOC 2/ISO 27001/NIST CSF) and to "production-grade software" quality attributes and a 6-level requirement-specification structure | documentation | 2026-07-07 |
+| [adaptive-knowledge-governance-advanced-amendment-concepts.md](adaptive-knowledge-governance-advanced-amendment-concepts.md) | 15 concepts extending the base amendment-mechanism pattern — decision logs/ADRs, assumption tracking, traceability matrices, change impact scoring, knowledge ownership — synthesized as an Adaptive Knowledge Governance Framework | documentation | 2026-07-07 |
+| [feedback-loop-taxonomy-substrate-instance-stage-symmetry.md](feedback-loop-taxonomy-substrate-instance-stage-symmetry.md) | **Base article.** Structural map placing feedback loop, iteration, control flow, closed-loop control, continuous improvement, live monitoring, and the ratchet mechanism on one taxonomy (substrate / whole-loop instance / single stage / symmetry-breaking modifier). See the companion extensions below for further vocabulary mapped onto the same taxonomy | documentation | 2026-07-08 |
+| [feedback-loop-substrate-dynamics-extrema-and-cyclical-process.md](feedback-loop-substrate-dynamics-extrema-and-cyclical-process.md) | Companion to the base taxonomy, one layer beneath control flow/iteration: dynamic vs. cyclical process, dynamical systems theory vs. control theory. See its own companion below for extremum/optimum/equilibrium | documentation | 2026-07-08 |
+| [feedback-loop-extrema-equilibria-and-physics-grounding.md](feedback-loop-extrema-equilibria-and-physics-grounding.md) | Companion to the substrate companion: extremum vs. optimum, extremum principles (stationary action, Fermat's least time, thermodynamic potentials, minimum total potential energy), equilibrium (stable/unstable, steady state vs. true equilibrium, Nash equilibrium), and the Onsager/Prigogine near-vs-far-from-equilibrium caveat | documentation | 2026-07-08 |
+| [feedback-loop-evaluative-dimensions-and-quality-disciplines.md](feedback-loop-evaluative-dimensions-and-quality-disciplines.md) | Companion to the base taxonomy: efficiency, effectiveness, excellence, optimization, and satisficing (evaluative dimensions — the corrective to treating optimization as the universal goal); quality assurance/control/management (a domain instance); refinement, progression, improvement, sustainable growth (trajectory descriptors) | documentation | 2026-07-08 |
+| [feedback-loop-enforcement-and-safety-vocabulary.md](feedback-loop-enforcement-and-safety-vocabulary.md) | Companion to the base taxonomy: guardrails, quality gates, checkpoints, prerequisites, fallback, safety nets, filters, parameters, criteria, negative detection patterns, tightening mechanisms, enforcement mechanisms, mechanical floors, the self-improving loop, and the fixed-parameter vs. unknown/decision-variable distinction (optimization vs. root-finding). See its own companion below for the funnel and epistemic-awareness material | documentation | 2026-07-08 |
+| [feedback-loop-enforcement-extensions-funnels-and-epistemics.md](feedback-loop-enforcement-extensions-funnels-and-epistemics.md) | Companion to the enforcement-and-safety companion: the funnel (open-loop-by-default filter chain; population throughput vs. single-instance trajectory), and known unknown vs. unknown known (loop observability vs. loop correctness — Polanyi's tacit knowledge vs. Žižek's disavowal) | documentation | 2026-07-08 |
+| [feedback-loop-cycle-vocabulary-personal-archetypes-and-change-theory.md](feedback-loop-cycle-vocabulary-personal-archetypes-and-change-theory.md) | Companion to the base taxonomy: virtuous circle, self-correction, self-perpetuating; a personal-development domain instance (Prokopton, go-getter, self-actualizer); the Watzlawick first-order/second-order change distinction behind a ~40-verb "tune vs. redesign" cluster; quality attributes; and a three-way breakdown of "adaptation" (adaptive control vs. contextual vs. evolutionary) | documentation | 2026-07-08 |
+| [feedback-loop-domain-instance-machine-learning-training.md](feedback-loop-domain-instance-machine-learning-training.md) | Companion to the base taxonomy: forward propagation, backpropagation, the chain rule, and gradient descent as a fifth domain instance — the neural-network training loop. See its own companion below for the optimization-landscape depth | documentation | 2026-07-08 |
+| [feedback-loop-ml-training-optimization-landscape.md](feedback-loop-ml-training-optimization-landscape.md) | Companion to the ML-training companion: local vs. global minima, the critical-point/saddle-point precision, why saddle points dominate in high dimension (curse of dimensionality), and minimization/maximization as the same sign-flipped operation | documentation | 2026-07-08 |
+| [feedback-loop-ml-search-strategy-and-generalization.md](feedback-loop-ml-search-strategy-and-generalization.md) | Companion to the optimization-landscape companion: exploration vs. exploitation (the framework behind momentum/noise/annealing/restarts), the bias-variance trade-off, and regularization as a fourth, softer boundary-setting mechanism | documentation | 2026-07-08 |
+| [feedback-loop-domain-instance-agentic-reflection-loops.md](feedback-loop-domain-instance-agentic-reflection-loops.md) | Companion to the base taxonomy: generate/verify/reflect (and self-reflection) in LLM agents as a sixth domain instance; introduces parametric-vs-contextual correction, iteration-granularity, and grounded-vs-self-referential verification as new axes | documentation | 2026-07-08 |
+| [feedback-loop-control-engineering-pid-hysteresis-and-delay.md](feedback-loop-control-engineering-pid-hysteresis-and-delay.md) | Companion to the base taxonomy — opens up "closed-loop control system": PID's three-way decomposition of the compare stage (proportional/integral/derivative), feedback delay/latency as the cause of oscillation and overshoot, hysteresis as a third asymmetry distinct from the ratchet, feedforward control, statistical process control, and a translation table to standard control-engineering vocabulary (setpoint/process variable/manipulated variable) | documentation | 2026-07-08 |
+| [env-example-template-vs-env-local-secrets.md](env-example-template-vs-env-local-secrets.md) | Why `.env.example` (committed template) and `.env` (gitignored real secrets) are split, how the split works mechanically, and a real incident where a secret was pasted into the wrong file | tooling | 2026-07-09 |
+| [stable-id-columns-decouple-cross-references-from-display-order.md](stable-id-columns-decouple-cross-references-from-display-order.md) | Stable ID columns vs. display order in growable numbered tables — the surrogate-key pattern generalized to any cross-referenced list; worked example: `development-workflow.md`'s Sequence table migration | documentation | 2026-07-11 |
+| [research-discovery-phase-before-software-implementation.md](research-discovery-phase-before-software-implementation.md) | Problem identification, requirements gathering, existing-system assessment, feasibility/solution-option research (context7 vs. web search), and scope definition — the sub-activities of "research before you code," mapped onto `development-workflow.md`'s own `external-research`/`solution-options-adr` step split | documentation | 2026-07-11 |
+| [devops-toolchain-inventory-and-verified-status.md](devops-toolchain-inventory-and-verified-status.md) | Full CI/CD and quality-gate tool inventory (JaCoCo, PIT, Codecov, OWASP Dependency-Check, SonarQube, CheckStyle, SpotBugs, Docker) with verified status per tool; the generalizable failure pattern behind three real incidents (#350/#353/#354) where a tool appeared configured but silently never ran or never surfaced its findings; blocking vs. advisory-only checks; the direct-CLI verification method | tooling | 2026-07-12 |
+| [smoke-sanity-and-regression-testing-vs-ci-test-suite-coverage.md](smoke-sanity-and-regression-testing-vs-ci-test-suite-coverage.md) | Why a green CI run doesn't prove a runtime/infra change actually works; the #122→#363 case (3 real bugs — WSL2 mount propagation, YAML command mis-tokenization, an exporter's silently-removed env-var config method — none reachable by syntax validation or the unit/integration suite); smoke vs. sanity vs. regression as three distinct questions; when the step applies and when it doesn't; how to flag an unverifiable-in-this-environment gap honestly | quality-engineering | 2026-07-12 |
+| [external-research-context7-vs-web-search-and-when-to-skip.md](external-research-context7-vs-web-search-and-when-to-skip.md) | What `development-workflow.md`'s `external-research` step covers ("how do I build this," not "which approach"); context7 (official API surface) vs. web search (idiomatic pattern, version-drift catches) tool selection; when to skip; pointer to `claude-code-extension-mechanisms.md` for sourcing a Claude Code capability itself | documentation | 2026-07-12 |
+| [spring-security-cors-configurationsource-precedence-over-webmvc.md](spring-security-cors-configurationsource-precedence-over-webmvc.md) | Why an explicit `corsConfigurationSource` on a Spring Security filter chain makes any `WebMvcConfigurer.addCorsMappings` bean fully unreachable dead code, not merged/layered; the #352 case; the negative/positive-control live-preflight technique for verifying which config actually governs requests | security | 2026-07-12 |
+| [content-extraction-dry-ssot-as-the-decision-principle.md](content-extraction-dry-ssot-as-the-decision-principle.md) | Why DRY/SSOT (not size, not a 7-item principle list) is the actual test for whether to extract content into a KB article; SoC as the complementary container-side question; abstraction/progressive-disclosure/indirection/modular-docs as consequences of extraction, not reasons for it; worked counter-example (`create-project-board` is the longest row and correctly stays inline) | documentation | 2026-07-12 |
+| [manifest-and-surrogate-pattern-for-index-files.md](manifest-and-surrogate-pattern-for-index-files.md) | Manifest defined (enumerates artifacts + per-entry metadata, no primary content, authoritative inventory); surrogate records and indirection as the underlying mechanism; distinguishes manifest from table of contents, index, registry, changelog; applied to `MEMORY.md` and `docs/wiki/learned-lessons/README.md` | documentation | 2026-07-13 |
+| [readme-manifest-blueprint.md](readme-manifest-blueprint.md) | Copy-paste Orientation/Index two-section skeleton for any directory README that needs to double as orientation content and an authoritative file manifest; adaptation rules; this KB's own README as the worked reference instance | documentation | 2026-07-13 |

@@ -1,7 +1,22 @@
+---
+title: "Closed Issue Status Is Not Evidence of Implementation — Verify Against Code, Not Against Another Issue"
+category: process
+tags: [github-issues, issue-triage, duplicate-detection, verification]
+keywords: [closed issue not implemented, duplicate issue triage, acceptance criteria unchecked, verify against code not against issue status, M4 milestone]
+source_conversations: [Session 2026-07-10]
+last_updated: 2026-07-10
+confidence: high
+evidence_strength: strong
+root_cause: "a closed GitHub issue's status was treated as proof of implementation without checking the codebase, when in fact closure itself can be incorrect — acceptance criteria left unchecked with no corresponding code"
+impact: high — proceeding on status alone would have marked 7 genuinely unimplemented features as duplicates of nothing and lost them from the backlog entirely; caught by spot-checking before the batch-close executed
+related_lessons:
+  - docs/wiki/learned-lessons/verify-issue-premises-against-repo-before-implementing.md
+---
+
 # Closed issue status is not evidence of implementation — verify against code, not against another issue
 
 While triaging 20 apparently-duplicate M4 issues (older issue number left open, newer identically-titled issue closed after an apparent milestone restructure), the initial plan was to trust the closed issue's status as proof the feature existed and close its open twin as a duplicate.
 
 **Why this was wrong:** spot-checking against the actual codebase found that 7 of the 20 "closed" twins (#166, #175, #180, #181, #185, #188, #205) had been closed with every acceptance-criteria checkbox left unchecked and no corresponding code anywhere in the repo — the closure itself was incorrect, not just the open twin being a stale duplicate. Had the batch-close proceeded on "closed status" alone, 7 genuinely unimplemented features would have been marked as duplicates of nothing and lost from the backlog entirely.
 
-**How to apply:** When two issues appear to describe the same completed work (matching titles, one open one closed), do not treat the closed one's status as ground truth. Grep the codebase for the concrete artifacts the acceptance criteria describe (specific classes, endpoints, config, dependencies) before closing anything as a duplicate. This is a stronger version of [[verify-issue-premises-against-repo-before-implementing]] — that lesson was about issue *bodies* misstating facts; this one is about issue *closure status* being unreliable in the same way. Both require the same fix: verify against the repo, not against another piece of project-tracking metadata.
+**How to apply:** When two issues appear to describe the same completed work (matching titles, one open one closed), do not treat the closed one's status as ground truth. Grep the codebase for the concrete artifacts the acceptance criteria describe (specific classes, endpoints, config, dependencies) before closing anything as a duplicate. This is a stronger version of [Verify Issue Premises Against Repo Before Implementing](verify-issue-premises-against-repo-before-implementing.md) — that lesson was about issue *bodies* misstating facts; this one is about issue *closure status* being unreliable in the same way. Both require the same fix: verify against the repo, not against another piece of project-tracking metadata.

@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-05]
 last_updated: 2026-07-05
 confidence: high
 evidence_strength: strong
+root_cause: "the test profile's ddl-auto=create-drop runs Hibernate schema regeneration after Liquibase migrations, dropping and recreating every entity-mapped table and wiping the seeded row before any @SpringBootTest method body runs — a test-profile-only interaction, not a broken changeset"
+impact: medium — a correct seed changeset appeared broken until DEBUG-level Liquibase logging redirected the investigation; motivated a new reusable Spring-context-free verification pattern
 related_lessons:
   - docs/wiki/learned-lessons/env-sourcing-and-cache-pitfalls-fixing-liquibase-data.md
   - docs/wiki/learned-lessons/stale-test-classes-false-failures.md

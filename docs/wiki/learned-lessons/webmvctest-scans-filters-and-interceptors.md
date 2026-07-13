@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-02]
 last_updated: 2026-07-02
 confidence: high
 evidence_strength: strong
+root_cause: "@WebMvcTest's slice scans every Filter/HandlerInterceptor/WebMvcConfigurer bean across the whole application, not just the target controller's own dependency graph, so an unrelated component's constructor dependency broke context load with a misleading NoSuchBeanDefinitionException"
+impact: medium — real time lost iteratively discovering unrelated required mocks, though it also surfaced a genuinely dead, unregistered interceptor as a side effect
 related_lessons: []
 ---
 

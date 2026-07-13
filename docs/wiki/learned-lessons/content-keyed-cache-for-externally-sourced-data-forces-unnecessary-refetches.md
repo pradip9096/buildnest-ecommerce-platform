@@ -7,6 +7,8 @@ source_conversations: ["#342", "#343"]
 last_updated: 2026-07-10
 confidence: high
 evidence_strength: direct-repo-verification
+root_cause: "the NVD database cache was keyed on hashFiles('**/pom.xml') even though the cached content is externally-sourced and unrelated to pom.xml, so every dependency edit minted a fresh cache key with nothing to restore"
+impact: medium — each of three parallel PRs independently paid a ~1.5-2 hour full resync cost before the keying bug was found
 related_lessons: [check-sibling-branches-before-filing-a-duplicate-issue]
 ---
 

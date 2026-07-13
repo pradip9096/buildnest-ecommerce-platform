@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-12, issue #83, issue #365]
 last_updated: 2026-07-12
 confidence: high
 evidence_strength: strong
+root_cause: "an implicit single-valued-association path (p.inventory.field) in a JPQL WHERE clause behaves as an inner join independent of surrounding boolean logic, so a :param IS NULL OR guard's short-circuit never runs because the join has already dropped null-association rows before the OR is evaluated"
+impact: high — silently excludes valid rows with no matching association from an 'optional filter' result set in production code, undetected until an unrelated feature's test happened to omit the association; confirmed but unfixed, tracked as #365
 related_lessons:
   - docs/wiki/learned-lessons/jpql-explicit-join-plus-entitygraph-collection-breaks-distinct-pagination.md
 ---

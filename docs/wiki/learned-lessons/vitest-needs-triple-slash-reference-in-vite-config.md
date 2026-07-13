@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-04]
 last_updated: 2026-07-04
 confidence: high
 evidence_strength: strong
+root_cause: "Vite's own UserConfig type doesn't declare a test property, so a Vitest test block colocated in vite.config.ts type-checks as unknown/errors without Vitest's ambient module augmentation, which only loads via an explicit triple-slash reference"
+impact: low — a type-only issue with no runtime effect, resolved by adding one reference directive
 related_lessons: []
 ---
 

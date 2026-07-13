@@ -7,6 +7,8 @@ source_conversations: ["#327", "#339"]
 last_updated: 2026-07-10
 confidence: high
 evidence_strength: direct-repo-verification
+root_cause: "an unverified OWASP ASVS control citation was written once, then copy-pasted across the RTM and SRS, where the duplication itself was mistaken for corroboration instead of propagated error"
+impact: high — a false compliance claim (wrong control, wrong timing value) sat in formal traceability docs an audit or future engineer could rely on as ground truth
 related_lessons: [verify-issue-premises-against-repo-before-implementing]
 ---
 

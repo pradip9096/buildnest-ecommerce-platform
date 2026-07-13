@@ -1,3 +1,19 @@
+---
+title: "`./mvnw spring-boot:run` Doesn't Read `.env`, and This Repo Has Two MySQL Instances Competing on Similar Ports"
+category: tooling
+tags: [spring-boot, dotenv, mysql, liquibase, checksum-mismatch, local-dev-environment]
+keywords: [spring-boot:run does not read .env, competing MySQL instances port 3306 3307, Liquibase checksum mismatch, MD5SUM reset dev database, docker-compose env loading]
+source_conversations: [Session 2026-07-07, issue #308]
+last_updated: 2026-07-07
+confidence: high
+evidence_strength: strong
+root_cause: "three independent environment-only failure modes stacked in one manual verification session: ./mvnw spring-boot:run never sources .env (docker-compose-only behavior), a native MySQL competed with the Dockerized instance on a similar port, and previously-edited Liquibase changesets triggered a checksum mismatch against a long-lived dev database's recorded checksums"
+impact: medium — none of the three failures were caused by the feature under test (#308), but each looked like a real bug until traced to environment/tooling causes, costing real debugging time before the actual feature could be verified
+related_lessons:
+  - docs/wiki/learned-lessons/dotenv-not-auto-loaded-by-local-processes.md
+  - docs/wiki/learned-lessons/known-table-drift-list-should-be-checked-before-writing-changesets.md
+---
+
 # `./mvnw spring-boot:run` doesn't read `.env`, and this repo has two MySQL instances competing on similar ports
 
 While manually verifying #308 (frontend forgot/reset-password pages) in a real browser, starting the backend directly via `./mvnw spring-boot:run` failed twice in a row with two different, unrelated errors — neither caused by the #308 code changes themselves.

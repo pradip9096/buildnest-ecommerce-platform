@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-01]
 last_updated: 2026-07-01
 confidence: high
 evidence_strength: strong
+root_cause: "issues accumulate stale because no single mechanism (auto-close on fix, linked PR closure, threshold re-check) reliably retires them once their triggering condition resolves"
+impact: medium — an unmanaged backlog obscures which issues represent real, actionable work and wastes reviewer attention across many issues over time
 related_lessons:
   - docs/wiki/learned-lessons/shell-pipeline-exit-code-masking.md
 ---

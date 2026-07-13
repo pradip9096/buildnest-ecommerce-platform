@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-04]
 last_updated: 2026-07-04
 confidence: high
 evidence_strength: strong
+root_cause: "six stacked, independently-masking causes (unquoted & truncating a sourced .env value, a silently-overriding duplicate .env key, ddl-auto=update running alongside Liquibase creating undocumented schema drift across three tables, a Redis @Cacheable entry never invalidated by an out-of-band JDBC write, and a checksum-reconciliation write to DATABASECHANGELOG) each hid the next until isolated one at a time"
+impact: high — systemic schema drift across three tables plus repeated direct writes to the Liquibase audit/integrity table (DATABASECHANGELOG)
 related_lessons:
   - docs/wiki/learned-lessons/dotenv-not-auto-loaded-by-local-processes.md
 ---

@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-02]
 last_updated: 2026-07-02
 confidence: high
 evidence_strength: strong
+root_cause: "PreToolUse evaluates once before the entire Bash tool invocation executes, not before each line of a multi-line script, so a hook inspecting staged state saw pre-invocation state when git add and git commit were combined in one call"
+impact: low — the hook silently failed to fire during its own test, caught before it was relied on in real use
 related_lessons:
   - docs/wiki/learned-lessons/git-checkout-vs-reset-order.md
 ---

@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-02]
 last_updated: 2026-07-02
 confidence: high
 evidence_strength: strong
+root_cause: "git checkout -- restores the working tree from the index, not HEAD, so running it before git reset on an already-staged file leaves the leftover edit in both the index and working tree"
+impact: low — leftover test/scratch lines in two files, caught and cleaned up manually the same session
 related_lessons:
   - docs/wiki/learned-lessons/pretooluse-hook-fires-once-per-bash-call.md
 ---

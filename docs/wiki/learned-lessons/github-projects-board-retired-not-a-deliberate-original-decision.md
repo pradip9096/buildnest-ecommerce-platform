@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-09]
 last_updated: 2026-07-09
 confidence: high
 evidence_strength: strong
+root_cause: "a supplementary tracking surface duplicating data already in issues/labels/milestones has no forcing function keeping it in sync, so it silently drifted out of date and the drop-off was later misremembered as a deliberate policy"
+impact: low — a process doc's phrasing implied a false deliberate decision, corrected once discovered; no functional tracking loss since milestones/labels already carried the same information
 related_lessons: []
 ---
 

@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-02]
 last_updated: 2026-07-02
 confidence: high
 evidence_strength: strong
+root_cause: "docker compose auto-loads .env but a locally-launched process (mvnw, npm run dev) does not, and application.properties fell back to a blank DB password default instead of failing fast on the missing variable"
+impact: medium — a real time-lost debugging session tracing an obscured Spring bean-creation chain back to a silently-blank credential
 related_lessons:
   - docs/wiki/learned-lessons/shell-pipeline-exit-code-masking.md
 ---

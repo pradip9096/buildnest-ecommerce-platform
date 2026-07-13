@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-05]
 last_updated: 2026-07-05
 confidence: high
 evidence_strength: strong
+root_cause: "SecurityConfig's @Profile('!test') exclusion means the real bean never loads during tests, and its hand-written TestSecurityConfig double had no structural mechanism keeping its duplicated literal values (CSP, HSTS) in sync as the real config evolved"
+impact: high — a real CSP hardening fix (#237, removing unsafe-inline) had zero regression coverage since no test ever loaded the actual production security bean
 related_lessons:
   - docs/wiki/learned-lessons/known-table-drift-list-should-be-checked-before-writing-changesets.md
   - docs/wiki/learned-lessons/webmvctest-scans-filters-and-interceptors.md

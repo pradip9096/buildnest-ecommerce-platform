@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-05]
 last_updated: 2026-07-05
 confidence: medium
 evidence_strength: moderate
+root_cause: "the project's 'always write rollback' rule is worded for DDL where an inverse always exists, but was read literally against a NULL-to-default data backfill where no audit column exists to distinguish originally-NULL rows from legitimately-false rows, making any attempted inverse itself data-corrupting"
+impact: low — a documentation/interpretation clarification, no incorrect rollback was actually written or run
 related_lessons:
   - docs/wiki/learned-lessons/known-table-drift-list-should-be-checked-before-writing-changesets.md
 ---

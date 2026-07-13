@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-04]
 last_updated: 2026-07-04
 confidence: high
 evidence_strength: strong
+root_cause: "@AllArgsConstructor generates a constructor ordered by field declaration order, so any positional test call site breaks silently until compile time when a field is inserted anywhere but the end"
+impact: medium — broke compilation in two unrelated test files, only surfaced on a full suite run
 related_lessons: []
 ---
 

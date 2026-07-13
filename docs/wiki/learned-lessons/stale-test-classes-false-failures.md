@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-02]
 last_updated: 2026-07-02
 confidence: high
 evidence_strength: strong
+root_cause: "Maven's incremental test goal doesn't prune target/test-classes .class files whose source was deleted in an earlier commit, so mvn test (without clean) ran an orphaned compiled test that no longer had a matching source file"
+impact: low — an unrelated false-positive test failure, resolved by running clean test once the stale-artifact pattern was recognized
 related_lessons:
   - docs/wiki/learned-lessons/shell-pipeline-exit-code-masking.md
 ---

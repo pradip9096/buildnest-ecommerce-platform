@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-01]
 last_updated: 2026-07-01
 confidence: high
 evidence_strength: strong
+root_cause: "three independent assertion-weakness patterns (asserting exception type instead of message, asserting a DTO that hides a mutated field, and a naming-convention filter silently excluding a test class) each let a real mutation survive PIT without the test genuinely exercising the mutated behavior"
+impact: medium — mutation coverage silently understated actual test quality, masking gaps a coverage-percentage metric alone wouldn't reveal
 related_lessons:
   - docs/knowledge-base/project/quality-gate-ratchet-pattern.md
 ---

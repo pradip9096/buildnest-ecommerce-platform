@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-04]
 last_updated: 2026-07-04
 confidence: high
 evidence_strength: strong
+root_cause: "useState's lazy initializer only runs at mount, and React Router doesn't remount the component on a same-route query-param-only navigation (back/forward), so local filter state never resyncs to the new searchParams value"
+impact: medium — passed every direct-URL-load acceptance criterion while remaining broken for back/forward navigation, a class of bug curl/direct-navigation testing structurally cannot catch
 related_lessons: []
 ---
 

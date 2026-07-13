@@ -7,6 +7,8 @@ source_conversations: ["#335", "#337", "#338", "#341"]
 last_updated: 2026-07-10
 confidence: high
 evidence_strength: direct-repo-verification
+root_cause: "a newly-discovered finding was filed as a new issue without first checking whether any of the other in-flight sibling PRs in the same working set already addressed it"
+impact: medium — a duplicate Critical issue caused several hours of incorrect "unresolved critical" framing before the existing fix was discovered
 related_lessons: [verify-issue-premises-against-repo-before-implementing]
 ---
 

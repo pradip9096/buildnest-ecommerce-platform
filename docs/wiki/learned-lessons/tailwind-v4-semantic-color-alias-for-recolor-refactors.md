@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-04]
 last_updated: 2026-07-04
 confidence: high
 evidence_strength: strong
+root_cause: "a naive find-and-replace from one hardcoded Tailwind palette name to another satisfies visual consistency but still hardcodes a literal color name across ~30 files, failing the acceptance criterion's actual requirement of a single edit point for future rebrands"
+impact: low — caught before implementation by re-reading the acceptance criteria, no rework needed
 related_lessons:
   - docs/wiki/learned-lessons/vitest-needs-triple-slash-reference-in-vite-config.md
 ---

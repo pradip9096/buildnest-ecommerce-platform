@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-03]
 last_updated: 2026-07-03
 confidence: medium
 evidence_strength: moderate
+root_cause: "ScheduleWakeup and the harness's event-driven task-notification are two independent triggers on the same background task, and completing the notification doesn't cancel the already-scheduled wakeup, so the wakeup fires on its fixed delay even after the described work is already finished"
+impact: low — a stale wakeup prompt arrived after the work was already done, caught by checking premises rather than blindly redoing steps
 related_lessons: []
 ---
 

@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-02]
 last_updated: 2026-07-02
 confidence: medium
 evidence_strength: moderate
+root_cause: "the changelog-guard PreToolUse hook's path filter only watches backend/src/main/** and frontend/src/**, so commits to root-level scripts, CI config, or other infra files never trigger the CHANGELOG check at all"
+impact: low — a missed CHANGELOG entry, caught and fixed manually the same session
 related_lessons:
   - docs/wiki/learned-lessons/pretooluse-hook-fires-once-per-bash-call.md
 ---

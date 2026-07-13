@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-05]
 last_updated: 2026-07-05
 confidence: high
 evidence_strength: strong
+root_cause: "Spring Security's StrictTransportSecurityHeaderWriter only writes HSTS when HttpServletRequest.isSecure() is true, and MockMvc's default get() builds a non-secure mock request, so the header writer's own spec-conforming guard suppressed the header — the security config itself was never broken"
+impact: low — a test-only false negative, resolved by adding .secure(true) to the mock request
 related_lessons:
   - docs/wiki/learned-lessons/known-table-drift-list-should-be-checked-before-writing-changesets.md
 ---

@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-01]
 last_updated: 2026-07-01
 confidence: high
 evidence_strength: strong
+root_cause: "a shell pipeline's exit code is that of the last command in the pipeline, not the first, so piping a build command into tail/grep/head reports the filter's always-zero exit code instead of the actual build's failure"
+impact: high — a genuinely failing build can read as green in CI or a manual check with no indication anything went wrong, a class of bug that recurs silently anywhere a pipeline masks the real exit code
 related_lessons:
   - docs/wiki/learned-lessons/github-issue-hygiene.md
 ---

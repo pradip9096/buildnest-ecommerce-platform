@@ -3,6 +3,8 @@ title: Setting a cascade=ALL mappedBy field after save() can trigger a duplicate
 category: jpa
 tags: [jpa, hibernate, cascade, onetoone, mappedby, duplicate-insert]
 last_updated: 2026-07-06
+root_cause: "setting a mappedBy/cascade=ALL back-reference field on an already-saved, still-managed parent marks it dirty, and Hibernate's cascade check is 'is this association dirty' not 'does this instance already have a row', so the next auto-flush re-cascades a second INSERT for an already-persisted child"
+impact: medium — an intermittent DataIntegrityViolationException that only surfaced in real H2 integration tests, invisible to Mockito-based unit tests since mocks don't cascade
 ---
 
 # Setting a cascade=ALL mappedBy Field After save() Can Trigger a Duplicate Insert
@@ -60,4 +62,4 @@ managed in the same persistence context. Either:
   in a single cascade-persist pass instead of two separate explicit saves plus a manual field set.
 
 ## Related
-- [[known-table-drift-list-should-be-checked-before-writing-changesets]]
+- [A Repo's Own "Not Liquibase-Managed" Table List Should Be Checked Before Writing a New Changeset](known-table-drift-list-should-be-checked-before-writing-changesets.md)

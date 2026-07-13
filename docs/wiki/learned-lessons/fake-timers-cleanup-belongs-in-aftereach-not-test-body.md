@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-04]
 last_updated: 2026-07-04
 confidence: high
 evidence_strength: strong
+root_cause: "vi.useRealTimers() was placed as the last line of the test body instead of afterEach, so a failing/timing-out test never reached it, leaking Vitest's global fake-timer state into the next test"
+impact: medium — cascaded into an unrelated next test with an identical timeout symptom, real time lost tracing it back to leaked global state
 related_lessons:
   - docs/wiki/learned-lessons/rtl-cleanup-needs-explicit-aftereach-with-globals-false.md
 ---

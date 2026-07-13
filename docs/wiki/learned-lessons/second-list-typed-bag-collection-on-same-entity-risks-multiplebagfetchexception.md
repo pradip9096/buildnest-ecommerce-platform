@@ -1,3 +1,17 @@
+---
+title: "Second List-Typed Bag Collection on the Same Entity Risks MultipleBagFetchException"
+category: jpa
+tags: [jpa, hibernate, multiplebagfetchexception, onetomany, bag-collection]
+keywords: [MultipleBagFetchException, List typed bag collection, fetch join Cartesian product, Product.images Product.variants, EntityGraph implicit join]
+source_conversations: [Session 2026-07-07, issues #81, #82]
+last_updated: 2026-07-07
+confidence: high
+evidence_strength: strong
+root_cause: "Hibernate throws MultipleBagFetchException only at the moment two List-typed (bag) collections on the same root entity are fetch-joined together in one query — a failure mode invisible at compile time or in most tests until that specific query shape is written"
+impact: low — proactively avoided by routing the second collection through a repository-level query instead of an entity-level bag association; no actual exception was hit in this repo
+related_lessons: []
+---
+
 # Second List-typed bag collection on the same entity risks MultipleBagFetchException
 
 When adding `Product.images` (PROD-02, #82) alongside the pre-existing `Product.variants`

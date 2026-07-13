@@ -7,6 +7,8 @@ source_conversations: [Session 2026-07-02]
 last_updated: 2026-07-02
 confidence: high
 evidence_strength: strong
+root_cause: "git add fails atomically across the whole invocation when any one pathspec doesn't match, so valid paths in the same call are silently left unstaged, not just the bad one"
+impact: medium — produced an incomplete first commit missing three of four intended files, requiring a second commit to carry the rest of the same logical change
 related_lessons:
   - docs/wiki/learned-lessons/git-checkout-vs-reset-order.md
 ---
