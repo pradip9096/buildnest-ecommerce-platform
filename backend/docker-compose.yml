@@ -213,6 +213,45 @@ services:
       - buildnest-network
 
   # ===============================
+  # Elasticsearch ILM setup (#326): one-shot sidecar that registers the app-logs-retention-policy
+  # ILM policy (delete-only, 30-day min_age -- no rollover action, since Logstash already creates
+  # one new app-logs-YYYY.MM.dd index per day) and an index template matching app-logs-* that
+  # applies the policy via index.lifecycle.name. Must complete before logstash starts writing,
+  # since ILM only governs indices created after the matching template exists -- it does not
+  # retroactively apply to already-existing indices. Mirrors prometheus-config-render (#324) /
+  # alertmanager-config-render (#122): list + literal-block command form (not `command: >` folded
+  # scalar), since that form previously mis-tokenized a similar multi-statement script (#122/#363).
+  # ===============================
+  elasticsearch-ilm-setup:
+    image: alpine:3.20
+    container_name: elasticsearch-ilm-setup
+    environment:
+      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
+      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
+    volumes:
+      - ./elasticsearch-ilm-policy.json:/config/ilm-policy.json:ro
+      - ./elasticsearch-ilm-index-template.json:/config/index-template.json:ro
+    command:
+      - sh
+      - -c
+      - |
+        apk add --no-cache curl >/dev/null
+        curl -sf -u "$$ELASTICSEARCH_USERNAME:$$ELASTICSEARCH_PASSWORD" \
+          -X PUT http://elasticsearch:9200/_ilm/policy/app-logs-retention-policy \
+          -H 'Content-Type: application/json' \
+          -d @/config/ilm-policy.json
+        curl -sf -u "$$ELASTICSEARCH_USERNAME:$$ELASTICSEARCH_PASSWORD" \
+          -X PUT http://elasticsearch:9200/_index_template/app-logs-template \
+          -H 'Content-Type: application/json' \
+          -d @/config/index-template.json
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - buildnest-network
+    restart: "no"
+
+  # ===============================
   # Logstash
   # ===============================
   logstash:
@@ -231,6 +270,8 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
+      elasticsearch-ilm-setup:
+        condition: service_completed_successfully
     networks:
       - buildnest-network
 
