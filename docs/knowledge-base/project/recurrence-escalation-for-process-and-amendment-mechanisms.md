@@ -2,7 +2,7 @@
 title: "Recurrence Escalation: Cross-Field Terminology and an Occurrence-Count Ladder for When the Same Process Gap Reappears After Being 'Fixed'"
 category: documentation
 tags: [amendment-mechanism, recurrence, escalation, capa, stateless-agent, audit-terminology, configuration-drift]
-keywords: [repeat finding, operating effectiveness deficiency, configuration drift, reconciliation loop, organizational forgetting, latent condition, swiss cheese model, defect-class id, escalation ladder, sibling-precedent-scope]
+keywords: [repeat finding, operating effectiveness deficiency, configuration drift, reconciliation loop, organizational forgetting, latent condition, swiss cheese model, whack-a-mole, mandelbug, bohrbug, heisenbug, defect-class id, escalation ladder, sibling-precedent-scope]
 objective: "When a process/amendment fix regresses (the same gap recurs after being fixed once), what's the established cross-field vocabulary for this, and what concrete mechanism closes the gap for a stateless AI agent governed by prose rule files rather than mechanically-enforced code?"
 audience: "Maintainers of AI-agent process/rule files (or any prose-governed checklist, runbook, or amendment log) who've had a fix regress and want to know both what to call it and what to do differently the second time."
 scope: both
@@ -51,7 +51,7 @@ sessions) — meaning this is a recurring failure *class*, not a one-off.
 
 ### Cross-field terminology for "a fix that didn't hold"
 
-Five established fields have already named this pattern, each from a different angle. None of
+Six established fields have already named this pattern, each from a different angle. None of
 these currently appear in this KB's existing amendment/CAPA/process-improvement articles — they're
 genuinely new vocabulary, not synonyms already covered:
 
@@ -62,6 +62,17 @@ genuinely new vocabulary, not synonyms already covered:
 | DevOps / SRE / GitOps | **Configuration drift**, corrected by a **reconciliation loop** | A system's actual state gradually diverging from its declared/intended state absent active reconciliation. Terraform/Ansible/ArgoCD are built around continuously diffing actual vs. desired state rather than trusting a one-time apply to hold forever |
 | Organizational behavior / knowledge management | **Organizational forgetting** | Documented decay of operational knowledge over time absent active reinforcement, especially under discontinuity/turnover — a stateless agent is, functionally, 100% turnover every session |
 | Safety science / human factors (aviation, healthcare) | **Latent condition** (James Reason, Swiss Cheese Model) | Distinguished from an *active failure* (the specific visible slip). A latent condition is the underlying systemic weakness that keeps producing slips; fixing only the active failure (reword the rule again) leaves the latent condition — "this rule has no forcing function" — untouched |
+| Software engineering, informal industry idiom | **Whack-a-mole** | Suppressing individual pop-ups of the same underlying problem without addressing why it keeps surfacing — not formal vocabulary, but the closest colloquial match to this article's whole subject: CAPA's *correction* (fix this instance) happening repeatedly with no *corrective/preventive action* (fix why it keeps recurring) ever landing |
+
+**Adjacent terms that describe a different axis, not recurrence — worth knowing so they aren't
+mistakenly reached for here.** A **Mandelbug** (coined by Bruce Lindsay at IBM, after Mandelbrot
+fractals) is a bug whose root cause is so complex or timing-dependent that its behavior appears
+chaotic — contrasted with a **Bohrbug** (reliably reproducible under well-defined conditions) and a
+**Heisenbug** (changes behavior or vanishes when observed/debugged, e.g. a race condition masked by
+a debugger's own timing). All three describe *how hard a bug is to reproduce or understand*, not
+whether it recurs after being fixed — our sibling-precedent-check gap doesn't fit any of them, since
+the root cause (no enforcement mechanism) was well understood both times it appeared, not chaotic
+or elusive. Included here only to mark the boundary, not because they apply.
 
 ### The escalation ladder
 
@@ -127,6 +138,8 @@ instead of its source code.
 | What's the DevOps term for state silently diverging from what was declared? | Configuration drift, corrected by a reconciliation loop |
 | What's the organizational-behavior term for knowledge decaying without reinforcement? | Organizational forgetting |
 | What's the safety-science term for the systemic weakness beneath a visible failure? | Latent condition (Swiss Cheese Model) |
+| What's the informal industry idiom closest to this whole pattern? | Whack-a-mole — corrections without ever landing the corrective/preventive action |
+| Does Mandelbug/Bohrbug/Heisenbug apply here? | No — those describe reproducibility/complexity of a bug, not whether a fix recurs over time; included only to mark the boundary |
 | How is this different from CAPA's own recurrence handling? | CAPA escalates fix *scope* (instance → class → system); this escalates enforcement *mechanism strength*, keyed to occurrence count of the same tagged gap |
 | What triggers the next rung of the ladder? | The same defect-class ID appearing a second (or further) time — not any new, unrelated gap |
 
