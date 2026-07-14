@@ -88,7 +88,7 @@ Schema changes are managed exclusively through **Liquibase** changesets (`backen
 | Containerisation | Docker, Docker Compose |
 | Frontend | React 19, Vite, TypeScript, Tailwind CSS v4 |
 | CI/CD | GitHub Actions |
-| Security scanning | OWASP Dependency-Check (CVSS ≥ 7.0 fails build; results also surfaced via GitHub's code-scanning UI using the `codeql-action/upload-sarif` action — CodeQL's own static-analysis engine is not run), SonarCloud (`SonarQube Code Analysis` PR check) |
+| Security scanning | OWASP Dependency-Check (CVSS ≥ 7.0 fails build; SARIF report surfaced via GitHub's code-scanning UI using the `codeql-action/upload-sarif` action), CodeQL (own semantic-analysis engine, `java-kotlin` + `javascript-typescript`, dedicated `codeql.yml` workflow — #358), SonarCloud (`SonarQube Code Analysis` PR check) |
 | Code quality | CheckStyle (**blocking**, baseline + ratchet — fails only above a documented violation ceiling), SpotBugs (non-blocking, untriaged findings) |
 | Test quality | JaCoCo (≥ 85% instruction coverage per package, `ci` profile), PIT mutation testing (≥ 77% mutation score, ratcheting to 83% through M5), Codecov (`codecov/patch` diff-coverage PR check) |
 | Testing frameworks | JUnit 5, Mockito, ArchUnit (naming-convention enforcement), REST Assured, Gatling (load tests) |
@@ -266,7 +266,8 @@ GitHub Actions workflows in `.github/workflows/` that actively trigger on `maste
 |---|---|---|
 | `ci.yml` | Push / PR to master (+ weekly schedule) | Build, test, JaCoCo coverage gate (≥ 85% per package), dependency check. Deploy depends on this workflow completing. |
 | `ci-cd-pipeline.yml` | Push / PR to master (+ weekly schedule) | Broader test orchestration: unit, integration, reliability, security, load, and stress test jobs, plus PIT mutation-score reporting on PRs |
-| `security.yml` | Push / PR to master (+ weekly schedule) | OWASP Dependency-Check (results surfaced via GitHub's code-scanning UI using the `codeql-action/upload-sarif` action — this workflow does not run CodeQL's own static-analysis engine, despite the action's name), SonarCloud analysis (`SonarQube Code Analysis` PR check, [dashboard](https://sonarcloud.io/dashboard?id=buildnest-ecommerce)), CheckStyle (**blocking, baseline + ratchet** — fails only if violations exceed 8,305, the verified baseline as of #354; lower the ceiling as violations are triaged), SpotBugs (non-blocking by deliberate decision — 103 untriaged findings (#353), not yet triaged) |
+| `security.yml` | Push / PR to master (+ weekly schedule) | OWASP Dependency-Check (SARIF report surfaced via GitHub's code-scanning UI using the `codeql-action/upload-sarif` action), SonarCloud analysis (`SonarQube Code Analysis` PR check, [dashboard](https://sonarcloud.io/dashboard?id=buildnest-ecommerce)), CheckStyle (**blocking, baseline + ratchet** — fails only if violations exceed 8,305, the verified baseline as of #354; lower the ceiling as violations are triaged), SpotBugs (non-blocking by deliberate decision — 103 untriaged findings (#353), not yet triaged) |
+| `codeql.yml` | Push / PR to master (+ weekly schedule) | CodeQL's own semantic-analysis engine (`init`/`analyze`) — distinct from `security.yml`'s `upload-sarif` step above, which only displays OWASP's report and never ran CodeQL itself. Scans `java-kotlin` (backend, `build-mode: autobuild`) and `javascript-typescript` (frontend). Non-blocking (advisory findings in the Security tab), added in #358. |
 | `deploy.yml` | On `ci.yml` completing on master, or manual dispatch | Docker image build and push |
 | `performance.yml` | Manual / weekly schedule | JMeter load test suite |
 
