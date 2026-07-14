@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Application Performance Monitoring Service
@@ -32,8 +33,8 @@ public class PerformanceMonitoringService implements IPerformanceMonitoringServi
     private static final long SLOW_REQUEST_THRESHOLD_MS = 500;
 
     private final ConcurrentHashMap<String, Long> responseTimes = new ConcurrentHashMap<>();
-    private volatile long slowRequestCount = 0;
-    private volatile long totalRequestCount = 0;
+    private final AtomicLong slowRequestCount = new AtomicLong(0);
+    private final AtomicLong totalRequestCount = new AtomicLong(0);
     private volatile LocalDateTime lastMetricsReset = LocalDateTime.now();
 
     /**
@@ -46,10 +47,10 @@ public class PerformanceMonitoringService implements IPerformanceMonitoringServi
         try {
             String key = endpoint + "_" + System.nanoTime();
             responseTimes.put(key, responseTimeMs);
-            totalRequestCount++;
+            totalRequestCount.incrementAndGet();
 
             if (responseTimeMs > SLOW_REQUEST_THRESHOLD_MS) {
-                slowRequestCount++;
+                slowRequestCount.incrementAndGet();
                 if (responseTimeMs > 1000) {
                     log.warn("SLOW_REQUEST detected: {} took {}ms", endpoint, responseTimeMs);
                 }
@@ -91,9 +92,10 @@ public class PerformanceMonitoringService implements IPerformanceMonitoringServi
         metrics.put("p99ResponseTimeMs", p99);
         metrics.put("minResponseTimeMs", min);
         metrics.put("maxResponseTimeMs", max);
-        metrics.put("totalRequests", totalRequestCount);
-        metrics.put("slowRequests", slowRequestCount);
-        metrics.put("slowRequestPercentage", String.format("%.2f%%", (slowRequestCount * 100.0 / totalRequestCount)));
+        metrics.put("totalRequests", totalRequestCount.get());
+        metrics.put("slowRequests", slowRequestCount.get());
+        metrics.put("slowRequestPercentage",
+                String.format("%.2f%%", (slowRequestCount.get() * 100.0 / totalRequestCount.get())));
         metrics.put("slaCompliance", p95 <= SLOW_REQUEST_THRESHOLD_MS ? "✓ PASS" : "✗ FAIL");
         metrics.put("sampledMetrics", times.size());
         metrics.put("lastResetTime", lastMetricsReset);
@@ -133,8 +135,8 @@ public class PerformanceMonitoringService implements IPerformanceMonitoringServi
      */
     public void resetMetrics() {
         responseTimes.clear();
-        slowRequestCount = 0;
-        totalRequestCount = 0;
+        slowRequestCount.set(0);
+        totalRequestCount.set(0);
         lastMetricsReset = LocalDateTime.now();
         log.info("Performance metrics reset");
     }
@@ -161,9 +163,10 @@ public class PerformanceMonitoringService implements IPerformanceMonitoringServi
      * @return Percentage of slow requests
      */
     public double getSlowQueryRatio() {
-        if (totalRequestCount == 0)
+        long total = totalRequestCount.get();
+        if (total == 0)
             return 0;
-        return (slowRequestCount * 100.0) / totalRequestCount;
+        return (slowRequestCount.get() * 100.0) / total;
     }
 
     @Override

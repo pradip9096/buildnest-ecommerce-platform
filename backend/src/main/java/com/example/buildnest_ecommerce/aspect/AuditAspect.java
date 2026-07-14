@@ -17,6 +17,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 /**
  * Audit Aspect for cross-cutting audit logging concerns.
@@ -118,7 +119,7 @@ public class AuditAspect {
                             entityId,
                             ipAddress,
                             userAgent,
-                            oldValue != null ? oldValue.toString() : null,
+                            oldValue != null ? Arrays.toString((Object[]) oldValue) : null,
                             result != null ? result.toString() : null);
                 } catch (Exception e) {
                     log.warn("Failed to index audit log in Elasticsearch: {}", e.getMessage());

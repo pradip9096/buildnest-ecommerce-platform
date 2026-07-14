@@ -166,13 +166,14 @@ jobs:
       - name: Run SpotBugs
         if: always()
         run: |
-          # Non-blocking by design (#353): this is SpotBugs's first-ever genuine run — the
-          # goal previously failed to resolve at all ("No plugin found for prefix 'spotbugs'"),
-          # so every finding below is new, untriaged signal on an otherwise-unaudited codebase.
-          # Blocking on it immediately would break every future PR with zero chance to review
-          # first. Revisit once there's been a chance to triage the initial findings (same
-          # decision already made for CheckStyle, see #354).
-          ./mvnw -B spotbugs:check || echo "SpotBugs found issues — see the real count in the job summary below (non-blocking, see #353)"
+          # Blocking on High-priority findings only (#317), following the same triage-then-block
+          # sequencing already used for CheckStyle (#354): #353 first got this goal resolving at
+          # all, then this run's initial 103 findings were triaged (4 Priority-1/High, all real
+          # defects, all fixed in the same change that added this threshold; 97 Priority-2/Medium
+          # left as tracked, non-blocking debt -- see #316's other sub-issues). pom.xml's
+          # <threshold>High</threshold> makes `spotbugs:check` itself fail only on High findings,
+          # so no `|| echo` fallback is needed here -- a real failure now genuinely fails this step.
+          ./mvnw -B spotbugs:check
 
       - name: Generate Quality Report
         if: always()
@@ -193,7 +194,7 @@ jobs:
             # *lines*, not occurrences, and would always report 0 or 1 regardless of the real
             # count. `grep -o ... | wc -l` counts every occurrence correctly.
             bug_count=$(grep -o "<BugInstance" target/spotbugsXml.xml | wc -l)
-            echo "- **SpotBugs**: ✅ Enabled — ${bug_count} finding(s) (non-blocking, untriaged first run — see #353)" >> $GITHUB_STEP_SUMMARY
+            echo "- **SpotBugs**: ✅ Enabled — ${bug_count} finding(s) (blocking on Priority-1/High only — see #317)" >> $GITHUB_STEP_SUMMARY
           else
             echo "- **SpotBugs**: ⚠️ Enabled but no report was generated — check the Run SpotBugs step's log" >> $GITHUB_STEP_SUMMARY
           fi
