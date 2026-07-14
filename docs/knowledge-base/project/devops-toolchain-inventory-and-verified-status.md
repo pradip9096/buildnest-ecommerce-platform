@@ -6,8 +6,8 @@ keywords: [devops toolchain, ci/cd inventory, tool health check, silently broken
 objective: "What tools make up BuildNest's CI/CD and quality-gate toolchain, what does each actually verify, and how do you tell whether a tool is genuinely running versus merely appearing configured?"
 audience: "Anyone adding to or auditing BuildNest's CI/CD pipeline, or deciding whether to trust a green (or silently non-blocking) check"
 scope: both
-source_conversations: [Session 2026-07-11/12 — #350, #352, #353, #354]
-last_updated: 2026-07-12
+source_conversations: ["Session 2026-07-11/12 — #350, #352, #353, #354"]
+last_updated: 2026-07-14
 confidence: high
 evidence_strength: strong
 related_articles:
@@ -91,7 +91,7 @@ they're worth blocking a merge over. The bug in all three incidents above wasn't
 are non-blocking — it's that non-blocking was silently doing double duty as "never actually shows
 you what happened."
 
-### Verified tool inventory (as of 2026-07-12)
+### Verified tool inventory (as of 2026-07-12; CodeQL row added 2026-07-14, others not re-verified since)
 
 | Tool | Workflow / job | Verified status | How it was verified |
 |---|---|---|---|
@@ -106,6 +106,7 @@ you what happened."
 | SpotBugs | `security.yml` (`code-quality` job) | ❌ Broken | Confirmed via direct local run: `No plugin found for prefix 'spotbugs'` — the goal never resolves at all — tracked as #353 |
 | `ci-cd.yml` (whole workflow) | N/A | ❌ Dead | Only triggers on `main`/`develop`; this repo's actual default branch is `master` — unreachable, documented as such in `README.md` |
 | JMeter (`performance.yml`) | Manual/weekly dispatch | ❓ Not verified | Never exercised or checked during this audit — status genuinely unknown |
+| CodeQL (semantic analysis) | `codeql.yml` (dedicated workflow, `java-kotlin` + `javascript-typescript`) | ✅ Working, non-blocking (advisory) | Previously only `upload-sarif` existed (display-only for OWASP's report; CodeQL's own `init`/`analyze` engine never ran) — added in #358. Verified via two independent checks, not just a green CI run: the PR's own CI completed both matrix jobs and `gh api .../code-scanning/analyses` showed genuine new analysis categories; the post-merge push scan on `master` then surfaced 5 real findings the PR's own scan had missed (4 `java/polynomial-redos` in `ValidationUtil`, tracked as #403; 1 `java/spring-disabled-csrf-protection`, confirmed a false positive and dismissed). See [CodeQL's `build-mode: autobuild` Scan Can Differ Between a PR's Merge-Ref and the Same Code's Post-Merge Push](../../wiki/learned-lessons/codeql-autobuild-pr-scan-results-can-differ-from-post-merge-branch-scan.md) for why a clean PR-time scan alone isn't sufficient verification for this tool |
 
 **This table will go stale.** Treat it the same way `project_state.md`'s "Key Technical Facts"
 section treats its own build numbers: a snapshot to re-verify before citing, not a permanently
