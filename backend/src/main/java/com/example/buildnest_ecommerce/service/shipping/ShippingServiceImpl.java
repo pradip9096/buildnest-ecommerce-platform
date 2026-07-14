@@ -144,8 +144,8 @@ public class ShippingServiceImpl implements ShippingService {
             return BigDecimal.ONE;
         }
         String prefix = postalCode.substring(0, Math.min(2, postalCode.length()));
-        // Math.abs(Integer.MIN_VALUE) is still negative (two's complement overflow) --
-        // Math.floorMod avoids that edge case and always returns a non-negative result.
+        // Math.abs(Integer.MIN_VALUE) stays negative (overflow); floorMod
+        // avoids that edge case and always returns a non-negative result.
         int idx = Math.floorMod(prefix.hashCode(), multipliers.size());
         return multipliers.get(idx);
     }
