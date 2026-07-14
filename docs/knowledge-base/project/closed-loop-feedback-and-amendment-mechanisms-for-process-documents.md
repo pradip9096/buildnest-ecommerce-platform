@@ -23,6 +23,7 @@ related_articles:
   - adaptive-knowledge-governance-advanced-amendment-concepts.md
   - ../learning/knowledge-organization-formats-qa-topic-chapter.md
   - stable-id-columns-decouple-cross-references-from-display-order.md
+  - recurrence-escalation-for-process-and-amendment-mechanisms.md
 status: published
 ---
 
@@ -130,6 +131,12 @@ document: a standing instruction for *when* to feed real-world findings back int
 Without the log, part 1 and 2 can still happen, but nobody downstream can tell *whether* the loop
 has been closing over time, or *how often* — the log is what makes the feedback loop auditable
 rather than anecdotal.
+
+**When the same trigger fires twice for the same underlying gap** (a fix regresses, not just a new
+gap appearing), the response needs to escalate beyond another prose correction — see [Recurrence
+Escalation](recurrence-escalation-for-process-and-amendment-mechanisms.md) for the cross-field
+terminology (repeat finding, configuration drift, latent condition, and others) and an occurrence-
+count-driven ladder for strengthening the enforcement mechanism itself, not just the wording.
 
 ### Worked Example — This Repo's Own Config Files (2026-07-07)
 

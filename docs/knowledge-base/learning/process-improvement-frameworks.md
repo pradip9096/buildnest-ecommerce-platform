@@ -170,6 +170,15 @@ A minimal, copy-pasteable structure for Step 4 (Design Improvement) through Step
 
 See the [CAPA article's glossary](./capa-corrective-and-preventive-action.md#glossary) for acronyms shared across both files (PDCA, CMMI, DMAIC, etc.).
 
+## Related: When the Fix Itself Regresses
+
+The "Evidence It's Recurring" field above assumes a *new* recurring gap being surfaced for the
+first time. A related but distinct case is when a gap that was **already fixed once** (a checklist
+item added, a rule reworded) reappears later — that's not a fresh process-improvement cycle, it's a
+sign the previous fix's enforcement mechanism didn't hold. See [Recurrence Escalation](../project/recurrence-escalation-for-process-and-amendment-mechanisms.md)
+for the cross-field terminology (repeat finding, configuration drift, latent condition) and an
+occurrence-count ladder for escalating enforcement strength in that specific case.
+
 ## Sources
 
 - [Learn Lean Sigma: W. Edwards Deming's PDCA](https://www.learnleansigma.com/lean_visionaries/w-edwards-deming-pdca/)
