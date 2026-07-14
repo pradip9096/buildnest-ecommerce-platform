@@ -139,17 +139,43 @@ jobs:
           # includes data for (they're structurally absent from jacoco.xml, not merely
           # untested) — any PR touching those packages would fail new_coverage regardless
           # of test effort (PR #370/#84 hit this for CacheConfig). Keep both lists in sync.
-          ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar \
-            -Ddependency-check.skip=true \
-            -Dsonar.projectKey=buildnest-ecommerce \
-            -Dsonar.organization=pradip9096 \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.token=$SONAR_TOKEN \
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-            -Dsonar.coverage.exclusions=**/model/dto/**,**/model/payload/**,**/config/**,**/*Application.java,**/exception/ResourceNotFoundException.java,**/exception/AccessDeniedException.java,**/exception/PaymentProcessingException.java,**/exception/ExternalServiceException.java,**/util/EventLogger.java,**/util/TransactionLogger.java,**/util/LoggingStandards.java \
-            || echo "SonarQube analysis failed — check logs above (non-blocking, matching SpotBugs in this same job — CheckStyle is now baseline-ratcheted and blocking, see #354)"
+          #
+          # #320: the sonar:sonar goal's own exit code only reflects whether the report was
+          # successfully SUBMITTED to SonarCloud's background compute engine -- an
+          # "ANALYSIS SUCCESSFUL" log line does not mean the quality gate was evaluated or
+          # waited on. `sonar.qualitygate.wait=true` makes the goal poll the compute-engine
+          # task and exit non-zero if the "Sonar way" gate (org default -- no new bugs/
+          # vulnerabilities, Maintainability rating A, 100% new hotspots reviewed, >=80% new
+          # coverage, <=3% duplication; verified on sonarcloud.io/organizations/pradip9096
+          # /quality_gates before this change) actually fails. Without this flag, the step
+          # can never genuinely gate on Critical/Blocker-equivalent findings, no matter what
+          # the `|| echo` wrapper below does.
+          #
+          # The `|| echo` below is now scoped to a genuine "not configured" case only (empty
+          # SONAR_TOKEN, e.g. a fork PR with no secret access) via the `if` guard -- when the
+          # token IS present, a scanner error or a failed quality gate now fails this step for
+          # real, matching AC 3's "distinguish not-configured from analysis-failed."
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "SonarQube analysis skipped — SONAR_TOKEN not available in this run's context (e.g. a fork PR without secret access)."
+          else
+            ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar \
+              -Ddependency-check.skip=true \
+              -Dsonar.projectKey=buildnest-ecommerce \
+              -Dsonar.organization=pradip9096 \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.token=$SONAR_TOKEN \
+              -Dsonar.qualitygate.wait=true \
+              -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+              -Dsonar.coverage.exclusions=**/model/dto/**,**/model/payload/**,**/config/**,**/*Application.java,**/exception/ResourceNotFoundException.java,**/exception/AccessDeniedException.java,**/exception/PaymentProcessingException.java,**/exception/ExternalServiceException.java,**/util/EventLogger.java,**/util/TransactionLogger.java,**/util/LoggingStandards.java
+          fi
 
       - name: Run CheckStyle
+        # #320: the Sonar step above can now genuinely fail (quality-gate failure or a real
+        # scanner error) instead of always exiting 0 via `|| echo`. Without `if: always()`
+        # here, GitHub Actions would silently skip this and every later step in the job on a
+        # Sonar failure -- the same step-skip gotcha #354 already fixed for the CheckStyle ->
+        # SpotBugs boundary, recurring one step earlier now that Sonar precedes CheckStyle.
+        if: always()
         run: |
           # Baseline + ratchet (#354), matching the PIT mutation-score pattern already used in
           # this repo (pom.xml's mutationThreshold, 77%->83% through M5). 8305 is the real,
@@ -198,7 +224,17 @@ jobs:
           else
             echo "- **SpotBugs**: ⚠️ Enabled but no report was generated — check the Run SpotBugs step's log" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "- **SonarQube**: ✅ Enabled — see the SonarCloud dashboard or PR checks for results" >> $GITHUB_STEP_SUMMARY
+          # #320: gate pass/fail is now enforced by the Run Quality Analysis step's own exit
+          # code (sonar.qualitygate.wait=true), so a failure already shows up as that step's
+          # red X above -- re-deriving pass/fail here would mean a second call to SonarCloud's
+          # compute-engine task API for a signal the job status already carries for free.
+          # report-task.txt's presence just confirms analysis genuinely ran (vs. skipped for a
+          # missing token).
+          if [ -f target/sonar/report-task.txt ]; then
+            echo "- **SonarQube**: ✅ Analysis ran — quality gate result reflected in the Run Quality Analysis step above; see the SonarCloud dashboard for details" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **SonarQube**: ⚠️ Skipped — SONAR_TOKEN was not available in this run's context" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Upload Quality Reports
         if: always()
