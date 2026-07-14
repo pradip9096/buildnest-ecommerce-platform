@@ -804,11 +804,25 @@
 			     'spotbugs'", which is exactly what silently broke this check before #353.
 			     Deliberately no <executions> binding, matching checkstyle-maven-plugin's setup in
 			     this same file — CI invokes `spotbugs:check` as an explicit standalone step, not on
-			     every build phase, and bare declaration is sufficient for the CLI prefix to resolve. -->
+			     every build phase, and bare declaration is sufficient for the CLI prefix to resolve.
+
+			     Blocking threshold (#317): threshold=High makes `spotbugs:check` fail the build
+			     on Priority-1 (High) findings only — Medium/Low stay advisory (reported, not
+			     blocking) since the 97 remaining Medium findings (mostly EI_EXPOSE_REP/REP2 and
+			     VA_FORMAT_STRING_USES_NEWLINE) are higher-effort and tracked separately (see #316's
+			     other sub-issues). Safe to block immediately with no grace-period ratchet (unlike
+			     CheckStyle's maxAllowedViolations ceiling) because the 4 pre-existing High-priority
+			     findings were fixed in the same change that introduced this threshold — the ceiling
+			     starts at zero. -->
 			<plugin>
 				<groupId>com.github.spotbugs</groupId>
 				<artifactId>spotbugs-maven-plugin</artifactId>
 				<version>4.10.2.0</version>
+				<configuration>
+					<threshold>High</threshold>
+					<effort>Max</effort>
+					<failOnError>true</failOnError>
+				</configuration>
 			</plugin>
 			<!-- PIT Mutation Testing Plugin (Section 3.1 - EXHAUSTIVE_RECOMMENDATION_REPORT) -->
 			<plugin>
