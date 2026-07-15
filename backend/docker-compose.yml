@@ -419,12 +419,16 @@ services:
     container_name: prometheus-config-render
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-dev}
+      # #359: monitoring credential Prometheus uses to authenticate its own scrape of
+      # /actuator/prometheus (SecurityConfig#actuatorMonitoringSecurityFilterChain).
+      MONITORING_USERNAME: ${MONITORING_USERNAME:-monitoring}
+      MONITORING_PASSWORD: ${MONITORING_PASSWORD:-changeme-monitoring-password}
     volumes:
       - ./prometheus.yml.template:/template/prometheus.yml.template:ro
       - ./alerts.yml:/template/alerts.yml:ro
       - prometheus_config:/config
     command: >
-      sh -c "sed \"s/__ENVIRONMENT__/$$ENVIRONMENT/g\" /template/prometheus.yml.template > /config/prometheus.yml &&
+      sh -c "sed -e \"s/__ENVIRONMENT__/$$ENVIRONMENT/g\" -e \"s/__MONITORING_USERNAME__/$$MONITORING_USERNAME/g\" -e \"s/__MONITORING_PASSWORD__/$$MONITORING_PASSWORD/g\" /template/prometheus.yml.template > /config/prometheus.yml &&
              cp /template/alerts.yml /config/alerts.yml"
     restart: "no"
 

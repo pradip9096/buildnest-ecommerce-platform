@@ -11,15 +11,19 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -52,6 +56,25 @@ public class SecurityConfig {
     @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:5174,http://localhost:3000}")
     private String[] corsAllowedOrigins;
 
+    /**
+     * Read-only monitoring username for the Prometheus scrape (#359) —
+     * intentionally NOT the ADMIN login account.
+     */
+    @Value("${monitoring.username:monitoring}")
+    private String monitoringUsername;
+
+    /** Marker for monitoring.password left at its local-dev default. */
+    private static final String DEFAULT_MONITORING_PASSWORD_MARKER =
+            "changeme-monitoring-password";
+
+    /**
+     * Read-only monitoring password, local-dev default only — same
+     * pattern as jwt.secret's fallback. Production rejection is
+     * enforced in {@link #validateHttpsInProduction()} below.
+     */
+    @Value("${monitoring.password:" + DEFAULT_MONITORING_PASSWORD_MARKER + "}")
+    private String monitoringPassword;
+
     @PostConstruct
     public void validateHttpsInProduction() {
         boolean isProduction = Arrays.asList(environment.getActiveProfiles()).contains("production");
@@ -60,6 +83,17 @@ public class SecurityConfig {
         if (isProduction && !sslEnabled) {
             throw new IllegalStateException(
                     "HTTPS must be enabled in production. Set server.ssl.enabled=true or SERVER_SSL_ENABLED=true");
+        }
+
+        boolean monitoringPasswordIsDefault = monitoringPassword == null
+                || monitoringPassword.isBlank()
+                || monitoringPassword.equals(
+                        DEFAULT_MONITORING_PASSWORD_MARKER);
+        if (isProduction && monitoringPasswordIsDefault) {
+            throw new IllegalStateException(
+                    "MONITORING_PASSWORD must be set to a non-default "
+                            + "value in production. Generate: "
+                            + "openssl rand -base64 32");
         }
 
         // FINDING #1 FIX: Enhanced fail-fast validation for keystore configuration
@@ -100,6 +134,71 @@ public class SecurityConfig {
                 .userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder());
         return authenticationManagerBuilder.build();
+    }
+
+    /**
+     * Dedicated security chain for Prometheus's /actuator/prometheus scrape
+     * (#359). HTTP Basic with a single, purpose-scoped monitoring credential
+     * — never the ADMIN login account, never JWT (Prometheus is a machine
+     * scraper, not a browser session). Ordered ahead of the main chain so
+     * this narrower matcher wins; the main chain's "/actuator/**" -&gt;
+     * hasRole(ADMIN) rule still governs every other actuator path.
+     *
+     * @param http the HttpSecurity to configure
+     * @return the built monitoring security filter chain
+     */
+    @Bean
+    @Order(0)
+    public SecurityFilterChain actuatorMonitoringSecurityFilterChain(
+            final HttpSecurity http) throws Exception {
+        InMemoryUserDetailsManager monitoringUsers =
+                buildMonitoringUserDetailsManager();
+        AuthenticationManager monitoringAuthManager =
+                buildMonitoringAuthenticationManager(monitoringUsers);
+
+        http
+                .securityMatcher("/actuator/prometheus")
+                .authenticationManager(monitoringAuthManager)
+                .authorizeHttpRequests(
+                        auth -> auth.anyRequest().hasRole("MONITORING"))
+                .httpBasic(basic -> {
+                })
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // CSRF exists to stop a browser replaying an ambient cookie a
+                // victim didn't intend to send. This chain never sets or reads
+                // a cookie (STATELESS, HTTP Basic via the Authorization header
+                // only) and its only real client is Prometheus, a machine
+                // scraper -- there is no browser session for a forged request
+                // to ride. Same rationale spring-security.md already documents
+                // for why CSRF was safe to disable before tokens moved to
+                // cookies (#359).
+                .csrf(csrf -> csrf.disable());
+        return http.build();
+    }
+
+    private InMemoryUserDetailsManager buildMonitoringUserDetailsManager() {
+        return new InMemoryUserDetailsManager(
+                User.withUsername(monitoringUsername)
+                        .password(passwordEncoder().encode(monitoringPassword))
+                        .roles("MONITORING")
+                        .build());
+    }
+
+    // Explicit ProviderManager, not .userDetailsService()/
+    // .authenticationProvider() on HttpSecurity -- those register against
+    // the shared AuthenticationManagerBuilder, which this app already
+    // populates globally with the DB-backed CustomUserDetailsService,
+    // causing Basic Auth here to silently authenticate against real user
+    // accounts instead of this dedicated monitoring identity. Confirmed
+    // empirically (#359): without this, the monitoring credential resolved
+    // via CustomUserDetailsService, not this provider.
+    private AuthenticationManager buildMonitoringAuthenticationManager(
+            final InMemoryUserDetailsManager monitoringUsers) {
+        var provider = new org.springframework.security.authentication
+                .dao.DaoAuthenticationProvider(monitoringUsers);
+        provider.setPasswordEncoder(passwordEncoder());
+        return new ProviderManager(provider);
     }
 
     /**
