@@ -31,13 +31,20 @@ These are independent axes. A repo can run CI on direct pushes, on PRs, or both 
 
 Checked `.github/workflows/*.yml` triggers directly (2026-07-06):
 
+**Updated 2026-07-15 (#407):** `ci-cd.yml` deleted (was only reachable on `main`/`develop`,
+which don't exist as branches in this repo — dead for its entire lifetime). `ci.yml` and
+`ci-cd-pipeline.yml` renamed to "Quality Gate Pipeline" and "Full Test Matrix & Docker Publish"
+respectively, for clarity — their near-identical prior names is what let #318's PMD gate land in
+the dead `ci-cd.yml` unnoticed. This also corrects a pre-existing error in this table: `deploy.yml`
+was never actually gated on `ci-cd-pipeline.yml` — its `workflow_run` trigger matches by workflow
+*display name*, and it has always pointed at `ci.yml` (now "Quality Gate Pipeline").
+
 | Workflow | Triggers on |
 |---|---|
-| `ci-cd-pipeline.yml` | push to `main`/`master`/`develop`, PR to same, `workflow_dispatch`, weekly schedule |
-| `ci-cd.yml` | push and PR to `main`/`develop` |
-| `ci.yml` | push and PR to `main`/`master`/`develop`, `workflow_dispatch`, weekly schedule |
+| `ci-cd-pipeline.yml` ("Full Test Matrix & Docker Publish") | push to `main`/`master`/`develop`, PR to same, `workflow_dispatch`, weekly schedule |
+| `ci.yml` ("Quality Gate Pipeline") | push and PR to `main`/`master`/`develop`, `workflow_dispatch`, weekly schedule |
 | `security.yml` | push and PR to `main`/`master`/`develop`, weekly schedule |
-| `deploy.yml` | `workflow_run` — fires only after `ci-cd-pipeline.yml` succeeds on `master` |
+| `deploy.yml` | `workflow_run` — fires only after `ci.yml` ("Quality Gate Pipeline") succeeds on `master`, not `ci-cd-pipeline.yml` |
 | `performance.yml` | `workflow_dispatch` and weekly schedule only — not tied to push or PR |
 
 **Key finding:** CI coverage is identical whether you push directly to `master` or open a PR — every relevant workflow triggers on both events. So in this repo, the choice between push and PR does not change *whether* CI runs.

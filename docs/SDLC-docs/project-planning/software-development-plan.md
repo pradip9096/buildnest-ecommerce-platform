@@ -531,12 +531,11 @@ Production
 
 | Workflow File | Trigger | Purpose |
 | :--- | :--- | :--- |
-| `ci.yml` | Push / PR to `main`, `master`, `develop`; schedule (weekly Mon 02:00 UTC) | Primary CI: build, test, JaCoCo coverage, PR comment, failure issue creation |
-| `ci-cd-pipeline.yml` | Push / PR to `main`, `master`, `develop` | Alternative full CI/CD pipeline |
+| `ci.yml` ("Quality Gate Pipeline", renamed #407) | Push / PR to `main`, `master`, `develop`; schedule (weekly Mon 02:00 UTC) | Primary CI: build, test, JaCoCo coverage, PR comment, failure issue creation |
+| `ci-cd-pipeline.yml` ("Full Test Matrix & Docker Publish", renamed #407) | Push / PR to `main`, `master`, `develop` | Full test matrix (unit/integration/PIT/reliability/load/stress/e2e) + real Docker build/push |
 | `security.yml` | Push / PR to `main`, `master`, `develop`; schedule (weekly Sun 00:00 UTC) | OWASP Dependency Check (CVSS 7 threshold), SARIF upload, code scanning |
 | `performance.yml` | Manual trigger / schedule | Gatling load simulation |
-| `deploy.yml` | After `ci.yml` success on `master`; manual (`workflow_dispatch`) | Docker image build + K8s deploy (staging / production) |
-| `ci-cd.yml` | Push / PR to `main`, `master`, `develop` | Secondary CI variant |
+| `deploy.yml` | After `ci.yml` ("Quality Gate Pipeline") success on `master`; manual (`workflow_dispatch`) | Docker image build + K8s deploy (staging / production) |
 
 ### 5.8 Maintenance Process
 
