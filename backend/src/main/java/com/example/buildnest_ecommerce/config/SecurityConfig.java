@@ -53,7 +53,7 @@ public class SecurityConfig {
     @Autowired
     private Environment environment;
 
-    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:5174,http://localhost:3000}")
+    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:5174,http://localhost:3000}")
     private String[] corsAllowedOrigins;
 
     /**
