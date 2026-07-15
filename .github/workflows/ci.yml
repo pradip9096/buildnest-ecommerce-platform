@@ -15,10 +15,6 @@ on:
       - main
       - master
       - develop
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - '.github/ISSUE_TEMPLATE/**'
   workflow_dispatch:
   schedule:
     - cron: "0 2 * * 1"
@@ -33,9 +29,34 @@ env:
   JAVA_VERSION: "21"
 
 jobs:
+  # #412: detects whether a PR/push touches only paths-ignore'd content
+  # (docs/**, **/*.md, .github/ISSUE_TEMPLATE/**). Downstream jobs stay always-
+  # triggering (no workflow-level paths-ignore) so their required-check names
+  # always report a status; individual expensive steps are gated on this
+  # output instead. See development-workflow.md's CI Failure Handling /
+  # Workflow File Responsibilities for why (required checks never satisfy
+  # branch protection if the whole workflow is skipped by paths-ignore).
+  detect-changes:
+    name: Detect Doc-Only Change
+    runs-on: ubuntu-latest
+    outputs:
+      code-changed: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '**'
+              - '!docs/**'
+              - '!**/*.md'
+              - '!.github/ISSUE_TEMPLATE/**'
+
   build:
     name: Build & Test
     runs-on: ubuntu-latest
+    needs: detect-changes
     defaults:
       run:
         working-directory: backend
@@ -45,6 +66,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
+        if: needs.detect-changes.outputs.code-changed == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
@@ -52,18 +74,21 @@ jobs:
           cache: "maven"
 
       - name: Validate Maven Wrapper
+        if: needs.detect-changes.outputs.code-changed == 'true'
         run: chmod +x mvnw
 
       - name: Build with Maven
+        if: needs.detect-changes.outputs.code-changed == 'true'
         run: ./mvnw -B clean package -DskipTests
 
       - name: Run Tests with JaCoCo Coverage
+        if: needs.detect-changes.outputs.code-changed == 'true'
         run: ./mvnw -B clean test jacoco:report
         continue-on-error: false
 
       - name: Generate Coverage Report
         id: coverage
-        if: always()
+        if: needs.detect-changes.outputs.code-changed == 'true'
         run: |
           python - <<'PY'
           import xml.etree.ElementTree as ET
@@ -128,7 +153,7 @@ jobs:
           PY
 
       - name: Comment PR with Coverage
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && needs.detect-changes.outputs.code-changed == 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -163,14 +188,14 @@ jobs:
             });
 
       - name: Publish Test Results
-        if: always()
+        if: needs.detect-changes.outputs.code-changed == 'true'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: backend/target/surefire-reports/**/*.xml
           check_name: Test Results
 
       - name: Upload Coverage Reports
-        if: always()
+        if: needs.detect-changes.outputs.code-changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-reports
@@ -180,7 +205,7 @@ jobs:
           retention-days: 30
 
       - name: Upload Test Reports
-        if: always()
+        if: needs.detect-changes.outputs.code-changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
@@ -188,14 +213,14 @@ jobs:
           retention-days: 30
 
       - name: Upload Jacoco XML
-        if: always()
+        if: needs.detect-changes.outputs.code-changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-xml
           path: backend/target/site/jacoco/jacoco.xml
 
       - name: Publish Coverage to Codecov
-        if: always()
+        if: needs.detect-changes.outputs.code-changed == 'true'
         uses: codecov/codecov-action@v3
         with:
           files: ./backend/target/site/jacoco/jacoco.xml
@@ -207,11 +232,15 @@ jobs:
       - name: Test Summary
         if: always()
         run: |
-          echo "## ✅ Build & Test Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Status**: ✅ Success" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tests Run**: Check artifacts for details" >> $GITHUB_STEP_SUMMARY
-          echo "- **Coverage Report**: Uploaded to artifacts" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.detect-changes.outputs.code-changed }}" == "true" ]; then
+            echo "## ✅ Build & Test Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Build Status**: ✅ Success" >> $GITHUB_STEP_SUMMARY
+            echo "- **Tests Run**: Check artifacts for details" >> $GITHUB_STEP_SUMMARY
+            echo "- **Coverage Report**: Uploaded to artifacts" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ⏭️ Build & Test Skipped (docs-only change, #412)" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Create Failure Issue
         if: failure()
@@ -240,16 +269,22 @@ jobs:
   quality-gates:
     name: Quality Gates
     runs-on: ubuntu-latest
-    needs: build
+    needs: [ build, detect-changes ]
     if: always()
 
     steps:
       - name: Download Coverage Results
+        if: needs.detect-changes.outputs.code-changed == 'true'
         uses: actions/download-artifact@v4
         with:
           name: coverage-reports
 
+      - name: Skip Notice (docs-only change, #412)
+        if: needs.detect-changes.outputs.code-changed != 'true'
+        run: echo "Docs-only change — quality gates skipped, reporting success."
+
       - name: Validate Coverage Thresholds
+        if: needs.detect-changes.outputs.code-changed == 'true'
         run: |
           python - <<'PY'
           import json
@@ -286,7 +321,11 @@ jobs:
   dependency-check:
     name: OWASP Dependency-Check
     runs-on: ubuntu-latest
-    needs: build
+    needs: [ build, detect-changes ]
+    # Not a required check (see branch protection config) — safe to skip the whole
+    # job on a docs-only change rather than gating individual steps, preserving
+    # #336's CI-minutes savings for this expensive scan.
+    if: needs.detect-changes.outputs.code-changed == 'true'
     defaults:
       run:
         working-directory: backend
