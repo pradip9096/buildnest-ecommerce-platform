@@ -38,8 +38,20 @@ jobs:
           project: 'civil-ecommerce'
           path: '.'
           format: 'SARIF'
+          # #405: npm retired its legacy audit endpoints (registry.npmjs.org
+          # /-/npm/v1/security/audits and /quick) in ~April 2026 — they now return
+          # HTTP 410 "This endpoint is being retired. Use the bulk advisory endpoint
+          # instead." NodeAuditAnalyzer targets the retired endpoint and has no way to
+          # reach it; this is an upstream DependencyCheck limitation (tracked e.g.
+          # dependency-check/DependencyCheck#8421/#8423 — migration to the bulk API),
+          # not something fixable from this repo's CI config. Disable it explicitly
+          # rather than let every run fail-then-self-disable at runtime, mirroring how
+          # the Sonatype OSS Index analyzer is already disabled non-fatally for the
+          # same "unreachable dependency" reason. RetireJS and the NVD CPE analyzer
+          # still run and cover frontend/package-lock.json dependencies.
           args: >
             --enableExperimental
+            --disableNodeAudit
             --failOnCVSS 7
             --scan .
           out: 'reports'
