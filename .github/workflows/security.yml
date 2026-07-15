@@ -201,6 +201,19 @@ jobs:
           # so no `|| echo` fallback is needed here -- a real failure now genuinely fails this step.
           ./mvnw -B spotbugs:check
 
+      - name: Run PMD
+        if: always()
+        run: |
+          # #318 (relocated here after its original home, ci-cd.yml, was found to have zero run
+          # history — that workflow's trigger is `branches: [main, develop]`, and this repo's
+          # real branch is `master`, so the gate had never once executed since #318 was closed).
+          # Same baseline+ratchet pattern as CheckStyle (#354) and SpotBugs (#317): blocking only
+          # on a net-new violation beyond the freshly-reverified baseline of 48 (10 priority-3,
+          # 38 priority-4 -- verified via `./mvnw pmd:check` locally). No maven-pmd-plugin
+          # declaration is needed in pom.xml -- same as checkstyle-maven-plugin, `pmd` resolves
+          # via Maven's default plugin-prefix group.
+          ./mvnw -B pmd:check -Dpmd.maxAllowedViolations=48
+
       - name: Generate Quality Report
         if: always()
         run: |
@@ -230,6 +243,12 @@ jobs:
           # compute-engine task API for a signal the job status already carries for free.
           # report-task.txt's presence just confirms analysis genuinely ran (vs. skipped for a
           # missing token).
+          if [ -f target/pmd.xml ]; then
+            violation_count=$(grep -o "<violation " target/pmd.xml | wc -l)
+            echo "- **PMD**: ✅ Enabled — ${violation_count}/48 finding(s) (blocking only above the baseline — see #318)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **PMD**: ⚠️ Enabled but no report was generated — check the Run PMD step's log" >> $GITHUB_STEP_SUMMARY
+          fi
           if [ -f target/sonar/report-task.txt ]; then
             echo "- **SonarQube**: ✅ Analysis ran — quality gate result reflected in the Run Quality Analysis step above; see the SonarCloud dashboard for details" >> $GITHUB_STEP_SUMMARY
           else

@@ -104,15 +104,12 @@ jobs:
           path: backend/target/buildnest-ecommerce-*.jar
           retention-days: 30
 
-      # Step 10: Check code quality with PMD
-      # Blocking, baseline-ratcheted (#318, mirrors CheckStyle's #354 pattern): the build now
-      # genuinely fails, but only on a net-new violation beyond the freshly-reverified baseline
-      # of 48 (10 priority-3, 38 priority-4 — verified via `./mvnw pmd:check` locally). No
-      # maven-pmd-plugin declaration is needed in pom.xml — same as checkstyle-maven-plugin,
-      # `pmd` resolves via Maven's default plugin-prefix group.
-      - name: Code Quality Check (PMD)
-        run: |
-          ./mvnw -B pmd:check -Dpmd.maxAllowedViolations=48
+      # Step 10 (removed #318 follow-up): PMD's blocking check used to live here, but this
+      # workflow's trigger (`branches: [main, develop]`) never matches this repo's real branch
+      # (`master`) — the step had zero run history since it was added. Relocated to
+      # `security.yml`'s "Code Quality Analysis" job, which is proven to actually trigger on
+      # `master`, alongside CheckStyle/SpotBugs/SonarCloud. This workflow file's own dead/
+      # duplicate status (relative to `ci.yml` and `ci-cd-pipeline.yml`) is tracked separately.
 
   # Job 2: Build and Push Docker Image (only on main branch)
   docker-build-push:
