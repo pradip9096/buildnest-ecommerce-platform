@@ -9,10 +9,6 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
   pull_request:
     branches: [ main, master, develop ]
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - '.github/ISSUE_TEMPLATE/**'
   workflow_dispatch:
     inputs:
       pit_debug:
@@ -36,31 +32,54 @@ defaults:
     working-directory: backend
 
 jobs:
+  # #412: see the identical job in ci.yml for rationale — always-triggering
+  # workflow + job-level conditional on this output, instead of a workflow-level
+  # paths-ignore that made the required checks below never report a status.
+  detect-changes:
+    name: Detect Doc-Only Change
+    runs-on: ubuntu-latest
+    outputs:
+      code-changed: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '!docs/**'
+              - '!**/*.md'
+              - '!.github/ISSUE_TEMPLATE/**'
+
   # Job 1: Unit Tests (Fast Feedback)
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+    needs: detect-changes
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up JDK 21
+        if: needs.detect-changes.outputs.code-changed == 'true'
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           cache: 'maven'
-      
+
       - name: Grant execute permissions to mvnw
+        if: needs.detect-changes.outputs.code-changed == 'true'
         run: chmod +x ./mvnw
-      
+
       - name: Run unit tests
+        if: needs.detect-changes.outputs.code-changed == 'true'
         run: ./mvnw test -P unit-tests
-      
+
       - name: Upload test results
-        if: always()
+        if: needs.detect-changes.outputs.code-changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
@@ -71,23 +90,26 @@ jobs:
     name: Integration Tests & Coverage
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: unit-tests
-    
+    needs: [ unit-tests, detect-changes ]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up JDK 21
+        if: needs.detect-changes.outputs.code-changed == 'true'
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           cache: 'maven'
-      
+
       - name: Grant execute permissions to mvnw
+        if: needs.detect-changes.outputs.code-changed == 'true'
         run: chmod +x ./mvnw
-      
+
       - name: Run integration tests with coverage
+        if: needs.detect-changes.outputs.code-changed == 'true'
         run: ./mvnw verify -P ci -Dpitest.skip=${{ github.event_name == 'workflow_dispatch' && inputs.pit_debug == 'true' }}
 
       - name: Parse PIT Mutation Report
@@ -219,22 +241,26 @@ jobs:
             backend/target/pit-reports/hs_err_pid*.log
       
       - name: Generate coverage report
+        if: needs.detect-changes.outputs.code-changed == 'true'
         run: ./mvnw jacoco:report
-      
+
       - name: Upload coverage to Codecov
+        if: needs.detect-changes.outputs.code-changed == 'true'
         uses: codecov/codecov-action@v4
         with:
           files: ./backend/target/site/jacoco/jacoco.xml
           flags: integration
           name: integration-coverage
-      
+
       - name: Upload coverage report
+        if: needs.detect-changes.outputs.code-changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: backend/target/site/jacoco/
-      
+
       - name: Check coverage threshold
+        if: needs.detect-changes.outputs.code-changed == 'true'
         run: |
           COVERAGE=$(grep -oP 'Total.*?\K[0-9]+(?=%)' target/site/jacoco/index.html || echo "0")
           echo "Coverage: ${COVERAGE}%"
