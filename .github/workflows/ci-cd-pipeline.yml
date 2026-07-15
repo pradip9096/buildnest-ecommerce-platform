@@ -1,4 +1,4 @@
-name: BuildNest E-Commerce CI/CD Pipeline
+name: Full Test Matrix & Docker Publish
 
 on:
   push:

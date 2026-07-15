@@ -2,7 +2,10 @@ name: Deploy to Production
 
 on:
   workflow_run:
-    workflows: ["CI/CD Pipeline"]
+    # Matches by workflow *display name*, not filename -- must stay in sync with ci.yml's
+    # `name:` field (#407: this exact mismatch class silently broke PMD's gate for #318,
+    # so the rename here was made in the same commit as ci.yml's own rename).
+    workflows: ["Quality Gate Pipeline"]
     types:
       - completed
     branches:
