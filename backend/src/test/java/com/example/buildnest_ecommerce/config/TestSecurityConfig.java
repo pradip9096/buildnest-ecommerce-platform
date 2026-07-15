@@ -14,10 +14,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
@@ -75,6 +78,44 @@ public class TestSecurityConfig {
         Mockito.when(mock.getRetryAfterSeconds(Mockito.anyString())).thenReturn(0L);
         Mockito.when(mock.isAllowed(Mockito.anyString(), Mockito.anyInt(), Mockito.any())).thenReturn(true);
         return mock;
+    }
+
+    @org.springframework.beans.factory.annotation.Value("${monitoring.username:monitoring}")
+    private String monitoringUsername;
+
+    @org.springframework.beans.factory.annotation.Value("${monitoring.password:changeme-monitoring-password}")
+    private String monitoringPassword;
+
+    /**
+     * Mirrors {@code SecurityConfig#actuatorMonitoringSecurityFilterChain} (#359) — kept
+     * deliberately in sync since this class already drifted from the real config once (#312).
+     */
+    @Bean
+    @Order(0)
+    public SecurityFilterChain actuatorMonitoringSecurityFilterChain(HttpSecurity http) throws Exception {
+        InMemoryUserDetailsManager monitoringUserDetailsManager = new InMemoryUserDetailsManager(
+                User.withUsername(monitoringUsername)
+                        .password(passwordEncoder().encode(monitoringPassword))
+                        .roles("MONITORING")
+                        .build());
+        org.springframework.security.authentication.dao.DaoAuthenticationProvider monitoringAuthProvider =
+                new org.springframework.security.authentication.dao.DaoAuthenticationProvider(monitoringUserDetailsManager);
+        monitoringAuthProvider.setPasswordEncoder(passwordEncoder());
+        // See SecurityConfig#actuatorMonitoringSecurityFilterChain -- explicit ProviderManager,
+        // not .userDetailsService() on HttpSecurity, to avoid leaking into the shared/global
+        // AuthenticationManagerBuilder this test config also populates.
+        org.springframework.security.authentication.ProviderManager monitoringAuthenticationManager =
+                new org.springframework.security.authentication.ProviderManager(monitoringAuthProvider);
+
+        http
+                .securityMatcher("/actuator/prometheus")
+                .authenticationManager(monitoringAuthenticationManager)
+                .authorizeHttpRequests(auth -> auth.anyRequest().hasRole("MONITORING"))
+                .httpBasic(basic -> {
+                })
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(csrf -> csrf.disable());
+        return http.build();
     }
 
     @Bean

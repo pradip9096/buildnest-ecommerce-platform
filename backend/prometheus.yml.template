@@ -27,6 +27,9 @@ scrape_configs:
   # BuildNest Application Metrics (PERFORMANCE_OPTIMIZATION_GUIDE - Monitoring & Metrics)
   - job_name: 'buildnest'
     metrics_path: '/actuator/prometheus'
+    basic_auth:
+      username: '__MONITORING_USERNAME__'
+      password: '__MONITORING_PASSWORD__'
     static_configs:
       - targets: ['buildnest-ecommerce:8080']
         labels:
