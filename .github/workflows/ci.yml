@@ -46,6 +46,11 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
+          # predicate-quantifier: every is required here -- the default ("some")
+          # OR's every pattern in the rule together, so the bare '**' alone would
+          # already match everything regardless of the negations below (confirmed
+          # empirically: code-changed was 'true' for a docs-only PR without this).
+          predicate-quantifier: every
           filters: |
             code:
               - '**'
