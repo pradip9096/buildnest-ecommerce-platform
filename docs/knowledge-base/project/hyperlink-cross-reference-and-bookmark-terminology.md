@@ -2,7 +2,7 @@
 title: "Hyperlink, Cross-Reference, Reference, Inline Hyperlink, and Bookmark — Precise Terminology"
 category: documentation
 tags: [markdown, documentation, terminology, linking]
-keywords: [hyperlink, cross-reference, reference, inline link, reference-style link, bookmark, anchor, fragment identifier, clickable link, wikilink]
+keywords: [hyperlink, cross-reference, reference, inline link, reference-style link, bookmark, anchor, fragment identifier, clickable link, wikilink, dynamic field, static link, microsoft word]
 objective: "What's the precise difference between a reference, a cross-reference, a hyperlink, an inline hyperlink, and a bookmark — terms that get used interchangeably but name distinct, nested concepts?"
 audience: "Anyone writing or reviewing markdown documentation in this repo who needs to distinguish 'named but not clickable' from 'clickable' from 'the clickable target itself.'"
 scope: general
@@ -99,6 +99,24 @@ URL:
 Here, `#contributing` is the bookmark (the landing spot), and the whole markdown link around it is
 the hyperlink (the clickable arrow). The bookmark is useless without something linking to it; the
 hyperlink's ability to land on a precise sub-section depends entirely on the bookmark existing.
+
+### Dynamic vs. static cross-references (Word vs. markdown)
+
+Word Processors like Microsoft Word have a dedicated **Cross-reference** field (References ribbon
+→ Captions group) that inserts a *dynamic* field pointing at a bookmark, heading, footnote, or
+caption elsewhere in the same document. Its displayed text ("see Figure 3," "see page 12")
+auto-updates if the target is renumbered, retitled, or moved — the field re-resolves itself, the
+author never edits the displayed text by hand.
+
+A markdown cross-reference is the same *concept* — a pointer from one place to a related place in
+the same document/corpus — but a fundamentally *static* mechanism: a hyperlink to a bookmark
+(`[see Section 3](#section-3)`). If the target heading's text or slug changes, the link's display
+text and its `#fragment` both have to be updated by hand; nothing re-resolves automatically. This
+is a direct consequence of markdown being plain, static text with no live document model behind
+it, unlike Word's field-based architecture. Practically: a markdown cross-reference is more
+fragile to rename/reorder churn than Word's, and is exactly why link-checking (rather than trusting
+a link was correct when written) matters more in markdown-based documentation than in a live
+word-processor document.
 
 ## When to Use It
 
