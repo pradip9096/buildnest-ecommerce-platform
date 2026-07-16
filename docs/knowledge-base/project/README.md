@@ -257,6 +257,13 @@ real relative link has zero downside and works everywhere.
 List every cross-referenced article in the `related_articles` frontmatter field too, using the
 same folder-relative path convention, so the relationship is machine-readable, not just prose.
 
+**Link to a specific heading (`#fragment`) when pointing at one sub-section of another article,
+not the whole file** — e.g. `[Contributing](../../wiki/learned-lessons/README.md#contributing)`
+rather than just linking the file when only one section is actually relevant. Reserve a bare
+file-level link for when the whole article's topic is the point. See [Hyperlink, Reference,
+Cross-Reference, and Bookmark Terminology](hyperlink-reference-cross-reference-and-bookmark-terminology.md)
+for the underlying definitions and the fuller when-to-use-a-bookmark guidance — not restated here.
+
 #### Housekeeping
 
 - Add a row to the Index table below when creating a new article.
