@@ -2,7 +2,7 @@
 title: "Hyperlink, Cross-Reference, Reference, Inline Hyperlink, and Bookmark — Precise Terminology"
 category: documentation
 tags: [markdown, documentation, terminology, linking]
-keywords: [hyperlink, cross-reference, reference, inline link, reference-style link, bookmark, anchor, fragment identifier, clickable link, wikilink, dynamic field, static link, microsoft word]
+keywords: [hyperlink, cross-reference, reference, inline link, reference-style link, bookmark, anchor, fragment identifier, clickable link, wikilink, dynamic field, static link, microsoft word, bidirectional, unidirectional, backlink, related_articles]
 objective: "What's the precise difference between a reference, a cross-reference, a hyperlink, an inline hyperlink, and a bookmark — terms that get used interchangeably but name distinct, nested concepts?"
 audience: "Anyone writing or reviewing markdown documentation in this repo who needs to distinguish 'named but not clickable' from 'clickable' from 'the clickable target itself.'"
 scope: general
@@ -118,6 +118,29 @@ fragile to rename/reorder churn than Word's, and is exactly why link-checking (r
 a link was correct when written) matters more in markdown-based documentation than in a live
 word-processor document.
 
+### Unidirectional vs. bidirectional hyperlinks
+
+This is a separate axis from everything above — it's about *navigability direction*, not
+clickability or targeting. A **unidirectional hyperlink** lets a reader go from the source to the
+target, but the target has no automatic way back — the relationship is known only to the source
+document's markup. Plain markdown links are unidirectional by default: linking from A to B doesn't
+give B any awareness that A points at it.
+
+A **bidirectional hyperlink** is one where both documents can navigate the relationship — either
+because each side independently contains a link to the other (two separate unidirectional links,
+kept in sync by hand), or because the linking system itself tracks the relationship and
+auto-generates the reverse pointer (the "backlinks" feature in tools like Obsidian, Roam, or
+Notion — the target gains a "linked from here" entry automatically the moment the source links to
+it, with no edit required on the target's side). Plain markdown and GitHub-rendered `.md` files
+have no such automatic mechanism.
+
+This directly governs how this KB's own `related_articles` frontmatter field behaves: listing
+`related_articles: [X]` in this article only creates a unidirectional link to X. For the
+relationship to be bidirectional, X's own frontmatter needs `related_articles` updated by hand to
+point back — this KB's "Cross-Referencing Between Articles" convention doesn't currently require
+or automate that reciprocal edit, so cross-references here are unidirectional unless an author
+deliberately adds the link on both sides.
+
 ## When to Use It
 
 - **Use a hyperlink, not a bare reference**, whenever you're pointing a reader at another file or
@@ -130,6 +153,10 @@ word-processor document.
 - **Use a bookmark (`#fragment`)** whenever the destination is a specific section of a longer
   document, not the whole file — e.g. pointing at one step in `development-workflow.md`'s Sequence
   table or one subsection of a long README, rather than making a reader search the whole file.
+- **Add the reciprocal link by hand when a relationship genuinely matters both ways** — this KB's
+  `related_articles` field doesn't auto-generate backlinks, so a one-sided `related_articles` entry
+  is a deliberate choice (X is relevant context for reading this article, but this article isn't
+  necessarily relevant to X) unless both sides are updated to make it bidirectional.
 
 ## Examples
 
