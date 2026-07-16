@@ -395,7 +395,7 @@ The RTM serves to:
 
 | Req ID | Description | Priority | Phase | SDD Reference | Implementation | Test Class(es) | Verification | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| PRT-01 | Docker multi-stage containerisation | High | Ph-2 | §4.10 | `Dockerfile` (multi-stage: build → runtime) | Docker build | Inspection | 🔵 Pending Ph-2 |
+| PRT-01 | Docker multi-stage containerisation | High | Ph-2 | §4.10 | `backend/Dockerfile`, `frontend/Dockerfile` (both multi-stage: build → runtime) | Docker build | Inspection | 🟡 Partial (frontend non-root confirmed via `nginx-unprivileged`, #125; backend still missing a `USER` directive despite building/running successfully — tracked by #124) |
 | PRT-02 | Kubernetes deployment manifests | High | Ph-2 | §4.10, Appendix B | `kubernetes/` (7+ manifest files) | `kubectl apply` dry run | Inspection | 🔵 Pending Ph-2 |
 | PRT-03 | Terraform IaC for AWS | Medium | Ph-2 | §4.10 | `terraform/` | Terraform plan | Inspection | 🔵 Pending Ph-2 |
 | PRT-04 | All configuration via environment variables (12-Factor) | High | Ph-1 | Appendix A, §6.1 | `application.properties` — all secrets via `${ENV_VAR}` | Config audit | Inspection | ✅ Implemented |
@@ -428,7 +428,7 @@ The RTM serves to:
 | DC-03 | All config externalised via env vars; no secrets in source | High | Ph-1 | Appendix A | `application.properties` — all secrets via `${ENV_VAR}` | `SecureLoggerTest`, config audit | Inspection | ✅ Implemented |
 | DC-04 | Stateless JWT; no server-side sessions | High | Ph-1 | §5.1.2, §4.3.1 | `JwtTokenProvider`, `SecurityConfig` (session = STATELESS) | `JwtTokenProviderTest`, `SecurityTest` | Inspection | ✅ Implemented |
 | DC-05 | Graceful shutdown 30-second drain | High | Ph-2 | §4.10.2 | `server.shutdown=graceful` + `lifecycle.timeout=30s` | `ReliabilityHATest` | Test | 🔵 Pending Ph-2 |
-| DC-06 | Multi-stage Docker builds | Medium | Ph-2 | §4.10, §4.10.5 | `Dockerfile` | Docker build | Inspection | 🔵 Pending Ph-2 |
+| DC-06 | Multi-stage Docker builds | Medium | Ph-2 | §4.10, §4.10.5 | `backend/Dockerfile`, `frontend/Dockerfile` | Docker build | Inspection | 🟡 Partial (both services now build multi-stage; frontend build-time/layer-caching per PR-08 not yet measured) |
 | DC-07 | Repository access only from service layer | High | Ph-1 | §4.3.1 | Package dependencies: no `@Repository` injection in `@RestController` | Architecture review | Inspection | ✅ Implemented |
 | DC-08 | Explicit JPA fetch strategy on all relationships | High | Ph-1 | §4.3.3, Appendix C | `User.roles` (EAGER), all `@OneToMany` (LAZY) | `OrderTest`, `CartTest` | Inspection | 🟡 Partial (`Category.products` and `Order.orderItems` missing explicit `FetchType.LAZY` — Baseline F-09; tracked in Appendix C of SDD) |
 
