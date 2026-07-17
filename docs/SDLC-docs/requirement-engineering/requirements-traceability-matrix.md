@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.2 |
-| **Date** | 2026-07-17 16:33 IST |
+| **Version** | 1.3 |
+| **Date** | 2026-07-17 18:00 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
@@ -31,6 +31,7 @@
 | 1.0 | 2026-06-19 | QA Manager | Initial controlled release — 156 requirements traced from SRS v4.0 through SDD v3.0 design elements, implementation classes, and test classes; status verified against live codebase and Baseline Assessment Report | Pending |
 | 1.1 | 2026-07-17 14:02 IST | QA Manager | Corrected the "Open Defects Blocking Phase 1 Exit" section (§9/§11/§12) — all 6 listed defects (DEF-001 through DEF-006, TIR-01–04 and MNT-03) verified already resolved in source; recomputed the Coverage Summary Totals row from its own 24 category rows (#452, PR #454) | Pending |
 | 1.2 | 2026-07-17 16:33 IST | QA Manager | Added FR-FE-31 (admin category management UI, tracing to #428); corrected FR-FE-22/24/25's cited paths from fictional `.jsx` files to the real implemented components (`AdminDashboardPage.tsx`, `InventoryTab.tsx`, `OrdersTab.tsx`) and their status to ✅ Implemented; FR-FE-23 confirmed still 🔵 Pending (real path doesn't exist — #425 open); recomputed the Frontend row and Coverage Summary Totals row accordingly (#450) | Pending |
+| 1.3 | 2026-07-17 18:00 IST | QA Manager | Full per-requirement audit of §6.10 (`FR-FE-01`–`21`, `26`–`30`): removed the false "frontend is a stub" header, corrected all 25 remaining rows' cited paths from fictional `.jsx` files to their real `.tsx` implementations, and re-derived each row's status from the requirement's actual text, not just file presence — 20 ✅ Implemented, 7 🟡 Partial (form-validation library, Razorpay modal, password-strength indicator, and 4 account/search features shipped as tabs/query-params rather than standalone routes), 4 🔵 Pending (Toast, Footer, Breadcrumb genuinely absent) (#453). Recomputed the Frontend Coverage Summary row (4→20 Implemented, 0→7 Partial, 27→4 Pending) and Coverage Summary Totals row; also recomputed the §12 Phase 2 Frontend Started/Not-Started counts, which surfaced and fixed a pre-existing, unrelated arithmetic error in that table's own row-total sum (81, not the previously stated 80) | Pending |
 
 ### Document Approval
 
@@ -91,7 +92,7 @@ The RTM serves to:
 | Reviews & Wishlists (FR-REV, FR-WISH) | 5 | 5 | 0 | 0 | 0 | 0 |
 | Admin Operations (FR-ADM) | 8 | 3 | 1 | 4 | 0 | 0 |
 | Monitoring (FR-MON) | 8 | 2 | 1 | 5 | 0 | 0 |
-| Frontend (FR-FE) | 31 | 4 | 0 | 27 | 0 | 0 |
+| Frontend (FR-FE) | 31 | 20 | 7 | 4 | 0 | 0 |
 | User Interfaces (UI) | 4 | 3 | 0 | 1 | 0 | 0 |
 | Software Interfaces (SI) | 6 | 3 | 0 | 3 | 0 | 0 |
 | Communication Interfaces (CI) | 5 | 2 | 0 | 3 | 0 | 0 |
@@ -106,7 +107,7 @@ The RTM serves to:
 | Safety (SAF) | 3 | 1 | 0 | 2 | 0 | 0 |
 | Design Constraints (DC) | 8 | 7 | 1 | 0 | 0 | 0 |
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
-| **Totals** | **180** | **97** | **9** | **74** | **0** | **0** |
+| **Totals** | **180** | **113** | **16** | **51** | **0** | **0** |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 
@@ -279,40 +280,45 @@ The RTM serves to:
 
 ### 6.10 Frontend Application (FG-10)
 
-> All FR-FE-* requirements are classified **Ph-2**. The frontend (`frontend/src/`) is a stub; no implementation exists. All rows show 🔵 Pending Ph-2.
+> Per-requirement audit completed 2026-07-17 (#453), superseding the prior "stub, no
+> implementation exists" claim: `frontend/src/` has 71 real `.ts`/`.tsx` source files with
+> working pages/components for every FR-FE-* row below. Each row was individually checked
+> against the real source (not just path existence) — see the Status column for whether the
+> requirement's actual text (not just the file's presence) is satisfied, partially satisfied,
+> or genuinely still missing.
 
 | Req ID | Description | Priority | Phase | SDD Reference | Implementation | Test Class(es) | Verification | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| FR-FE-01 | React 19 SPA | High | Ph-2 | §4.2.2 | `frontend/src/` | Vitest | Inspection | 🔵 Pending Ph-2 |
-| FR-FE-02 | Axios / Fetch with JWT injection interceptors | High | Ph-2 | §4.3.6 | `frontend/src/config/axiosInstance.js` | Vitest | Inspection | 🔵 Pending Ph-2 |
-| FR-FE-03 | React Router v6+ client-side routing | High | Ph-2 | §4.7.4 | `frontend/src/router/AppRouter.jsx` | Vitest, Playwright | Test | 🔵 Pending Ph-2 |
-| FR-FE-04 | Responsive design (mobile / tablet / desktop) | High | Ph-2 | §4.10.5 | CSS / Tailwind, media queries | Playwright viewport tests | Demonstration | 🔵 Pending Ph-2 |
-| FR-FE-05 | React Context / Redux global state | High | Ph-2 | §4.3.6 | `frontend/src/context/AuthContext.jsx`, `CartContext.jsx` | Vitest | Inspection | 🔵 Pending Ph-2 |
-| FR-FE-06 | Protected routes redirect unauthenticated users | High | Ph-2 | §4.7.4 | `frontend/src/router/ProtectedRoute.jsx` | Playwright | Test | 🔵 Pending Ph-2 |
-| FR-FE-07 | Loading indicators during async API calls | Medium | Ph-2 | §4.3.6 | `Spinner` component | Playwright | Demonstration | 🔵 Pending Ph-2 |
-| FR-FE-08 | Toast notifications for success/error | Medium | Ph-2 | §4.3.6 | `Toast` component | Vitest | Demonstration | 🔵 Pending Ph-2 |
-| FR-FE-09 | Client-side form validation (React Hook Form + Yup) | Medium | Ph-2 | §4.3.6 | Form components | Vitest | Test | 🔵 Pending Ph-2 |
-| FR-FE-10 | Silent JWT refresh on 401 response | High | Ph-2 | §4.3.6 | Axios response interceptor | Vitest, Playwright | Test | 🔵 Pending Ph-2 |
-| FR-FE-11 | Home page | High | Ph-2 | §4.7.4 | `frontend/src/pages/core/Home.jsx` | Playwright | Demonstration | 🔵 Pending Ph-2 |
-| FR-FE-12 | Product listing with pagination / sort / filter | High | Ph-2 | §4.7.4 | `frontend/src/pages/core/ProductList.jsx` | Vitest, Playwright | Test | 🔵 Pending Ph-2 |
-| FR-FE-13 | Product detail page | High | Ph-2 | §4.7.4 | `frontend/src/pages/core/ProductDetail.jsx` | Playwright | Demonstration | 🔵 Pending Ph-2 |
-| FR-FE-14 | Shopping cart page | High | Ph-2 | §4.7.4 | `frontend/src/pages/core/Cart.jsx` | Vitest, Playwright | Test | 🔵 Pending Ph-2 |
-| FR-FE-15 | Checkout page with Razorpay modal | High | Ph-2 | §4.7.4 | `frontend/src/pages/checkout/Checkout.jsx` | Playwright | Test | 🔵 Pending Ph-2 |
-| FR-FE-16 | Login page | High | Ph-2 | §4.7.4 | `frontend/src/pages/auth/Login.jsx` | Vitest, Playwright | Test | 🔵 Pending Ph-2 |
-| FR-FE-17 | Registration page with password strength indicator | High | Ph-2 | §4.7.4 | `frontend/src/pages/auth/Register.jsx` | Vitest, Playwright | Test | 🔵 Pending Ph-2 |
-| FR-FE-18 | User profile page | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/core/Profile.jsx` | Vitest | Test | 🔵 Pending Ph-2 |
-| FR-FE-19 | Order history page | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/core/OrderHistory.jsx` | Vitest | Test | 🔵 Pending Ph-2 |
-| FR-FE-20 | Wishlist page | Low | Ph-2 | §4.7.4 | `frontend/src/pages/core/Wishlist.jsx` | Vitest | Test | 🔵 Pending Ph-2 |
-| FR-FE-21 | Search results page | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/core/SearchResults.jsx` | Vitest | Test | 🔵 Pending Ph-2 |
+| FR-FE-01 | React 19 SPA | High | Ph-2 | §4.2.2 | `frontend/src/App.tsx`, `frontend/src/main.tsx` (React 19.2.6) | Vitest | Inspection | ✅ Implemented |
+| FR-FE-02 | Axios / Fetch with JWT injection interceptors | High | Ph-2 | §4.3.6 | `frontend/src/api/client.ts` (hand-rolled `fetch` wrapper, not Axios — CSRF header injection + 401 handling) | `client.test.ts` | Inspection | ✅ Implemented |
+| FR-FE-03 | React Router v6+ client-side routing | High | Ph-2 | §4.7.4 | `frontend/src/App.tsx` (react-router-dom v7, inline `<Routes>`/`<Route>`, not a separate router file) | Vitest, Playwright | Test | ✅ Implemented |
+| FR-FE-04 | Responsive design (mobile / tablet / desktop) | High | Ph-2 | §4.10.5 | CSS / Tailwind v4, `sm:`/`md:`/`lg:` breakpoint classes throughout (e.g. `pages/HomePage.tsx`) | Playwright viewport tests | Demonstration | ✅ Implemented |
+| FR-FE-05 | React Context / Redux global state | High | Ph-2 | §4.3.6 | `frontend/src/contexts/AuthContext.tsx` (cart state uses `hooks/useCart.ts`, a hook, not a second Context — no `CartContext`) | Vitest | Inspection | ✅ Implemented |
+| FR-FE-06 | Protected routes redirect unauthenticated users | High | Ph-2 | §4.7.4 | `frontend/src/components/common/RequireAuth.tsx` (also supports role-gating, e.g. `role="ADMIN"` — more capable than stated) | `RequireAuth.test.tsx`, Playwright | Test | ✅ Implemented |
+| FR-FE-07 | Loading indicators during async API calls | Medium | Ph-2 | §4.3.6 | Inline Tailwind spinners (e.g. `RequireAuth.tsx`) + `frontend/src/components/product/LoadingSkeleton.tsx` (no single dedicated `Spinner` component) | Playwright | Demonstration | ✅ Implemented |
+| FR-FE-08 | Toast notifications for success/error | Medium | Ph-2 | §4.3.6 | None found — no toast component or library anywhere in `frontend/src/` or `package.json` | Vitest | Demonstration | 🔵 Pending Ph-2 |
+| FR-FE-09 | Client-side form validation (React Hook Form + Yup) | Medium | Ph-2 | §4.3.6 | Manual inline `validate()` functions per form (e.g. `pages/RegisterPage.tsx`) — neither `react-hook-form` nor `yup` is a dependency | Vitest | Test | 🟡 Partial (validation exists but not via the specified libraries — manual state/error handling per form instead) |
+| FR-FE-10 | Silent JWT refresh on 401 response | High | Ph-2 | §4.3.6 | `frontend/src/api/client.ts` (401 triggers one silent refresh via a registered handler) + `contexts/AuthContext.tsx` (registers it) | Vitest, Playwright | Test | ✅ Implemented |
+| FR-FE-11 | Home page | High | Ph-2 | §4.7.4 | `frontend/src/pages/HomePage.tsx` | Playwright | Demonstration | ✅ Implemented |
+| FR-FE-12 | Product listing with pagination / sort / filter | High | Ph-2 | §4.7.4 | `frontend/src/pages/ProductListingPage.tsx` (uses `components/filters/SortDropdown.tsx`, `components/common/Pagination.tsx`) | Vitest, Playwright | Test | ✅ Implemented |
+| FR-FE-13 | Product detail page | High | Ph-2 | §4.7.4 | `frontend/src/pages/ProductDetailPage.tsx` | Playwright | Demonstration | ✅ Implemented |
+| FR-FE-14 | Shopping cart page | High | Ph-2 | §4.7.4 | `frontend/src/pages/CartPage.tsx` | Vitest, Playwright | Test | ✅ Implemented |
+| FR-FE-15 | Checkout page with Razorpay modal | High | Ph-2 | §4.7.4 | `frontend/src/pages/CheckoutPage.tsx`, `components/checkout/PaymentStep.tsx` — backend Razorpay order is created and its ID displayed, but no client-side Razorpay `checkout.js` modal invocation (`new Razorpay(...)`) exists; the page currently only says "you will be redirected" | Playwright | Test | 🟡 Partial (checkout flow + backend order creation implemented; the actual Razorpay JS modal is not yet wired client-side) |
+| FR-FE-16 | Login page | High | Ph-2 | §4.7.4 | `frontend/src/pages/LoginPage.tsx` | Vitest, Playwright | Test | ✅ Implemented |
+| FR-FE-17 | Registration page with password strength indicator | High | Ph-2 | §4.7.4 | `frontend/src/pages/RegisterPage.tsx` — registration works with a minimum-length check, but no visual strength meter/indicator | Vitest, Playwright | Test | 🟡 Partial (registration implemented; the password-strength indicator specifically is missing) |
+| FR-FE-18 | User profile page | Medium | Ph-2 | §4.7.4 | `frontend/src/components/account/ProfileTab.tsx` — a tab inside `pages/AccountPage.tsx`, not a standalone page/route | Vitest | Test | 🟡 Partial (functionality implemented; delivered as an account-page tab rather than its own route) |
+| FR-FE-19 | Order history page | Medium | Ph-2 | §4.7.4 | `frontend/src/components/account/OrdersTab.tsx` — a tab inside `pages/AccountPage.tsx`, not a standalone page/route | Vitest | Test | 🟡 Partial (functionality implemented; delivered as an account-page tab rather than its own route) |
+| FR-FE-20 | Wishlist page | Low | Ph-2 | §4.7.4 | `frontend/src/components/account/WishlistTab.tsx` — a tab inside `pages/AccountPage.tsx`, not a standalone page/route | Vitest | Test | 🟡 Partial (functionality implemented; delivered as an account-page tab rather than its own route) |
+| FR-FE-21 | Search results page | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/ProductListingPage.tsx` — search is integrated via a `?search=` query param on the product listing route, not a separate page/route | Vitest | Test | 🟡 Partial (functionality implemented; delivered as a mode of the listing page rather than a dedicated route) |
 | FR-FE-22 | Admin dashboard | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/AdminDashboardPage.tsx` | Playwright | Demonstration | ✅ Implemented |
 | FR-FE-23 | Admin product management | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/admin/AdminProductMgmt.jsx` (not yet built — #425 open) | Vitest | Test | 🔵 Pending Ph-2 |
 | FR-FE-24 | Admin inventory page | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/InventoryTab.tsx` | Vitest | Test | ✅ Implemented |
 | FR-FE-25 | Admin order management | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/OrdersTab.tsx` | Vitest | Test | ✅ Implemented |
-| FR-FE-26 | Navbar on all pages | High | Ph-2 | §4.3.6 | `frontend/src/components/layout/Navbar.jsx` | Playwright | Demonstration | 🔵 Pending Ph-2 |
-| FR-FE-27 | Footer | Low | Ph-2 | §4.3.6 | `frontend/src/components/layout/Footer.jsx` | Playwright | Demonstration | 🔵 Pending Ph-2 |
-| FR-FE-28 | ProductCard component | High | Ph-2 | §4.3.6 | `frontend/src/components/product/ProductCard.jsx` | Vitest | Demonstration | 🔵 Pending Ph-2 |
-| FR-FE-29 | Breadcrumb navigation | Low | Ph-2 | §4.3.6 | `frontend/src/components/layout/Breadcrumb.jsx` | Playwright | Demonstration | 🔵 Pending Ph-2 |
-| FR-FE-30 | ErrorBoundary with fallback UI | Medium | Ph-2 | §4.3.6 | `frontend/src/components/common/ErrorBoundary.jsx` | Vitest | Test | 🔵 Pending Ph-2 |
+| FR-FE-26 | Navbar on all pages | High | Ph-2 | §4.3.6 | `frontend/src/components/common/Navbar.tsx` | Playwright | Demonstration | ✅ Implemented |
+| FR-FE-27 | Footer | Low | Ph-2 | §4.3.6 | None found — no Footer component exists anywhere in `frontend/src/` | Playwright | Demonstration | 🔵 Pending Ph-2 |
+| FR-FE-28 | ProductCard component | High | Ph-2 | §4.3.6 | `frontend/src/components/product/ProductCard.tsx` | `ProductCard.test.tsx` | Demonstration | ✅ Implemented |
+| FR-FE-29 | Breadcrumb navigation | Low | Ph-2 | §4.3.6 | None found — no Breadcrumb component exists anywhere in `frontend/src/` | Playwright | Demonstration | 🔵 Pending Ph-2 |
+| FR-FE-30 | ErrorBoundary with fallback UI | Medium | Ph-2 | §4.3.6 | `frontend/src/components/common/ErrorBoundary.tsx` (class component, `getDerivedStateFromError`/`componentDidCatch`, renders a real fallback UI with reload button) | `ErrorBoundary.test.tsx` | Test | ✅ Implemented |
 | FR-FE-31 | Admin category management | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/CategoriesTab.tsx`, `frontend/src/components/admin/CategoryFormModal.tsx` | Vitest | Test | ✅ Implemented (#428) |
 
 ---
@@ -624,7 +630,7 @@ The RTM serves to:
 
 | Category | Total Ph-2 Requirements | Started | Not Started |
 | :--- | :--- | :--- | :--- |
-| Frontend (FR-FE-01 to FR-FE-31) | 31 | 4 | 27 |
+| Frontend (FR-FE-01 to FR-FE-31) | 31 | 27 (20 ✅ Implemented + 7 🟡 Partial) | 4 |
 | Security (SEC-03, SEC-04, SEC-12, SEC-13, SEC-14) | 5 | 1 (SEC-12 dual-key) | 4 |
 | Monitoring (FR-MON-02 to FR-MON-08) | 6 | 1 (FR-MON-05 partial) | 5 |
 | Payment full flow (FR-PAY-01 to FR-PAY-05) | 5 | 3 (partial) | 2 |
@@ -633,9 +639,9 @@ The RTM serves to:
 | Admin full suite (FR-ADM-01 to FR-ADM-07) | 6 | 1 (FR-ADM-06 partial) | 5 |
 | Maintainability (MNT-02, TIR-05) | 2 | 2 (MNT-02 now ✅ at 85% JaCoCo gate, corrected 2026-07-17 from a stale 40% record; TIR-05 at 77% PIT, ratcheting to 79% end-M4) | 0 |
 | Auth / Safety / Checkout / Inventory Ph-2 | 10 | 0 | 10 |
-| **Phase 2 total** | **80** | **7*** | **73** |
+| **Phase 2 total** | **81** | **35*** | **46** |
 
-*\* The MNT-02/TIR-05 row above was corrected 2026-07-17 (#452); this aggregate total wasn't otherwise re-verified in the same pass — the Frontend row in particular is known-stale (see §6.10's header and #453's broader audit) and will shift this total materially once corrected.*
+*\* The MNT-02/TIR-05 row was corrected 2026-07-17 (#452); the Frontend row was corrected 2026-07-17 (#453, full per-requirement audit — see §6.10). Recomputing this table from its own corrected rows also fixed a pre-existing, unrelated arithmetic error: the row totals had always summed to 81, not the 80 this table previously stated (31+5+6+5+13+3+6+2+10 = 81) — a separate, mechanical off-by-one that predates and is independent of the Frontend staleness this issue targeted.*
 
 ---
 
