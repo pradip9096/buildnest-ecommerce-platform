@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 4.0 |
-| **Date** | 2026-06-19 |
+| **Version** | 4.1 |
+| **Date** | 2026-07-17 |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -29,6 +29,7 @@
 | 2.0 | 2026-02-11 | Documentation Team | Frontend requirements; API appendix expanded to 19 sections | Approved |
 | 3.0 | 2026-02-11 | Documentation Team | ISO 29148:2018 conformance statement added | Approved |
 | 4.0 | 2026-06-19 | Claude Code (claude-sonnet-4-6) | Baseline-driven update: corrected Spring Boot version (3.2.2 → 3.5.10); added Phase classification (Ph-1 Stable / Ph-2 Production Ready); added test integrity requirements (TIR); updated MNT-02 coverage target (40% → 70%); corrected MNT-03 to reflect live test state; added SEC-14 CSP requirement; added CON-11 React version constraint; referenced baseline assessment report | Pending |
+| 4.1 | 2026-07-17 | Claude Code (claude-sonnet-5) | Corrected two stale technology-stack claims found via direct source verification (#455): Redis client is Lettuce, not Jedis (`lettuce-core:6.6.0` confirmed via `mvnw dependency:tree`; Jedis absent from classpath); Elasticsearch version is 8.17 (`docker-compose.yml`'s active service), not the previously-recorded 8.10. Appendix A's API Endpoint Catalogue was found separately stale (wrong path prefixes, missing endpoint groups) and filed as its own follow-up (#456) rather than fixed here, since it needs a full per-endpoint re-derivation | Pending |
 
 ### Document Change Procedure
 
@@ -142,7 +143,7 @@ End User ──HTTPS──► React SPA ──REST/JSON──► Spring Boot API
                                                    │
                                     ┌──────────────┼──────────────┐
                                     │              │              │
-                                 MySQL 8.2      Redis 7     Elasticsearch 8.10
+                                 MySQL 8.2      Redis 7     Elasticsearch 8.17
                                  (Primary)     (Cache)      (Search/Analytics)
                                     │
                                Razorpay (Payments)
@@ -172,8 +173,8 @@ The system is designed for deployment on **Kubernetes** (manifests provided) or 
 | Interface | Technology | Purpose |
 | :--- | :--- | :--- |
 | MySQL 8.2 | JDBC / JPA (HikariCP) | Primary relational data store |
-| Redis 7 | Jedis client | Caching, rate limiting |
-| Elasticsearch 8.10 | Spring Data Elasticsearch | Full-text search, analytics, log aggregation |
+| Redis 7 | Lettuce client | Caching, rate limiting |
+| Elasticsearch 8.17 | Spring Data Elasticsearch | Full-text search, analytics, log aggregation |
 | Razorpay | REST SDK | Payment processing |
 | Prometheus | Micrometer registry | Metrics collection |
 | Logstash | TCP / JSON | Log ingestion pipeline |
@@ -286,7 +287,7 @@ BuildNest is a new, self-contained product. It is not a replacement for or enhan
 │  Elasticsearch Repositories                      │
 ├──────────────────────────────────────────────────┤
 │  External Systems                                │
-│  MySQL 8.2 · Redis 7 · Elasticsearch 8.10       │
+│  MySQL 8.2 · Redis 7 · Elasticsearch 8.17       │
 │  Razorpay · Prometheus · Logstash               │
 └──────────────────────────────────────────────────┘
 ```
@@ -334,7 +335,7 @@ BuildNest is a new, self-contained product. It is not a replacement for or enhan
 | CON-01 | Language & Runtime | Java 21 (LTS) is required |
 | CON-02 | Backend Framework | Spring Boot **3.5.10** with Spring Security, Spring Data JPA |
 | CON-03 | Database | MySQL **8.2** is the primary relational data store |
-| CON-04 | Cache | Redis 7 with Jedis client is required for caching and rate limiting |
+| CON-04 | Cache | Redis 7 with Lettuce client is required for caching and rate limiting |
 | CON-05 | Payment Gateway | Razorpay is the sole supported payment provider |
 | CON-06 | Security | JWT tokens with minimum 512-bit secret; HTTPS mandatory in production |
 | CON-07 | Build System | Apache Maven with Maven Wrapper |
@@ -365,7 +366,7 @@ BuildNest is a new, self-contained product. It is not a replacement for or enhan
 | DEP-01 | MySQL 8.2 | **Critical** — System cannot operate; all data persistence fails |
 | DEP-02 | Redis 7 | **High** — Rate limiting disabled, caching unavailable; circuit breaker activates |
 | DEP-03 | Razorpay API | **High** — Payment processing unavailable; orders without payment still possible |
-| DEP-04 | Elasticsearch 8.10 | **Low** — Search / analytics unavailable; core e-commerce functions unaffected |
+| DEP-04 | Elasticsearch 8.17 | **Low** — Search / analytics unavailable; core e-commerce functions unaffected |
 | DEP-05 | Prometheus / Grafana | **Low** — Monitoring data unavailable; application functions normally |
 | DEP-06 | JDK 21 | **Critical** — Backend cannot compile or run |
 | DEP-07 | Node.js 18+ / NPM | **Critical** — Frontend build and development environment cannot function |
@@ -439,8 +440,8 @@ This system has no direct hardware interfaces. It runs as a containerised applic
 | ID | External System | Interface Type | Protocol | Data Format | Phase |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | SI-01 | MySQL 8.2 | JDBC via HikariCP | TCP / 3306 | SQL | Ph-1 |
-| SI-02 | Redis 7 | Jedis client | TCP / 6379 | RESP | Ph-1 |
-| SI-03 | Elasticsearch 8.10 | Spring Data Elasticsearch REST client | HTTP(S) / 9200 | JSON | Ph-2 |
+| SI-02 | Redis 7 | Lettuce client | TCP / 6379 | RESP | Ph-1 |
+| SI-03 | Elasticsearch 8.17 | Spring Data Elasticsearch REST client | HTTP(S) / 9200 | JSON | Ph-2 |
 | SI-04 | Razorpay Payment Gateway | REST SDK | HTTPS | JSON | Ph-2 |
 | SI-05 | Prometheus | HTTP scrape endpoint (`/actuator/prometheus`) | HTTP / 8080 | OpenMetrics | Ph-2 |
 | SI-06 | Logstash | TCP log shipper | TCP / 5000 | JSON | Ph-2 |
