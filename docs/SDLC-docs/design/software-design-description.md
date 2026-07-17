@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 3.1 |
-| **Date** | 2026-07-17 13:53 IST |
+| **Version** | 3.2 |
+| **Date** | 2026-07-17 20:10 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
@@ -30,6 +30,7 @@
 | 2.0 | 2026-02-11 | Documentation Team | Fixed pool rows; added Wishlist/Review/Admin SRS traceability | Approved |
 | 3.0 | 2026-06-19 | Software Architect | Baseline-driven update: corrected Spring Boot to 3.5.10; updated component counts from static analysis (256 source files, 173 test files); corrected circuit breaker thresholds from live configuration; added JwtTokenProvider dual-key rotation design; added `@Profile("!test")` SecurityConfig constraint; corrected Kubernetes resource limits from manifest (512Mi request / 1Gi limit); aligned all design elements with SRS-BUILDNEST-001 v4.0; referenced Baseline Assessment Report | Pending |
 | 3.1 | 2026-07-17 13:53 IST | Software Architect | Recomputed all 12 rows of §4.2.3's Component Statistics table directly via the `find`/`grep` commands the table itself cites — every metric had drifted upward as real features shipped since the 2026-06-19 baseline (e.g. 256→352 source files, 29→38 controllers, 19→28 repositories); corrected Jedis→Lettuce and Elasticsearch 8.10→8.17 references throughout (§458). The 6 sections still framing the entire frontend design as "Design Intent — Phase 2" were found separately stale (the frontend is real and substantial) and filed as their own follow-up (#459) rather than fixed here, since correcting them requires authoring real design content, not a relabel | Pending |
+| 3.2 | 2026-07-17 20:10 IST | Software Architect | Full re-derivation (not a relabel) of the 6 sections flagged by #459 as still framing the real, deployed frontend as unbuilt/aspirational: §1.2 Scope and §4.1.1's context diagram drop the "design intent"/"(Phase 2)" framing; §4.2.2's package structure rewritten to the real `frontend/src/` layout (`api/`, `components/{account,admin,cart,checkout,common,filters,product}/`, `contexts/`, `hooks/`, `pages/`, `types/`, `test/` — no `core/`/`auth/`/`admin/`/`router/`/`services/`); §4.3.6's component model rewritten around the actual `useAsync` hook, `RequireAuth` guard, and Tailwind-only styling (no component library, no Redux/React Query); §4.5.5's state model corrected to `AuthContext` + hook-local state (`useCart`, `useAsync`) — no `CartContext`, no server-cache library; §4.7.4's routes rewritten to match `App.tsx`'s real `react-router-dom` v7 routes and RTM's FR-FE mapping (tabs inside `AccountPage`/`AdminDashboardPage`, not standalone routes); §4.10.5 rewritten against the actual `frontend/Dockerfile`/`nginx.conf` (`nginx-unprivileged`, healthcheck, real cache-control directives) | Pending |
 
 ### Document Approval
 
@@ -100,7 +101,7 @@ This SDD covers the design of the **BuildNest** platform in its entirety:
 
 **In Scope**:
 - Backend REST API (Spring Boot 3.5.10, Java 21) — layered monolithic architecture
-- Frontend Application (React 19.2, Vite 8.0) — Single Page Application (design intent; implementation pending)
+- Frontend Application (React 19.2, Vite 8.0) — Single Page Application (`frontend/src/`, 71 source files: home, product listing/detail, cart, checkout, order confirmation, login/register, forgot/reset-password, account dashboard, admin dashboard)
 - Security chain — JWT authentication, RBAC, rate limiting, secure HTTP headers
 - External integrations — MySQL 8.2, Redis 7, Elasticsearch 8.17, Razorpay
 - Resilience patterns — Resilience4j circuit breakers, time limiters
@@ -206,8 +207,8 @@ Per ISO/IEC/IEEE 1016:2017 Clause 5.5:
                             │ HTTPS (React SPA served via Nginx)
                             ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  FRONTEND  (Phase 2)                                                │
-│  BuildNest React 19.2 SPA — Vite 8.0 — Nginx Alpine                │
+│  FRONTEND                                                           │
+│  BuildNest React 19.2 SPA — Vite 8.0 — nginx-unprivileged Alpine   │
 └───────────────────────────┬─────────────────────────────────────────┘
                             │ HTTPS / REST / JSON
                             ▼
@@ -297,29 +298,40 @@ com.example.buildnest_ecommerce/          [Root — 256 Java source files]
 └── validation/                           [5+ validation classes]
 ```
 
-#### 4.2.2 Frontend Package Structure (Design Intent — Phase 2)
+#### 4.2.2 Frontend Package Structure (Verified — 2026-07-17, #459)
 
 ```
-frontend/src/
-├── assets/                 [Images, fonts, global styles]
+frontend/src/                [71 source files, verified via `find frontend/src -name "*.ts*" | wc -l`]
+├── api/                     [Fetch wrappers, one file per domain: client, auth, admin, cart,
+│                             categories, checkout, orders, products, reviews, user, wishlist,
+│                             addresses — plus a *.test.ts alongside several of them]
 ├── components/
-│   ├── common/             [Button, Input, Modal, Spinner, Toast]
-│   ├── layout/             [Navbar, Footer, Sidebar, Breadcrumb]
-│   └── product/            [ProductCard, ProductList, ReviewForm]
-├── config/                 [Axios instance, API base URL, constants]
-├── context/                [AuthContext, CartContext (React Context API)]
-├── hooks/                  [useAuth, useCart, useProduct — custom hooks]
-├── pages/
-│   ├── admin/              [AdminDashboard, UserManagement, ProductMgmt, InventoryMgmt]
-│   ├── auth/               [Login, Register, ForgotPassword]
-│   ├── checkout/           [Checkout, OrderConfirmation]
-│   └── core/               [Home, ProductList, ProductDetail, Cart, Profile, OrderHistory]
-├── router/                 [AppRouter, ProtectedRoute, AdminRoute]
-├── services/               [authService, productService, cartService, paymentService]
-├── utils/                  [formatters, validators, tokenHelpers]
-├── App.jsx                 [Root component — Provider composition]
-└── main.jsx                [Entry point — ReactDOM.createRoot]
+│   ├── account/             [Account dashboard sub-components]
+│   ├── admin/                [Admin dashboard sub-components]
+│   ├── cart/                 [Cart page sub-components]
+│   ├── checkout/             [Checkout page sub-components]
+│   ├── common/                [Navbar, ErrorBoundary, RequireAuth — shared across pages]
+│   ├── filters/               [Product listing filter controls]
+│   └── product/                [ProductCard and related product-display components]
+├── contexts/                [AuthContext.tsx — the only React Context in use, plus its test]
+├── hooks/                    [useAsync (generic fetch/loading/error hook), useAuth, useCart,
+│                             useCategories, useFeaturedProducts, useProduct, useProducts,
+│                             useReviews]
+├── pages/                    [13 route-level page components — see §4.7.4 for the route map:
+│                             HomePage, ProductListingPage, ProductDetailPage, CartPage,
+│                             CheckoutPage, OrderConfirmationPage, LoginPage, RegisterPage,
+│                             ForgotPasswordPage, ResetPasswordPage, AccountPage,
+│                             AdminDashboardPage, NotFoundPage]
+├── types/                    [Shared TypeScript type definitions]
+├── test/                     [Test setup/utilities shared across the suite]
+├── assets/                   [Static assets]
+├── App.tsx                   [Root component — BrowserRouter + AuthProvider + Routes]
+└── main.tsx                  [Entry point — ReactDOM.createRoot]
 ```
+
+There is no `config/`, `router/`, `services/`, or `utils/` top-level package, and no `core/`/`auth/`
+subdivision under `pages/` — the structure above is the actual, current layout, verified directly
+against `frontend/src/` rather than the SPA's original planning assumptions.
 
 #### 4.2.3 Component Statistics (Verified — 2026-07-17, #458)
 
@@ -453,18 +465,17 @@ AuditAspect (@Around advice)
 
 The AOP proxy is applied via `@EnableAspectJAutoProxy` (Spring Boot default). No intrusion into business method code is required.
 
-#### 4.3.6 Frontend Component Model (Design Intent)
+#### 4.3.6 Frontend Component Model (Verified — 2026-07-17, #459)
 
 | Component Category | Key Components | Responsibility |
 | :--- | :--- | :--- |
-| Providers | `AuthProvider`, `CartProvider` | Global state via React Context; wrap the component tree |
-| Routes | `AppRouter`, `ProtectedRoute`, `AdminRoute` | Client-side routing; redirect unauthenticated users |
-| Pages | `Home`, `ProductList`, `ProductDetail`, `Cart`, `Checkout`, `Login`, `Register`, `AdminDashboard` | Top-level views mapped to URL routes |
-| Layouts | `MainLayout`, `AdminLayout`, `AuthLayout` | Structural wrappers (Navbar, Footer, Sidebar) |
-| Common | `Button`, `Input`, `Modal`, `Spinner`, `Toast`, `ErrorBoundary` | Reusable atomic components |
-| Features | `ProductCard`, `CartDrawer`, `ReviewForm`, `RazorpayModal` | Domain-specific composites |
-| Services | `authService`, `productService`, `cartService`, `paymentService` | Axios-based API integration modules |
-| Hooks | `useAuth`, `useCart`, `useProduct` | Encapsulate Context access and async state |
+| Providers | `AuthProvider` (`contexts/AuthContext.tsx`) | The single global provider — wraps the tree in `App.tsx`; there is no `CartProvider` (cart state is not Context-managed, see §4.5.5) |
+| Route guard | `RequireAuth` (`components/common/RequireAuth.tsx`) | Wraps a `<Route>`'s element; redirects to `/login` if unauthenticated, renders an "Access denied" view if an optional `role` prop doesn't match the user's roles — there is no separate `ProtectedRoute`/`AdminRoute`, one component handles both cases via the optional prop |
+| Pages | 13 page components in `pages/` (see §4.2.2, §4.7.4) | Top-level views mapped one-to-one to routes in `App.tsx` |
+| Shared UI | `Navbar`, `ErrorBoundary` (`components/common/`) | Cross-page structural components — there is no separate Layout-wrapper tier (`MainLayout`/`AdminLayout`/`AuthLayout`); pages render directly inside `Navbar` + `ErrorBoundary` |
+| Domain components | Per-page sub-components under `components/{account,admin,cart,checkout,filters,product}/` | Composites scoped to the page that owns them, not shared atomics — there is no generic `Button`/`Input`/`Modal`/`Toast` component library; styling is applied directly via Tailwind v4 utility classes |
+| API modules | `api/*.ts` (one file per domain — `auth`, `admin`, `cart`, `categories`, `checkout`, `orders`, `products`, `reviews`, `user`, `wishlist`, `addresses`) plus `api/client.ts` | Plain `fetch`-based wrappers (not Axios) around each REST domain; `client.ts` centralizes the CSRF/cookie handling and a shared 401 → refresh-and-retry hook (`setUnauthorizedHandler`, consumed by `AuthContext`) |
+| Hooks | `useAsync<T>` (`hooks/useAsync.ts`) — generic `data`/`loading`/`error`/`reload`/`setData` wrapper around an async fetcher, replacing ~15 hand-written fetch-in-`useEffect` call sites; `useAuth`, `useCart`, `useCategories`, `useFeaturedProducts`, `useProduct`, `useProducts`, `useReviews` — thin domain-specific wrappers built on top of `useAsync` or `AuthContext` | Encapsulate async data-fetching and Context access |
 
 ---
 
@@ -597,16 +608,20 @@ WebhookSubscription  (standalone — no User FK)
 | `inventory-items` | `inventory:{productId}` | 5 min (300,000 ms) | Stock update |
 | `elasticsearchAuditLogs` | `userId + ':' + fromDate + ':' + toDate` | 15 min | New audit event |
 
-#### 4.5.5 Client-Side State Model (Design Intent)
+#### 4.5.5 Client-Side State Model (Verified — 2026-07-17, #459)
 
 | State Type | Storage | Content | Lifetime |
 | :--- | :--- | :--- | :--- |
 | Auth tokens | httpOnly `Secure`/`SameSite=Lax` cookies (backend-set, unreadable from JS) | JWT access token, JWT refresh token | Access: matches `jwt.expiration`; Refresh: matches `jwt.refresh-expiration` (SEC-15) |
 | CSRF token | Non-httpOnly `XSRF-TOKEN` cookie (double-submit) | Opaque CSRF token, echoed via `X-XSRF-TOKEN` header | Session-scoped; reissued by `NonClearingCsrfTokenRepository` |
-| User session | React Context (memory) | User profile | Cleared on page reload; rehydrated via profile fetch against the auth cookie |
-| Cart state | React Context / Redux | Cart items, total | Synced with backend on mutation |
-| UI state | Local component state | Form inputs, modal visibility | Component lifecycle |
-| Server cache | React Query / SWR | Product lists, search results | Stale-time configurable (default 5 min) |
+| User session | React Context — `AuthContext` (the only Context in the app, memory-only) | User profile (`id`, `username`, normalized `roles`), `loading` flag | Cleared on page reload; rehydrated on mount via `apiFetchCsrf()` + `fetchProfile()` against the auth cookie (`AuthContext.tsx`'s `restoreSession`) |
+| Cart state | Local component state via the `useCart(userId)` hook — no Context, no external store | Cart items, loading/error flags | Re-fetched on hook mount and after every mutation (`addItem`/`removeItem` call `load()` internally) |
+| UI state | Local component state (`useState`) | Form inputs, modal visibility | Component lifecycle |
+| Server data (products, categories, reviews, etc.) | Local component state via the generic `useAsync<T>` hook (`hooks/useAsync.ts`) | Fetched entity data, loading/error flags | Re-fetched when the hook's dependency array changes, or on demand via its `reload()` — no React Query/SWR or other caching library is in use; each call is a fresh fetch |
+
+There is no Redux, React Query, or SWR in the dependency tree — all client state is either the one
+`AuthContext` Provider or hook-local component state, per the project's own `react/coding-style.md`
+guidance ("Context for cross-cutting state... not for high-frequency updates").
 
 ---
 
@@ -778,25 +793,33 @@ All events flow through `DomainEventPublisher` → `DomainEventListener` via Spr
 | GET | `/api/monitoring/performance` | ADMIN | FR-MON-05 |
 | GET | `/api/monitoring/pool` | ADMIN | FR-MON-05 |
 
-#### 4.7.4 Frontend Route Design (Phase 2)
+#### 4.7.4 Frontend Route Design (Verified — 2026-07-17, #459)
 
-| Route | Component | Auth Required | SRS Req |
+All routes are declared inline as `<Route>` elements inside `App.tsx`'s single `<Routes>` block —
+there is no separate `router/` package or `AppRouter` file. Route guarding is a single
+`RequireAuth` component (`components/common/RequireAuth.tsx`), used with an optional `role` prop
+rather than two separate `ProtectedRoute`/`AdminRoute` components.
+
+| Route | Component | Auth Required | RTM Req |
 | :--- | :--- | :--- | :--- |
-| `/` | `Home` | No | FR-FE-11 |
-| `/login` | `Login` | No | FR-FE-16 |
-| `/register` | `Register` | No | FR-FE-17 |
-| `/products` | `ProductList` | No | FR-FE-12 |
-| `/product/:id` | `ProductDetail` | No | FR-FE-13 |
-| `/search` | `SearchResults` | No | FR-FE-21 |
-| `/cart` | `Cart` | Yes (USER) | FR-FE-14 |
-| `/checkout` | `Checkout` | Yes (USER) | FR-FE-15 |
-| `/profile` | `UserProfile` | Yes (USER) | FR-FE-18 |
-| `/orders` | `OrderHistory` | Yes (USER) | FR-FE-19 |
-| `/wishlist` | `Wishlist` | Yes (USER) | FR-FE-20 |
-| `/admin` | `AdminDashboard` | Yes (ADMIN) | FR-FE-22 |
-| `/admin/products` | `AdminProductMgmt` | Yes (ADMIN) | FR-FE-23 |
-| `/admin/inventory` | `AdminInventory` | Yes (ADMIN) | FR-FE-24 |
-| `/admin/orders` | `AdminOrderMgmt` | Yes (ADMIN) | FR-FE-25 |
+| `/` | `HomePage` | No | FR-FE-11 |
+| `/products` | `ProductListingPage` (also serves search via `?search=`) | No | FR-FE-12, FR-FE-21 |
+| `/products/:id` | `ProductDetailPage` | No | FR-FE-13 |
+| `/cart` | `CartPage` | No (route itself unguarded; cart is per-session) | FR-FE-14 |
+| `/checkout` | `CheckoutPage` | No (route itself unguarded) | FR-FE-15 |
+| `/orders/:id` | `OrderConfirmationPage` | No | — |
+| `/login` | `LoginPage` | No | FR-FE-16 |
+| `/register` | `RegisterPage` | No | FR-FE-17 |
+| `/forgot-password` | `ForgotPasswordPage` | No | — |
+| `/reset-password` | `ResetPasswordPage` | No | — |
+| `/account` | `AccountPage` (tabs: profile, orders, wishlist — see FR-FE-18/19/20) | Yes — `<RequireAuth>` | FR-FE-18, FR-FE-19, FR-FE-20 |
+| `/admin` | `AdminDashboardPage` (tabs: categories, inventory, orders — see FR-FE-24/25/31) | Yes — `<RequireAuth role="ADMIN">` | FR-FE-22, FR-FE-24, FR-FE-25, FR-FE-31 |
+| `*` | `NotFoundPage` | No | — |
+
+There are no standalone `/profile`, `/orders`, `/wishlist`, `/admin/products`,
+`/admin/inventory`, or `/admin/orders` routes — those features exist as tabs inside `AccountPage`
+and `AdminDashboardPage` respectively (per RTM §6.10's per-row verification, #453). Admin product
+management (`FR-FE-23`) has no route or component at all yet — tracked as open in #425.
 
 ---
 
@@ -1086,16 +1109,20 @@ Refresh Token:
 | Redis Lettuce pool | 8 (dev) / 32 (prod) | Cache and rate limit Redis operations |
 | Spring async / scheduler | 2 threads | Token cleanup, inventory threshold monitoring |
 
-#### 4.10.5 Frontend Deployment (Phase 2)
+#### 4.10.5 Frontend Deployment (Verified — 2026-07-17, #459)
+
+Real, deployed (#125), verified against `frontend/Dockerfile`, `frontend/nginx.conf`:
 
 | Component | Configuration | Purpose |
 | :--- | :--- | :--- |
-| Build artifact | `dist/` (HTML / CSS / JS) | Vite production build output |
-| Web server | Nginx Alpine | Serves static files; handles SPA fallback routing |
-| Docker image | `buildnest-frontend:latest` | Multi-stage build: Node (build) → Nginx (runtime) |
-| Ingress path | `/` | All non-`/api/` and non-`/actuator/` traffic |
-| Static asset caching | `Cache-Control: public, max-age=31536000` | Applied to content-hashed JS/CSS bundles |
-| SPA fallback | `try_files $uri /index.html` | All unknown paths served as `index.html` for React Router |
+| Build artifact | `dist/` (HTML / CSS / JS) | Vite production build output (`npm run build`, `node:22-alpine` builder stage) |
+| Web server | `nginxinc/nginx-unprivileged:1.27-alpine` | Non-root, listens on 8080 by default (OPS-07 acceptance criteria) — not a plain `nginx:alpine` image |
+| Docker image | Multi-stage: `node:22-alpine` (builder) → `nginxinc/nginx-unprivileged:1.27-alpine` (runtime), copies `dist/` to `/usr/share/nginx/html` | Keeps the runtime image free of Node/build tooling |
+| Healthcheck | `wget -q --spider http://localhost:8080/` every 30 s | Container-level liveness check |
+| Static asset caching | `location ~* \.(js\|css\|woff2?\|ttf\|eot\|svg\|png\|jpg\|jpeg\|gif\|ico)$` → `Cache-Control: public, immutable`, `expires 1y` | Applied to Vite's content-hashed JS/CSS/font/image bundles |
+| `index.html` caching | `Cache-Control: no-cache` (explicit, separate `location = /index.html` block) | Ensures new deploys with new hashed asset filenames are picked up immediately |
+| SPA fallback | `location /` → `try_files $uri $uri/ /index.html` | All unmatched paths served as `index.html` for React Router client-side routing |
+| Security headers | `security-headers.conf`, included on every `location` block | Applied at the nginx layer, not by the SPA itself |
 
 ---
 
