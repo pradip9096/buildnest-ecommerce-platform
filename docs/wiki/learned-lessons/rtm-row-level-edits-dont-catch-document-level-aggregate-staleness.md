@@ -42,3 +42,16 @@ The signal that this kind of staleness exists: **a document has both granular, f
 ## Synthesis
 
 Row-level maintenance discipline and document-level consistency are two different properties, and improving one does not improve the other — a document can have every individual row perfectly current while its own summary/verdict about itself is stale, because nothing about editing a row ever exercises the summary. Treat "is this document accurate" and "is this document internally self-consistent" as two separate questions to check, not one.
+
+## Extension: Even the Successful Row Edits Never Bumped the Document's Own Version
+
+A second, distinct finding surfaced when the user asked directly: *"has the date of the SDLC documents ever been changed?"* Checking `git log -p --follow` on the RTM's full history answered it precisely — only two commits ever added a Version/Date line to its Document Control block: the original 2026-06-19 baseline, and this investigation's own fix. Every content-editing commit in between (e.g. `c36f384`, which correctly fixed `PRT-01`/`DC-06`) skipped it entirely.
+
+This is a *different* mechanism from the aggregate-staleness gap above, and worth keeping distinct:
+
+- The aggregate-staleness gap (§ above) is a **scope problem**: no issue's trigger condition ever legitimately includes "re-verify this document's own summary," so the check structurally can't fire.
+- The Document-Control-never-bumped gap is **not** a scope problem — bumping Version + adding a Revision History row should happen unconditionally, every single time a document's content changes, the same way a semver bump accompanies any release. It doesn't need a trigger condition at all. It was simply never done, on every occasion, until directly asked about.
+
+**How to apply:** don't assume "the check fired correctly on this row, so the document is being maintained properly" — check the Document Control block itself (Version/Date, Revision History) independently. A document can have a perfectly-updated content row and a Document Control section frozen at its original baseline, for months, across many separate correct edits. This is the same general caution as the aggregate-staleness finding above (verify document *meta*-state independently of content state) but the fix is different: this one just needs an unconditional "also do this" step attached to every content edit, not a new periodic trigger.
+
+See `development-workflow.md`'s `update-docs` step (`[defect-class: sdlc-doc-version-never-bumped]`) and its new "Periodic SDLC Documentation Sync (Every 15 Merged Issues)" section for the two corresponding process fixes — one unconditional (Document Control bump), one count-triggered (aggregate re-verification).
