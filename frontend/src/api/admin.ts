@@ -98,6 +98,49 @@ export async function deleteAdminUser(userId: number): Promise<void> {
   await request(`/api/admin/users/${userId}`, { method: 'DELETE' }, 'Failed to disable user');
 }
 
+// ── Categories ───────────────────────────────────────────────────────────────
+
+export interface AdminCategory {
+  id: number;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  isActive?: boolean;
+  parentCategory?: { id: number } | null;
+}
+
+export interface CategoryFormInput {
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  parentId?: number | null;
+}
+
+export async function fetchAdminCategories(): Promise<AdminCategory[]> {
+  const data = await requestData<AdminCategory[]>('/api/v1/admin/categories', {}, 'Failed to load categories');
+  return Array.isArray(data) ? data : [];
+}
+
+export async function createAdminCategory(input: CategoryFormInput): Promise<AdminCategory> {
+  return requestData<AdminCategory>(
+    '/api/v1/admin/categories',
+    { method: 'POST', body: input },
+    'Failed to create category'
+  );
+}
+
+export async function updateAdminCategory(id: number, input: CategoryFormInput): Promise<AdminCategory> {
+  return requestData<AdminCategory>(
+    `/api/v1/admin/categories/${id}`,
+    { method: 'PUT', body: input },
+    'Failed to update category'
+  );
+}
+
+export async function deleteAdminCategory(id: number): Promise<void> {
+  await request(`/api/v1/admin/categories/${id}`, { method: 'DELETE' }, 'Failed to delete category');
+}
+
 // ── Audit Log ────────────────────────────────────────────────────────────────
 
 export interface AuditLogEntry {

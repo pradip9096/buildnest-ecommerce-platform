@@ -260,7 +260,7 @@ The RTM serves to:
 | FR-ADM-06 | Admin configures inventory alert thresholds | Medium | Ph-2 | §4.7.3 | `AdminInventoryThresholdController`, `InventoryThresholdManagementService` | `AdminInventoryThresholdControllerTest`, `InventoryThresholdManagementServiceTest` | Test | 🟡 Partial (controller + service exist; feature toggle deferred) |
 | FR-ADM-07 | Admin manages webhook subscriptions | Low | Ph-2 | §4.7.3 | `WebhookAdminController`, `WebhookServiceImpl` | `WebhookAdminControllerTest`, `WebhookServiceImplTest` | Test | 🔵 Pending Ph-2 |
 | FR-ADM-08 | All `/api/admin/**` requires `ADMIN` role | High | Ph-1 | §5.1.3 | `SecurityConfig` — `.requestMatchers("/api/admin/**").hasRole("ADMIN")` | `AuthenticationAuthorizationSecurityTest`, `RBACTest` | Test | ✅ Implemented |
-| FR-ADM-09 | Admin CRUD for product categories with hierarchical parent/child support; deletion blocked while products or subcategories still reference the category | Medium | Ph-1 | §4.7.3 | `Category` (`parentCategory`/`subcategories`), `CategoryServiceImpl`, `AdminCategoryController` | `CategoryServiceImplTest`, `CategoryTest`, `AdminCategoryControllerIntegrationTest` | Test | ✅ Implemented (#68) |
+| FR-ADM-09 | Admin CRUD for product categories with hierarchical parent/child support; deletion blocked while products or subcategories still reference the category | Medium | Ph-1 | §4.7.3 | `Category` (`parentCategory`/`subcategories`), `CategoryServiceImpl`, `AdminCategoryController`; frontend consumption via `CategoriesTab`, `CategoryFormModal` | `CategoryServiceImplTest`, `CategoryTest`, `AdminCategoryControllerIntegrationTest`, `CategoriesTab.test.tsx` | Test | ✅ Implemented (#68 backend, #428 frontend UI) |
 
 ### 6.9 Monitoring and Observability (FG-09)
 
