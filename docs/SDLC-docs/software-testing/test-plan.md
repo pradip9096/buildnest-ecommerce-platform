@@ -31,7 +31,7 @@
 | 2.0 | 2026-02-11 | BuildNest QA | Expanded to 124 TCs; 22 categories; 12 modules | Approved |
 | 3.0 | 2026-02-11 | BuildNest QA | ISO 29119-3 compliance; added conformance, definitions, responsibilities, deliverables, suspension criteria | Approved |
 | 4.0 | 2026-06-19 | Claude Code (claude-sonnet-4-6) | Baseline-driven update: corrected Spring Boot to 3.5.10; updated test counts from static and dynamic analysis (173 test files, 1,538 test executions, 99.1% pass rate); introduced Test Integrity Requirements (TIR) section; corrected JaCoCo gate from 40% to 70% target; updated Maven profile inventory; added mutation testing gate (PIT ≥ 75%); aligned all SRS/SDD references to v4.0/v3.0 | Pending |
-| 4.1 | 2026-07-17 13:55 IST | Claude Code (claude-sonnet-5) | Corrected §15 TIR-01–05 status (all 5 were stale "Open"/"Not yet measured" — TIR-01–04 confirmed already resolved in source, TIR-05's PIT gate confirmed configured at 77%); corrected §17.1's JaCoCo gate (actual 85%, not 40%) and frontend-coverage baseline (17 test files/121 tests, not the 3-file 2026-07-04 snapshot); corrected Elasticsearch 8.10→8.17 references (#461). §17.2's baseline test-execution table to be updated once a fresh full-suite run completes in this same session | Pending |
+| 4.1 | 2026-07-17 14:05 IST | Claude Code (claude-sonnet-5) | Corrected §15 TIR-01–05 status (all 5 were stale "Open"/"Not yet measured" — TIR-01–04 confirmed already resolved in source, TIR-05's PIT gate confirmed configured at 77%); corrected §17.1's JaCoCo gate (actual 85%, not 40%) and frontend-coverage baseline (17 test files/121 tests, not the 3-file 2026-07-04 snapshot); corrected Elasticsearch 8.10→8.17 references; re-ran the full suite (`all-tests` profile, isolated shell) for §17.2's baseline table — 1,735 tests, 0 failures, 0 errors, superseding the stale 2026-06-19 figures (1,538 executions, 11 failed, 3 errors) (#461) | Pending |
 
 ### Document Approval
 
@@ -921,19 +921,19 @@ The table below maps SRS v4.0 requirement groups to the test classes that verify
 | Frontend component coverage | Vitest | 17 test files, 121 tests, across components/hooks/API modules (verified 2026-07-17 13:55 IST, #461 via `npx vitest run`) | ≥ 80% statements | FR-FE-* |
 | WCAG 2.1 AA violations | axe-core | Not yet active | 0 violations | ACC-01 |
 
-### 17.2 Current Baseline (2026-06-19)
+### 17.2 Current Baseline (Re-verified 2026-07-17 14:05 IST, #461)
 
-From Baseline Assessment Report (`docs/reports/baseline-assessment-2026-06-19.md`):
+Superseding the original 2026-06-19 Baseline Assessment Report figures below, re-measured directly via a clean `./mvnw test -P all-tests` run (`env -i` isolated shell, to avoid the environment-contamination false alarm documented in the `exported-env-vars-can-leak-across-separate-bash-tool-calls-contaminating-later-test-runs.md` wiki lesson) and `./mvnw dependency:tree`/`pom.xml` inspection:
 
 | Metric | Current State | Gap to Phase 2 Target |
 | :--- | :--- | :--- |
-| Total test files | 173 | — |
-| Total test executions (last full run) | 1,538 | — |
-| Passed | 1,524 (99.1%) | — |
-| Failed | 11 (0.7%) | 11 must be resolved |
-| Errors | 3 (0.2%) | 3 must be resolved |
-| JaCoCo LINE coverage | ~40% (enforced minimum) | +30% required |
-| Mutation score | Not yet measured | Baseline TBD after PIT setup |
+| Total test files | 195 | — |
+| Total test executions (last full run) | 1,735 | — |
+| Passed | 1,735 (100%) | — |
+| Failed | 0 | None |
+| Errors | 0 | None |
+| JaCoCo LINE coverage | 85% PACKAGE/INSTRUCTION (`jacoco-check` rule) | Already exceeds 70% target |
+| Mutation score | Active — `mutationThreshold` 77% | Already exceeds 75% requirement; ratcheting to 79% per M4 milestone |
 
 ### 17.3 Coverage Exclusions
 
