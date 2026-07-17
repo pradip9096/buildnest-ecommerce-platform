@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 3.3 |
-| **Date** | 2026-07-17 19:11 IST |
+| **Version** | 3.4 |
+| **Date** | 2026-07-17 20:45 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
@@ -32,6 +32,7 @@
 | 3.1 | 2026-07-17 13:53 IST | Software Architect | Recomputed all 12 rows of §4.2.3's Component Statistics table directly via the `find`/`grep` commands the table itself cites — every metric had drifted upward as real features shipped since the 2026-06-19 baseline (e.g. 256→352 source files, 29→38 controllers, 19→28 repositories); corrected Jedis→Lettuce and Elasticsearch 8.10→8.17 references throughout (§458). The 6 sections still framing the entire frontend design as "Design Intent — Phase 2" were found separately stale (the frontend is real and substantial) and filed as their own follow-up (#459) rather than fixed here, since correcting them requires authoring real design content, not a relabel | Pending |
 | 3.2 | 2026-07-17 20:10 IST | Software Architect | Full re-derivation (not a relabel) of the 6 sections flagged by #459 as still framing the real, deployed frontend as unbuilt/aspirational: §1.2 Scope and §4.1.1's context diagram drop the "design intent"/"(Phase 2)" framing; §4.2.2's package structure rewritten to the real `frontend/src/` layout (`api/`, `components/{account,admin,cart,checkout,common,filters,product}/`, `contexts/`, `hooks/`, `pages/`, `types/`, `test/` — no `core/`/`auth/`/`admin/`/`router/`/`services/`); §4.3.6's component model rewritten around the actual `useAsync` hook, `RequireAuth` guard, and Tailwind-only styling (no component library, no Redux/React Query); §4.5.5's state model corrected to `AuthContext` + hook-local state (`useCart`, `useAsync`) — no `CartContext`, no server-cache library; §4.7.4's routes rewritten to match `App.tsx`'s real `react-router-dom` v7 routes and RTM's FR-FE mapping (tabs inside `AccountPage`/`AdminDashboardPage`, not standalone routes); §4.10.5 rewritten against the actual `frontend/Dockerfile`/`nginx.conf` (`nginx-unprivileged`, healthcheck, real cache-control directives) | Pending |
 | 3.3 | 2026-07-17 19:11 IST | Software Architect | §4.2.3-adjacent traceability row for "React SPA design" still cited `FR-FE-01–30`, never updated when #450 added `FR-FE-31` (#470) — corrected to `FR-FE-01–31`. Also corrected the `Related SRS` cross-reference from a long-stale v4.0 to the current v4.4, which had drifted through 4 intervening SRS version bumps without ever being updated here | Pending |
+| 3.4 | 2026-07-17 20:45 IST | Software Architect | Full re-derivation of §4.7.3's API Endpoint Catalogue (#471), same staleness class already fixed in SRS Appendix A (#456): 7 stale sections (wrong path prefixes — `/api/auth/refresh-token` instead of real `/api/auth/refresh`, `/api/auth/forgot-password`/`reset-password` instead of real `/api/password/forgot`/`reset`; only legacy `/api/checkout/*`, missing the current `/api/v1/checkout/*` multi-step flow entirely) expanded to 36 groups, each citing its real controller class. Unlike Appendix A, this table also carries a Rate Limit column per row — verified directly against `RateLimitHeaderInterceptor`/`AdminRateLimitFilter`/`RateLimitUtil` source and `application.properties`, surfacing a previously-undocumented gap: `/api/v1/admin/**` (base path for most admin resource controllers — products, categories, tags, coupons, shipping-methods, search, orders, inventory, sales analytics) matches neither the interceptor's nor the filter's literal `/api/admin/` prefix check, so those endpoints receive only the 100/min default header and no dedicated admin-tier blocking, unlike the literal `/api/admin/**` groups (users, analytics, audit, webhooks, monitoring, thresholds, inventory-threshold/analytics/reports) which get 30/min headers + a real 50/min block | Pending |
 
 ### Document Approval
 
@@ -711,88 +712,395 @@ All events flow through `DomainEventPublisher` → `DomainEventListener` via Spr
 
 `ApiSunsetInterceptor` adds `Deprecation` and `Sunset` headers to all V1 responses. V1 controllers remain active for backward compatibility; no removal date is set at this time.
 
-#### 4.7.3 API Endpoint Catalogue
+#### 4.7.3 API Endpoint Catalogue (Re-derived — 2026-07-17, #471)
 
-##### Authentication (`/api/auth/`)
+**Re-derived directly from every controller's `@RequestMapping`/`@GetMapping`/etc. source**, mirroring
+SRS Appendix A's own #456 re-derivation (not a copy of it — this table's shape needs a Rate Limit
+column and per-row SRS Req citation that Appendix A doesn't carry). The prior version had wrong path
+prefixes throughout (`/api/auth/refresh-token` instead of the real `/api/auth/refresh`,
+`/api/auth/forgot-password`/`reset-password` instead of the real `PasswordResetController`'s
+`/api/password/forgot`/`/api/password/reset`) and omitted entire endpoint groups (categories, tags,
+coupons, shipping-methods, search reindex, inventory-threshold/analytics/reports, the public webhook
+receiver, product reviews, notifications, the current multi-step checkout flow). Controller class
+name is cited per group so a future drift check can `grep` the exact source file.
 
-| Method | Path | Auth | Rate Limit | SRS Req |
-| :--- | :--- | :--- | :--- | :--- |
-| POST | `/api/auth/register` | Public | — | FR-AUTH-01 |
-| POST | `/api/auth/login` | Public | 3 / 5 min | FR-AUTH-02 |
-| POST | `/api/auth/refresh-token` | Public | 10 / min | FR-AUTH-06 |
-| POST | `/api/auth/logout` | USER | — | FR-AUTH-07 |
-| POST | `/api/auth/forgot-password` | Public | 3 / hr | FR-AUTH-08 |
-| POST | `/api/auth/reset-password` | Public | 3 / hr | FR-AUTH-08 |
-| GET | `/api/auth/validate-reset-token` | Public | — | FR-AUTH-08 |
+**Rate Limit column — verified against `rate-limiting.md` and the actual enforcement code, not
+assumed uniform per path prefix.** Two independent, differently-scoped mechanisms are in play:
 
-##### Product — V1 Deprecated (`/api/public/products`)
+- `RateLimitHeaderInterceptor` (all paths) adds response headers using a **hardcoded, literal
+  path-prefix check**: `/api/auth/**` → 5/min, `/api/admin/**` → 30/min, `/api/public/**` → 50/min,
+  everything else → 100/min. Critically, `/api/v1/admin/**` (the base path for most admin resource
+  controllers — products, categories, tags, coupons, shipping-methods, search, orders, inventory,
+  sales analytics) does **not** match the `/api/admin/` prefix check, so those endpoints get only
+  the 100/min default header, not the 30/min admin one, despite requiring `ROLE_ADMIN`.
+- `AdminRateLimitFilter` (blocking, not just headers) is scoped the same way — `shouldNotFilter`
+  only applies to literal `/api/admin/**` paths — and enforces `RateLimitUtil`'s `"admin"` key
+  (50 requests / 60 s, from `rate.limit.admin.requests`/`.duration`). `/api/v1/admin/**` endpoints
+  receive **no dedicated blocking rate limit at all** from either layer — only the 100/min
+  informational header above.
+- `/api/auth/login`, `/api/auth/refresh`, and `/api/password/forgot`/`reset`/`change` each call
+  `RateLimitUtil.isAllowed()` explicitly with their own named key, which **overrides** the
+  interceptor's path-based header for that specific endpoint: login 3/300 s, refresh 10/min,
+  password forgot/reset/change 3/3600 s each (verified via `rate.limit.*` properties in
+  `application.properties`, not the differing example defaults documented in `rate-limiting.md`
+  itself, which describes hypothetical defaults, not this app's configured values).
 
-| Method | Path | Auth | SRS Req |
-| :--- | :--- | :--- | :--- |
-| GET | `/api/public/products` | Public | FR-PROD-01 |
-| GET | `/api/public/products/{id}` | Public | FR-PROD-02 |
-| GET | `/api/public/products/search` | Public | FR-PROD-01 |
-| GET | `/api/public/products/category/{id}` | Public | FR-PROD-03 |
+Per-group Rate Limit cells below cite the actual enforcing mechanism, not just the header value.
 
-##### Product — V2 Current (`/api/v2/public/products`)
-
-| Method | Path | Auth | Rate Limit | SRS Req |
-| :--- | :--- | :--- | :--- | :--- |
-| GET | `/api/v2/public/products` | Public | 60 / min | FR-PROD-01 |
-| GET | `/api/v2/public/products/{id}` | Public | 60 / min | FR-PROD-02 |
-| GET | `/api/v2/public/products/search` | Public | 60 / min | FR-PROD-01 |
-| GET | `/api/v2/public/products/category/{id}` | Public | 60 / min | FR-PROD-03 |
-
-##### User Profile, Cart, Orders, Reviews, Wishlist (`/api/user/`)
-
-| Method | Path | Auth | Rate Limit | SRS Req |
-| :--- | :--- | :--- | :--- | :--- |
-| GET / PUT | `/api/user/profile` | USER | 500 / min | FR-AUTH-09 |
-| PUT | `/api/user/change-password` | USER | 500 / min | FR-AUTH-09 |
-| POST | `/api/user/cart/add` | USER | 500 / min | FR-CART-01 |
-| GET | `/api/user/cart/{userId}` | USER | 500 / min | FR-CART-02 |
-| DELETE | `/api/user/cart/item/{cartItemId}` | USER | 500 / min | FR-CART-03 |
-| DELETE | `/api/user/cart/clear/{userId}` | USER | 500 / min | FR-CART-04 |
-| GET | `/api/user/cart/total/{userId}` | USER | 500 / min | FR-CART-05 |
-| GET | `/api/user/orders` | USER | 500 / min | FR-CHK-07 |
-| GET | `/api/user/orders/{orderId}` | USER | 500 / min | FR-CHK-07 |
-| POST | `/api/user/reviews/product/{productId}` | USER | 500 / min | FR-REV-01 |
-| PUT / DELETE | `/api/user/reviews/{reviewId}` | USER | 500 / min | FR-REV-03 |
-| POST / GET / DELETE | `/api/user/wishlist/**` | USER | 500 / min | FR-WISH-01, FR-WISH-02 |
-
-##### Checkout (`/api/checkout/`)
-
-| Method | Path | Auth | SRS Req |
-| :--- | :--- | :--- | :--- |
-| GET | `/api/checkout/validate/{cartId}` | USER | FR-CHK-01 |
-| GET | `/api/checkout/calculate-total/{cartId}` | USER | FR-CHK-02 |
-| POST | `/api/checkout/process/{cartId}` | USER | FR-CHK-03 |
-| POST | `/api/checkout/process-with-payment/{cartId}` | USER | FR-CHK-04 |
-
-##### Admin (`/api/admin/`)
+##### Authentication (`AuthController`, base `/api/auth`)
 
 | Method | Path | Auth | Rate Limit | SRS Req |
 | :--- | :--- | :--- | :--- | :--- |
-| GET / POST / PUT / DELETE | `/api/admin/products/**` | ADMIN | 50 / min | FR-PROD-04, FR-ADM-08 |
-| GET / PUT / DELETE | `/api/admin/users/**` | ADMIN | 50 / min | FR-ADM-03, FR-ADM-08 |
-| GET / PUT / DELETE | `/api/admin/orders/**` | ADMIN | 50 / min | FR-CHK-08, FR-ADM-08 |
-| GET / POST | `/api/admin/inventory/**` | ADMIN | 50 / min | FR-INV-03, FR-INV-04 |
-| GET | `/api/admin/analytics/**` | ADMIN | 50 / min | FR-ADM-01, FR-ADM-02 |
-| GET | `/api/admin/reports/**` | ADMIN | 50 / min | FR-ADM-04, FR-ADM-05 |
-| POST / PUT / GET | `/api/admin/webhooks/**` | ADMIN | 50 / min | FR-ADM-07 |
+| POST | `/api/auth/login` | Public | 3 / 5 min (explicit `"login"` key, overrides header) | FR-AUTH-02 |
+| POST | `/api/auth/register` | Public | 5 / min (interceptor header only) | FR-AUTH-01 |
+| POST | `/api/auth/refresh` | Public | 10 / min (explicit `"refresh"` key, overrides header) | FR-AUTH-06 |
+| POST | `/api/auth/validate-token` | Public | 5 / min (interceptor header only) | FR-AUTH-02 |
+| POST | `/api/auth/logout` | Authenticated | 5 / min (interceptor header only) | FR-AUTH-07 |
+| GET | `/api/auth/csrf` | Public | 5 / min (interceptor header only) | — |
 
-##### Monitoring
+##### Password Reset (`PasswordResetController`, base `/api/password`)
 
-| Method | Path | Auth | SRS Req |
-| :--- | :--- | :--- | :--- |
-| GET | `/actuator/health` | Public | FR-MON-01 |
-| GET | `/actuator/prometheus` | Public | FR-MON-05 |
-| GET | `/actuator/info` | Public | FR-MON-01 |
-| GET | `/actuator/metrics` | ADMIN | FR-MON-05 |
-| GET | `/api/inventory/product/{productId}` | USER | FR-INV-01 |
-| GET | `/api/inventory/check-availability/{productId}` | USER | FR-INV-02 |
-| GET | `/api/monitoring/performance` | ADMIN | FR-MON-05 |
-| GET | `/api/monitoring/pool` | ADMIN | FR-MON-05 |
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| POST | `/api/password/forgot` | Public | 3 / hr (explicit `"password-forgot"` key) | FR-AUTH-08 |
+| POST | `/api/password/reset` | Public | 3 / hr (explicit `"password-reset"` key) | FR-AUTH-08 |
+| POST | `/api/password/change` | Authenticated (USER or ADMIN) | 3 / hr (explicit `"password-change"` key, user-scoped) | FR-AUTH-08 |
+
+##### Product — Legacy Public (`HomeController`, base `/api/public`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/public` | Public | 50 / min | — |
+| GET | `/api/public/health` | Public | 50 / min | — |
+| GET | `/api/public/products` | Public | 50 / min | FR-PROD-01 |
+| GET | `/api/public/products/{id}` | Public | 50 / min | FR-PROD-02 |
+| GET | `/api/public/products/search` | Public | 50 / min | FR-PROD-01 |
+| GET | `/api/public/products/featured` | Public | 50 / min | FR-PROD-01 |
+| GET | `/api/public/categories` | Public | 50 / min | FR-PROD-03 |
+
+##### Product — V1 Deprecated (`ProductControllerV1`, base `/api/v1/products`)
+
+`@Deprecated(since = "2.0", forRemoval = true)`, sunset 2026-12-31, `X-API-Deprecated` header on
+every response (`ApiSunsetInterceptor`).
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/v1/products` | Public | 100 / min | FR-PROD-01, FR-PROD-05 |
+| GET | `/api/v1/products/{id}` | Public | 100 / min | FR-PROD-02, FR-PROD-05 |
+
+##### Product — V2 Current (`ProductControllerV2`, base `/api/v2/products`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/v2/products` | Public | 100 / min | FR-PROD-01, FR-PROD-05 |
+| GET | `/api/v2/products/{id}` | Public | 100 / min | FR-PROD-02, FR-PROD-05 |
+| GET | `/api/v2/products/search` | Public | 100 / min | FR-PROD-01 |
+| GET | `/api/v2/products/category/{categoryId}` | Public | 100 / min | FR-PROD-03 |
+| GET | `/api/v2/products/{id}/related` | Public | 100 / min | FR-PROD-02 |
+
+##### User Profile (`UserController`, base `/api/user`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/user/profile` | USER | 100 / min | FR-AUTH-09 |
+| PUT | `/api/user/profile` | USER | 100 / min | FR-AUTH-09 |
+
+##### Address (`AddressController`, base `/api/user/addresses`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/user/addresses` | USER | 100 / min | — |
+| POST | `/api/user/addresses` | USER | 100 / min | — |
+| PUT | `/api/user/addresses/{id}` | USER | 100 / min | — |
+| DELETE | `/api/user/addresses/{id}` | USER | 100 / min | — |
+| PUT | `/api/user/addresses/{id}/default` | USER | 100 / min | — |
+
+##### Cart (`CartController`, base `/api/user/cart`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| POST | `/api/user/cart/add` | USER (ownership-checked) | 100 / min | FR-CART-01 |
+| GET | `/api/user/cart/{userId}` | USER (ownership-checked) | 100 / min | FR-CART-02 |
+| DELETE | `/api/user/cart/item/{cartItemId}` | USER | 100 / min | FR-CART-03 |
+| DELETE | `/api/user/cart/clear/{userId}` | USER (ownership-checked) | 100 / min | FR-CART-04 |
+| GET | `/api/user/cart/total/{userId}` | USER (ownership-checked) | 100 / min | FR-CART-05 |
+
+##### Checkout — Legacy Single-Step (`CheckoutController`, base `/api/checkout`)
+
+Not `@Deprecated`-annotated in code, but superseded by the multi-step flow below (#76/CHK-01); no
+frontend caller references `/api/checkout` (`frontend/src/api/checkout.ts` targets `/api/v1/checkout`
+exclusively) — kept for direct payment-linked checkout, not removed.
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/checkout/validate/{cartId}` | USER | 100 / min | FR-CHK-01 |
+| GET | `/api/checkout/calculate-total/{cartId}` | USER | 100 / min | FR-CHK-02 |
+| POST | `/api/checkout/process/{cartId}` | USER | 100 / min | FR-CHK-03 |
+| POST | `/api/checkout/process-with-payment/{cartId}` | USER | 100 / min | FR-CHK-04 |
+
+##### Checkout — Multi-Step (Current) (`MultiStepCheckoutController`, base `/api/v1/checkout`)
+
+Address → shipping → coupon → payment → confirm; session stored in Redis, 30-minute TTL. This is
+the flow the frontend's `CheckoutPage` actually consumes.
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/v1/checkout/shipping-options` | USER | 100 / min | FR-CHK-01 |
+| POST | `/api/v1/checkout/address` | USER | 100 / min | FR-CHK-01 |
+| POST | `/api/v1/checkout/coupon` | USER | 100 / min | FR-CHK-02 |
+| POST | `/api/v1/checkout/shipping` | USER | 100 / min | FR-CHK-02 |
+| POST | `/api/v1/checkout/payment` | USER | 100 / min | FR-CHK-04 |
+| POST | `/api/v1/checkout/confirm` | USER | 100 / min | FR-CHK-05, FR-CHK-06 |
+
+##### Order (`UserOrderController`, base `/api/user/orders`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/user/orders` | USER | 100 / min | FR-CHK-07 |
+| GET | `/api/user/orders/{id}` | USER | 100 / min | FR-CHK-07 |
+
+##### Wishlist (`WishlistController`, base `/api/user/wishlist`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| POST | `/api/user/wishlist/items/{productId}` | USER | 100 / min | FR-WISH-01 |
+| DELETE | `/api/user/wishlist/items/{productId}` | USER | 100 / min | FR-WISH-02 |
+| GET | `/api/user/wishlist` | USER | 100 / min | FR-WISH-02 |
+| GET | `/api/user/wishlist/contains/{productId}` | USER | 100 / min | FR-WISH-02 |
+| DELETE | `/api/user/wishlist` | USER | 100 / min | FR-WISH-02 |
+| GET | `/api/user/wishlist/count` | USER | 100 / min | FR-WISH-02 |
+
+##### Product Review (`ProductReviewController`, base `/api/products/{productId}/reviews`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| POST | `/api/products/{productId}/reviews` | USER | 100 / min | FR-REV-01 |
+| GET | `/api/products/{productId}/reviews` | Public | 100 / min | FR-REV-02 |
+| GET | `/api/products/{productId}/reviews/summary` | Public | 100 / min | FR-REV-02 |
+| GET | `/api/products/{productId}/reviews/top-helpful` | Public | 100 / min | FR-REV-02 |
+| POST | `/api/products/{productId}/reviews/{reviewId}/helpful` | Authenticated | 100 / min | FR-REV-02 |
+| PUT | `/api/products/{productId}/reviews/{reviewId}` | USER | 100 / min | FR-REV-03 |
+| DELETE | `/api/products/{productId}/reviews/{reviewId}` | USER | 100 / min | FR-REV-03 |
+
+##### Notification (`NotificationController`, base `/api/user/notifications`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/user/notifications/stream` | USER | 100 / min | — |
+
+##### Public Inventory Status (`InventoryStatusController`, base `/api/inventory`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/inventory/{productId}/status` | Public | 100 / min | FR-INV-01 |
+| GET | `/api/inventory/{productId}/details` | Public | 100 / min | FR-INV-01 |
+| GET | `/api/inventory/{productId}/available` | Public | 100 / min | FR-INV-02 |
+
+##### Public Webhook Receiver (`PaymentWebhookController`, base `/api/v1/webhooks`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| POST | `/api/v1/webhooks/payment` | Public (signature-verified) | 100 / min | FR-PAY-04 |
+
+##### Admin Product Management (`AdminProductController`, base `/api/v1/admin/products`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/products` | ADMIN | 100 / min (no dedicated admin limit — see note above) | FR-PROD-04, FR-ADM-08 |
+| GET | `/api/v1/admin/products/{id}` | ADMIN | 100 / min | FR-PROD-04, FR-ADM-08 |
+| POST | `/api/v1/admin/products` | ADMIN | 100 / min | FR-PROD-04, FR-ADM-08 |
+| PUT | `/api/v1/admin/products/{id}` | ADMIN | 100 / min | FR-PROD-04, FR-ADM-08 |
+| DELETE | `/api/v1/admin/products/{id}` | ADMIN | 100 / min | FR-PROD-04, FR-ADM-08 |
+| GET / POST | `/api/v1/admin/products/{id}/images` | ADMIN | 100 / min | FR-PROD-09, FR-ADM-08 |
+| PATCH | `/api/v1/admin/products/{id}/images/reorder` | ADMIN | 100 / min | FR-PROD-09, FR-ADM-08 |
+| DELETE | `/api/v1/admin/products/{id}/images/{imageId}` | ADMIN | 100 / min | FR-PROD-09, FR-ADM-08 |
+| GET / POST | `/api/v1/admin/products/{productId}/variants` | ADMIN | 100 / min | FR-PROD-08, FR-ADM-08 |
+| PUT / DELETE | `/api/v1/admin/products/{productId}/variants/{variantId}` | ADMIN | 100 / min | FR-PROD-08, FR-ADM-08 |
+
+##### Admin Category Management (`AdminCategoryController`, base `/api/v1/admin/categories`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/categories` | ADMIN | 100 / min (no dedicated admin limit) | FR-ADM-09 |
+| GET | `/api/v1/admin/categories/{id}` | ADMIN | 100 / min | FR-ADM-09 |
+| POST | `/api/v1/admin/categories` | ADMIN | 100 / min | FR-ADM-09 |
+| PUT | `/api/v1/admin/categories/{id}` | ADMIN | 100 / min | FR-ADM-09 |
+| DELETE | `/api/v1/admin/categories/{id}` | ADMIN | 100 / min | FR-ADM-09 |
+
+##### Admin Product Tagging (`AdminProductTagController`, base `/api/v1/admin/tags`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET / POST / PUT / DELETE | `/api/v1/admin/tags/**` | ADMIN | 100 / min (no dedicated admin limit) | FR-ADM-08 |
+
+##### Admin Coupon Management (`AdminCouponController`, base `/api/v1/admin/coupons`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| POST | `/api/v1/admin/coupons` | ADMIN | 100 / min (no dedicated admin limit) | FR-ADM-08 |
+| DELETE | `/api/v1/admin/coupons/{id}` | ADMIN | 100 / min | FR-ADM-08 |
+
+##### Admin Shipping Method Management (`AdminShippingController`, base `/api/v1/admin/shipping-methods`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET / POST / PUT / DELETE | `/api/v1/admin/shipping-methods/**` | ADMIN | 100 / min (no dedicated admin limit) | FR-ADM-08 |
+
+##### Admin Search Management (`AdminSearchController`, base `/api/v1/admin/search`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| POST | `/api/v1/admin/search/reindex` | ADMIN | 100 / min (no dedicated admin limit) | FR-ADM-08 |
+
+##### Admin Order Management (`AdminOrderController`, base `/api/v1/admin/orders`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/orders` | ADMIN | 100 / min (no dedicated admin limit) | FR-CHK-08, FR-ADM-08 |
+| GET | `/api/v1/admin/orders/{id}` | ADMIN | 100 / min | FR-CHK-08, FR-ADM-08 |
+| PATCH | `/api/v1/admin/orders/{id}/status` | ADMIN | 100 / min | FR-CHK-08, FR-ADM-08 |
+| POST | `/api/v1/admin/orders/{id}/refund` | ADMIN | 100 / min | FR-CHK-08, FR-ADM-08 |
+
+##### Admin User Management (`AdminUserController`, base `/api/admin/users`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/admin/users` | ADMIN | 30 / min header + 50 / min block | FR-ADM-03, FR-ADM-08 |
+| GET | `/api/admin/users/{id}` | ADMIN | 30 / min header + 50 / min block | FR-ADM-03, FR-ADM-08 |
+| PUT | `/api/admin/users/{id}` | ADMIN | 30 / min header + 50 / min block | FR-ADM-03, FR-ADM-08 |
+| DELETE | `/api/admin/users/{id}` | ADMIN | 30 / min header + 50 / min block | FR-ADM-03, FR-ADM-08 |
+
+##### Admin Inventory Management (`AdminInventoryController`, base `/api/v1/admin/inventory`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/inventory` | ADMIN | 100 / min (no dedicated admin limit) | FR-INV-03, FR-ADM-08 |
+| PATCH | `/api/v1/admin/inventory/{productId}` | ADMIN | 100 / min | FR-INV-04, FR-ADM-08 |
+| GET | `/api/v1/admin/inventory/product/{productId}` | ADMIN | 100 / min | FR-INV-01, FR-ADM-08 |
+| POST | `/api/v1/admin/inventory/add-stock/{productId}` | ADMIN | 100 / min | FR-INV-03, FR-ADM-08 |
+| POST | `/api/v1/admin/inventory/update-stock/{productId}` | ADMIN | 100 / min | FR-INV-04, FR-ADM-08 |
+| GET | `/api/v1/admin/inventory/check-availability/{productId}` | ADMIN | 100 / min | FR-INV-02, FR-ADM-08 |
+
+##### Admin Inventory Threshold Management (`AdminInventoryThresholdController`, base `/api/admin/inventory-threshold`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| POST / GET | `/api/admin/inventory-threshold/product/{productId}` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06, FR-ADM-08 |
+| POST / GET | `/api/admin/inventory-threshold/category/{categoryId}` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06, FR-ADM-08 |
+| GET | `/api/admin/inventory-threshold/product/{productId}/effective` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06, FR-ADM-08 |
+| PUT | `/api/admin/inventory-threshold/product/{productId}/use-category` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06, FR-ADM-08 |
+
+##### Admin Inventory Analytics (`AdminInventoryAnalyticsController`, base `/api/admin/inventory-analytics`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/admin/inventory-analytics/high-demand-low-inventory` | ADMIN | 30 / min header + 50 / min block | FR-ADM-02, FR-INV-07 |
+| GET | `/api/admin/inventory-analytics/seasonal-patterns` | ADMIN | 30 / min header + 50 / min block | FR-ADM-02, FR-INV-07 |
+| GET | `/api/admin/inventory-analytics/stock-turnover` | ADMIN | 30 / min header + 50 / min block | FR-ADM-02, FR-INV-07 |
+| GET | `/api/admin/inventory-analytics/restocking-plan` | ADMIN | 30 / min header + 50 / min block | FR-ADM-02, FR-INV-07 |
+
+##### Admin Inventory Reports (`AdminInventoryReportController`, base `/api/admin/inventory-reports`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/admin/inventory-reports/below-threshold` | ADMIN | 30 / min header + 50 / min block | FR-ADM-02, FR-INV-07 |
+| GET | `/api/admin/inventory-reports/breaches` | ADMIN | 30 / min header + 50 / min block | FR-ADM-02, FR-INV-07 |
+| GET | `/api/admin/inventory-reports/frequent-problems` | ADMIN | 30 / min header + 50 / min block | FR-ADM-02, FR-INV-07 |
+| GET | `/api/admin/inventory-reports/product/{productId}` | ADMIN | 30 / min header + 50 / min block | FR-ADM-02, FR-INV-07 |
+| GET | `/api/admin/inventory-reports/summary` | ADMIN | 30 / min header + 50 / min block | FR-ADM-02, FR-INV-07 |
+
+##### Admin Reports (`AdminReportController`, base `/api/admin/reports`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/admin/reports/dashboard` | ADMIN | 30 / min header + 50 / min block | FR-ADM-05 |
+| GET | `/api/admin/reports/users/count` | ADMIN | 30 / min header + 50 / min block | FR-ADM-05 |
+| GET | `/api/admin/reports/products/count` | ADMIN | 30 / min header + 50 / min block | FR-ADM-05 |
+| GET | `/api/admin/reports/orders/count` | ADMIN | 30 / min header + 50 / min block | FR-ADM-05 |
+| GET | `/api/admin/reports/revenue` | ADMIN | 30 / min header + 50 / min block | FR-ADM-05 |
+
+##### Admin Sales Analytics (`SalesAnalyticsController`, base `/api/v1/admin/analytics/sales`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/analytics/sales/dashboard` | ADMIN | 100 / min (no dedicated admin limit) | FR-ADM-01 |
+| GET | `/api/v1/admin/analytics/sales/revenue/daily` | ADMIN | 100 / min | FR-ADM-01 |
+| GET | `/api/v1/admin/analytics/sales/conversion-rate` | ADMIN | 100 / min | FR-ADM-01 |
+| GET | `/api/v1/admin/analytics/sales/cart-abandonment-rate` | ADMIN | 100 / min | FR-ADM-01 |
+| GET | `/api/v1/admin/analytics/sales/average-order-value` | ADMIN | 100 / min | FR-ADM-01 |
+| GET | `/api/v1/admin/analytics/sales/customer-lifetime-value/{userId}` | ADMIN | 100 / min | FR-ADM-01 |
+
+##### Admin Analytics — Audit/Metrics (`AdminAnalyticsController`, base `/api/admin/analytics`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/admin/analytics/audit-logs/user/{userId}` | ADMIN | 30 / min header + 50 / min block | FR-ADM-04 |
+| GET | `/api/admin/analytics/audit-logs/action/{action}` | ADMIN | 30 / min header + 50 / min block | FR-ADM-04 |
+| GET | `/api/admin/analytics/audit-logs/range` | ADMIN | 30 / min header + 50 / min block | FR-ADM-04 |
+| GET | `/api/admin/analytics/metrics/range` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+| GET | `/api/admin/analytics/metrics/recent` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+| GET | `/api/admin/analytics/alerts/summary` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+| GET | `/api/admin/analytics/dashboard` | ADMIN | 30 / min header + 50 / min block | FR-ADM-01, FR-ADM-02 |
+| GET | `/api/admin/analytics/api-errors/by-status` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+| GET | `/api/admin/analytics/api-errors/by-endpoint` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+| GET | `/api/admin/analytics/behaviour` | ADMIN | 30 / min header + 50 / min block | FR-ADM-01 |
+
+##### Admin Audit Log (`AuditLogController`, base `/api/admin/audit`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/admin/audit` | ADMIN | 30 / min header + 50 / min block | FR-ADM-04 |
+
+##### Admin Webhook Management (`WebhookAdminController`, base `/api/admin/webhooks`)
+
+Distinct from the Public Webhook Receiver group above — this is subscription management.
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| POST | `/api/admin/webhooks` | ADMIN | 30 / min header + 50 / min block | FR-ADM-07 |
+| GET | `/api/admin/webhooks` | ADMIN | 30 / min header + 50 / min block | FR-ADM-07 |
+| PUT | `/api/admin/webhooks/{id}/deactivate` | ADMIN | 30 / min header + 50 / min block | FR-ADM-07 |
+| DELETE | `/api/admin/webhooks/{id}` | ADMIN | 30 / min header + 50 / min block | FR-ADM-07 |
+
+##### Admin Monitoring (`MonitoringController`, base `/api/admin/monitoring`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/admin/monitoring/performance` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+| GET | `/api/admin/monitoring/performance/sla-status` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+| POST | `/api/admin/monitoring/performance/reset` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+| GET | `/api/admin/monitoring/uptime` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+| GET | `/api/admin/monitoring/uptime/formatted` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+| POST | `/api/admin/monitoring/uptime/reset` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+| GET | `/api/admin/monitoring/health-status` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+| GET | `/api/admin/monitoring/sla-status` | ADMIN | 30 / min header + 50 / min block | FR-MON-05 |
+
+##### Admin Adaptive Thresholds (`AdminThresholdController`, base `/api/admin/thresholds`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/admin/thresholds` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06 |
+| GET / PUT | `/api/admin/thresholds/cpu` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06 |
+| GET / PUT | `/api/admin/thresholds/memory` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06 |
+| GET / PUT | `/api/admin/thresholds/error-rate` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06 |
+| GET / PUT | `/api/admin/thresholds/response-time` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06 |
+| GET / PUT | `/api/admin/thresholds/failed-logins` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06 |
+| GET / PUT | `/api/admin/thresholds/jwt-refresh` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06 |
+| GET / PUT | `/api/admin/thresholds/admin-operations` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06 |
+| POST | `/api/admin/thresholds/reset` | ADMIN | 30 / min header + 50 / min block | FR-ADM-06 |
+
+##### Actuator and Monitoring Endpoints
+
+`/actuator/prometheus` uses a dedicated Basic Auth credential, isolated from the app's real user
+accounts (`actuatorMonitoringSecurityFilterChain`, `@Order(0)` — see `spring-security.md`); every
+other `/actuator/**` path requires `ROLE_ADMIN` via the main filter chain.
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/actuator/health` | Public | 100 / min | FR-MON-01 |
+| GET | `/actuator/prometheus` | Basic Auth (dedicated monitoring credential) | 100 / min | FR-MON-05 |
+| GET | `/actuator/info` | Public | 100 / min | FR-MON-01 |
+| GET | `/actuator/metrics` | ADMIN | 100 / min | FR-MON-05 |
 
 #### 4.7.4 Frontend Route Design (Verified — 2026-07-17, #459)
 

@@ -10,13 +10,13 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.5 |
+| **Version** | 1.6 |
 | **Date** | 2026-07-17 19:11 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
 | **Related SRS** | SRS-BUILDNEST-001 v4.4 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
-| **Related SDD** | SDD-BUILDNEST-001 v3.3 — `docs/SDLC-docs/design/software-design-description.md` |
+| **Related SDD** | SDD-BUILDNEST-001 v3.4 — `docs/SDLC-docs/design/software-design-description.md` |
 | **Related TP** | TP-BUILDNEST-001 v4.0 — `docs/SDLC-docs/software-testing/test-plan.md` |
 | **Baseline Assessment** | `docs/reports/baseline-assessment-2026-06-19.md` |
 
@@ -34,6 +34,7 @@
 | 1.3 | 2026-07-17 18:00 IST | QA Manager | Full per-requirement audit of §6.10 (`FR-FE-01`–`21`, `26`–`30`): removed the false "frontend is a stub" header, corrected all 25 remaining rows' cited paths from fictional `.jsx` files to their real `.tsx` implementations, and re-derived each row's status from the requirement's actual text, not just file presence — 20 ✅ Implemented, 7 🟡 Partial (form-validation library, Razorpay modal, password-strength indicator, and 4 account/search features shipped as tabs/query-params rather than standalone routes), 4 🔵 Pending (Toast, Footer, Breadcrumb genuinely absent) (#453). Recomputed the Frontend Coverage Summary row (4→20 Implemented, 0→7 Partial, 27→4 Pending) and Coverage Summary Totals row; also recomputed the §12 Phase 2 Frontend Started/Not-Started counts, which surfaced and fixed a pre-existing, unrelated arithmetic error in that table's own row-total sum (81, not the previously stated 80) | Pending |
 | 1.4 | 2026-07-17 18:18 IST | QA Manager | Updated the `Related SRS` cross-reference from v4.2 to v4.3 following SRS's own Appendix A endpoint-catalogue re-derivation (#456) — no RTM row content otherwise touched by that fix | Pending |
 | 1.5 | 2026-07-17 19:11 IST | QA Manager | Updated the `Related SRS` cross-reference from v4.3 to v4.4 (SRS/SDD `FR-FE-01–31` aggregate-row sync, #470) and the `Related SDD` cross-reference from a long-stale v3.0 to the current v3.3 — the latter had drifted through 3 intervening SDD version bumps without ever being updated here; no RTM row content otherwise touched by this fix | Pending |
+| 1.6 | 2026-07-17 20:45 IST | QA Manager | Updated the `Related SDD` cross-reference from v3.3 to v3.4 following SDD's own §4.7.3 API Endpoint Catalogue re-derivation (#471) — no RTM row content otherwise touched by that fix | Pending |
 
 ### Document Approval
 
