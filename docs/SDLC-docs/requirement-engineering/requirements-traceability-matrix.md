@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.7 |
-| **Date** | 2026-07-17 21:15 IST |
+| **Version** | 1.8 |
+| **Date** | 2026-07-17 22:30 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
@@ -36,6 +36,7 @@
 | 1.5 | 2026-07-17 19:11 IST | QA Manager | Updated the `Related SRS` cross-reference from v4.3 to v4.4 (SRS/SDD `FR-FE-01–31` aggregate-row sync, #470) and the `Related SDD` cross-reference from a long-stale v3.0 to the current v3.3 — the latter had drifted through 3 intervening SDD version bumps without ever being updated here; no RTM row content otherwise touched by this fix | Pending |
 | 1.6 | 2026-07-17 20:45 IST | QA Manager | Updated the `Related SDD` cross-reference from v3.3 to v3.4 following SDD's own §4.7.3 API Endpoint Catalogue re-derivation (#471) — no RTM row content otherwise touched by that fix | Pending |
 | 1.7 | 2026-07-17 21:15 IST | QA Manager | Found during a fresh RTM/SRS/SDD/Test-Plan verification sweep: `Related SRS` had drifted one version behind (v4.4, SRS is now v4.5 following #474), `Related SDD` similarly (v3.4, SDD is now v3.5 following this same sweep's own fix), and `Related TP` had never been updated at all since the original baseline (stuck at v4.0, Test Plan is now v4.2). Updated all three to current. No RTM row content otherwise touched | Pending |
+| 1.8 | 2026-07-17 22:30 IST | QA Manager | FR-FE-23 (admin product management) corrected from 🔵 Pending Ph-2 citing a fictional `AdminProductMgmt.jsx` to ✅ Implemented, citing the real `ProductsTab.tsx`/`ProductFormModal.tsx` and their `ProductsTab.test.tsx` coverage (#425, part of Epic #424 — same pattern as FR-FE-31/#428). Recomputed the Frontend Coverage Summary row (20→21 Implemented, 4→3 Pending), the Coverage Summary Totals row (113→114 Implemented, 51→50 Pending), and the §12 Phase 2 Frontend Started/Not-Started counts (27→28 Started, 4→3 Not Started) and Phase 2 total (35→36 Started, 46→45 Not Started) accordingly | Pending |
 
 ### Document Approval
 
@@ -96,7 +97,7 @@ The RTM serves to:
 | Reviews & Wishlists (FR-REV, FR-WISH) | 5 | 5 | 0 | 0 | 0 | 0 |
 | Admin Operations (FR-ADM) | 8 | 3 | 1 | 4 | 0 | 0 |
 | Monitoring (FR-MON) | 8 | 2 | 1 | 5 | 0 | 0 |
-| Frontend (FR-FE) | 31 | 20 | 7 | 4 | 0 | 0 |
+| Frontend (FR-FE) | 31 | 21 | 7 | 3 | 0 | 0 |
 | User Interfaces (UI) | 4 | 3 | 0 | 1 | 0 | 0 |
 | Software Interfaces (SI) | 6 | 3 | 0 | 3 | 0 | 0 |
 | Communication Interfaces (CI) | 5 | 2 | 0 | 3 | 0 | 0 |
@@ -111,7 +112,7 @@ The RTM serves to:
 | Safety (SAF) | 3 | 1 | 0 | 2 | 0 | 0 |
 | Design Constraints (DC) | 8 | 7 | 1 | 0 | 0 | 0 |
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
-| **Totals** | **180** | **113** | **16** | **51** | **0** | **0** |
+| **Totals** | **180** | **114** | **16** | **50** | **0** | **0** |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 
@@ -315,7 +316,7 @@ The RTM serves to:
 | FR-FE-20 | Wishlist page | Low | Ph-2 | §4.7.4 | `frontend/src/components/account/WishlistTab.tsx` — a tab inside `pages/AccountPage.tsx`, not a standalone page/route | Vitest | Test | 🟡 Partial (functionality implemented; delivered as an account-page tab rather than its own route) |
 | FR-FE-21 | Search results page | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/ProductListingPage.tsx` — search is integrated via a `?search=` query param on the product listing route, not a separate page/route | Vitest | Test | 🟡 Partial (functionality implemented; delivered as a mode of the listing page rather than a dedicated route) |
 | FR-FE-22 | Admin dashboard | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/AdminDashboardPage.tsx` | Playwright | Demonstration | ✅ Implemented |
-| FR-FE-23 | Admin product management | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/admin/AdminProductMgmt.jsx` (not yet built — #425 open) | Vitest | Test | 🔵 Pending Ph-2 |
+| FR-FE-23 | Admin product management | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/ProductsTab.tsx`, `ProductFormModal.tsx` | `ProductsTab.test.tsx` | Test | ✅ Implemented (#425) |
 | FR-FE-24 | Admin inventory page | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/InventoryTab.tsx` | Vitest | Test | ✅ Implemented |
 | FR-FE-25 | Admin order management | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/OrdersTab.tsx` | Vitest | Test | ✅ Implemented |
 | FR-FE-26 | Navbar on all pages | High | Ph-2 | §4.3.6 | `frontend/src/components/common/Navbar.tsx` | Playwright | Demonstration | ✅ Implemented |
@@ -634,7 +635,7 @@ The RTM serves to:
 
 | Category | Total Ph-2 Requirements | Started | Not Started |
 | :--- | :--- | :--- | :--- |
-| Frontend (FR-FE-01 to FR-FE-31) | 31 | 27 (20 ✅ Implemented + 7 🟡 Partial) | 4 |
+| Frontend (FR-FE-01 to FR-FE-31) | 31 | 28 (21 ✅ Implemented + 7 🟡 Partial) | 3 |
 | Security (SEC-03, SEC-04, SEC-12, SEC-13, SEC-14) | 5 | 1 (SEC-12 dual-key) | 4 |
 | Monitoring (FR-MON-02 to FR-MON-08) | 6 | 1 (FR-MON-05 partial) | 5 |
 | Payment full flow (FR-PAY-01 to FR-PAY-05) | 5 | 3 (partial) | 2 |
@@ -643,7 +644,7 @@ The RTM serves to:
 | Admin full suite (FR-ADM-01 to FR-ADM-07) | 6 | 1 (FR-ADM-06 partial) | 5 |
 | Maintainability (MNT-02, TIR-05) | 2 | 2 (MNT-02 now ✅ at 85% JaCoCo gate, corrected 2026-07-17 from a stale 40% record; TIR-05 at 77% PIT, ratcheting to 79% end-M4) | 0 |
 | Auth / Safety / Checkout / Inventory Ph-2 | 10 | 0 | 10 |
-| **Phase 2 total** | **81** | **35*** | **46** |
+| **Phase 2 total** | **81** | **36*** | **45** |
 
 *\* The MNT-02/TIR-05 row was corrected 2026-07-17 (#452); the Frontend row was corrected 2026-07-17 (#453, full per-requirement audit — see §6.10). Recomputing this table from its own corrected rows also fixed a pre-existing, unrelated arithmetic error: the row totals had always summed to 81, not the 80 this table previously stated (31+5+6+5+13+3+6+2+10 = 81) — a separate, mechanical off-by-one that predates and is independent of the Frontend staleness this issue targeted.*
 

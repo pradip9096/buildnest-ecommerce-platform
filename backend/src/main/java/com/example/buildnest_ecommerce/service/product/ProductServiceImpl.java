@@ -12,6 +12,7 @@ import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -54,7 +55,12 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Product> getAllProducts() {
         log.info("Fetching all products");
-        return productRepository.findAll();
+        List<Product> products = productRepository.findAll();
+        // Force-initialize the lazy `tags` collection while the session is still open —
+        // open-in-view is disabled, so an uninitialized proxy throws LazyInitializationException
+        // once Jackson serializes the response after the transaction has closed.
+        products.forEach(product -> Hibernate.initialize(product.getTags()));
+        return products;
     }
 
     /**
@@ -69,8 +75,10 @@ public class ProductServiceImpl implements ProductService {
     @SuppressWarnings("null")
     public Product getProductById(Long productId) {
         log.info("Fetching product with id: {}", productId);
-        return productRepository.findById(productId)
+        Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+        Hibernate.initialize(product.getTags());
+        return product;
     }
 
     /**

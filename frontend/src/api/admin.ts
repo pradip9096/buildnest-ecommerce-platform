@@ -141,6 +141,59 @@ export async function deleteAdminCategory(id: number): Promise<void> {
   await request(`/api/v1/admin/categories/${id}`, { method: 'DELETE' }, 'Failed to delete category');
 }
 
+// ── Products ─────────────────────────────────────────────────────────────────
+
+export interface AdminProduct {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  discountPrice?: number;
+  stockQuantity?: number;
+  sku?: string;
+  imageUrl?: string;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  category?: { id: number; name?: string } | null;
+}
+
+export interface ProductFormInput {
+  name: string;
+  description: string;
+  price: number;
+  discountPrice?: number;
+  stockQuantity?: number;
+  sku?: string;
+  categoryId: number;
+  imageUrl?: string;
+  isFeatured?: boolean;
+}
+
+export async function fetchAdminProducts(): Promise<AdminProduct[]> {
+  const data = await requestData<AdminProduct[]>('/api/v1/admin/products', {}, 'Failed to load products');
+  return Array.isArray(data) ? data : [];
+}
+
+export async function createAdminProduct(input: ProductFormInput): Promise<AdminProduct> {
+  return requestData<AdminProduct>(
+    '/api/v1/admin/products',
+    { method: 'POST', body: input },
+    'Failed to create product'
+  );
+}
+
+export async function updateAdminProduct(id: number, input: ProductFormInput): Promise<AdminProduct> {
+  return requestData<AdminProduct>(
+    `/api/v1/admin/products/${id}`,
+    { method: 'PUT', body: input },
+    'Failed to update product'
+  );
+}
+
+export async function deleteAdminProduct(id: number): Promise<void> {
+  await request(`/api/v1/admin/products/${id}`, { method: 'DELETE' }, 'Failed to delete product');
+}
+
 // ── Audit Log ────────────────────────────────────────────────────────────────
 
 export interface AuditLogEntry {
