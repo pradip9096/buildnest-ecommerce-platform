@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 4.2 |
-| **Date** | 2026-07-17 16:33 IST |
+| **Version** | 4.3 |
+| **Date** | 2026-07-17 18:18 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -31,6 +31,7 @@
 | 4.0 | 2026-06-19 | Technical Lead | Baseline-driven update: corrected Spring Boot version (3.2.2 → 3.5.10); added Phase classification (Ph-1 Stable / Ph-2 Production Ready); added test integrity requirements (TIR); updated MNT-02 coverage target (40% → 70%); corrected MNT-03 to reflect live test state; added SEC-14 CSP requirement; added CON-11 React version constraint; referenced baseline assessment report | Pending |
 | 4.1 | 2026-07-17 13:43 IST | Technical Lead | Corrected two stale technology-stack claims found via direct source verification (#455): Redis client is Lettuce, not Jedis (`lettuce-core:6.6.0` confirmed via `mvnw dependency:tree`; Jedis absent from classpath); Elasticsearch version is 8.17 (`docker-compose.yml`'s active service), not the previously-recorded 8.10. Appendix A's API Endpoint Catalogue was found separately stale (wrong path prefixes, missing endpoint groups) and filed as its own follow-up (#456) rather than fixed here, since it needs a full per-endpoint re-derivation | Pending |
 | 4.2 | 2026-07-17 16:33 IST | Technical Lead | Added FR-FE-31 (admin category management UI) to §3.2.10.2, tracing to #428's `CategoriesTab.tsx`/`CategoryFormModal.tsx` — the `FR-FE-*` series previously had no requirement row for this feature at all despite it being implemented (#450) | Pending |
+| 4.3 | 2026-07-17 18:18 IST | Technical Lead | Full re-derivation of Appendix A's API Endpoint Catalogue (#456), fixing every controller base-path prefix and adding previously-missing endpoint groups (categories, tags, coupons, shipping-methods, search reindex, inventory-threshold/analytics/reports, public webhook receiver, product reviews, notifications SSE, auth validate-token/csrf) — 18 sections expanded to 36, each citing its real controller class. Determined `/api/checkout` (legacy single-step) vs `/api/v1/checkout` (multi-step, current — confirmed via `frontend/src/api/checkout.ts`) via direct investigation, not assumption | Pending |
 
 ### Document Change Procedure
 
@@ -955,63 +956,96 @@ Phase 2 (Production Ready) is complete when Phase 1 criteria are met and all of 
 
 ### Appendix A: API Endpoint Catalogue
 
-#### A.1 Authentication Endpoints
+**Re-derived 2026-07-17 (#456) directly from every controller's `@RequestMapping`/`@GetMapping`/etc.
+source, not by prefix substitution on the prior version** — the prior catalogue had wrong path
+prefixes throughout and omitted entire endpoint groups (categories, tags, coupons, shipping-methods,
+search reindex, inventory-threshold/analytics/reports, the public webhook receiver, product reviews,
+auth token-validate/csrf). Controller class name is cited per group so a future drift check can
+`grep` the exact source file rather than guessing.
+
+#### A.1 Authentication Endpoints (`AuthController`, base `/api/auth`)
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
+| POST | `/api/auth/login` | Public | User login (returns JWT access + refresh cookies) |
 | POST | `/api/auth/register` | Public | User registration |
-| POST | `/api/auth/login` | Public | User login (returns JWT) |
-| POST | `/api/auth/refresh-token` | Public | Refresh access token |
-| POST | `/api/auth/logout` | Authenticated | Invalidate refresh token |
-| POST | `/api/auth/forgot-password` | Public | Request password reset |
-| POST | `/api/auth/reset-password` | Public | Reset password with token |
-| GET | `/api/auth/validate-reset-token` | Public | Validate reset token |
+| POST | `/api/auth/refresh` | Public | Refresh access token via refresh-token cookie |
+| POST | `/api/auth/validate-token` | Public | Validate an access token |
+| POST | `/api/auth/logout` | Authenticated | Invalidate refresh token, clear cookies |
+| GET | `/api/auth/csrf` | Public | Bootstrap the `XSRF-TOKEN` cookie (see `spring-security.md` CSRF section) |
 
-#### A.2 Product Endpoints — V1 (Deprecated)
+#### A.2 Password Reset Endpoints (`PasswordResetController`, base `/api/password`)
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
-| GET | `/api/public/products` | Public | List all products (paginated) |
+| POST | `/api/password/forgot` | Public | Request password reset email |
+| POST | `/api/password/reset` | Public | Reset password with token |
+| POST | `/api/password/change` | Authenticated (USER or ADMIN) | Change password while logged in |
+
+#### A.3 Product Endpoints — Legacy Public (`HomeController`, base `/api/public`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/public` | Public | API welcome/info message |
+| GET | `/api/public/health` | Public | Liveness check |
+| GET | `/api/public/products` | Public | List all products (unpaginated) |
 | GET | `/api/public/products/{id}` | Public | Get product by ID |
 | GET | `/api/public/products/search` | Public | Search products by keyword |
-| GET | `/api/public/products/category/{id}` | Public | Filter by category |
-
-#### A.3 Product Endpoints — V2 (Current)
-
-| Method | Endpoint | Auth | Description |
-| :--- | :--- | :--- | :--- |
-| GET | `/api/v2/public/products` | Public | List products (paginated, enhanced) |
-| GET | `/api/v2/public/products/{id}` | Public | Get product detail |
-| GET | `/api/v2/public/products/search` | Public | Search products |
-| GET | `/api/v2/public/products/category/{id}` | Public | Filter by category |
-
-#### A.4 Category Endpoints
-
-| Method | Endpoint | Auth | Description |
-| :--- | :--- | :--- | :--- |
+| GET | `/api/public/products/featured` | Public | Featured products |
 | GET | `/api/public/categories` | Public | List all categories |
-| GET | `/api/public/categories/{id}` | Public | Get category by ID |
 
-#### A.5 User Profile Endpoints
+#### A.4 Product Endpoints — V1 (Deprecated) (`ProductControllerV1`, base `/api/v1/products`)
+
+`@Deprecated(since = "2.0", forRemoval = true)`, sunset 2026-12-31, `X-API-Deprecated` response
+header on every method — see `ApiSunsetInterceptor`.
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/v1/products` | Public | List products, paginated (legacy response shape) |
+| GET | `/api/v1/products/{id}` | Public | Get product by ID (legacy response shape) |
+
+#### A.5 Product Endpoints — V2 (Current) (`ProductControllerV2`, base `/api/v2/products`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/v2/products` | Public | List products, paginated (enhanced response) |
+| GET | `/api/v2/products/{id}` | Public | Get product detail |
+| GET | `/api/v2/products/search` | Public | Search products |
+| GET | `/api/v2/products/category/{categoryId}` | Public | Filter by category |
+| GET | `/api/v2/products/{id}/related` | Public | Related products |
+
+#### A.6 User Profile Endpoints (`UserController`, base `/api/user`)
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
 | GET | `/api/user/profile` | USER | Get user profile |
 | PUT | `/api/user/profile` | USER | Update user profile |
-| PUT | `/api/user/change-password` | USER | Change password |
 
-#### A.6 Cart Endpoints
+#### A.7 Address Endpoints (`AddressController`, base `/api/user/addresses`)
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
-| POST | `/api/user/cart/add` | USER | Add item to cart |
-| GET | `/api/user/cart/{userId}` | USER | Get cart contents |
-| PUT | `/api/user/cart/update` | USER | Update item quantity |
-| DELETE | `/api/user/cart/item/{cartItemId}` | USER | Remove cart item |
-| DELETE | `/api/user/cart/clear/{userId}` | USER | Clear entire cart |
-| GET | `/api/user/cart/total/{userId}` | USER | Get cart total |
+| GET | `/api/user/addresses` | USER | List saved addresses |
+| POST | `/api/user/addresses` | USER | Add address |
+| PUT | `/api/user/addresses/{id}` | USER | Update address |
+| DELETE | `/api/user/addresses/{id}` | USER | Delete address |
+| PUT | `/api/user/addresses/{id}/default` | USER | Set as default address |
 
-#### A.7 Checkout Endpoints
+#### A.8 Cart Endpoints (`CartController`, base `/api/user/cart`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| POST | `/api/user/cart/add` | USER (ownership-checked) | Add item to cart |
+| GET | `/api/user/cart/{userId}` | USER (ownership-checked) | Get cart contents |
+| DELETE | `/api/user/cart/item/{cartItemId}` | USER | Remove cart item |
+| DELETE | `/api/user/cart/clear/{userId}` | USER (ownership-checked) | Clear entire cart |
+| GET | `/api/user/cart/total/{userId}` | USER (ownership-checked) | Get cart total |
+
+#### A.9 Checkout Endpoints — Legacy Single-Step (`CheckoutController`, base `/api/checkout`)
+
+Not `@Deprecated`-annotated in code, but superseded by A.10's multi-step flow (#76/CHK-01); no
+frontend caller references `/api/checkout` (`frontend/src/api/checkout.ts` targets `/api/v1/checkout`
+exclusively) — kept for direct payment-linked checkout, not removed.
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
@@ -1020,109 +1054,287 @@ Phase 2 (Production Ready) is complete when Phase 1 criteria are met and all of 
 | GET | `/api/checkout/validate/{cartId}` | USER | Validate cart for checkout |
 | GET | `/api/checkout/calculate-total/{cartId}` | USER | Calculate checkout total |
 
-#### A.8 Order Endpoints
+#### A.10 Checkout Endpoints — Multi-Step (Current) (`MultiStepCheckoutController`, base `/api/v1/checkout`)
+
+Address → shipping → coupon → payment → confirm; session stored in Redis, 30-minute TTL. This is
+the flow the frontend's `CheckoutPage` actually consumes.
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/v1/checkout/shipping-options` | USER | Get available shipping options |
+| POST | `/api/v1/checkout/address` | USER | Set checkout address |
+| POST | `/api/v1/checkout/coupon` | USER | Apply coupon |
+| POST | `/api/v1/checkout/shipping` | USER | Select shipping method |
+| POST | `/api/v1/checkout/payment` | USER | Submit payment step |
+| POST | `/api/v1/checkout/confirm` | USER | Confirm and place order |
+
+#### A.11 Order Endpoints (`UserOrderController`, base `/api/user/orders`)
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
 | GET | `/api/user/orders` | USER | Get order history |
-| GET | `/api/user/orders/{orderId}` | USER | Get order by ID |
+| GET | `/api/user/orders/{id}` | USER | Get order by ID |
 
-#### A.9 Wishlist Endpoints
+#### A.12 Wishlist Endpoints (`WishlistController`, base `/api/user/wishlist`)
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
-| POST | `/api/user/wishlist/add/{productId}` | USER | Add product to wishlist |
-| DELETE | `/api/user/wishlist/remove/{productId}` | USER | Remove product from wishlist |
+| POST | `/api/user/wishlist/items/{productId}` | USER | Add product to wishlist |
+| DELETE | `/api/user/wishlist/items/{productId}` | USER | Remove product from wishlist |
 | GET | `/api/user/wishlist` | USER | Get wishlist contents |
-| GET | `/api/user/wishlist/check/{productId}` | USER | Check if product in wishlist |
+| GET | `/api/user/wishlist/contains/{productId}` | USER | Check if product in wishlist |
+| DELETE | `/api/user/wishlist` | USER | Clear entire wishlist |
 | GET | `/api/user/wishlist/count` | USER | Get wishlist item count |
-| DELETE | `/api/user/wishlist/clear` | USER | Clear entire wishlist |
 
-#### A.10 Product Review Endpoints
-
-| Method | Endpoint | Auth | Description |
-| :--- | :--- | :--- | :--- |
-| POST | `/api/user/reviews/product/{productId}` | USER | Submit a review |
-| GET | `/api/public/reviews/product/{productId}` | Public | Get reviews for product |
-| GET | `/api/public/reviews/product/{productId}/summary` | Public | Get rating summary |
-| PUT | `/api/user/reviews/{reviewId}` | USER | Update own review |
-| DELETE | `/api/user/reviews/{reviewId}` | USER | Delete own review |
-| POST | `/api/user/reviews/{reviewId}/helpful` | USER | Mark review as helpful |
-
-#### A.11 Inventory Endpoints
+#### A.13 Product Review Endpoints (`ProductReviewController`, base `/api/products/{productId}/reviews`)
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
-| GET | `/api/inventory/product/{productId}` | USER | Get product inventory |
-| GET | `/api/inventory/check-availability/{productId}` | USER | Check stock availability |
-| POST | `/api/inventory/add-stock/{productId}` | ADMIN | Add stock |
-| POST | `/api/inventory/update-stock/{productId}` | ADMIN | Update stock |
+| POST | `/api/products/{productId}/reviews` | USER | Submit a review |
+| GET | `/api/products/{productId}/reviews` | Public | Get reviews for product |
+| GET | `/api/products/{productId}/reviews/summary` | Public | Get rating summary |
+| GET | `/api/products/{productId}/reviews/top-helpful` | Public | Most-helpful reviews |
+| POST | `/api/products/{productId}/reviews/{reviewId}/helpful` | Authenticated | Mark review as helpful |
+| PUT | `/api/products/{productId}/reviews/{reviewId}` | USER | Update own review |
+| DELETE | `/api/products/{productId}/reviews/{reviewId}` | USER | Delete own review |
 
-#### A.12 Admin Product Management
-
-| Method | Endpoint | Auth | Description |
-| :--- | :--- | :--- | :--- |
-| GET | `/api/admin/products` | ADMIN | List all products |
-| POST | `/api/admin/products` | ADMIN | Create product |
-| PUT | `/api/admin/products/{id}` | ADMIN | Update product |
-| DELETE | `/api/admin/products/{id}` | ADMIN | Delete product |
-
-#### A.13 Admin Order Management
+#### A.14 Notification Endpoints (`NotificationController`, base `/api/user/notifications`)
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
-| GET | `/api/admin/orders` | ADMIN | List all orders |
-| GET | `/api/admin/orders/{orderId}` | ADMIN | Get order details |
-| PUT | `/api/admin/orders/{orderId}/status` | ADMIN | Update order status |
-| DELETE | `/api/admin/orders/{orderId}` | ADMIN | Soft-delete order |
+| GET | `/api/user/notifications/stream` | USER | SSE stream of real-time notifications |
 
-#### A.14 Admin User Management
+#### A.15 Public Inventory Status Endpoints (`InventoryStatusController`, base `/api/inventory`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/inventory/{productId}/status` | Public | Get stock status |
+| GET | `/api/inventory/{productId}/details` | Public | Get inventory details |
+| GET | `/api/inventory/{productId}/available` | Public | Check available quantity |
+
+#### A.16 Public Webhook Receiver (`PaymentWebhookController`, base `/api/v1/webhooks`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| POST | `/api/v1/webhooks/payment` | Public (signature-verified) | Payment provider server-to-server callback |
+
+#### A.17 Admin Product Management (`AdminProductController`, base `/api/v1/admin/products`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/products` | ADMIN | List all products |
+| GET | `/api/v1/admin/products/{id}` | ADMIN | Get product by ID |
+| POST | `/api/v1/admin/products` | ADMIN | Create product |
+| PUT | `/api/v1/admin/products/{id}` | ADMIN | Update product |
+| DELETE | `/api/v1/admin/products/{id}` | ADMIN | Delete product |
+| GET | `/api/v1/admin/products/{id}/images` | ADMIN | List product images |
+| POST | `/api/v1/admin/products/{id}/images` | ADMIN | Upload product image (multipart) |
+| PATCH | `/api/v1/admin/products/{id}/images/reorder` | ADMIN | Reorder product images |
+| DELETE | `/api/v1/admin/products/{id}/images/{imageId}` | ADMIN | Delete product image |
+| GET | `/api/v1/admin/products/{productId}/variants` | ADMIN | List product variants |
+| POST | `/api/v1/admin/products/{productId}/variants` | ADMIN | Create product variant |
+| PUT | `/api/v1/admin/products/{productId}/variants/{variantId}` | ADMIN | Update product variant |
+| DELETE | `/api/v1/admin/products/{productId}/variants/{variantId}` | ADMIN | Delete product variant |
+
+#### A.18 Admin Category Management (`AdminCategoryController`, base `/api/v1/admin/categories`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/categories` | ADMIN | List all categories (hierarchical) |
+| GET | `/api/v1/admin/categories/{id}` | ADMIN | Get category by ID |
+| POST | `/api/v1/admin/categories` | ADMIN | Create category |
+| PUT | `/api/v1/admin/categories/{id}` | ADMIN | Update category |
+| DELETE | `/api/v1/admin/categories/{id}` | ADMIN | Delete category (blocked if it has subcategories) |
+
+#### A.19 Admin Product Tagging (`AdminProductTagController`, base `/api/v1/admin/tags`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/tags` | ADMIN | List all tags |
+| GET | `/api/v1/admin/tags/{id}` | ADMIN | Get tag by ID |
+| POST | `/api/v1/admin/tags` | ADMIN | Create tag |
+| PUT | `/api/v1/admin/tags/{id}` | ADMIN | Update tag |
+| DELETE | `/api/v1/admin/tags/{id}` | ADMIN | Delete tag |
+
+#### A.20 Admin Coupon Management (`AdminCouponController`, base `/api/v1/admin/coupons`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| POST | `/api/v1/admin/coupons` | ADMIN | Create coupon |
+| DELETE | `/api/v1/admin/coupons/{id}` | ADMIN | Delete coupon |
+
+#### A.21 Admin Shipping Method Management (`AdminShippingController`, base `/api/v1/admin/shipping-methods`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/shipping-methods` | ADMIN | List shipping methods |
+| GET | `/api/v1/admin/shipping-methods/{id}` | ADMIN | Get shipping method by ID |
+| POST | `/api/v1/admin/shipping-methods` | ADMIN | Create shipping method |
+| PUT | `/api/v1/admin/shipping-methods/{id}` | ADMIN | Update shipping method |
+| DELETE | `/api/v1/admin/shipping-methods/{id}` | ADMIN | Delete shipping method |
+
+#### A.22 Admin Search Management (`AdminSearchController`, base `/api/v1/admin/search`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| POST | `/api/v1/admin/search/reindex` | ADMIN | Trigger Elasticsearch product reindex |
+
+#### A.23 Admin Order Management (`AdminOrderController`, base `/api/v1/admin/orders`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/orders` | ADMIN | List all orders |
+| GET | `/api/v1/admin/orders/{id}` | ADMIN | Get order details |
+| PATCH | `/api/v1/admin/orders/{id}/status` | ADMIN | Update order status |
+| POST | `/api/v1/admin/orders/{id}/refund` | ADMIN | Process refund |
+
+#### A.24 Admin User Management (`AdminUserController`, base `/api/admin/users`)
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
 | GET | `/api/admin/users` | ADMIN | List all users |
-| GET | `/api/admin/users/{userId}` | ADMIN | Get user details |
-| PUT | `/api/admin/users/{userId}` | ADMIN | Update user |
-| DELETE | `/api/admin/users/{userId}` | ADMIN | Soft-delete user |
+| GET | `/api/admin/users/{id}` | ADMIN | Get user details |
+| PUT | `/api/admin/users/{id}` | ADMIN | Update user |
+| DELETE | `/api/admin/users/{id}` | ADMIN | Soft-delete user |
 
-#### A.15 Admin Inventory Management
-
-| Method | Endpoint | Auth | Description |
-| :--- | :--- | :--- | :--- |
-| GET | `/api/admin/inventory/low-stock` | ADMIN | Get low-stock products |
-| GET | `/api/admin/inventory/out-of-stock` | ADMIN | Get out-of-stock products |
-| POST | `/api/admin/inventory/add-stock/{productId}` | ADMIN | Add stock to product |
-| GET | `/api/admin/inventory/available/{productId}` | ADMIN | Check available quantity |
-
-#### A.16 Admin Analytics and Reports
+#### A.25 Admin Inventory Management (`AdminInventoryController`, base `/api/v1/admin/inventory`)
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
-| GET | `/api/admin/analytics/dashboard` | ADMIN | Get dashboard metrics |
-| GET | `/api/admin/analytics/sales` | ADMIN | Get sales analytics |
-| GET | `/api/admin/analytics/inventory` | ADMIN | Get inventory analytics |
-| GET | `/api/admin/reports/audit-logs` | ADMIN | Get audit log history |
-| GET | `/api/admin/reports/errors` | ADMIN | Get error analytics |
+| GET | `/api/v1/admin/inventory` | ADMIN | List inventory records |
+| PATCH | `/api/v1/admin/inventory/{productId}` | ADMIN | Adjust inventory record |
+| GET | `/api/v1/admin/inventory/product/{productId}` | ADMIN | Get inventory for product |
+| POST | `/api/v1/admin/inventory/add-stock/{productId}` | ADMIN | Add stock |
+| POST | `/api/v1/admin/inventory/update-stock/{productId}` | ADMIN | Update stock |
+| GET | `/api/v1/admin/inventory/check-availability/{productId}` | ADMIN | Check available quantity |
 
-#### A.17 Admin Webhook Management
+#### A.26 Admin Inventory Threshold Management (`AdminInventoryThresholdController`, base `/api/admin/inventory-threshold`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| POST | `/api/admin/inventory-threshold/product/{productId}` | ADMIN | Set product-level threshold |
+| POST | `/api/admin/inventory-threshold/category/{categoryId}` | ADMIN | Set category-level threshold |
+| GET | `/api/admin/inventory-threshold/product/{productId}` | ADMIN | Get product-level threshold |
+| GET | `/api/admin/inventory-threshold/category/{categoryId}` | ADMIN | Get category-level threshold |
+| GET | `/api/admin/inventory-threshold/product/{productId}/effective` | ADMIN | Get effective threshold (product overrides category) |
+| PUT | `/api/admin/inventory-threshold/product/{productId}/use-category` | ADMIN | Revert product to category-level threshold |
+
+#### A.27 Admin Inventory Analytics (`AdminInventoryAnalyticsController`, base `/api/admin/inventory-analytics`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/admin/inventory-analytics/high-demand-low-inventory` | ADMIN | High-demand/low-stock products |
+| GET | `/api/admin/inventory-analytics/seasonal-patterns` | ADMIN | Seasonal demand patterns |
+| GET | `/api/admin/inventory-analytics/stock-turnover` | ADMIN | Stock turnover rate |
+| GET | `/api/admin/inventory-analytics/restocking-plan` | ADMIN | Suggested restocking plan |
+
+#### A.28 Admin Inventory Reports (`AdminInventoryReportController`, base `/api/admin/inventory-reports`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/admin/inventory-reports/below-threshold` | ADMIN | Products below threshold |
+| GET | `/api/admin/inventory-reports/breaches` | ADMIN | Threshold breach history |
+| GET | `/api/admin/inventory-reports/frequent-problems` | ADMIN | Recurring low-stock products |
+| GET | `/api/admin/inventory-reports/product/{productId}` | ADMIN | Report for a specific product |
+| GET | `/api/admin/inventory-reports/summary` | ADMIN | Summary report |
+
+#### A.29 Admin Reports (`AdminReportController`, base `/api/admin/reports`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/admin/reports/dashboard` | ADMIN | Dashboard summary |
+| GET | `/api/admin/reports/users/count` | ADMIN | User count |
+| GET | `/api/admin/reports/products/count` | ADMIN | Product count |
+| GET | `/api/admin/reports/orders/count` | ADMIN | Order count |
+| GET | `/api/admin/reports/revenue` | ADMIN | Revenue report |
+
+#### A.30 Admin Sales Analytics (`SalesAnalyticsController`, base `/api/v1/admin/analytics/sales`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/analytics/sales/dashboard` | ADMIN | Sales dashboard |
+| GET | `/api/v1/admin/analytics/sales/revenue/daily` | ADMIN | Daily revenue |
+| GET | `/api/v1/admin/analytics/sales/conversion-rate` | ADMIN | Conversion rate |
+| GET | `/api/v1/admin/analytics/sales/cart-abandonment-rate` | ADMIN | Cart abandonment rate |
+| GET | `/api/v1/admin/analytics/sales/average-order-value` | ADMIN | Average order value |
+| GET | `/api/v1/admin/analytics/sales/customer-lifetime-value/{userId}` | ADMIN | Customer lifetime value |
+
+#### A.31 Admin Analytics (Audit/Metrics) (`AdminAnalyticsController`, base `/api/admin/analytics`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/admin/analytics/audit-logs/user/{userId}` | ADMIN | Audit logs for a user |
+| GET | `/api/admin/analytics/audit-logs/action/{action}` | ADMIN | Audit logs for an action type |
+| GET | `/api/admin/analytics/audit-logs/range` | ADMIN | Audit logs within a time range |
+| GET | `/api/admin/analytics/metrics/range` | ADMIN | Ingested metrics within a time range |
+| GET | `/api/admin/analytics/metrics/recent` | ADMIN | Recent metrics |
+| GET | `/api/admin/analytics/alerts/summary` | ADMIN | Alert summary |
+| GET | `/api/admin/analytics/dashboard` | ADMIN | Analytics dashboard |
+| GET | `/api/admin/analytics/api-errors/by-status` | ADMIN | API errors grouped by HTTP status |
+| GET | `/api/admin/analytics/api-errors/by-endpoint` | ADMIN | API errors grouped by endpoint |
+| GET | `/api/admin/analytics/behaviour` | ADMIN | User behaviour analytics |
+
+#### A.32 Admin Audit Log (`AuditLogController`, base `/api/admin/audit`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/admin/audit` | ADMIN | List audit log entries |
+
+#### A.33 Admin Webhook Management (`WebhookAdminController`, base `/api/admin/webhooks`)
+
+Distinct from A.16's public receiver — this is subscription management.
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
 | POST | `/api/admin/webhooks` | ADMIN | Create webhook subscription |
 | GET | `/api/admin/webhooks` | ADMIN | List all webhooks |
-| PUT | `/api/admin/webhooks/{id}/activate` | ADMIN | Activate webhook |
 | PUT | `/api/admin/webhooks/{id}/deactivate` | ADMIN | Deactivate webhook |
+| DELETE | `/api/admin/webhooks/{id}` | ADMIN | Delete webhook |
 
-#### A.18 Monitoring Endpoints
+#### A.34 Admin Monitoring (`MonitoringController`, base `/api/admin/monitoring`)
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
-| GET | `/actuator/health` | Public | System health status |
-| GET | `/actuator/prometheus` | Public | Prometheus metrics |
-| GET | `/actuator/info` | Public | Application info |
-| GET | `/actuator/metrics` | ADMIN | Detailed metrics |
-| GET | `/api/monitoring/performance` | ADMIN | Performance metrics |
-| GET | `/api/monitoring/pool` | ADMIN | Connection pool stats |
+| GET | `/api/admin/monitoring/performance` | ADMIN | Performance metrics |
+| GET | `/api/admin/monitoring/performance/sla-status` | ADMIN | SLA compliance status |
+| POST | `/api/admin/monitoring/performance/reset` | ADMIN | Reset performance counters |
+| GET | `/api/admin/monitoring/uptime` | ADMIN | Uptime (raw) |
+| GET | `/api/admin/monitoring/uptime/formatted` | ADMIN | Uptime (formatted) |
+| POST | `/api/admin/monitoring/uptime/reset` | ADMIN | Reset uptime counter |
+| GET | `/api/admin/monitoring/health-status` | ADMIN | Health status summary |
+| GET | `/api/admin/monitoring/sla-status` | ADMIN | Overall SLA status |
+
+#### A.35 Admin Adaptive Thresholds (`AdminThresholdController`, base `/api/admin/thresholds`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/admin/thresholds` | ADMIN | Get all alerting thresholds |
+| GET / PUT | `/api/admin/thresholds/cpu` | ADMIN | Get/set CPU alert threshold |
+| GET / PUT | `/api/admin/thresholds/memory` | ADMIN | Get/set memory alert threshold |
+| GET / PUT | `/api/admin/thresholds/error-rate` | ADMIN | Get/set error-rate alert threshold |
+| GET / PUT | `/api/admin/thresholds/response-time` | ADMIN | Get/set response-time alert threshold |
+| GET / PUT | `/api/admin/thresholds/failed-logins` | ADMIN | Get/set failed-login alert threshold |
+| GET / PUT | `/api/admin/thresholds/jwt-refresh` | ADMIN | Get/set JWT-refresh alert threshold |
+| GET / PUT | `/api/admin/thresholds/admin-operations` | ADMIN | Get/set admin-operations alert threshold |
+| POST | `/api/admin/thresholds/reset` | ADMIN | Reset all thresholds to defaults |
+
+#### A.36 Actuator and Monitoring Endpoints
+
+`/actuator/prometheus` uses a dedicated Basic Auth credential, isolated from the app's real user
+accounts (`actuatorMonitoringSecurityFilterChain`, `@Order(0)` — see `spring-security.md`); every
+other `/actuator/**` path requires `ROLE_ADMIN` via the main filter chain.
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| GET | `/actuator/health/**` | Public | Liveness/readiness health groups |
+| GET | `/actuator/prometheus` | Basic Auth (dedicated monitoring credential) | Prometheus scrape target |
+| GET | `/actuator/**` (all other paths, e.g. `/actuator/metrics`, `/actuator/env`) | ADMIN | Full actuator surface |
+| GET | `/actuator/custom/performance-metrics` | ADMIN | Custom performance metrics (`PerformanceMetricsController`) |
+| GET | `/actuator/custom/cache-metrics` | ADMIN | Cache metrics |
+| GET | `/actuator/custom/database-metrics` | ADMIN | Database connection metrics |
+| GET | `/actuator/custom/performance-report` | ADMIN | Performance report |
+| GET | `/actuator/custom/pool-status` | ADMIN | Connection pool status (`PoolMetricsController`) |
+| GET | `/actuator/custom/pool-health` | ADMIN | Connection pool health |
 
 ---
 
