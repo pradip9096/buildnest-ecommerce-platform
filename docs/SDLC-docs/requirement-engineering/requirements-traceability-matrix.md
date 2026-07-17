@@ -98,15 +98,15 @@ The RTM serves to:
 | Reliability (REL) | 5 | 2 | 0 | 3 | 0 | 0 |
 | Availability (AVL) | 4 | 1 | 0 | 3 | 0 | 0 |
 | Security (SEC) | 14 | 9 | 2 | 3 | 0 | 0 |
-| Maintainability (MNT) | 6 | 3 | 1 | 2 | 0 | 0 |
+| Maintainability (MNT) | 6 | 6 | 0 | 0 | 0 | 0 |
 | Portability (PRT) | 4 | 1 | 0 | 3 | 0 | 0 |
 | Scalability (SCL) | 4 | 2 | 0 | 2 | 0 | 0 |
 | Safety (SAF) | 3 | 1 | 0 | 2 | 0 | 0 |
 | Design Constraints (DC) | 8 | 7 | 1 | 0 | 0 | 0 |
-| Test Integrity (TIR) | 5 | 0 | 0 | 1 | 4 | 0 |
-| **Totals** | **179** | **89** | **9** | **79** | **4** | **0** |
+| Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
+| **Totals** | **179** | **93** | **9** | **77** | **0** | **0** |
 
-> **Phase 1 gate posture**: 89 requirements fully implemented, 4 with open defects (TIR-01 through TIR-04) that block Phase 1 exit. Phase 1 is blocked until all 🔴 defects are resolved.
+> **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 
 ---
 
@@ -385,8 +385,8 @@ The RTM serves to:
 | Req ID | Description | Priority | Phase | SDD Reference | Implementation | Test Class(es) | Verification | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | MNT-01 | 100% Javadoc coverage enforced by Maven Javadoc Plugin | High | Ph-1 | §6.1 | `pom.xml` (Javadoc plugin config) | Build gate | Build | ✅ Implemented |
-| MNT-02 | JaCoCo line coverage ≥ 70% | High | Ph-2 | §17 (TP) | JaCoCo 0.8.11 in `pom.xml` — gate at 0.40 (current); target 0.70 (Ph-2) | `./mvnw verify` JaCoCo gate | Build | 🟡 Partial (gate at 40%; target 70% not yet enforced) |
-| MNT-03 | All unit tests: 0 failures, 0 errors | High | Ph-1 | §15 (TP) | `./mvnw test -P unit-tests` | All test classes | Build | 🔴 Open Defect (14 failures/errors; DEF-001 through DEF-006) |
+| MNT-02 | JaCoCo line coverage ≥ 70% | High | Ph-2 | §17 (TP) | JaCoCo in `pom.xml` — PACKAGE/INSTRUCTION `jacoco-check` rule enforces 0.85 minimum, exceeding the 0.70 target | `./mvnw verify` JaCoCo gate | Build | ✅ Implemented (verified 2026-07-17, #452 — gate is 85%, not the previously-recorded 40%) |
+| MNT-03 | All unit tests: 0 failures, 0 errors | High | Ph-1 | §15 (TP) | `./mvnw test -P unit-tests` | All test classes | Build | ✅ Implemented (verified 2026-07-17, #452 — `@Tag("e2e")`, `RoleRepository` mock, and both security-test status-code assertions all confirmed fixed in source) |
 | MNT-04 | All DDL changes via Liquibase changesets | High | Ph-1 | §4.5 | `src/main/resources/db/changelog/` | `DatabaseConstraintTest` | Inspection | ✅ Implemented |
 | MNT-05 | Structured JSON logging via SLF4J / Logback + Logstash encoder | High | Ph-1 | §4.2.1 | `logback-spring.xml`, `@Slf4j` on 87 classes | `LoggingStandardsTest`, `SecureLoggerTest` | Inspection | ✅ Implemented |
 | MNT-06 | No `System.out` or `printStackTrace` in production code | High | Ph-1 | §4.2.1 | All production `.java` files | `LoggingStandardsTest`, `DeadCodeAnalyzerTest` | Inspection | ✅ Implemented |
@@ -438,11 +438,11 @@ The RTM serves to:
 
 | Req ID | Description | Priority | Phase | SDD Reference | Implementation | Test Class(es) | Verification | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| TIR-01 | E2E tests must be excluded from `unit-tests` profile; tagged `@Tag("e2e")` | High | Ph-1 | §15 (TP) | `pom.xml` excludedGroups; `@Tag("e2e")` on `ProductApiTest`, `OrderApiTest` | `./mvnw test` must show 0 failures from missing server | Build | 🔴 Open Defect (DEF-002, DEF-003 — E2E tests run in unit-tests profile; fail with HTTP 500) |
-| TIR-02 | All `@InjectMocks` services must have `@Mock` for every dependency | High | Ph-1 | §15 (TP) | `AuthServiceImplTest` — add `@Mock RoleRepository roleRepository` | `AuthServiceImplTest` — 0 NullPointerExceptions | Test | 🔴 Open Defect (DEF-001 — `roleRepository` is null; 3 NPE errors) |
-| TIR-03 | Security tests assert 403 (authenticated+unauthorised) vs 401 (unauthenticated) | Medium | Ph-1 | §15 (TP) | `AuthenticationAuthorizationSecurityTest.testRoleHierarchyEnforcement()` | Correct HTTP status assertion | Inspection | 🔴 Open Defect (DEF-004 — asserts 401; receives 403) |
-| TIR-04 | Input validation tests accept 400/415 as well as 401 | Medium | Ph-1 | §15 (TP) | `InputValidationSecurityTest.testXSSPrevention()`, `testFileUploadValidation()` | Correct status code range assertions | Inspection | 🔴 Open Defect (DEF-005, DEF-006 — asserts 401; receives 400 or 415) |
-| TIR-05 | PIT mutation score ≥ 75% (`service.*` and `security.*`) | Medium | Ph-2 | §15 (TP) | `pom.xml` PIT plugin (not yet configured) | `./mvnw pitest:mutationCoverage -P coverage` | Build | 🔵 Pending Ph-2 |
+| TIR-01 | E2E tests must be excluded from `unit-tests` profile; tagged `@Tag("e2e")` | High | Ph-1 | §15 (TP) | `pom.xml` excludedGroups; `@Tag("e2e")` on `ProductApiTest`, `OrderApiTest` (now in a dedicated `e2e/` test package) | `./mvnw test` must show 0 failures from missing server | Build | ✅ Implemented (verified 2026-07-17, #452 — both classes confirmed `@Tag("e2e")`-annotated) |
+| TIR-02 | All `@InjectMocks` services must have `@Mock` for every dependency | High | Ph-1 | §15 (TP) | `AuthServiceImplTest` — `@Mock RoleRepository roleRepository` | `AuthServiceImplTest` — 0 NullPointerExceptions | Test | ✅ Implemented (verified 2026-07-17, #452) |
+| TIR-03 | Security tests assert 403 (authenticated+unauthorised) vs 401 (unauthenticated) | Medium | Ph-1 | §15 (TP) | `AuthenticationAuthorizationSecurityTest.testRoleHierarchyEnforcement()` | Correct HTTP status assertion | Inspection | ✅ Implemented (verified 2026-07-17, #452 — asserts `status().isForbidden()`) |
+| TIR-04 | Input validation tests accept 400/415 as well as 401 | Medium | Ph-1 | §15 (TP) | `InputValidationSecurityTest.testXSSPrevention()`, `testFileUploadValidation()` | Correct status code range assertions | Inspection | ✅ Implemented (verified 2026-07-17, #452 — asserts `isBadRequest()`/`isUnsupportedMediaType()`) |
+| TIR-05 | PIT mutation score ≥ 75% (`service.*` and `security.*`) | Medium | Ph-2 | §15 (TP) | `pom.xml` `pitest-maven` — `mutationThreshold` currently 77 (M4 ratchet: 77% mid-M4 → 79% end-M4) | `./mvnw pitest:mutationCoverage -P coverage` | Build | 🟡 Partial (configured and enforced above the 75% requirement floor; ratchet still climbing toward its own 79% end-M4 target, verified 2026-07-17, #452) |
 
 ---
 
@@ -583,16 +583,18 @@ The RTM serves to:
 
 ---
 
-## 11. Open Defects Blocking Phase 1 Exit
+## 11. Resolved Defects (Formerly Blocking Phase 1 Exit)
 
-| Defect ID | TIR / Req | File | Symptom | Root Cause | Remediation Action |
+**All six defects below are resolved** — verified directly against source on 2026-07-17 (#452). This section previously blocked Phase 1 exit; retained here as a historical record rather than deleted outright, per §13's maintenance procedure (remove from "open" listing once resolved and verified).
+
+| Defect ID | TIR / Req | File | Symptom (as originally recorded) | Root Cause | Resolution — Verified 2026-07-17 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| DEF-001 | TIR-02 / MNT-03 | `AuthServiceImplTest.java` | `NullPointerException` in 3 test methods (`testRegisterSuccess`, `testRegisterPublishesEvent`, `testRegisterSetsUserFieldsAndValidatesPassword`) | `RoleRepository roleRepository` not declared as `@Mock`; field is null when `@InjectMocks` creates `AuthServiceImpl` | Add `@Mock RoleRepository roleRepository` field; add stub `when(roleRepository.findByName("USER")).thenReturn(Optional.of(userRole))` in `@BeforeEach` |
-| DEF-002 | TIR-01 / MNT-03 | `ProductApiTest.java` | HTTP 500 in 4 test methods (`testGetProductsByCategory`, `testSearchProducts`, `testGetProductDetails`, `testGetDeprecatedV1Products`) | E2E test class runs in `unit-tests` Maven profile; no server is running; RestAssured connection fails | Add `@Tag("e2e")` to `ProductApiTest`; confirm `pom.xml` unit-tests profile has `<excludedGroups>e2e,stress,integration</excludedGroups>` |
-| DEF-003 | TIR-01 / MNT-03 | `OrderApiTest.java` | HTTP 500 (presumed, consistent with ProductApiTest) | Same root cause as DEF-002 | Add `@Tag("e2e")` to `OrderApiTest` |
-| DEF-004 | TIR-03 / MNT-03 | `AuthenticationAuthorizationSecurityTest.java:246` | Test asserts HTTP 401; receives HTTP 403 | `testRoleHierarchyEnforcement` tests an authenticated user accessing an admin endpoint; the correct response is 403 (Forbidden), not 401 (Unauthorized) | Change assertion from `equalTo(401)` to `equalTo(403)` in `testRoleHierarchyEnforcement` |
-| DEF-005 | TIR-04 / MNT-03 | `InputValidationSecurityTest.java:168` | Test asserts HTTP 401; receives HTTP 400 | `testXSSPrevention` sends XSS payload; Spring's `MethodArgumentNotValidException` (400) fires before JWT authentication filter | Change assertion to `anyOf(equalTo(400), equalTo(401))` |
-| DEF-006 | TIR-04 / MNT-03 | `InputValidationSecurityTest.java:303` | Test asserts HTTP 401; receives HTTP 415 | `testFileUploadValidation` sends wrong Content-Type; Spring's `HttpMediaTypeNotSupportedException` (415) fires before JWT filter | Change assertion to `anyOf(equalTo(415), equalTo(401))` |
+| DEF-001 | TIR-02 / MNT-03 | `AuthServiceImplTest.java` | `NullPointerException` in 3 test methods (`testRegisterSuccess`, `testRegisterPublishesEvent`, `testRegisterSetsUserFieldsAndValidatesPassword`) | `RoleRepository roleRepository` not declared as `@Mock`; field is null when `@InjectMocks` creates `AuthServiceImpl` | ✅ `@Mock RoleRepository roleRepository` is present |
+| DEF-002 | TIR-01 / MNT-03 | `ProductApiTest.java` | HTTP 500 in 4 test methods (`testGetProductsByCategory`, `testSearchProducts`, `testGetProductDetails`, `testGetDeprecatedV1Products`) | E2E test class runs in `unit-tests` Maven profile; no server is running; RestAssured connection fails | ✅ `@Tag("e2e")` present; class now lives in a dedicated `e2e/product/` package |
+| DEF-003 | TIR-01 / MNT-03 | `OrderApiTest.java` | HTTP 500 (presumed, consistent with ProductApiTest) | Same root cause as DEF-002 | ✅ `@Tag("e2e")` present; class now lives in a dedicated `e2e/order/` package |
+| DEF-004 | TIR-03 / MNT-03 | `AuthenticationAuthorizationSecurityTest.java:246` | Test asserts HTTP 401; receives HTTP 403 | `testRoleHierarchyEnforcement` tests an authenticated user accessing an admin endpoint; the correct response is 403 (Forbidden), not 401 (Unauthorized) | ✅ Assertion is `status().isForbidden()` |
+| DEF-005 | TIR-04 / MNT-03 | `InputValidationSecurityTest.java:168` | Test asserts HTTP 401; receives HTTP 400 | `testXSSPrevention` sends XSS payload; Spring's `MethodArgumentNotValidException` (400) fires before JWT authentication filter | ✅ Assertion is `status().isBadRequest()` |
+| DEF-006 | TIR-04 / MNT-03 | `InputValidationSecurityTest.java:303` | Test asserts HTTP 401; receives HTTP 415 | `testFileUploadValidation` sends wrong Content-Type; Spring's `HttpMediaTypeNotSupportedException` (415) fires before JWT filter | ✅ Assertion is `status().isUnsupportedMediaType()` |
 
 ---
 
@@ -607,14 +609,13 @@ The RTM serves to:
 | Design Constraints (DC-01 to DC-07) | 7 | 0 | 0 | ✅ |
 | Reliability (REL-02, REL-03) | 2 | 0 | 0 | ✅ |
 | Availability (AVL-04) | 1 | 0 | 0 | ✅ |
-| Maintainability (MNT-01, MNT-04, MNT-05, MNT-06) | 4 | 0 | 0 | ✅ |
+| Maintainability (MNT-01, MNT-03, MNT-04, MNT-05, MNT-06) | 5 | 0 | 0 | ✅ |
 | Portability (PRT-04) | 1 | 0 | 0 | ✅ |
 | Scalability (SCL-01, SCL-02) | 2 | 0 | 0 | ✅ |
 | Safety (SAF-03) | 1 | 0 | 0 | ✅ |
-| Test Integrity (TIR-01 to TIR-04) | 0 | **4** | 0 | 🔴 **BLOCKED** |
-| Maintainability (MNT-03) | 0 | **1** | 0 | 🔴 **BLOCKED** |
+| Test Integrity (TIR-01 to TIR-04) | 4 | 0 | 0 | ✅ |
 
-> **Phase 1 is blocked.** Six defects (DEF-001 through DEF-006) across TIR-01 to TIR-04 and MNT-03 must be resolved. Estimated remediation effort: 2–3 hours.
+> **Phase 1 is no longer blocked.** All six defects (DEF-001 through DEF-006) across TIR-01 to TIR-04 and MNT-03 were verified resolved on 2026-07-17 (#452) — see §11 for the resolution record. TIR-05 (Ph-2, PIT mutation score) remains 🟡 Partial, not a Phase 1 gate item.
 
 ### Phase 2 — Production Readiness
 
@@ -627,9 +628,11 @@ The RTM serves to:
 | Performance / Scalability / Reliability (PR, REL, SCL) | 13 | 0 | 13 |
 | Availability (AVL-01 to AVL-03) | 3 | 0 | 3 |
 | Admin full suite (FR-ADM-01 to FR-ADM-07) | 6 | 1 (FR-ADM-06 partial) | 5 |
-| Maintainability (MNT-02, TIR-05) | 2 | 1 (MNT-02 40% gate) | 1 |
+| Maintainability (MNT-02, TIR-05) | 2 | 2 (MNT-02 now ✅ at 85% JaCoCo gate, corrected 2026-07-17 from a stale 40% record; TIR-05 at 77% PIT, ratcheting to 79% end-M4) | 0 |
 | Auth / Safety / Checkout / Inventory Ph-2 | 10 | 0 | 10 |
-| **Phase 2 total** | **80** | **7** | **73** |
+| **Phase 2 total** | **80** | **7*** | **73** |
+
+*\* The MNT-02/TIR-05 row above was corrected 2026-07-17 (#452); this aggregate total wasn't otherwise re-verified in the same pass — the Frontend row in particular is known-stale (see §6.10's header and #453's broader audit) and will shift this total materially once corrected.*
 
 ---
 
