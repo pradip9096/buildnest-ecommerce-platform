@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 4.3 |
-| **Date** | 2026-07-17 18:18 IST |
+| **Version** | 4.4 |
+| **Date** | 2026-07-17 19:11 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -32,6 +32,7 @@
 | 4.1 | 2026-07-17 13:43 IST | Technical Lead | Corrected two stale technology-stack claims found via direct source verification (#455): Redis client is Lettuce, not Jedis (`lettuce-core:6.6.0` confirmed via `mvnw dependency:tree`; Jedis absent from classpath); Elasticsearch version is 8.17 (`docker-compose.yml`'s active service), not the previously-recorded 8.10. Appendix A's API Endpoint Catalogue was found separately stale (wrong path prefixes, missing endpoint groups) and filed as its own follow-up (#456) rather than fixed here, since it needs a full per-endpoint re-derivation | Pending |
 | 4.2 | 2026-07-17 16:33 IST | Technical Lead | Added FR-FE-31 (admin category management UI) to §3.2.10.2, tracing to #428's `CategoriesTab.tsx`/`CategoryFormModal.tsx` — the `FR-FE-*` series previously had no requirement row for this feature at all despite it being implemented (#450) | Pending |
 | 4.3 | 2026-07-17 18:18 IST | Technical Lead | Full re-derivation of Appendix A's API Endpoint Catalogue (#456), fixing every controller base-path prefix and adding previously-missing endpoint groups (categories, tags, coupons, shipping-methods, search reindex, inventory-threshold/analytics/reports, public webhook receiver, product reviews, notifications SSE, auth validate-token/csrf) — 18 sections expanded to 36, each citing its real controller class. Determined `/api/checkout` (legacy single-step) vs `/api/v1/checkout` (multi-step, current — confirmed via `frontend/src/api/checkout.ts`) via direct investigation, not assumption | Pending |
+| 4.4 | 2026-07-17 19:11 IST | Technical Lead | §4.2's Frontend aggregate row still said `FR-FE-01–30`/count 30, never updated when #450 added `FR-FE-31` (#470). Corrected to `FR-FE-01–31`/31, and recomputed the priority breakdown by reading all 31 rows' actual priorities directly rather than incrementing the stale figure — real split is 16 High/12 Medium/3 Low, not the previously-stated 15/10/5 (which was already wrong even for the original 30, independent of FR-FE-31). Recomputed **Total Functional** from the table's own row counts: 99, not the previously-stated 95 (which also didn't match the sum of its own listed rows even before this fix) | Pending |
 
 ### Document Change Procedure
 
@@ -890,8 +891,8 @@ Test integrity requirements define the properties that the test suite itself mus
 | Reviews / Wishlists (FR-REV, FR-WISH) | 5 | Ph-1 | 0 High, 3 Medium, 2 Low | Test |
 | Admin Operations (FR-ADM-01–09) | 9 | Ph-1 / Ph-2 | 2 High, 6 Medium, 1 Low | Test |
 | Monitoring (FR-MON-01–08) | 8 | Ph-1 / Ph-2 | 3 High, 3 Medium, 2 Low | Test, Inspection |
-| Frontend (FR-FE-01–30) | 30 | Ph-2 | 15 High, 10 Medium, 5 Low | Test, Inspection, Demonstration |
-| **Total Functional** | **95** | | | |
+| Frontend (FR-FE-01–31) | 31 | Ph-2 | 16 High, 12 Medium, 3 Low | Test, Inspection, Demonstration |
+| **Total Functional** | **99** | | | |
 | Usability (UR-01–05, UR-FE-01–03) | 8 | Ph-1 / Ph-2 | Mixed | Test, Inspection |
 | Performance (PR-01–08) | 8 | Ph-1 / Ph-2 | 4 High, 3 Medium, 1 Low | Analysis, Inspection |
 | Reliability (REL-01–05) | 5 | Ph-1 / Ph-2 | Mixed | Analysis, Inspection |
