@@ -56,9 +56,9 @@ public class ProductServiceImpl implements ProductService {
     public List<Product> getAllProducts() {
         log.info("Fetching all products");
         List<Product> products = productRepository.findAll();
-        // Force-initialize the lazy `tags` collection while the session is still open —
-        // open-in-view is disabled, so an uninitialized proxy throws LazyInitializationException
-        // once Jackson serializes the response after the transaction has closed.
+        // Force-initialize lazy `tags` while the session is open — open-in-view
+        // is disabled, so an uninitialized proxy throws once Jackson serializes
+        // the response after the transaction has already closed.
         products.forEach(product -> Hibernate.initialize(product.getTags()));
         return products;
     }
