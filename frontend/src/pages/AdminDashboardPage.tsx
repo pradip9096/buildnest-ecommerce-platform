@@ -5,13 +5,15 @@ import { InventoryTab } from '../components/admin/InventoryTab';
 import { UsersTab } from '../components/admin/UsersTab';
 import { AuditLogTab } from '../components/admin/AuditLogTab';
 import { CategoriesTab } from '../components/admin/CategoriesTab';
+import { ProductsTab } from '../components/admin/ProductsTab';
 
-type Tab = 'overview' | 'orders' | 'inventory' | 'categories' | 'users' | 'audit';
+type Tab = 'overview' | 'orders' | 'inventory' | 'products' | 'categories' | 'users' | 'audit';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'overview',   label: 'Overview',   icon: '📊' },
   { id: 'orders',     label: 'Orders',     icon: '🛒' },
   { id: 'inventory',  label: 'Inventory',  icon: '📦' },
+  { id: 'products',   label: 'Products',   icon: '🏷️' },
   { id: 'categories', label: 'Categories', icon: '🗂️' },
   { id: 'users',      label: 'Users',      icon: '👥' },
   { id: 'audit',      label: 'Audit Log',  icon: '🔍' },
@@ -54,6 +56,7 @@ export function AdminDashboardPage() {
             {activeTab === 'overview'  && <OverviewTab />}
             {activeTab === 'orders'    && <OrdersTab />}
             {activeTab === 'inventory' && <InventoryTab />}
+            {activeTab === 'products' && <ProductsTab />}
             {activeTab === 'categories' && <CategoriesTab />}
             {activeTab === 'users'     && <UsersTab />}
             {activeTab === 'audit'     && <AuditLogTab />}
