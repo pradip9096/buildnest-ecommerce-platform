@@ -10,12 +10,12 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 3.2 |
-| **Date** | 2026-07-17 20:10 IST |
+| **Version** | 3.3 |
+| **Date** | 2026-07-17 19:11 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
-| **Related SRS** | SRS-BUILDNEST-001 v4.0 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
+| **Related SRS** | SRS-BUILDNEST-001 v4.4 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
 | **Supersedes** | SDD v2.0 (archive/docs/ISO-IEC-IEEE/SDD_IEEE_1016_2017.md, 2026-02-11) |
 
 ---
@@ -31,6 +31,7 @@
 | 3.0 | 2026-06-19 | Software Architect | Baseline-driven update: corrected Spring Boot to 3.5.10; updated component counts from static analysis (256 source files, 173 test files); corrected circuit breaker thresholds from live configuration; added JwtTokenProvider dual-key rotation design; added `@Profile("!test")` SecurityConfig constraint; corrected Kubernetes resource limits from manifest (512Mi request / 1Gi limit); aligned all design elements with SRS-BUILDNEST-001 v4.0; referenced Baseline Assessment Report | Pending |
 | 3.1 | 2026-07-17 13:53 IST | Software Architect | Recomputed all 12 rows of §4.2.3's Component Statistics table directly via the `find`/`grep` commands the table itself cites — every metric had drifted upward as real features shipped since the 2026-06-19 baseline (e.g. 256→352 source files, 29→38 controllers, 19→28 repositories); corrected Jedis→Lettuce and Elasticsearch 8.10→8.17 references throughout (§458). The 6 sections still framing the entire frontend design as "Design Intent — Phase 2" were found separately stale (the frontend is real and substantial) and filed as their own follow-up (#459) rather than fixed here, since correcting them requires authoring real design content, not a relabel | Pending |
 | 3.2 | 2026-07-17 20:10 IST | Software Architect | Full re-derivation (not a relabel) of the 6 sections flagged by #459 as still framing the real, deployed frontend as unbuilt/aspirational: §1.2 Scope and §4.1.1's context diagram drop the "design intent"/"(Phase 2)" framing; §4.2.2's package structure rewritten to the real `frontend/src/` layout (`api/`, `components/{account,admin,cart,checkout,common,filters,product}/`, `contexts/`, `hooks/`, `pages/`, `types/`, `test/` — no `core/`/`auth/`/`admin/`/`router/`/`services/`); §4.3.6's component model rewritten around the actual `useAsync` hook, `RequireAuth` guard, and Tailwind-only styling (no component library, no Redux/React Query); §4.5.5's state model corrected to `AuthContext` + hook-local state (`useCart`, `useAsync`) — no `CartContext`, no server-cache library; §4.7.4's routes rewritten to match `App.tsx`'s real `react-router-dom` v7 routes and RTM's FR-FE mapping (tabs inside `AccountPage`/`AdminDashboardPage`, not standalone routes); §4.10.5 rewritten against the actual `frontend/Dockerfile`/`nginx.conf` (`nginx-unprivileged`, healthcheck, real cache-control directives) | Pending |
+| 3.3 | 2026-07-17 19:11 IST | Software Architect | §4.2.3-adjacent traceability row for "React SPA design" still cited `FR-FE-01–30`, never updated when #450 added `FR-FE-31` (#470) — corrected to `FR-FE-01–31`. Also corrected the `Related SRS` cross-reference from a long-stale v4.0 to the current v4.4, which had drifted through 4 intervening SRS version bumps without ever being updated here | Pending |
 
 ### Document Approval
 
@@ -1323,7 +1324,7 @@ Bucket4j token-bucket strategy backed by Redis:
 | HikariCP configuration | PR-05, PR-06 | Resource |
 | Liquibase changelogs | MNT-04, DC-12 | Information |
 | `HttpsEnforcementFilter`, `@PostConstruct` SSL check | SEC-03, FR-MON-01 | Security Overlay |
-| React SPA design (§4.3.6, §4.7.4, §4.10.5) | FR-FE-01–30 | Composition, Interface |
+| React SPA design (§4.3.6, §4.7.4, §4.10.5) | FR-FE-01–31 | Composition, Interface |
 | Domain events (`DomainEventPublisher`) | FR-INV-06, FR-PAY-04 | Logical, Interaction |
 
 ---
