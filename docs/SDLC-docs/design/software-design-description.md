@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 3.0 |
-| **Date** | 2026-06-19 |
+| **Version** | 3.1 |
+| **Date** | 2026-07-17 |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
@@ -29,6 +29,7 @@
 | 1.0 | 2026-02-10 | Documentation Team | Initial controlled release per ISO/IEC/IEEE 1016:2017 | Approved |
 | 2.0 | 2026-02-11 | Documentation Team | Fixed pool rows; added Wishlist/Review/Admin SRS traceability | Approved |
 | 3.0 | 2026-06-19 | Claude Code (claude-sonnet-4-6) | Baseline-driven update: corrected Spring Boot to 3.5.10; updated component counts from static analysis (256 source files, 173 test files); corrected circuit breaker thresholds from live configuration; added JwtTokenProvider dual-key rotation design; added `@Profile("!test")` SecurityConfig constraint; corrected Kubernetes resource limits from manifest (512Mi request / 1Gi limit); aligned all design elements with SRS-BUILDNEST-001 v4.0; referenced Baseline Assessment Report | Pending |
+| 3.1 | 2026-07-17 | Claude Code (claude-sonnet-5) | Recomputed all 12 rows of §4.2.3's Component Statistics table directly via the `find`/`grep` commands the table itself cites — every metric had drifted upward as real features shipped since the 2026-06-19 baseline (e.g. 256→352 source files, 29→38 controllers, 19→28 repositories); corrected Jedis→Lettuce and Elasticsearch 8.10→8.17 references throughout (§458). The 6 sections still framing the entire frontend design as "Design Intent — Phase 2" were found separately stale (the frontend is real and substantial) and filed as their own follow-up (#459) rather than fixed here, since correcting them requires authoring real design content, not a relabel | Pending |
 
 ### Document Approval
 
@@ -101,7 +102,7 @@ This SDD covers the design of the **BuildNest** platform in its entirety:
 - Backend REST API (Spring Boot 3.5.10, Java 21) — layered monolithic architecture
 - Frontend Application (React 19.2, Vite 8.0) — Single Page Application (design intent; implementation pending)
 - Security chain — JWT authentication, RBAC, rate limiting, secure HTTP headers
-- External integrations — MySQL 8.2, Redis 7, Elasticsearch 8.10, Razorpay
+- External integrations — MySQL 8.2, Redis 7, Elasticsearch 8.17, Razorpay
 - Resilience patterns — Resilience4j circuit breakers, time limiters
 - Deployment topology — Docker, Kubernetes, Prometheus observability stack
 
@@ -214,9 +215,9 @@ Per ISO/IEC/IEEE 1016:2017 Clause 5.5:
 │  BACKEND API                                                        │
 │  BuildNest Spring Boot 3.5.10  :8080  Java 21                       │
 └──────┬────────────┬────────────┬──────────┬──────────┬─────────────┘
-       │ JDBC       │ Jedis      │ HTTP     │ HTTPS    │ TCP/JSON
+       │ JDBC       │ Lettuce    │ HTTP     │ HTTPS    │ TCP/JSON
        ▼            ▼            ▼          ▼          ▼
-   MySQL 8.2    Redis 7    Elastic 8.10  Razorpay  Logstash
+   MySQL 8.2    Redis 7    Elastic 8.17  Razorpay  Logstash
    :3306        :6379       :9200         API        :5000
                                            │
                                     Prometheus (:9090)
@@ -229,7 +230,7 @@ Per ISO/IEC/IEEE 1016:2017 Clause 5.5:
 | :--- | :--- | :--- | :--- | :--- |
 | MySQL 8.2 | JDBC / TCP | 3306 | Primary data store | **Critical** — Circuit breaker (50% threshold, 8 s timeout) |
 | Redis 7 | RESP / TCP | 6379 | Cache, rate limiting | **Degraded** — Circuit breaker (70% threshold, 3 s timeout); fail-open on rate limit |
-| Elasticsearch 8.10 | HTTP | 9200 | Search, analytics, audit log ingestion | **Optional** — Disabled by default (`elasticsearch.enabled=false`) |
+| Elasticsearch 8.17 | HTTP | 9200 | Search, analytics, audit log ingestion | **Optional** — Disabled by default (`elasticsearch.enabled=false`) |
 | Razorpay | HTTPS | 443 | Payment processing | **Degraded** — Non-payment checkout path still operational |
 | Prometheus | HTTP | 9090 | Metrics scraping from `/actuator/prometheus` | **None** — Passive consumer; no impact on application |
 | Logstash | TCP | 5000 | Structured JSON log aggregation | **None** — Logs fall back to file (`logs/buildnest-ecommerce.log`) |
@@ -270,7 +271,7 @@ com.example.buildnest_ecommerce/          [Root — 256 Java source files]
 │   ├── PerformanceMonitoringInterceptor [Request timing, slow-query logging]
 │   └── RateLimitHeaderInterceptor       [X-RateLimit-* response headers]
 ├── model/
-│   ├── entity/                           [24 @Entity classes]
+│   ├── entity/                           [32 @Entity classes]
 │   ├── dto/                              [Output DTOs]
 │   ├── payload/                          [Request/response payloads]
 │   └── elasticsearch/                    [Elasticsearch document models]
@@ -286,7 +287,7 @@ com.example.buildnest_ecommerce/          [Root — 256 Java source files]
 │       ├── JwtAuthenticationEntryPoint  [401 on unauthenticated requests]
 │       ├── JwtAuthenticationFilter      [Extracts + validates JWT per request]
 │       └── JwtTokenProvider.java        [Token generation, validation, rotation]
-├── service/                              [36 @Service classes]
+├── service/                              [46 @Service classes]
 │   ├── admin/    auth/    cart/    category/    checkout/
 │   ├── elasticsearch/    inventory/    notification/    order/
 │   ├── payment/    product/    ratelimit/    review/
@@ -320,23 +321,23 @@ frontend/src/
 └── main.jsx                [Entry point — ReactDOM.createRoot]
 ```
 
-#### 4.2.3 Component Statistics (Verified — 2026-06-19)
+#### 4.2.3 Component Statistics (Verified — 2026-07-17, #458)
 
 | Layer | Count | Verification Source |
 | :--- | :--- | :--- |
-| Total Java source files | **256** | `find src/main/java -name "*.java" \| wc -l` |
-| Total test files | **173** | `find src/test/java -name "*.java" \| wc -l` |
-| Controller classes (`@RestController`) | **29** | `find` + `grep @RestController` |
-| Service classes (`@Service`) | **36** | `find` + `grep @Service` |
-| Entity classes (`@Entity`) | **24** | `find` + `grep @Entity` |
-| Repository interfaces | **19** | `extends JpaRepository / ElasticsearchRepository` |
-| Configuration classes (`@Configuration`) | **38** | `find` + `grep @Configuration` |
-| API endpoint mappings | **164** | `grep @*Mapping` across controllers |
-| Classes using `@Transactional` | **18** | `grep @Transactional` |
+| Total Java source files | **352** | `find src/main/java -name "*.java" \| wc -l` |
+| Total test files | **195** | `find src/test/java -name "*.java" \| wc -l` |
+| Controller classes (`@RestController`) | **38** | `find` + `grep @RestController` |
+| Service classes (`@Service`) | **46** | `find` + `grep @Service` |
+| Entity classes (`@Entity`) | **32** | `find` + `grep @Entity` |
+| Repository interfaces | **28** | `extends JpaRepository / ElasticsearchRepository` |
+| Configuration classes (`@Configuration`) | **39** | `find` + `grep @Configuration` |
+| API endpoint mappings | **218** | `grep @*Mapping` across controllers |
+| Classes using `@Transactional` | **24** | `grep @Transactional` |
 | Classes using `@Cacheable` / `@CacheEvict` | **5** | `grep @Cacheable` |
-| Classes with method-level security | **20** | `grep @PreAuthorize\|@Secured` |
-| Classes using Resilience4j | **11** | `grep CircuitBreaker\|@Retry` |
-| Classes using SLF4J / Logback | **87** | `grep @Slf4j\|LoggerFactory` |
+| Classes with method-level security | **29** | `grep @PreAuthorize\|@Secured` |
+| Classes using Resilience4j | **6** | `grep CircuitBreaker\|@Retry` |
+| Classes using SLF4J / Logback | **102** | `grep @Slf4j\|LoggerFactory` |
 
 ---
 
@@ -478,7 +479,7 @@ The AOP proxy is applied via `@EnableAspectJAutoProxy` (Spring Boot default). No
 | Security | Spring Security | 6.x (via Boot) | Auth, authorisation |
 | Persistence | Spring Data JPA / Hibernate | 6.x | ORM, repository pattern |
 | Database | MySQL | 8.2 | Primary relational store |
-| Cache | Spring Data Redis (Jedis) | (via Boot) | Distributed caching |
+| Cache | Spring Data Redis (Lettuce) | (via Boot) | Distributed caching |
 | Search | Spring Data Elasticsearch | (via Boot) | Full-text search, analytics |
 | Auth tokens | JJWT | **0.12.3** | JWT creation and validation |
 | Rate limiting | Bucket4j | **8.1.0** | Token-bucket rate limiting (Redis-backed) |
@@ -1034,7 +1035,7 @@ Refresh Token:
                     │              ▼                 │             │
                     │  ┌───────────────────────────────────┐      │
                     │  │  DATA TIER                        │      │
-                    │  │  MySQL 8.2    Redis 7    ES 8.10  │      │
+                    │  │  MySQL 8.2    Redis 7    ES 8.17  │      │
                     │  │  :3306        :6379      :9200    │      │
                     │  └───────────────────────────────────┘      │
                     │                                              │
@@ -1082,7 +1083,7 @@ Refresh Token:
 | :--- | :--- | :--- |
 | Tomcat HTTP worker | 200 (default) | Handles all inbound HTTP requests |
 | HikariCP | 20 (dev) / 30 (prod) | JDBC database connections |
-| Redis Jedis pool | 8 (dev) / 32 (prod) | Cache and rate limit Redis operations |
+| Redis Lettuce pool | 8 (dev) / 32 (prod) | Cache and rate limit Redis operations |
 | Spring async / scheduler | 2 threads | Token cleanup, inventory threshold monitoring |
 
 #### 4.10.5 Frontend Deployment (Phase 2)
@@ -1262,8 +1263,8 @@ Bucket4j token-bucket strategy backed by Redis:
 | Java 21 (LTS) | Long-term support; virtual thread support (Project Loom); modern language features (records, sealed classes) | Higher memory baseline vs Go; verbose compared to Kotlin |
 | Spring Boot 3.5.10 | Mature ecosystem; autoconfiguration reduces boilerplate; production-ready observability stack (Actuator) | Opinionated; startup time higher than lightweight frameworks |
 | MySQL 8.2 | Proven RDBMS; strong ACID compliance; InnoDB row-level locking; wide cloud hosting support | Relational model less flexible than NoSQL for unstructured data |
-| Redis 7 | Sub-millisecond latency; atomic Lua scripts for Bucket4j; pub/sub for future event use; Jedis client maturity | Additional infrastructure component; single point of failure mitigated by circuit breaker |
-| Elasticsearch 8.10 | Full-text search, structured analytics, and log aggregation in one system; Spring Data integration | Resource-intensive (minimum 512 MB JVM heap); optional for core functionality |
+| Redis 7 | Sub-millisecond latency; atomic Lua scripts for Bucket4j; pub/sub for future event use; Lettuce client maturity | Additional infrastructure component; single point of failure mitigated by circuit breaker |
+| Elasticsearch 8.17 | Full-text search, structured analytics, and log aggregation in one system; Spring Data integration | Resource-intensive (minimum 512 MB JVM heap); optional for core functionality |
 | Razorpay Java SDK 1.4.5 | India-focused payment gateway; comprehensive SDK; webhook support; signature verification built in | Vendor lock-in; limited to Indian domestic payments |
 | JJWT 0.12.3 | Active maintenance; HMAC-SHA512 support; explicit key validation API | More verbose than `nimbus-jose-jwt` for simple use cases |
 | Bucket4j 8.1.0 | Redis-backed distributed token bucket; Spring integration; per-key isolation | Configuration complexity for multiple rate limit rules |
