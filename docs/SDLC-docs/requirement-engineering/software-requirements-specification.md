@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 4.1 |
-| **Date** | 2026-07-17 13:43 IST |
+| **Version** | 4.2 |
+| **Date** | 2026-07-17 16:33 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -30,6 +30,7 @@
 | 3.0 | 2026-02-11 | Documentation Team | ISO 29148:2018 conformance statement added | Approved |
 | 4.0 | 2026-06-19 | Technical Lead | Baseline-driven update: corrected Spring Boot version (3.2.2 → 3.5.10); added Phase classification (Ph-1 Stable / Ph-2 Production Ready); added test integrity requirements (TIR); updated MNT-02 coverage target (40% → 70%); corrected MNT-03 to reflect live test state; added SEC-14 CSP requirement; added CON-11 React version constraint; referenced baseline assessment report | Pending |
 | 4.1 | 2026-07-17 13:43 IST | Technical Lead | Corrected two stale technology-stack claims found via direct source verification (#455): Redis client is Lettuce, not Jedis (`lettuce-core:6.6.0` confirmed via `mvnw dependency:tree`; Jedis absent from classpath); Elasticsearch version is 8.17 (`docker-compose.yml`'s active service), not the previously-recorded 8.10. Appendix A's API Endpoint Catalogue was found separately stale (wrong path prefixes, missing endpoint groups) and filed as its own follow-up (#456) rather than fixed here, since it needs a full per-endpoint re-derivation | Pending |
+| 4.2 | 2026-07-17 16:33 IST | Technical Lead | Added FR-FE-31 (admin category management UI) to §3.2.10.2, tracing to #428's `CategoriesTab.tsx`/`CategoryFormModal.tsx` — the `FR-FE-*` series previously had no requirement row for this feature at all despite it being implemented (#450) | Pending |
 
 ### Document Change Procedure
 
@@ -609,6 +610,7 @@ This system has no direct hardware interfaces. It runs as a containerised applic
 | FR-FE-23 | Admin Product Management: table with CRUD actions, image upload, category assignment | Medium | Ph-2 | Test |
 | FR-FE-24 | Admin Inventory Page: stock levels with colour-coded status and threshold configuration | Medium | Ph-2 | Test |
 | FR-FE-25 | Admin Order Management: all orders with status filters and order status updates | Medium | Ph-2 | Test |
+| FR-FE-31 | Admin Category Management: table with CRUD actions and hierarchy support for product categories | Medium | Ph-2 | Test |
 
 ##### 3.2.10.3 Shared Components
 
