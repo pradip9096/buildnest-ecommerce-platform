@@ -28,8 +28,8 @@
 
 | Version | Date | Author | Changes | Approval |
 | :--- | :--- | :--- | :--- | :--- |
-| 1.0 | 2026-06-19 | Claude Code (claude-sonnet-4-6) | Initial controlled release — 156 requirements traced from SRS v4.0 through SDD v3.0 design elements, implementation classes, and test classes; status verified against live codebase and Baseline Assessment Report | Pending |
-| 1.1 | 2026-07-17 14:02 IST | Claude Code (claude-sonnet-5) | Corrected the "Open Defects Blocking Phase 1 Exit" section (§9/§11/§12) — all 6 listed defects (DEF-001 through DEF-006, TIR-01–04 and MNT-03) verified already resolved in source; recomputed the Coverage Summary Totals row from its own 24 category rows (#452, PR #454) | Pending |
+| 1.0 | 2026-06-19 | QA Manager | Initial controlled release — 156 requirements traced from SRS v4.0 through SDD v3.0 design elements, implementation classes, and test classes; status verified against live codebase and Baseline Assessment Report | Pending |
+| 1.1 | 2026-07-17 14:02 IST | QA Manager | Corrected the "Open Defects Blocking Phase 1 Exit" section (§9/§11/§12) — all 6 listed defects (DEF-001 through DEF-006, TIR-01–04 and MNT-03) verified already resolved in source; recomputed the Coverage Summary Totals row from its own 24 category rows (#452, PR #454) | Pending |
 
 ### Document Approval
 
