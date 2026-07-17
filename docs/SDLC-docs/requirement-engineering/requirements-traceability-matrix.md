@@ -10,12 +10,12 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.1 |
-| **Date** | 2026-07-17 14:02 IST |
+| **Version** | 1.2 |
+| **Date** | 2026-07-17 16:33 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
-| **Related SRS** | SRS-BUILDNEST-001 v4.0 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
+| **Related SRS** | SRS-BUILDNEST-001 v4.2 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
 | **Related SDD** | SDD-BUILDNEST-001 v3.0 — `docs/SDLC-docs/design/software-design-description.md` |
 | **Related TP** | TP-BUILDNEST-001 v4.0 — `docs/SDLC-docs/software-testing/test-plan.md` |
 | **Baseline Assessment** | `docs/reports/baseline-assessment-2026-06-19.md` |
@@ -30,6 +30,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | 1.0 | 2026-06-19 | QA Manager | Initial controlled release — 156 requirements traced from SRS v4.0 through SDD v3.0 design elements, implementation classes, and test classes; status verified against live codebase and Baseline Assessment Report | Pending |
 | 1.1 | 2026-07-17 14:02 IST | QA Manager | Corrected the "Open Defects Blocking Phase 1 Exit" section (§9/§11/§12) — all 6 listed defects (DEF-001 through DEF-006, TIR-01–04 and MNT-03) verified already resolved in source; recomputed the Coverage Summary Totals row from its own 24 category rows (#452, PR #454) | Pending |
+| 1.2 | 2026-07-17 16:33 IST | QA Manager | Added FR-FE-31 (admin category management UI, tracing to #428); corrected FR-FE-22/24/25's cited paths from fictional `.jsx` files to the real implemented components (`AdminDashboardPage.tsx`, `InventoryTab.tsx`, `OrdersTab.tsx`) and their status to ✅ Implemented; FR-FE-23 confirmed still 🔵 Pending (real path doesn't exist — #425 open); recomputed the Frontend row and Coverage Summary Totals row accordingly (#450) | Pending |
 
 ### Document Approval
 
@@ -90,7 +91,7 @@ The RTM serves to:
 | Reviews & Wishlists (FR-REV, FR-WISH) | 5 | 5 | 0 | 0 | 0 | 0 |
 | Admin Operations (FR-ADM) | 8 | 3 | 1 | 4 | 0 | 0 |
 | Monitoring (FR-MON) | 8 | 2 | 1 | 5 | 0 | 0 |
-| Frontend (FR-FE) | 30 | 0 | 0 | 30 | 0 | 0 |
+| Frontend (FR-FE) | 31 | 4 | 0 | 27 | 0 | 0 |
 | User Interfaces (UI) | 4 | 3 | 0 | 1 | 0 | 0 |
 | Software Interfaces (SI) | 6 | 3 | 0 | 3 | 0 | 0 |
 | Communication Interfaces (CI) | 5 | 2 | 0 | 3 | 0 | 0 |
@@ -105,7 +106,7 @@ The RTM serves to:
 | Safety (SAF) | 3 | 1 | 0 | 2 | 0 | 0 |
 | Design Constraints (DC) | 8 | 7 | 1 | 0 | 0 | 0 |
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
-| **Totals** | **179** | **93** | **9** | **77** | **0** | **0** |
+| **Totals** | **180** | **97** | **9** | **74** | **0** | **0** |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 
@@ -303,15 +304,16 @@ The RTM serves to:
 | FR-FE-19 | Order history page | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/core/OrderHistory.jsx` | Vitest | Test | 🔵 Pending Ph-2 |
 | FR-FE-20 | Wishlist page | Low | Ph-2 | §4.7.4 | `frontend/src/pages/core/Wishlist.jsx` | Vitest | Test | 🔵 Pending Ph-2 |
 | FR-FE-21 | Search results page | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/core/SearchResults.jsx` | Vitest | Test | 🔵 Pending Ph-2 |
-| FR-FE-22 | Admin dashboard | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/admin/AdminDashboard.jsx` | Playwright | Demonstration | 🔵 Pending Ph-2 |
-| FR-FE-23 | Admin product management | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/admin/AdminProductMgmt.jsx` | Vitest | Test | 🔵 Pending Ph-2 |
-| FR-FE-24 | Admin inventory page | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/admin/AdminInventory.jsx` | Vitest | Test | 🔵 Pending Ph-2 |
-| FR-FE-25 | Admin order management | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/admin/AdminOrderMgmt.jsx` | Vitest | Test | 🔵 Pending Ph-2 |
+| FR-FE-22 | Admin dashboard | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/AdminDashboardPage.tsx` | Playwright | Demonstration | ✅ Implemented |
+| FR-FE-23 | Admin product management | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/admin/AdminProductMgmt.jsx` (not yet built — #425 open) | Vitest | Test | 🔵 Pending Ph-2 |
+| FR-FE-24 | Admin inventory page | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/InventoryTab.tsx` | Vitest | Test | ✅ Implemented |
+| FR-FE-25 | Admin order management | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/OrdersTab.tsx` | Vitest | Test | ✅ Implemented |
 | FR-FE-26 | Navbar on all pages | High | Ph-2 | §4.3.6 | `frontend/src/components/layout/Navbar.jsx` | Playwright | Demonstration | 🔵 Pending Ph-2 |
 | FR-FE-27 | Footer | Low | Ph-2 | §4.3.6 | `frontend/src/components/layout/Footer.jsx` | Playwright | Demonstration | 🔵 Pending Ph-2 |
 | FR-FE-28 | ProductCard component | High | Ph-2 | §4.3.6 | `frontend/src/components/product/ProductCard.jsx` | Vitest | Demonstration | 🔵 Pending Ph-2 |
 | FR-FE-29 | Breadcrumb navigation | Low | Ph-2 | §4.3.6 | `frontend/src/components/layout/Breadcrumb.jsx` | Playwright | Demonstration | 🔵 Pending Ph-2 |
 | FR-FE-30 | ErrorBoundary with fallback UI | Medium | Ph-2 | §4.3.6 | `frontend/src/components/common/ErrorBoundary.jsx` | Vitest | Test | 🔵 Pending Ph-2 |
+| FR-FE-31 | Admin category management | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/CategoriesTab.tsx`, `frontend/src/components/admin/CategoryFormModal.tsx` | Vitest | Test | ✅ Implemented (#428) |
 
 ---
 
@@ -622,7 +624,7 @@ The RTM serves to:
 
 | Category | Total Ph-2 Requirements | Started | Not Started |
 | :--- | :--- | :--- | :--- |
-| Frontend (FR-FE-01 to FR-FE-30) | 30 | 0 | 30 |
+| Frontend (FR-FE-01 to FR-FE-31) | 31 | 4 | 27 |
 | Security (SEC-03, SEC-04, SEC-12, SEC-13, SEC-14) | 5 | 1 (SEC-12 dual-key) | 4 |
 | Monitoring (FR-MON-02 to FR-MON-08) | 6 | 1 (FR-MON-05 partial) | 5 |
 | Payment full flow (FR-PAY-01 to FR-PAY-05) | 5 | 3 (partial) | 2 |
