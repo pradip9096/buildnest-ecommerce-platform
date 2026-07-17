@@ -10,12 +10,12 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.3 |
-| **Date** | 2026-07-17 18:00 IST |
+| **Version** | 1.4 |
+| **Date** | 2026-07-17 18:18 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
-| **Related SRS** | SRS-BUILDNEST-001 v4.2 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
+| **Related SRS** | SRS-BUILDNEST-001 v4.3 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
 | **Related SDD** | SDD-BUILDNEST-001 v3.0 — `docs/SDLC-docs/design/software-design-description.md` |
 | **Related TP** | TP-BUILDNEST-001 v4.0 — `docs/SDLC-docs/software-testing/test-plan.md` |
 | **Baseline Assessment** | `docs/reports/baseline-assessment-2026-06-19.md` |
@@ -32,6 +32,7 @@
 | 1.1 | 2026-07-17 14:02 IST | QA Manager | Corrected the "Open Defects Blocking Phase 1 Exit" section (§9/§11/§12) — all 6 listed defects (DEF-001 through DEF-006, TIR-01–04 and MNT-03) verified already resolved in source; recomputed the Coverage Summary Totals row from its own 24 category rows (#452, PR #454) | Pending |
 | 1.2 | 2026-07-17 16:33 IST | QA Manager | Added FR-FE-31 (admin category management UI, tracing to #428); corrected FR-FE-22/24/25's cited paths from fictional `.jsx` files to the real implemented components (`AdminDashboardPage.tsx`, `InventoryTab.tsx`, `OrdersTab.tsx`) and their status to ✅ Implemented; FR-FE-23 confirmed still 🔵 Pending (real path doesn't exist — #425 open); recomputed the Frontend row and Coverage Summary Totals row accordingly (#450) | Pending |
 | 1.3 | 2026-07-17 18:00 IST | QA Manager | Full per-requirement audit of §6.10 (`FR-FE-01`–`21`, `26`–`30`): removed the false "frontend is a stub" header, corrected all 25 remaining rows' cited paths from fictional `.jsx` files to their real `.tsx` implementations, and re-derived each row's status from the requirement's actual text, not just file presence — 20 ✅ Implemented, 7 🟡 Partial (form-validation library, Razorpay modal, password-strength indicator, and 4 account/search features shipped as tabs/query-params rather than standalone routes), 4 🔵 Pending (Toast, Footer, Breadcrumb genuinely absent) (#453). Recomputed the Frontend Coverage Summary row (4→20 Implemented, 0→7 Partial, 27→4 Pending) and Coverage Summary Totals row; also recomputed the §12 Phase 2 Frontend Started/Not-Started counts, which surfaced and fixed a pre-existing, unrelated arithmetic error in that table's own row-total sum (81, not the previously stated 80) | Pending |
+| 1.4 | 2026-07-17 18:18 IST | QA Manager | Updated the `Related SRS` cross-reference from v4.2 to v4.3 following SRS's own Appendix A endpoint-catalogue re-derivation (#456) — no RTM row content otherwise touched by that fix | Pending |
 
 ### Document Approval
 
