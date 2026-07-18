@@ -1,5 +1,6 @@
 package com.example.buildnest_ecommerce.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -28,13 +29,20 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = { "product", "inventory", "createdAt", "updatedAt" })
+@EqualsAndHashCode(exclude = {
+        "product", "inventory", "createdAt", "updatedAt" })
 @ToString(exclude = { "product", "inventory" })
 public class ProductVariant implements AggregateRoot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Never serialized: the API consumer already has the parent product in
+    // view, and Product carries its own lazy collections (e.g. tags) that
+    // would throw LazyInitializationException once Jackson tried to walk
+    // them outside the transaction under open-in-view=false. Still used
+    // server-side by getEffectivePrice() below.
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
@@ -54,8 +62,10 @@ public class ProductVariant implements AggregateRoot {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    @JsonIgnoreProperties({ "variant", "hibernateLazyInitializer", "handler" })
-    @OneToOne(mappedBy = "variant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({
+            "variant", "hibernateLazyInitializer", "handler" })
+    @OneToOne(mappedBy = "variant", cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY)
     private Inventory inventory;
 
     @Column(name = "created_at")
@@ -65,13 +75,16 @@ public class ProductVariant implements AggregateRoot {
     private LocalDateTime updatedAt;
 
     /**
-     * Effective unit price = parent product's active price (discountPrice if set,
-     * else price) plus this variant's adjustment. Kept here rather than in a
-     * DTO/service since it is a pure function of the entity's own state plus its
-     * parent, matching how Inventory.getAvailableQuantity() is derived on-entity.
+     * Effective unit price = parent product's active price (discountPrice
+     * if set, else price) plus this variant's adjustment. Kept here rather
+     * than in a DTO/service since it is a pure function of the entity's own
+     * state plus its parent, matching how Inventory.getAvailableQuantity()
+     * is derived on-entity.
      */
     public BigDecimal getEffectivePrice() {
-        BigDecimal basePrice = product.getDiscountPrice() != null ? product.getDiscountPrice() : product.getPrice();
+        BigDecimal basePrice = product.getDiscountPrice() != null
+                ? product.getDiscountPrice()
+                : product.getPrice();
         return basePrice.add(priceAdjustment);
     }
 }

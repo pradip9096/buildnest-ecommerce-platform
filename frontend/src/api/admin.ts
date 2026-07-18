@@ -314,6 +314,69 @@ export async function deleteProductImage(productId: number, imageId: number): Pr
   );
 }
 
+// ── Product Variants ────────────────────────────────────────────────────────
+
+export interface AdminProductVariant {
+  id: number;
+  sku: string;
+  size?: string;
+  colour?: string;
+  priceAdjustment: number;
+  isActive: boolean;
+  effectivePrice?: number;
+  inventory?: { quantityInStock: number; minimumStockLevel: number } | null;
+}
+
+export interface VariantFormInput {
+  sku: string;
+  size?: string;
+  colour?: string;
+  priceAdjustment: number;
+  isActive: boolean;
+  initialStockQuantity?: number;
+  minimumStockLevel?: number;
+}
+
+export async function fetchProductVariants(productId: number): Promise<AdminProductVariant[]> {
+  const data = await requestData<AdminProductVariant[]>(
+    `/api/v1/admin/products/${productId}/variants`,
+    {},
+    'Failed to load variants'
+  );
+  return Array.isArray(data) ? data : [];
+}
+
+export async function createProductVariant(
+  productId: number,
+  input: VariantFormInput
+): Promise<AdminProductVariant> {
+  return requestData<AdminProductVariant>(
+    `/api/v1/admin/products/${productId}/variants`,
+    { method: 'POST', body: input },
+    status => (status === 409 ? 'Variant SKU already in use' : 'Failed to create variant')
+  );
+}
+
+export async function updateProductVariant(
+  productId: number,
+  variantId: number,
+  input: VariantFormInput
+): Promise<AdminProductVariant> {
+  return requestData<AdminProductVariant>(
+    `/api/v1/admin/products/${productId}/variants/${variantId}`,
+    { method: 'PUT', body: input },
+    status => (status === 409 ? 'Variant SKU already in use' : 'Failed to update variant')
+  );
+}
+
+export async function deleteProductVariant(productId: number, variantId: number): Promise<void> {
+  await request(
+    `/api/v1/admin/products/${productId}/variants/${variantId}`,
+    { method: 'DELETE' },
+    'Failed to delete variant'
+  );
+}
+
 // ── Audit Log ────────────────────────────────────────────────────────────────
 
 export interface AuditLogEntry {

@@ -18,9 +18,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Manages product variant CRUD and their per-variant inventory rows (PROD-01, #81).
- * Mirrors ProductServiceImpl's conventions (plain RuntimeException for not-found,
- * soft delete rather than hard delete).
+ * Manages product variant CRUD and their per-variant inventory rows
+ * (PROD-01, #81). Mirrors ProductServiceImpl's conventions (plain
+ * RuntimeException for not-found, soft delete rather than hard delete).
  */
 @Slf4j
 @Service
@@ -41,18 +41,23 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     public ProductVariant getVariantById(Long variantId) {
         log.info("Fetching variant with id: {}", variantId);
         return productVariantRepository.findById(variantId)
-                .orElseThrow(() -> new RuntimeException("Variant not found with id: " + variantId));
+                .orElseThrow(() -> new RuntimeException(
+                        "Variant not found with id: " + variantId));
     }
 
     @Override
     @Transactional
-    public ProductVariant createVariant(Long productId, CreateProductVariantRequest request) {
-        log.info("Creating variant for product {}: {}", productId, request.getSku());
+    public ProductVariant createVariant(
+            Long productId, CreateProductVariantRequest request) {
+        log.info("Creating variant for product {}: {}", productId,
+                request.getSku());
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+                .orElseThrow(() -> new RuntimeException(
+                        "Product not found with id: " + productId));
 
         if (productVariantRepository.existsBySku(request.getSku())) {
-            throw new RuntimeException("Variant SKU already in use: " + request.getSku());
+            throw new RuntimeException(
+                    "Variant SKU already in use: " + request.getSku());
         }
 
         ProductVariant variant = new ProductVariant();
@@ -61,8 +66,10 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         variant.setSize(request.getSize());
         variant.setColour(request.getColour());
         variant.setPriceAdjustment(request.getPriceAdjustment());
-        variant.setIsActive(request.getIsActive() == null || request.getIsActive());
+        variant.setIsActive(
+                request.getIsActive() == null || request.getIsActive());
         variant.setCreatedAt(LocalDateTime.now());
+        variant.setUpdatedAt(LocalDateTime.now());
 
         ProductVariant savedVariant = productVariantRepository.save(variant);
 
@@ -70,25 +77,33 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         inventory.setVariant(savedVariant);
         inventory.setQuantityInStock(request.getInitialStockQuantity());
         inventory.setMinimumStockLevel(request.getMinimumStockLevel());
-        inventory.setStatus(request.getInitialStockQuantity() > 0 ? InventoryStatus.IN_STOCK : InventoryStatus.OUT_OF_STOCK);
+        inventory.setStatus(request.getInitialStockQuantity() > 0
+                ? InventoryStatus.IN_STOCK
+                : InventoryStatus.OUT_OF_STOCK);
         inventory.setUpdatedAt(LocalDateTime.now());
         inventoryRepository.save(inventory);
 
-        // Re-fetch rather than setting savedVariant.setInventory(inventory) directly: ProductVariant.inventory
-        // carries cascade=ALL on this mappedBy side, and setting it in-memory on an already-managed entity
-        // triggers Hibernate to cascade-persist the (already persisted) Inventory a second time on next flush,
-        // causing a duplicate-key violation on the unique variant_id index.
-        return productVariantRepository.findById(savedVariant.getId()).orElseThrow();
+        // Re-fetch rather than setting savedVariant.setInventory(inventory)
+        // directly: ProductVariant.inventory carries cascade=ALL on this
+        // mappedBy side, and setting it in-memory on an already-managed
+        // entity triggers Hibernate to cascade-persist the (already
+        // persisted) Inventory a second time on next flush, causing a
+        // duplicate-key violation on the unique variant_id index.
+        return productVariantRepository.findById(savedVariant.getId())
+                .orElseThrow();
     }
 
     @Override
     @Transactional
-    public ProductVariant updateVariant(Long variantId, UpdateProductVariantRequest request) {
+    public ProductVariant updateVariant(
+            Long variantId, UpdateProductVariantRequest request) {
         log.info("Updating variant with id: {}", variantId);
         ProductVariant variant = getVariantById(variantId);
 
-        if (!variant.getSku().equals(request.getSku()) && productVariantRepository.existsBySku(request.getSku())) {
-            throw new RuntimeException("Variant SKU already in use: " + request.getSku());
+        if (!variant.getSku().equals(request.getSku())
+                && productVariantRepository.existsBySku(request.getSku())) {
+            throw new RuntimeException(
+                    "Variant SKU already in use: " + request.getSku());
         }
 
         variant.setSku(request.getSku());

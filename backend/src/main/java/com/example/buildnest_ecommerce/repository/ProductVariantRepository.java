@@ -9,9 +9,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProductVariantRepository extends JpaRepository<ProductVariant, Long> {
+public interface ProductVariantRepository
+        extends JpaRepository<ProductVariant, Long> {
 
-    @EntityGraph(attributePaths = { "inventory" })
+    @EntityGraph(attributePaths = { "product", "inventory" })
     List<ProductVariant> findByProductId(Long productId);
 
     @EntityGraph(attributePaths = { "product", "inventory" })

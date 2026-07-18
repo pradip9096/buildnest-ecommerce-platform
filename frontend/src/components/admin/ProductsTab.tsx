@@ -8,6 +8,7 @@ import {
 } from '../../api/admin';
 import { ProductFormModal } from './ProductFormModal';
 import { ProductImagesModal } from './ProductImagesModal';
+import { ProductVariantsModal } from './ProductVariantsModal';
 
 export function ProductsTab() {
   const { data, loading, error, setData } = useAsync<AdminProduct[]>(() => fetchAdminProducts(), []);
@@ -19,6 +20,7 @@ export function ProductsTab() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [modalProduct, setModalProduct] = useState<AdminProduct | 'new' | null>(null);
   const [imagesProduct, setImagesProduct] = useState<AdminProduct | null>(null);
+  const [variantsProduct, setVariantsProduct] = useState<AdminProduct | null>(null);
 
   const filtered = search
     ? products.filter(
@@ -138,6 +140,13 @@ export function ProductsTab() {
                     </button>
                     <button
                       type="button"
+                      onClick={() => setVariantsProduct(product)}
+                      className="text-xs font-medium text-gray-600 hover:text-gray-800 border border-gray-200 hover:border-gray-400 rounded-lg px-3 py-1 transition-colors"
+                    >
+                      Variants
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleDelete(product)}
                       disabled={deleting === product.id}
                       className="text-xs font-medium text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 rounded-lg px-3 py-1 transition-colors disabled:opacity-50"
@@ -163,6 +172,10 @@ export function ProductsTab() {
 
       {imagesProduct && (
         <ProductImagesModal product={imagesProduct} onClose={() => setImagesProduct(null)} />
+      )}
+
+      {variantsProduct && (
+        <ProductVariantsModal product={variantsProduct} onClose={() => setVariantsProduct(null)} />
       )}
     </div>
   );
