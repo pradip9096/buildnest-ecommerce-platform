@@ -103,11 +103,11 @@ export function InventoryDetailModal({ item, onClose, onChanged }: Props) {
             <div className="grid grid-cols-3 gap-3 text-sm">
               <div>
                 <p className="text-gray-500">Total</p>
-                <p className="font-semibold text-gray-900">{data.quantity}</p>
+                <p className="font-semibold text-gray-900">{data.quantityInStock}</p>
               </div>
               <div>
                 <p className="text-gray-500">Reserved</p>
-                <p className="font-semibold text-gray-900">{data.reservedQuantity}</p>
+                <p className="font-semibold text-gray-900">{data.quantityReserved}</p>
               </div>
               <div>
                 <p className="text-gray-500">Available</p>

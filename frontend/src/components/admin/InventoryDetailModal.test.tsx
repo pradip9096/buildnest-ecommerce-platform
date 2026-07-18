@@ -34,8 +34,8 @@ const item: InventoryItem = {
 
 const detail: InventoryDetail = {
   id: 1,
-  quantity: 100,
-  reservedQuantity: 10,
+  quantityInStock: 100,
+  quantityReserved: 10,
   availableQuantity: 90,
   status: 'IN_STOCK',
 };
@@ -57,7 +57,7 @@ describe('InventoryDetailModal', () => {
 
   it('adds stock and calls onChanged', async () => {
     mockFetchDetail.mockResolvedValue(detail);
-    mockAddStock.mockResolvedValue({ ...detail, quantity: 150, availableQuantity: 140 });
+    mockAddStock.mockResolvedValue({ ...detail, quantityInStock: 150, availableQuantity: 140 });
     const onChanged = vi.fn();
 
     render(<InventoryDetailModal item={item} onClose={vi.fn()} onChanged={onChanged} />);
@@ -74,7 +74,7 @@ describe('InventoryDetailModal', () => {
 
   it('sets stock to an exact quantity', async () => {
     mockFetchDetail.mockResolvedValue(detail);
-    mockSetStock.mockResolvedValue({ ...detail, quantity: 25, availableQuantity: 15 });
+    mockSetStock.mockResolvedValue({ ...detail, quantityInStock: 25, availableQuantity: 15 });
     const onChanged = vi.fn();
 
     render(<InventoryDetailModal item={item} onClose={vi.fn()} onChanged={onChanged} />);

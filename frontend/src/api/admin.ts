@@ -79,8 +79,8 @@ export async function adjustInventory(
 
 export interface InventoryDetail {
   id: number;
-  quantity: number;
-  reservedQuantity: number;
+  quantityInStock: number;
+  quantityReserved: number;
   availableQuantity: number;
   status: string;
 }
