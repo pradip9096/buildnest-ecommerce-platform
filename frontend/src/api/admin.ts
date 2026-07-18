@@ -137,13 +137,33 @@ export interface AdminUser {
   email: string;
   firstName: string;
   lastName: string;
+  phoneNumber?: string;
   roles?: string[];
   enabled?: boolean;
+}
+
+export interface UpdateUserInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
 }
 
 export async function fetchAdminUsers(): Promise<AdminUser[]> {
   const data = await requestData<AdminUser[]>('/api/admin/users', {}, 'Failed to load users');
   return Array.isArray(data) ? data : [];
+}
+
+export async function fetchAdminUser(userId: number): Promise<AdminUser> {
+  return requestData<AdminUser>(`/api/admin/users/${userId}`, {}, 'Failed to load user');
+}
+
+export async function updateAdminUser(userId: number, input: UpdateUserInput): Promise<AdminUser> {
+  return requestData<AdminUser>(
+    `/api/admin/users/${userId}`,
+    { method: 'PUT', body: input },
+    'Failed to update user'
+  );
 }
 
 export async function deleteAdminUser(userId: number): Promise<void> {

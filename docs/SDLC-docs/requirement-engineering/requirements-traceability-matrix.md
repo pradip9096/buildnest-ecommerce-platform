@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.10 |
-| **Date** | 2026-07-18 20:50 IST |
+| **Version** | 1.11 |
+| **Date** | 2026-07-18 23:20 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
@@ -39,6 +39,7 @@
 | 1.8 | 2026-07-17 22:30 IST | QA Manager | FR-FE-23 (admin product management) corrected from 🔵 Pending Ph-2 citing a fictional `AdminProductMgmt.jsx` to ✅ Implemented, citing the real `ProductsTab.tsx`/`ProductFormModal.tsx` and their `ProductsTab.test.tsx` coverage (#425, part of Epic #424 — same pattern as FR-FE-31/#428). Recomputed the Frontend Coverage Summary row (20→21 Implemented, 4→3 Pending), the Coverage Summary Totals row (113→114 Implemented, 51→50 Pending), and the §12 Phase 2 Frontend Started/Not-Started counts (27→28 Started, 4→3 Not Started) and Phase 2 total (35→36 Started, 46→45 Not Started) accordingly | Pending |
 | 1.9 | 2026-07-18 10:30 IST | QA Manager | FR-FE-23's own SRS text explicitly names "image upload" as part of this requirement's scope, but its #425-era citation only covered `ProductsTab.tsx`/`ProductFormModal.tsx` (product CRUD, no image capability). Added `ProductImagesModal.tsx`/`ProductImagesModal.test.tsx` to FR-FE-23's Implementation/Test citations now that image upload/reorder/delete genuinely exist (#426, part of Epic #424) — status stays ✅ Implemented (no count changes; #425 had already marked it Implemented, this closes the citation gap rather than changing status) | Pending |
 | 1.10 | 2026-07-18 20:50 IST | QA Manager | FR-FE-25 (admin order management) already ✅ Implemented but only cited `OrdersTab.tsx` with a generic "Vitest" test reference, predating a dedicated test file. Added `RefundModal.tsx` and named `OrdersTab.test.tsx`/`RefundModal.test.tsx` now that the refund action genuinely exists (#438) — status stays ✅ Implemented (no count changes; closes a citation gap rather than changing status). Updated the `Related SRS` cross-reference from v4.5 to v4.6 following SRS's own FR-FE-25 requirement-text extension in the same fix | Pending |
+| 1.11 | 2026-07-18 23:20 IST | QA Manager | FR-ADM-03 (admin manages user accounts — view, update, deactivate) corrected from 🔵 Pending Ph-2 to ✅ Implemented: the backend (`AdminUserController` GET/PUT `/{id}`, `AdminServiceImpl.updateUserByAdmin`) was already fully implemented and tested (`AdminUserControllerTest`), but the frontend `UsersTab.tsx` only wired list + delete; added `UserDetailModal.tsx` (view + edit) and its wiring, with `UserDetailModal.test.tsx`/`UsersTab.test.tsx` coverage (#439). Recomputed the Admin Operations (FR-ADM) Coverage Summary row (3→4 Implemented, 4→3 Pending) and the Coverage Summary Totals row (114→115 Implemented, 50→49 Pending) | Pending |
 
 ### Document Approval
 
@@ -97,7 +98,7 @@ The RTM serves to:
 | Payment (FR-PAY) | 5 | 0 | 3 | 2 | 0 | 0 |
 | Inventory (FR-INV) | 7 | 5 | 0 | 2 | 0 | 0 |
 | Reviews & Wishlists (FR-REV, FR-WISH) | 5 | 5 | 0 | 0 | 0 | 0 |
-| Admin Operations (FR-ADM) | 8 | 3 | 1 | 4 | 0 | 0 |
+| Admin Operations (FR-ADM) | 8 | 4 | 1 | 3 | 0 | 0 |
 | Monitoring (FR-MON) | 8 | 2 | 1 | 5 | 0 | 0 |
 | Frontend (FR-FE) | 31 | 21 | 7 | 3 | 0 | 0 |
 | User Interfaces (UI) | 4 | 3 | 0 | 1 | 0 | 0 |
@@ -114,7 +115,7 @@ The RTM serves to:
 | Safety (SAF) | 3 | 1 | 0 | 2 | 0 | 0 |
 | Design Constraints (DC) | 8 | 7 | 1 | 0 | 0 | 0 |
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
-| **Totals** | **180** | **114** | **16** | **50** | **0** | **0** |
+| **Totals** | **180** | **115** | **16** | **49** | **0** | **0** |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 
@@ -264,7 +265,7 @@ The RTM serves to:
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | FR-ADM-01 | Sales analytics dashboard for admins | Medium | Ph-2 | §4.7.3 | `SalesAnalyticsController`, `SalesAnalyticsServiceImpl` | `SalesAnalyticsControllerTest`, `SalesAnalyticsServiceImplTest`, `AnalyticsReportingTest` | Test | 🔵 Pending Ph-2 |
 | FR-ADM-02 | Inventory analytics and reports | Medium | Ph-2 | §4.7.3 | `AdminInventoryAnalyticsController`, `InventoryAnalyticsService` | `AdminInventoryAnalyticsControllerTest`, `InventoryAnalyticsServiceTest` | Test | 🔵 Pending Ph-2 |
-| FR-ADM-03 | Admin manages user accounts (view, update, deactivate) | Medium | Ph-2 | §4.7.3 | `AdminUserController`, `AdminServiceImpl.manageUser()` | `AdminUserControllerTest` | Test | 🔵 Pending Ph-2 |
+| FR-ADM-03 | Admin manages user accounts (view, update, deactivate) | Medium | Ph-2 | §4.7.3 | `AdminUserController`, `AdminServiceImpl`, `frontend/src/components/admin/UsersTab.tsx`, `UserDetailModal.tsx` | `AdminUserControllerTest`, `UserDetailModal.test.tsx`, `UsersTab.test.tsx` | Test | ✅ Implemented (#439) |
 | FR-ADM-04 | Tamper-evident audit log of all admin actions | High | Ph-1 | §4.3.5, §4.6.1 | `AuditAspect` (`@Around @Auditable`), `AuditLogService`, `AuditLogController` | `AuditAspectTest`, `AuditLogServiceTest`, `AuditLogControllerTest` | Test | ✅ Implemented |
 | FR-ADM-05 | Admin reporting endpoints | Medium | Ph-2 | §4.7.3 | `AdminReportController` | `AdminReportControllerTest` | Test | 🔵 Pending Ph-2 |
 | FR-ADM-06 | Admin configures inventory alert thresholds | Medium | Ph-2 | §4.7.3 | `AdminInventoryThresholdController`, `InventoryThresholdManagementService` | `AdminInventoryThresholdControllerTest`, `InventoryThresholdManagementServiceTest` | Test | 🟡 Partial (controller + service exist; feature toggle deferred) |
