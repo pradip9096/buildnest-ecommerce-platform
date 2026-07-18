@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAsync } from '../../hooks/useAsync';
 import { fetchAdminUsers, deleteAdminUser, type AdminUser } from '../../api/admin';
+import { UserDetailModal } from './UserDetailModal';
 
 export function UsersTab() {
   const { data, loading, error, setData } = useAsync<AdminUser[]>(
@@ -10,6 +11,7 @@ export function UsersTab() {
   const users = data ?? [];
   const [disabling, setDisabling] = useState<number | null>(null);
   const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<AdminUser | null>(null);
 
   const handleDisable = async (user: AdminUser) => {
     if (!confirm(`Disable account for @${user.username}? This action can be reversed by re-enabling the account in the database.`)) return;
@@ -32,6 +34,17 @@ export function UsersTab() {
 
   return (
     <div className="space-y-4">
+      {selected && (
+        <UserDetailModal
+          user={selected}
+          onClose={() => setSelected(null)}
+          onSuccess={updated => {
+            setData(prev => (prev ?? []).map(u => u.id === updated.id ? updated : u));
+            setSelected(null);
+          }}
+        />
+      )}
+
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-lg font-semibold text-gray-900">Users</h2>
         <div className="flex items-center gap-3">
@@ -104,16 +117,25 @@ export function UsersTab() {
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  {user.enabled !== false && (
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => handleDisable(user)}
-                      disabled={disabling === user.id}
-                      className="text-xs font-medium text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 rounded-lg px-3 py-1 transition-colors disabled:opacity-50"
+                      onClick={() => setSelected(user)}
+                      className="text-xs font-medium text-primary-600 hover:text-primary-800 border border-primary-200 hover:border-primary-400 rounded-lg px-3 py-1 transition-colors"
                     >
-                      {disabling === user.id ? 'Disabling…' : 'Disable'}
+                      View
                     </button>
-                  )}
+                    {user.enabled !== false && (
+                      <button
+                        type="button"
+                        onClick={() => handleDisable(user)}
+                        disabled={disabling === user.id}
+                        className="text-xs font-medium text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 rounded-lg px-3 py-1 transition-colors disabled:opacity-50"
+                      >
+                        {disabling === user.id ? 'Disabling…' : 'Disable'}
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
