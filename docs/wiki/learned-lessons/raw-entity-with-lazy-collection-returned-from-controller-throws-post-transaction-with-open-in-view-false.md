@@ -3,8 +3,8 @@ title: Raw Entity With a Lazy Collection Returned From a Controller Throws Post-
 category: jpa
 tags: [hibernate, jpa, lazy-loading, open-in-view, serialization, jackson]
 keywords: [LazyInitializationException, open-in-view, Hibernate.initialize, ManyToMany, Jackson serialization, ResponseEntity]
-source_conversations: ["#425"]
-last_updated: 2026-07-17
+source_conversations: ["#425", "#426", "#440"]
+last_updated: 2026-07-18
 confidence: high
 evidence_strength: verified — reproduced live against a running backend, root-caused via stack trace, fixed and re-verified
 related_lessons: [service-layer-mocked-unit-tests-can-fully-cover-a-method-while-its-query-logic-stays-untested.md]
@@ -94,3 +94,26 @@ explicit fetch-join, or an `@EntityGraph`), or the controller maps to a DTO inst
 `@SpringBootTest`/integration test is not proof of safety here, since the test's own transaction
 context can keep the session open through the assertion, masking exactly the failure mode a real,
 non-transactional HTTP request would hit.
+
+## Recurrence
+
+**#426** hit a sibling instance the very next issue: `ProductImage.product`'s back-reference had no
+`@JsonIgnore` at all (unlike `Inventory.product`'s already-correct pattern), so any image-endpoint
+response walked into `Product`'s own lazy fields post-transaction. Fixed with `@JsonIgnore` rather
+than `Hibernate.initialize()`, since the back-reference was never meant to serialize at all — a
+narrower fix than #425's, but the same root cause.
+
+**#440** hit a third instance: `Inventory.thresholdBreaches` (a lazy `@OneToMany`) had no
+`@JsonIgnore`, even though its *own sibling fields on the same entity* (`product`, `variant`)
+already did — the entity had partially applied the fix to itself and still shipped with one lazy
+field unguarded. `AdminInventoryController.getInventory()` returns the raw `Inventory` entity
+directly (the same `jpa.md` violation #425 already flags), and the moment any inventory record
+with an initialized threshold-breach history was fetched, the response failed with a bare 500
+(`"Failed to write request"`) — no useful message reaching the client, same as #425's symptom.
+
+**The sharper generalization from three occurrences**: checking whether "the entity already has
+`@JsonIgnore` on its lazy fields" is not sufficient — every individual lazy field on the entity
+needs the check, since a prior fix (or a partially-consistent original author) can leave some
+fields ignored and others not, on the very same class. Grep the entity source for every
+`@OneToMany`/`@ManyToMany`/lazy `@OneToOne`/`@ManyToOne` field and verify each one individually
+before trusting that "this entity is already handled."

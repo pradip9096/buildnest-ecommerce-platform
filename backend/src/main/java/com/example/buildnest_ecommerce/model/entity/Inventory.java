@@ -20,8 +20,8 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = { "product", "variant", "thresholdBreaches", "updatedAt", "lastRestocked",
-        "lastThresholdBreach" })
+@EqualsAndHashCode(exclude = { "product", "variant", "thresholdBreaches",
+        "updatedAt", "lastRestocked", "lastThresholdBreach" })
 @ToString(exclude = { "product", "variant", "thresholdBreaches" })
 public class Inventory implements AggregateRoot {
     @Id
@@ -76,8 +76,11 @@ public class Inventory implements AggregateRoot {
     @Column(name = "reservation_expires_at")
     private LocalDateTime reservationExpiresAt;
 
-    @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, fetch = jakarta.persistence.FetchType.LAZY, orphanRemoval = true)
-    private List<InventoryThresholdBreachEvent> thresholdBreaches = new ArrayList<>();
+    @JsonIgnore
+    @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL,
+            fetch = jakarta.persistence.FetchType.LAZY, orphanRemoval = true)
+    private List<InventoryThresholdBreachEvent> thresholdBreaches =
+            new ArrayList<>();
 
     /**
      * Get available quantity (in stock - reserved).

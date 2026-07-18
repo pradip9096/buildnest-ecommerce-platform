@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAsync } from '../../hooks/useAsync';
 import { fetchAdminInventory, type InventoryItem } from '../../api/admin';
 import { InventoryAdjustModal } from './InventoryAdjustModal';
+import { InventoryDetailModal } from './InventoryDetailModal';
 
 const STATUS_COLORS: Record<string, string> = {
   IN_STOCK:     'bg-green-100 text-green-800',
@@ -16,6 +17,7 @@ export function InventoryTab() {
   );
   const items = data ?? [];
   const [adjusting, setAdjusting] = useState<InventoryItem | null>(null);
+  const [viewing, setViewing] = useState<InventoryItem | null>(null);
   const [search, setSearch] = useState('');
 
   const filtered = items.filter(i =>
@@ -30,6 +32,14 @@ export function InventoryTab() {
           item={adjusting}
           onClose={() => setAdjusting(null)}
           onSuccess={() => { setAdjusting(null); reload(); }}
+        />
+      )}
+
+      {viewing && (
+        <InventoryDetailModal
+          item={viewing}
+          onClose={() => setViewing(null)}
+          onChanged={reload}
         />
       )}
 
@@ -88,13 +98,22 @@ export function InventoryTab() {
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <button
-                    type="button"
-                    onClick={() => setAdjusting(item)}
-                    className="text-xs font-medium text-primary-600 hover:text-primary-800 border border-primary-200 hover:border-primary-400 rounded-lg px-3 py-1 transition-colors"
-                  >
-                    Adjust
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAdjusting(item)}
+                      className="text-xs font-medium text-primary-600 hover:text-primary-800 border border-primary-200 hover:border-primary-400 rounded-lg px-3 py-1 transition-colors"
+                    >
+                      Adjust
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewing(item)}
+                      className="text-xs font-medium text-gray-600 hover:text-gray-800 border border-gray-200 hover:border-gray-400 rounded-lg px-3 py-1 transition-colors"
+                    >
+                      Details
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
