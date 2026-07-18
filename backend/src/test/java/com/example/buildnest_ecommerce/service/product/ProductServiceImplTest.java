@@ -3,9 +3,12 @@ package com.example.buildnest_ecommerce.service.product;
 import com.example.buildnest_ecommerce.event.DomainEventPublisher;
 import com.example.buildnest_ecommerce.model.dto.CreateProductRequest;
 import com.example.buildnest_ecommerce.model.entity.Category;
+import com.example.buildnest_ecommerce.model.entity.Inventory;
+import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.CategoryRepository;
+import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +40,9 @@ class ProductServiceImplTest {
 
     @Mock
     private CategoryRepository categoryRepository;
+
+    @Mock
+    private InventoryRepository inventoryRepository;
 
     @Mock
     private DomainEventPublisher domainEventPublisher;
@@ -140,6 +146,31 @@ class ProductServiceImplTest {
         assertEquals(testCategory, saved.getCategory());
 
         verify(categoryRepository).findById(1L);
+
+        ArgumentCaptor<Inventory> inventoryCaptor = ArgumentCaptor.forClass(Inventory.class);
+        verify(inventoryRepository).save(inventoryCaptor.capture());
+        Inventory createdInventory = inventoryCaptor.getValue();
+        assertEquals(testProduct, createdInventory.getProduct());
+        assertEquals(25, createdInventory.getQuantityInStock());
+        assertEquals(InventoryStatus.IN_STOCK, createdInventory.getStatus());
+    }
+
+    @Test
+    void testCreateProduct_zeroStock_createsOutOfStockInventory() {
+        // Arrange
+        createRequest.setStockQuantity(0);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+
+        // Act
+        productService.createProduct(createRequest);
+
+        // Assert
+        ArgumentCaptor<Inventory> inventoryCaptor = ArgumentCaptor.forClass(Inventory.class);
+        verify(inventoryRepository).save(inventoryCaptor.capture());
+        Inventory createdInventory = inventoryCaptor.getValue();
+        assertEquals(0, createdInventory.getQuantityInStock());
+        assertEquals(InventoryStatus.OUT_OF_STOCK, createdInventory.getStatus());
     }
 
     @Test
