@@ -3,8 +3,8 @@ title: Raw Entity With a Lazy Collection Returned From a Controller Throws Post-
 category: jpa
 tags: [hibernate, jpa, lazy-loading, open-in-view, serialization, jackson]
 keywords: [LazyInitializationException, open-in-view, Hibernate.initialize, ManyToMany, Jackson serialization, ResponseEntity]
-source_conversations: ["#425", "#426", "#440"]
-last_updated: 2026-07-18
+source_conversations: ["#425", "#426", "#440", "#427"]
+last_updated: 2026-07-19
 confidence: high
 evidence_strength: verified — reproduced live against a running backend, root-caused via stack trace, fixed and re-verified
 related_lessons: [service-layer-mocked-unit-tests-can-fully-cover-a-method-while-its-query-logic-stays-untested.md]
@@ -117,3 +117,38 @@ needs the check, since a prior fix (or a partially-consistent original author) c
 fields ignored and others not, on the very same class. Grep the entity source for every
 `@OneToMany`/`@ManyToMany`/lazy `@OneToOne`/`@ManyToOne` field and verify each one individually
 before trusting that "this entity is already handled."
+
+**#427** hit a fourth instance, and a new sub-shape of the same root cause:
+`ProductVariantRepository.findByProductId`'s `@EntityGraph(attributePaths = {"inventory"})` never
+listed `"product"` at all — unlike this bug's first three instances (a missing `@JsonIgnore` on an
+already-loaded field), here the lazy `product` association was never loaded in the first place, so
+Jackson threw on `product` itself, not on something reachable through it. The sibling `findById`
+query on the same repository *did* correctly list `{"product", "inventory"}` — the same
+"partially-consistent" pattern #440 already generalized, but at the query/`@EntityGraph` level
+instead of the entity/`@JsonIgnore` level: two queries on the same repository, same entity, one
+fixed and one not. Fixing the entity graph then exposed a second-order case of the *original* bug
+shape one level deeper: once `product` was correctly loaded, Jackson walked into `product`'s own
+lazy `tags` collection (the exact field #425 originally found) and threw the same
+`LazyInitializationException` again — `ProductVariant.product` had no `@JsonIgnore` at all. Fixed
+by `@JsonIgnore`-ing `product` entirely (the API consumer never needed the nested product object),
+rather than `Hibernate.initialize()`-ing `tags` — the narrower fix already established by #426.
+
+A live-verification-only bug not related to this lesson's root cause surfaced in the same session:
+`createVariant()` set `createdAt` but never `updatedAt`, and `updated_at` is `NOT NULL` with no
+MySQL-side fallback once Hibernate binds an explicit `NULL` — every variant creation failed with a
+raw SQL error. Worth noting alongside this lesson because it was caught the same way (live browser
+verification against a real backend, not CI): the existing `AdminProductVariantControllerIntegrationTest`
+never created a variant through the actual create endpoint with an assertion sharp enough to notice
+a persistence failure at the field level, only through direct `entityManager.persist()` fixtures
+that set every field explicitly — a general reminder that fixture-seeded integration tests don't
+exercise the same code path as the endpoint's own service-layer construction logic.
+
+**Fourth-occurrence generalization**: this bug family isn't limited to "entity already loaded, lazy
+field unguarded" (`@JsonIgnore` gap) — it also shows up as "field never loaded at all"
+(`@EntityGraph`/fetch-join gap upstream of serialization). Both produce the identical symptom
+(`LazyInitializationException` post-transaction under `open-in-view=false`) and both are invisible
+to a `@Transactional`-wrapped test. When auditing a repository method for this bug class, check two
+things, not one: (1) does the query's `@EntityGraph`/fetch-join actually initialize every
+association the response DTO/entity needs, and (2) does every one of those now-initialized
+associations itself carry `@JsonIgnore` on any further lazy fields it exposes. Fixing only one
+still leaves the other path open.
