@@ -246,7 +246,7 @@ public class SecurityConfig {
                     List<String> origins = new java.util.ArrayList<>(Arrays.asList("https://buildnest.com", "https://www.buildnest.com"));
                     origins.addAll(Arrays.asList(corsAllowedOrigins));
                     corsConfig.setAllowedOrigins(origins);
-                    corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                     corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-XSRF-TOKEN"));
                     corsConfig.setExposedHeaders(Arrays.asList("Authorization"));
                     corsConfig.setAllowCredentials(true);

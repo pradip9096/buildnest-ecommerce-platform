@@ -27,9 +27,17 @@ function getCsrfToken(): string | undefined {
   return match ? decodeURIComponent(match[1]) : undefined;
 }
 
-function buildHeaders(method: string | undefined, hasBody: boolean, extra?: HeadersInit): HeadersInit {
+function buildHeaders(
+  method: string | undefined,
+  hasBody: boolean,
+  isFormData: boolean,
+  extra?: HeadersInit
+): HeadersInit {
   const headers: Record<string, string> = {};
-  if (hasBody) headers['Content-Type'] = 'application/json';
+  // FormData must NOT get an explicit Content-Type: the browser sets one
+  // itself (multipart/form-data; boundary=...) only when the header is
+  // absent — setting it here would omit the boundary and corrupt the upload.
+  if (hasBody && !isFormData) headers['Content-Type'] = 'application/json';
   const isSafeMethod = !method || method === 'GET' || method === 'HEAD';
   if (!isSafeMethod) {
     const csrfToken = getCsrfToken();
@@ -68,13 +76,14 @@ export async function request<T>(
 ): Promise<T> {
   const { body, headers, method, ...rest } = options;
   const hasBody = body !== undefined;
+  const isFormData = body instanceof FormData;
 
   const res = await fetch(path, {
     ...rest,
     method,
     credentials: 'include',
-    headers: buildHeaders(method, hasBody, headers),
-    body: hasBody ? JSON.stringify(body) : undefined,
+    headers: buildHeaders(method, hasBody, isFormData, headers),
+    body: hasBody ? (isFormData ? body : JSON.stringify(body)) : undefined,
   });
 
   if (res.status === 401 && !isRetry && unauthorizedHandler) {

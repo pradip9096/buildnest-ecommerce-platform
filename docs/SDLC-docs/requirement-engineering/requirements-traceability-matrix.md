@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.8 |
-| **Date** | 2026-07-17 22:30 IST |
+| **Version** | 1.9 |
+| **Date** | 2026-07-18 10:30 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
@@ -37,6 +37,7 @@
 | 1.6 | 2026-07-17 20:45 IST | QA Manager | Updated the `Related SDD` cross-reference from v3.3 to v3.4 following SDD's own §4.7.3 API Endpoint Catalogue re-derivation (#471) — no RTM row content otherwise touched by that fix | Pending |
 | 1.7 | 2026-07-17 21:15 IST | QA Manager | Found during a fresh RTM/SRS/SDD/Test-Plan verification sweep: `Related SRS` had drifted one version behind (v4.4, SRS is now v4.5 following #474), `Related SDD` similarly (v3.4, SDD is now v3.5 following this same sweep's own fix), and `Related TP` had never been updated at all since the original baseline (stuck at v4.0, Test Plan is now v4.2). Updated all three to current. No RTM row content otherwise touched | Pending |
 | 1.8 | 2026-07-17 22:30 IST | QA Manager | FR-FE-23 (admin product management) corrected from 🔵 Pending Ph-2 citing a fictional `AdminProductMgmt.jsx` to ✅ Implemented, citing the real `ProductsTab.tsx`/`ProductFormModal.tsx` and their `ProductsTab.test.tsx` coverage (#425, part of Epic #424 — same pattern as FR-FE-31/#428). Recomputed the Frontend Coverage Summary row (20→21 Implemented, 4→3 Pending), the Coverage Summary Totals row (113→114 Implemented, 51→50 Pending), and the §12 Phase 2 Frontend Started/Not-Started counts (27→28 Started, 4→3 Not Started) and Phase 2 total (35→36 Started, 46→45 Not Started) accordingly | Pending |
+| 1.9 | 2026-07-18 10:30 IST | QA Manager | FR-FE-23's own SRS text explicitly names "image upload" as part of this requirement's scope, but its #425-era citation only covered `ProductsTab.tsx`/`ProductFormModal.tsx` (product CRUD, no image capability). Added `ProductImagesModal.tsx`/`ProductImagesModal.test.tsx` to FR-FE-23's Implementation/Test citations now that image upload/reorder/delete genuinely exist (#426, part of Epic #424) — status stays ✅ Implemented (no count changes; #425 had already marked it Implemented, this closes the citation gap rather than changing status) | Pending |
 
 ### Document Approval
 
@@ -316,7 +317,7 @@ The RTM serves to:
 | FR-FE-20 | Wishlist page | Low | Ph-2 | §4.7.4 | `frontend/src/components/account/WishlistTab.tsx` — a tab inside `pages/AccountPage.tsx`, not a standalone page/route | Vitest | Test | 🟡 Partial (functionality implemented; delivered as an account-page tab rather than its own route) |
 | FR-FE-21 | Search results page | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/ProductListingPage.tsx` — search is integrated via a `?search=` query param on the product listing route, not a separate page/route | Vitest | Test | 🟡 Partial (functionality implemented; delivered as a mode of the listing page rather than a dedicated route) |
 | FR-FE-22 | Admin dashboard | Medium | Ph-2 | §4.7.4 | `frontend/src/pages/AdminDashboardPage.tsx` | Playwright | Demonstration | ✅ Implemented |
-| FR-FE-23 | Admin product management | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/ProductsTab.tsx`, `ProductFormModal.tsx` | `ProductsTab.test.tsx` | Test | ✅ Implemented (#425) |
+| FR-FE-23 | Admin product management | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/ProductsTab.tsx`, `ProductFormModal.tsx`, `ProductImagesModal.tsx` | `ProductsTab.test.tsx`, `ProductImagesModal.test.tsx` | Test | ✅ Implemented (#425, #426) |
 | FR-FE-24 | Admin inventory page | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/InventoryTab.tsx` | Vitest | Test | ✅ Implemented |
 | FR-FE-25 | Admin order management | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/OrdersTab.tsx` | Vitest | Test | ✅ Implemented |
 | FR-FE-26 | Navbar on all pages | High | Ph-2 | §4.3.6 | `frontend/src/components/common/Navbar.tsx` | Playwright | Demonstration | ✅ Implemented |
