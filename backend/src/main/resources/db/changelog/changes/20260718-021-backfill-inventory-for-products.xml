@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #309: products.stock_quantity and the inventory table are two
+         independent representations of stock with no seed/sync mechanism.
+         Existing products with no matching inventory row fail every
+         checkout (InventoryServiceImpl.hasStock() returns false when no
+         row exists), not just the Admin Inventory tab. Backfill one
+         inventory row per product lacking one, using its stock_quantity
+         as the initial quantityInStock. -->
+    <changeSet id="20260718-021-backfill-inventory-for-products" author="buildnest-team">
+        <!-- 'products' is not created by any Liquibase changeset in this
+             repo (Hibernate-drift, same class as #241/categories/#305) and
+             does not exist yet when Liquibase runs in the test profile
+             (Hibernate create-drop runs after). MARK_RAN lets this no-op
+             cleanly there instead of failing every test-profile startup. -->
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="products"/>
+                <tableExists tableName="inventory"/>
+            </and>
+        </preConditions>
+
+        <comment>Backfill missing inventory rows for existing products (#309)</comment>
+
+        <sql>
+            INSERT INTO inventory (product_id, quantity_in_stock, quantity_reserved,
+                minimum_stock_level, use_category_threshold, status, updated_at, version)
+            SELECT p.id, COALESCE(p.stock_quantity, 0), 0, 0, true,
+                CASE WHEN COALESCE(p.stock_quantity, 0) > 0 THEN 'IN_STOCK' ELSE 'OUT_OF_STOCK' END,
+                NOW(), 0
+            FROM products p
+            LEFT JOIN inventory i ON i.product_id = p.id
+            WHERE i.id IS NULL;
+        </sql>
+
+        <rollback>
+            <!-- Best-effort inverse: removes only the rows this changeset
+                 created (rows with no reservation/restock/threshold-breach
+                 activity yet), not a perfect undo if those rows were
+                 subsequently adjusted through normal inventory operations. -->
+            <sql>
+                DELETE FROM inventory
+                WHERE quantity_reserved = 0
+                  AND last_restocked IS NULL
+                  AND last_threshold_breach IS NULL
+                  AND version = 0;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

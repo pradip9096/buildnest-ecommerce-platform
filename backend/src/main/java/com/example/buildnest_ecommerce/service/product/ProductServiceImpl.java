@@ -6,10 +6,13 @@ import com.example.buildnest_ecommerce.event.ProductDeletedEvent;
 import com.example.buildnest_ecommerce.event.ProductUpdatedEvent;
 import com.example.buildnest_ecommerce.model.dto.CreateProductRequest;
 import com.example.buildnest_ecommerce.model.entity.Category;
+import com.example.buildnest_ecommerce.model.entity.Inventory;
+import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.entity.ProductTag;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.CategoryRepository;
+import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
@@ -45,6 +48,7 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final InventoryRepository inventoryRepository;
     private final DomainEventPublisher domainEventPublisher;
 
     /**
@@ -114,7 +118,21 @@ public class ProductServiceImpl implements ProductService {
                     .orElseThrow(() -> new RuntimeException("Category not found")));
         }
 
+        int initialStock = product.getStockQuantity() != null
+                ? product.getStockQuantity()
+                : 0;
         Product saved = productRepository.save(product);
+        Inventory inventory = new Inventory();
+        inventory.setProduct(saved);
+        inventory.setQuantityInStock(initialStock);
+        inventory.setMinimumStockLevel(0);
+        inventory.setUseCategoryThreshold(true);
+        inventory.setStatus(initialStock > 0
+                ? InventoryStatus.IN_STOCK
+                : InventoryStatus.OUT_OF_STOCK);
+        inventory.setUpdatedAt(LocalDateTime.now());
+        inventoryRepository.save(inventory);
+
         domainEventPublisher.publish(new ProductCreatedEvent(this, saved));
         return saved;
     }
