@@ -284,7 +284,7 @@ GitHub Actions workflows in `.github/workflows/` that actively trigger on `maste
 | M1 — Stabilisation | Critical test defect fixes | 2026-07-04 | **Complete** (v0.2.0) — 16/16 issues |
 | M2 — Quality Foundation | Test coverage, OWASP, env docs | 2026-07-18 | **Complete** (v0.3.0) — 16/16 issues |
 | M3 — Technical Debt Reduction | ES upgrade, CSP hardening, circuit breaker fallbacks, coverage gate ratchet | 2026-08-01 | **Complete** (v0.4.0) — 13/13 issues |
-| M4 — Feature Development | Core commerce features + bug fixes | 2026-10-24 | **In progress** — 137/150 issues closed |
+| M4 — Feature Development | Core commerce features + bug fixes | 2026-10-24 | **In progress** — 167/198 issues closed |
 | M5 — Production Readiness | Security hardening, deployment, observability, compliance | 2026-11-21 | **In progress** — 29/72 issues closed |
 
 ---
