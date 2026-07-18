@@ -49,6 +49,18 @@ export async function updateOrderStatus(
   );
 }
 
+export async function refundOrder(
+  orderId: number,
+  amount: number,
+  reason: string
+): Promise<void> {
+  await request(
+    `/api/v1/admin/orders/${orderId}/refund`,
+    { method: 'POST', body: { amount, reason } },
+    'Failed to process refund'
+  );
+}
+
 // ── Inventory ────────────────────────────────────────────────────────────────
 
 export interface InventoryItem {

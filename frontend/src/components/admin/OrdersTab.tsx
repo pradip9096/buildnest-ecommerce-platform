@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAsync } from '../../hooks/useAsync';
 import { fetchAdminOrders, updateOrderStatus, type AdminOrder } from '../../api/admin';
+import { RefundModal } from './RefundModal';
 
 type AdminOrdersPage = Awaited<ReturnType<typeof fetchAdminOrders>>;
 
@@ -18,8 +19,9 @@ export function OrdersTab() {
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
   const [updating, setUpdating] = useState<number | null>(null);
+  const [refunding, setRefunding] = useState<AdminOrder | null>(null);
 
-  const { data, loading, error, setData } = useAsync<AdminOrdersPage>(
+  const { data, loading, error, setData, reload } = useAsync<AdminOrdersPage>(
     () => fetchAdminOrders({ status: statusFilter || undefined, page, size: 15 }),
     [statusFilter, page]
   );
@@ -41,6 +43,14 @@ export function OrdersTab() {
 
   return (
     <div className="space-y-4">
+      {refunding && (
+        <RefundModal
+          order={refunding}
+          onClose={() => setRefunding(null)}
+          onSuccess={() => { setRefunding(null); reload(); }}
+        />
+      )}
+
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-lg font-semibold text-gray-900">Orders</h2>
         <div className="flex items-center gap-3">
@@ -69,20 +79,21 @@ export function OrdersTab() {
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Date</th>
               <th className="px-4 py-3">Update</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {loading ? (
               [...Array(5)].map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  {[...Array(6)].map((__, j) => (
+                  {[...Array(7)].map((__, j) => (
                     <td key={j} className="px-4 py-3"><div className="h-4 bg-gray-100 rounded" /></td>
                   ))}
                 </tr>
               ))
             ) : orders.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">No orders found</td>
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">No orders found</td>
               </tr>
             ) : orders.map(order => (
               <tr key={order.id} className="hover:bg-gray-50 transition-colors">
@@ -110,6 +121,15 @@ export function OrdersTab() {
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
+                </td>
+                <td className="px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => setRefunding(order)}
+                    className="text-xs font-medium text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 rounded-lg px-3 py-1 transition-colors"
+                  >
+                    Refund
+                  </button>
                 </td>
               </tr>
             ))}
