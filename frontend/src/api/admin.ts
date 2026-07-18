@@ -77,6 +77,46 @@ export async function adjustInventory(
   );
 }
 
+export interface InventoryDetail {
+  id: number;
+  quantity: number;
+  reservedQuantity: number;
+  availableQuantity: number;
+  status: string;
+}
+
+export async function fetchInventoryDetail(productId: number): Promise<InventoryDetail> {
+  return requestData<InventoryDetail>(
+    `/api/v1/admin/inventory/product/${productId}`,
+    {},
+    'Failed to load inventory detail'
+  );
+}
+
+export async function addStock(productId: number, quantity: number): Promise<InventoryDetail> {
+  return requestData<InventoryDetail>(
+    `/api/v1/admin/inventory/add-stock/${productId}?quantity=${quantity}`,
+    { method: 'POST' },
+    'Failed to add stock'
+  );
+}
+
+export async function setStock(productId: number, quantity: number): Promise<InventoryDetail> {
+  return requestData<InventoryDetail>(
+    `/api/v1/admin/inventory/update-stock/${productId}?quantity=${quantity}`,
+    { method: 'POST' },
+    'Failed to update stock'
+  );
+}
+
+export async function checkStockAvailability(productId: number, quantity: number): Promise<boolean> {
+  return requestData<boolean>(
+    `/api/v1/admin/inventory/check-availability/${productId}?quantity=${quantity}`,
+    {},
+    'Failed to check availability'
+  );
+}
+
 // ── Users ────────────────────────────────────────────────────────────────────
 
 export interface AdminUser {
