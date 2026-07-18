@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 4.5 |
-| **Date** | 2026-07-17 20:05 IST |
+| **Version** | 4.6 |
+| **Date** | 2026-07-18 20:50 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -34,6 +34,7 @@
 | 4.3 | 2026-07-17 18:18 IST | Technical Lead | Full re-derivation of Appendix A's API Endpoint Catalogue (#456), fixing every controller base-path prefix and adding previously-missing endpoint groups (categories, tags, coupons, shipping-methods, search reindex, inventory-threshold/analytics/reports, public webhook receiver, product reviews, notifications SSE, auth validate-token/csrf) — 18 sections expanded to 36, each citing its real controller class. Determined `/api/checkout` (legacy single-step) vs `/api/v1/checkout` (multi-step, current — confirmed via `frontend/src/api/checkout.ts`) via direct investigation, not assumption | Pending |
 | 4.4 | 2026-07-17 19:11 IST | Technical Lead | §4.2's Frontend aggregate row still said `FR-FE-01–30`/count 30, never updated when #450 added `FR-FE-31` (#470). Corrected to `FR-FE-01–31`/31, and recomputed the priority breakdown by reading all 31 rows' actual priorities directly rather than incrementing the stale figure — real split is 16 High/12 Medium/3 Low, not the previously-stated 15/10/5 (which was already wrong even for the original 30, independent of FR-FE-31). Recomputed **Total Functional** from the table's own row counts: 99, not the previously-stated 95 (which also didn't match the sum of its own listed rows even before this fix) | Pending |
 | 4.5 | 2026-07-17 20:05 IST | Technical Lead | §4.2's Authentication, Shopping Cart, and Payment rows each had a duplicated priority label from a copy-paste-shaped defect, found incidentally during #470 (#474). Recomputed all three directly from their §3.2 requirement rows rather than guessing the intended third label: Authentication is 9 High/2 Medium (not "8 High, 2 Medium, 1 Medium"), Shopping Cart is 5 High/1 Medium (not "4 High, 1 Medium, 1 High"), Payment is 4 High/1 Medium (not "3 High, 1 Medium, 1 High") — none of the three actually contain a Low-priority requirement, contrary to the issue's own initial guess. Checked every other row in the same table for the same duplicate-label pattern; none found | Pending |
+| 4.6 | 2026-07-18 20:50 IST | Technical Lead | FR-FE-25's requirement text covered only status filters and status updates, but the admin order-management UI now also processes refunds (#438). Extended §3.2.10.2's FR-FE-25 row text to name refund processing explicitly | Pending |
 
 ### Document Change Procedure
 
@@ -612,7 +613,7 @@ This system has no direct hardware interfaces. It runs as a containerised applic
 | FR-FE-22 | Admin Dashboard: summary cards for total sales, orders, users, and low-stock items | Medium | Ph-2 | Demonstration |
 | FR-FE-23 | Admin Product Management: table with CRUD actions, image upload, category assignment | Medium | Ph-2 | Test |
 | FR-FE-24 | Admin Inventory Page: stock levels with colour-coded status and threshold configuration | Medium | Ph-2 | Test |
-| FR-FE-25 | Admin Order Management: all orders with status filters and order status updates | Medium | Ph-2 | Test |
+| FR-FE-25 | Admin Order Management: all orders with status filters, order status updates, and refund processing | Medium | Ph-2 | Test |
 | FR-FE-31 | Admin Category Management: table with CRUD actions and hierarchy support for product categories | Medium | Ph-2 | Test |
 
 ##### 3.2.10.3 Shared Components
