@@ -36,6 +36,9 @@ build/
 artifacts/
 pit-reports-download/
 
+### Local file storage (LocalStorageService, app.storage.location) ###
+uploads/
+
 ### Logs ###
 logs/
 *_IS_UNDEFINED

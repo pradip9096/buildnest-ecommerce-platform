@@ -194,6 +194,54 @@ export async function deleteAdminProduct(id: number): Promise<void> {
   await request(`/api/v1/admin/products/${id}`, { method: 'DELETE' }, 'Failed to delete product');
 }
 
+// ── Product Images ──────────────────────────────────────────────────────────
+
+export interface AdminProductImage {
+  id: number;
+  imageUrl: string;
+  altText?: string;
+  displayOrder: number;
+  isPrimary: boolean;
+}
+
+export async function fetchProductImages(productId: number): Promise<AdminProductImage[]> {
+  const data = await requestData<AdminProductImage[]>(
+    `/api/v1/admin/products/${productId}/images`,
+    {},
+    'Failed to load images'
+  );
+  return Array.isArray(data) ? data : [];
+}
+
+export async function uploadProductImage(productId: number, file: File): Promise<AdminProductImage> {
+  const form = new FormData();
+  form.append('file', file);
+  return requestData<AdminProductImage>(
+    `/api/v1/admin/products/${productId}/images`,
+    { method: 'POST', body: form },
+    status => (status === 400 ? 'Unsupported file type or file too large' : 'Failed to upload image')
+  );
+}
+
+export async function reorderProductImages(
+  productId: number,
+  imageIds: number[]
+): Promise<AdminProductImage[]> {
+  return requestData<AdminProductImage[]>(
+    `/api/v1/admin/products/${productId}/images/reorder`,
+    { method: 'PATCH', body: { imageIds } },
+    'Failed to reorder images'
+  );
+}
+
+export async function deleteProductImage(productId: number, imageId: number): Promise<void> {
+  await request(
+    `/api/v1/admin/products/${productId}/images/${imageId}`,
+    { method: 'DELETE' },
+    'Failed to delete image'
+  );
+}
+
 // ── Audit Log ────────────────────────────────────────────────────────────────
 
 export interface AuditLogEntry {

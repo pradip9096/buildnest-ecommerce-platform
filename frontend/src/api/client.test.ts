@@ -76,6 +76,29 @@ describe('api/client', () => {
       });
     });
 
+    it('sends a FormData body as-is, without JSON.stringify or a Content-Type header', async () => {
+      vi.mocked(fetch).mockResolvedValue(jsonResponse({ ok: true }, true));
+      const form = new FormData();
+      form.append('file', new File(['data'], 'photo.jpg', { type: 'image/jpeg' }));
+
+      await request('/api/thing', { method: 'POST', body: form });
+
+      const [, init] = vi.mocked(fetch).mock.calls[0];
+      expect(init?.body).toBe(form);
+      expect((init?.headers as Record<string, string>)['Content-Type']).toBeUndefined();
+    });
+
+    it('still attaches X-XSRF-TOKEN on a mutating FormData request', async () => {
+      document.cookie = 'XSRF-TOKEN=abc123';
+      vi.mocked(fetch).mockResolvedValue(jsonResponse({ ok: true }, true));
+      const form = new FormData();
+
+      await request('/api/thing', { method: 'POST', body: form });
+
+      const [, init] = vi.mocked(fetch).mock.calls[0];
+      expect((init?.headers as Record<string, string>)['X-XSRF-TOKEN']).toBe('abc123');
+    });
+
     it('returns undefined for a 204 No Content response without parsing the body', async () => {
       const res = jsonResponse(undefined, true, 204);
       vi.mocked(fetch).mockResolvedValue(res);
