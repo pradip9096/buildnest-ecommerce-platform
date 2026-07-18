@@ -33,10 +33,11 @@ public class ProductImage implements AggregateRoot {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Not serialized: the admin UI already scopes image responses by product ID in the
-    // URL, so the nested Product is never needed here — and serializing it risks
-    // LazyInitializationException on any of Product's own lazy fields (e.g. tags) once
-    // the transaction that loaded this ProductImage has closed (open-in-view=false).
+    // Not serialized: the admin UI scopes image responses by product ID in
+    // the URL, so the nested Product is never needed here -- serializing
+    // it risks LazyInitializationException on any of Product's own lazy
+    // fields (e.g. tags) once the loading transaction has closed
+    // (open-in-view=false).
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
