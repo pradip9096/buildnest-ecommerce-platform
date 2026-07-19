@@ -10,12 +10,12 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.13 |
-| **Date** | 2026-07-19 06:00 IST |
+| **Version** | 1.14 |
+| **Date** | 2026-07-19 09:00 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
-| **Related SRS** | SRS-BUILDNEST-001 v4.7 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
+| **Related SRS** | SRS-BUILDNEST-001 v4.8 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
 | **Related SDD** | SDD-BUILDNEST-001 v3.5 — `docs/SDLC-docs/design/software-design-description.md` |
 | **Related TP** | TP-BUILDNEST-001 v4.2 — `docs/SDLC-docs/software-testing/test-plan.md` |
 | **Baseline Assessment** | `docs/reports/baseline-assessment-2026-06-19.md` |
@@ -42,6 +42,7 @@
 | 1.11 | 2026-07-18 23:20 IST | QA Manager | FR-ADM-03 (admin manages user accounts — view, update, deactivate) corrected from 🔵 Pending Ph-2 to ✅ Implemented: the backend (`AdminUserController` GET/PUT `/{id}`, `AdminServiceImpl.updateUserByAdmin`) was already fully implemented and tested (`AdminUserControllerTest`), but the frontend `UsersTab.tsx` only wired list + delete; added `UserDetailModal.tsx` (view + edit) and its wiring, with `UserDetailModal.test.tsx`/`UsersTab.test.tsx` coverage (#439). Recomputed the Admin Operations (FR-ADM) Coverage Summary row (3→4 Implemented, 4→3 Pending) and the Coverage Summary Totals row (114→115 Implemented, 50→49 Pending) | Pending |
 | 1.12 | 2026-07-19 02:00 IST | QA Manager | FR-PROD-08 and FR-FE-23 were both already ✅ Implemented, backend-only for FR-PROD-08 (variant CRUD had no admin UI) and citation-incomplete for FR-FE-23. Added `ProductVariantsModal.tsx`/`ProductVariantsModal.test.tsx` (the new admin variant-management UI) to both rows' citations, and `ProductVariantRepositoryTest` (new regression test for a live-verified `LazyInitializationException` bug found while building the UI — `ProductVariantRepository.findByProductId`'s `@EntityGraph` was missing `"product"`, plus a related missing-`updatedAt`-on-create NOT NULL bug and a `Product.tags` serialization leak, all fixed in the same change) to FR-PROD-08 (#427). Status stays ✅ Implemented on both rows — citation/evidence gap closure, no count changes | Pending |
 | 1.13 | 2026-07-19 06:00 IST | QA Manager | Added FR-ADM-10 (admin CRUD for product tags) — no RTM row existed for tag management at all, matching SRS's newly-added FR-ADM-10 (same fix, v4.7). Backend (`AdminProductTagController`, `ProductTagServiceImpl`) was already complete; added the new frontend `TagsTab.tsx`/`TagFormModal.tsx` consuming it, with `TagsTab.test.tsx` coverage (#429). Recomputed the Admin Operations (FR-ADM) Coverage Summary row (8→9 total, 4→5 Implemented) and the Coverage Summary Totals row (180→181 total, 115→116 Implemented). Updated `Related SRS` from v4.6 to v4.7 | Pending |
+| 1.14 | 2026-07-19 09:00 IST | QA Manager | Added FR-ADM-11 (admin CRUD for coupons: list, create, deactivate) — no RTM row existed for coupon admin management, matching SRS's newly-added FR-ADM-11 (same fix, v4.8). `AdminCouponController` had no `GET`/list endpoint at all before this issue (only `POST`/`DELETE`, confirmed via source read) — added in the same change (#435), since a table/list-based admin UI cannot function without one, matching every sibling admin CRUD UI's shape. Live browser verification also surfaced a genuine, pre-existing Liquibase schema-drift defect (two conflicting `coupons`-table changesets) blocking coupon creation entirely, fixed via a new reconciling migration in the same PR. Recomputed the Admin Operations (FR-ADM) Coverage Summary row (9→10 total, 5→6 Implemented) and the Coverage Summary Totals row (181→182 total, 116→117 Implemented). Updated `Related SRS` from v4.7 to v4.8 | Pending |
 
 ### Document Approval
 
@@ -100,7 +101,7 @@ The RTM serves to:
 | Payment (FR-PAY) | 5 | 0 | 3 | 2 | 0 | 0 |
 | Inventory (FR-INV) | 7 | 5 | 0 | 2 | 0 | 0 |
 | Reviews & Wishlists (FR-REV, FR-WISH) | 5 | 5 | 0 | 0 | 0 | 0 |
-| Admin Operations (FR-ADM) | 9 | 5 | 1 | 3 | 0 | 0 |
+| Admin Operations (FR-ADM) | 10 | 6 | 1 | 3 | 0 | 0 |
 | Monitoring (FR-MON) | 8 | 2 | 1 | 5 | 0 | 0 |
 | Frontend (FR-FE) | 31 | 21 | 7 | 3 | 0 | 0 |
 | User Interfaces (UI) | 4 | 3 | 0 | 1 | 0 | 0 |
@@ -117,7 +118,7 @@ The RTM serves to:
 | Safety (SAF) | 3 | 1 | 0 | 2 | 0 | 0 |
 | Design Constraints (DC) | 8 | 7 | 1 | 0 | 0 | 0 |
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
-| **Totals** | **181** | **116** | **16** | **49** | **0** | **0** |
+| **Totals** | **182** | **117** | **16** | **49** | **0** | **0** |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 
@@ -275,6 +276,7 @@ The RTM serves to:
 | FR-ADM-08 | All `/api/admin/**` requires `ADMIN` role | High | Ph-1 | §5.1.3 | `SecurityConfig` — `.requestMatchers("/api/admin/**").hasRole("ADMIN")` | `AuthenticationAuthorizationSecurityTest`, `RBACTest` | Test | ✅ Implemented |
 | FR-ADM-09 | Admin CRUD for product categories with hierarchical parent/child support; deletion blocked while products or subcategories still reference the category | Medium | Ph-1 | §4.7.3 | `Category` (`parentCategory`/`subcategories`), `CategoryServiceImpl`, `AdminCategoryController`; frontend consumption via `CategoriesTab`, `CategoryFormModal` | `CategoryServiceImplTest`, `CategoryTest`, `AdminCategoryControllerIntegrationTest`, `CategoriesTab.test.tsx` | Test | ✅ Implemented (#68 backend, #428 frontend UI) |
 | FR-ADM-10 | Admin CRUD for product tags (create, view, update, delete) | Medium | Ph-1 | §A.19 | `ProductTag`, `ProductTagServiceImpl`, `AdminProductTagController`; frontend consumption via `TagsTab`, `TagFormModal` | `TagsTab.test.tsx` | Test | ✅ Implemented (#429) |
+| FR-ADM-11 | Admin CRUD for coupons (list, create, deactivate) | Medium | Ph-1 | §A.20 | `Coupon`, `CouponServiceImpl`, `AdminCouponController`; frontend consumption via `CouponsTab`, `CouponFormModal` | `AdminCouponControllerTest`, `CouponServiceImplTest`, `CouponsTab.test.tsx` | Test | ✅ Implemented (#435) |
 
 ### 6.9 Monitoring and Observability (FG-09)
 
@@ -491,6 +493,7 @@ The RTM serves to:
 | `ProductImageServiceImpl`, `AdminProductController` (image endpoints) | FR-PROD-09 |
 | `CategoryServiceImpl`, `AdminCategoryController` | FR-ADM-09, FR-ADM-08 |
 | `ProductTagServiceImpl`, `AdminProductTagController` | FR-ADM-10, FR-ADM-08 |
+| `CouponServiceImpl`, `AdminCouponController` | FR-ADM-11, FR-ADM-08 |
 | `ApiSunsetInterceptor` | FR-PROD-05, UR-05 |
 | `CartController` + `CartServiceImpl` | FR-CART-01 to FR-CART-05 |
 | `Cart` entity | FR-CART-06 |
@@ -552,6 +555,7 @@ The RTM serves to:
 | `ProductImageServiceImplTest`, `AdminProductImageControllerIntegrationTest` | FR-PROD-09 |
 | `CategoryServiceImplTest`, `CategoryTest`, `AdminCategoryControllerIntegrationTest` | FR-ADM-09 |
 | `TagsTab.test.tsx` | FR-ADM-10 |
+| `AdminCouponControllerTest`, `CouponServiceImplTest`, `CouponsTab.test.tsx` | FR-ADM-11 |
 | `CartControllerTest` | FR-CART-01 to FR-CART-05 |
 | `CartServiceImplTest`, `CartServiceImplEnhancedTest` | FR-CART-01 to FR-CART-05 |
 | `CartRepositoryTest` | FR-CART-02, FR-CART-06 |

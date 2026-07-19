@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -24,20 +25,28 @@ public class CouponServiceImpl implements CouponService {
     @Override
     public Coupon validateCoupon(String code, BigDecimal orderSubtotal) {
         Coupon coupon = couponRepository.findByCode(code.trim().toUpperCase())
-                .orElseThrow(() -> new ResourceNotFoundException("Coupon not found: " + code));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Coupon not found: " + code));
 
         if (!Boolean.TRUE.equals(coupon.getIsActive())) {
-            throw new ValidationException("Coupon is no longer active: " + code);
+            throw new ValidationException(
+                    "Coupon is no longer active: " + code);
         }
-        if (coupon.getExpiresAt() != null && coupon.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (coupon.getExpiresAt() != null
+                && coupon.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new ValidationException("Coupon has expired: " + code);
         }
-        if (coupon.getUsageLimit() != null && coupon.getUsageCount() >= coupon.getUsageLimit()) {
-            throw new ValidationException("Coupon usage limit reached: " + code);
-        }
-        if (coupon.getMinOrderValue() != null && orderSubtotal.compareTo(coupon.getMinOrderValue()) < 0) {
+        if (coupon.getUsageLimit() != null
+                && coupon.getUsageCount() >= coupon.getUsageLimit()) {
             throw new ValidationException(
-                    "Order subtotal " + orderSubtotal + " is below the minimum " + coupon.getMinOrderValue()
+                    "Coupon usage limit reached: " + code);
+        }
+        if (coupon.getMinOrderValue() != null
+                && orderSubtotal.compareTo(coupon.getMinOrderValue()) < 0) {
+            throw new ValidationException(
+                    "Order subtotal " + orderSubtotal
+                            + " is below the minimum "
+                            + coupon.getMinOrderValue()
                             + " required for coupon " + code);
         }
 
@@ -45,7 +54,8 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
-    public BigDecimal calculateDiscount(Coupon coupon, BigDecimal orderSubtotal) {
+    public BigDecimal calculateDiscount(
+            Coupon coupon, BigDecimal orderSubtotal) {
         BigDecimal discount;
         if (coupon.getDiscountType() == Coupon.DiscountType.PERCENTAGE) {
             discount = orderSubtotal.multiply(coupon.getDiscountValue())
@@ -53,15 +63,21 @@ public class CouponServiceImpl implements CouponService {
         } else {
             discount = coupon.getDiscountValue();
         }
-        // Never discount more than the subtotal itself — avoids a negative order total.
+        // Never discount more than the subtotal — avoids a negative total.
         return discount.min(orderSubtotal);
+    }
+
+    @Override
+    public List<Coupon> getAllCoupons() {
+        return couponRepository.findAll();
     }
 
     @Override
     @Transactional
     public void incrementUsage(Long couponId) {
         Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new ResourceNotFoundException("Coupon", couponId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Coupon", couponId));
         coupon.setUsageCount(coupon.getUsageCount() + 1);
         coupon.setUpdatedAt(LocalDateTime.now());
         couponRepository.save(coupon);
@@ -69,22 +85,27 @@ public class CouponServiceImpl implements CouponService {
 
     @Override
     @Transactional
-    public Coupon createCoupon(String code, Coupon.DiscountType discountType, BigDecimal discountValue,
-            BigDecimal minOrderValue, Integer usageLimit, LocalDateTime expiresAt) {
+    public Coupon createCoupon(String code, Coupon.DiscountType discountType,
+            BigDecimal discountValue, BigDecimal minOrderValue,
+            Integer usageLimit, LocalDateTime expiresAt) {
         String normalizedCode = code.trim().toUpperCase();
         couponRepository.findByCode(normalizedCode).ifPresent(existing -> {
-            throw new ValidationException("A coupon with code " + normalizedCode + " already exists");
+            throw new ValidationException(
+                    "A coupon with code " + normalizedCode
+                            + " already exists");
         });
         if (discountType == Coupon.DiscountType.PERCENTAGE
                 && discountValue.compareTo(BigDecimal.valueOf(100)) > 0) {
-            throw new ValidationException("Percentage discount cannot exceed 100");
+            throw new ValidationException(
+                    "Percentage discount cannot exceed 100");
         }
 
         Coupon coupon = new Coupon();
         coupon.setCode(normalizedCode);
         coupon.setDiscountType(discountType);
         coupon.setDiscountValue(discountValue);
-        coupon.setMinOrderValue(minOrderValue != null ? minOrderValue : BigDecimal.ZERO);
+        coupon.setMinOrderValue(
+                minOrderValue != null ? minOrderValue : BigDecimal.ZERO);
         coupon.setUsageLimit(usageLimit);
         coupon.setUsageCount(0);
         coupon.setExpiresAt(expiresAt);
@@ -101,7 +122,8 @@ public class CouponServiceImpl implements CouponService {
     @Transactional
     public Coupon deactivateCoupon(Long couponId) {
         Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new ResourceNotFoundException("Coupon", couponId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Coupon", couponId));
         coupon.setIsActive(false);
         coupon.setUpdatedAt(LocalDateTime.now());
         Coupon saved = couponRepository.save(coupon);
