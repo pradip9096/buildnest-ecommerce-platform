@@ -5,6 +5,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchCart } from '../../api/cart';
+import { getWishlistCount } from '../../api/wishlist';
 import type { AuthUser, Cart } from '../../types';
 
 vi.mock('../../hooks/useAuth', () => ({
@@ -17,8 +18,13 @@ vi.mock('../../api/cart', () => ({
   removeCartItem: vi.fn(),
 }));
 
+vi.mock('../../api/wishlist', () => ({
+  getWishlistCount: vi.fn(),
+}));
+
 const mockUseAuth = vi.mocked(useAuth);
 const mockFetchCart = vi.mocked(fetchCart);
+const mockGetWishlistCount = vi.mocked(getWishlistCount);
 
 function authState(overrides: Partial<ReturnType<typeof useAuth>>) {
   return {
@@ -45,6 +51,7 @@ function renderNavbar(initialEntries = ['/']) {
 beforeEach(() => {
   vi.clearAllMocks();
   mockFetchCart.mockResolvedValue({ cartId: 1, userId: 1, items: [], totalAmount: 0 } as Cart);
+  mockGetWishlistCount.mockResolvedValue(0);
 });
 
 describe('Navbar', () => {
@@ -131,6 +138,26 @@ describe('Navbar', () => {
 
     await waitFor(() => expect(mockFetchCart).not.toHaveBeenCalled());
     expect(screen.queryByText(/^\d+$/)).not.toBeInTheDocument();
+  });
+
+  it('shows the wishlist count as a badge when authenticated with items', async () => {
+    const user: AuthUser = { id: 1, username: 'alice', roles: ['USER'] };
+    mockUseAuth.mockReturnValue(authState({ isAuthenticated: true, user }));
+    mockGetWishlistCount.mockResolvedValue(4);
+
+    renderNavbar();
+
+    expect(mockGetWishlistCount).toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByText('4')).toBeInTheDocument());
+  });
+
+  it('hides the wishlist link entirely when unauthenticated', () => {
+    mockUseAuth.mockReturnValue(authState({}));
+
+    renderNavbar();
+
+    expect(mockGetWishlistCount).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText('Wishlist')).not.toBeInTheDocument();
   });
 
   it('navigates to a filtered product search on submit', async () => {

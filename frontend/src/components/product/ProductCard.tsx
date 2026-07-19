@@ -2,6 +2,7 @@ import { useState, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { addToCart } from '../../api/cart';
+import { WishlistButton } from './WishlistButton';
 import type { Product } from '../../types';
 
 interface Props {
@@ -57,7 +58,7 @@ export function ProductCard({ product, linkable = true }: Props) {
 
   const card = (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
-      <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
+      <div className="relative aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
@@ -68,6 +69,10 @@ export function ProductCard({ product, linkable = true }: Props) {
         ) : (
           <span className="text-gray-400 text-4xl">🏗️</span>
         )}
+        <WishlistButton
+          productId={product.id}
+          className="absolute top-2 right-2 bg-white/90 rounded-full w-8 h-8 flex items-center justify-center shadow-sm"
+        />
       </div>
 
       <div className="p-4 flex flex-col gap-2 flex-1">

@@ -9,6 +9,7 @@ import com.example.buildnest_ecommerce.repository.UserRepository;
 import com.example.buildnest_ecommerce.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -115,12 +116,28 @@ public class WishlistServiceImpl implements WishlistService {
         @Override
         public Set<Product> getWishlistProducts(Long userId) {
                 log.debug("Fetching wishlist products for user {}", userId);
-                return wishlistRepository.findByUserId(userId)
+                Set<Product> products = wishlistRepository.findByUserId(userId)
                                 .map(Wishlist::getProducts)
                                 .orElseGet(() -> {
                                         log.debug("No wishlist row yet for user {}; returning empty product set", userId);
                                         return Set.of();
                                 });
+                products.forEach(WishlistServiceImpl::initializeLazyFields);
+                return products;
+        }
+
+        /**
+         * Force-initializes every lazy association on {@code product} while
+         * the session is still open. Without this, Jackson serializing the
+         * response after the transaction closes (open-in-view=false) throws
+         * LazyInitializationException — same root cause documented in
+         * docs/wiki/learned-lessons/raw-entity-with-lazy-collection-...md.
+         */
+        private static void initializeLazyFields(Product product) {
+                Hibernate.initialize(product.getCategory());
+                Hibernate.initialize(product.getInventory());
+                Hibernate.initialize(product.getVariants());
+                Hibernate.initialize(product.getTags());
         }
 
         @Override

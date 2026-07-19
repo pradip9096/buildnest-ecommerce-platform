@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Test Plan |
 | **Document ID** | TP-BUILDNEST-001 |
-| **Version** | 4.2 |
-| **Date** | 2026-07-17 21:15 IST |
+| **Version** | 4.3 |
+| **Date** | 2026-07-19 22:30 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29119-3:2021 |
@@ -33,6 +33,7 @@
 | 4.0 | 2026-06-19 | Test Manager | Baseline-driven update: corrected Spring Boot to 3.5.10; updated test counts from static and dynamic analysis (173 test files, 1,538 test executions, 99.1% pass rate); introduced Test Integrity Requirements (TIR) section; corrected JaCoCo gate from 40% to 70% target; updated Maven profile inventory; added mutation testing gate (PIT ≥ 75%); aligned all SRS/SDD references to v4.0/v3.0 | Pending |
 | 4.1 | 2026-07-17 14:05 IST | Test Manager | Corrected §15 TIR-01–05 status (all 5 were stale "Open"/"Not yet measured" — TIR-01–04 confirmed already resolved in source, TIR-05's PIT gate confirmed configured at 77%); corrected §17.1's JaCoCo gate (actual 85%, not 40%) and frontend-coverage baseline (17 test files/121 tests, not the 3-file 2026-07-04 snapshot); corrected Elasticsearch 8.10→8.17 references; re-ran the full suite (`all-tests` profile, isolated shell) for §17.2's baseline table — 1,735 tests, 0 failures, 0 errors, superseding the stale 2026-06-19 figures (1,538 executions, 11 failed, 3 errors) (#461) | Pending |
 | 4.2 | 2026-07-17 21:15 IST | Test Manager | Found during a fresh RTM/SRS/SDD/Test-Plan verification sweep: §17's 4.1 fix (actual JaCoCo 85%/PIT 77%) never propagated to §8.3/§8.4/§9.1/§9.2, which still stated the pre-fix 0.40/0.70/75% values — a direct self-contradiction within this same document. Corrected all four to the real gate values, and corrected §8.3's Counter column from LINE to INSTRUCTION (verified directly against `pom.xml`'s `<counter>INSTRUCTION</counter>`, not assumed). Also updated the `Related SRS`/`Related SDD` header fields from a long-stale v4.0/v3.0 to the current v4.5/v3.4, which had drifted through several intervening version bumps on both documents without ever being updated here | Pending |
+| 4.3 | 2026-07-19 22:30 IST | Test Manager | Added `WishlistServiceImplLazyLoadingTest` to §8/#311's `service.wishlist` test-class listing — new `@DataJpaTest` regression test added for #442's fix (`WishlistServiceImpl.getWishlistProducts` was returning raw `Product` entities with uninitialized lazy fields, 6th occurrence of the raw-entity-lazy-collection bug family) | Pending |
 
 ### Document Approval
 
@@ -308,7 +309,7 @@ git push → CI triggered
 | `service.category` | `CategoryServiceImplTest` |
 | `service.review` | `ProductReviewServiceImplTest` |
 | `service.user` | `UserServiceImplTest` |
-| `service.wishlist` | `WishlistServiceImplTest` |
+| `service.wishlist` | `WishlistServiceImplTest`, `WishlistServiceImplLazyLoadingTest` |
 | `service.webhook` | `WebhookServiceImplTest` |
 | `service.notification` | `NotificationServiceTest` |
 | `service.analytics` | `SalesAnalyticsServiceImplTest` |
