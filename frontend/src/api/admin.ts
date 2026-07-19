@@ -250,6 +250,56 @@ export async function deleteAdminTag(id: number): Promise<void> {
   await request(`/api/v1/admin/tags/${id}`, { method: 'DELETE' }, 'Failed to delete tag');
 }
 
+// ── Coupons ──────────────────────────────────────────────────────────────────
+
+export type CouponDiscountType = 'PERCENTAGE' | 'FIXED';
+
+export interface AdminCoupon {
+  id: number;
+  code: string;
+  discountType: CouponDiscountType;
+  discountValue: number;
+  minOrderValue: number;
+  usageLimit: number | null;
+  usageCount: number;
+  expiresAt: string | null;
+  isActive: boolean;
+}
+
+export interface CouponFormInput {
+  code: string;
+  discountType: CouponDiscountType;
+  discountValue: number;
+  minOrderValue?: number;
+  usageLimit?: number | null;
+  expiresAt?: string | null;
+}
+
+export async function fetchAdminCoupons(): Promise<AdminCoupon[]> {
+  const data = await requestData<AdminCoupon[]>(
+    '/api/v1/admin/coupons',
+    {},
+    'Failed to load coupons'
+  );
+  return Array.isArray(data) ? data : [];
+}
+
+export async function createAdminCoupon(input: CouponFormInput): Promise<AdminCoupon> {
+  return requestData<AdminCoupon>(
+    '/api/v1/admin/coupons',
+    { method: 'POST', body: input },
+    'Failed to create coupon'
+  );
+}
+
+export async function deactivateAdminCoupon(id: number): Promise<AdminCoupon> {
+  return requestData<AdminCoupon>(
+    `/api/v1/admin/coupons/${id}`,
+    { method: 'DELETE' },
+    'Failed to deactivate coupon'
+  );
+}
+
 // ── Products ─────────────────────────────────────────────────────────────────
 
 export interface AdminProduct {

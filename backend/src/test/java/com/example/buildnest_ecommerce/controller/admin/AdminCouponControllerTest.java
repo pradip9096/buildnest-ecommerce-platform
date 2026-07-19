@@ -10,13 +10,43 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@DisplayName("AdminCouponController tests (CHK-02, #77)")
+@DisplayName("AdminCouponController tests (CHK-02, #77, #435)")
 class AdminCouponControllerTest {
+
+    @Test
+    @DisplayName("getAllCoupons returns 200 OK with the coupon list")
+    void getAllCoupons_success_returnsOk() {
+        CouponService couponService = mock(CouponService.class);
+        Coupon coupon = new Coupon();
+        coupon.setId(1L);
+        coupon.setCode("SAVE10");
+        when(couponService.getAllCoupons()).thenReturn(List.of(coupon));
+
+        AdminCouponController controller = new AdminCouponController(couponService);
+        var response = controller.getAllCoupons();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(true, response.getBody().isSuccess());
+    }
+
+    @Test
+    @DisplayName("getAllCoupons returns 500 Internal Server Error on an unexpected exception")
+    void getAllCoupons_unexpectedException_returns500() {
+        CouponService couponService = mock(CouponService.class);
+        when(couponService.getAllCoupons()).thenThrow(new RuntimeException("database is down"));
+
+        AdminCouponController controller = new AdminCouponController(couponService);
+        var response = controller.getAllCoupons();
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
 
     @Test
     @DisplayName("createCoupon returns 201 Created on success")

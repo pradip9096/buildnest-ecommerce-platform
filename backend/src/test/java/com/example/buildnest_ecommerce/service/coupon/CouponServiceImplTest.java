@@ -45,6 +45,30 @@ class CouponServiceImplTest {
         activeCoupon.setIsActive(true);
     }
 
+    // ===== getAllCoupons =====
+
+    @Test
+    @DisplayName("getAllCoupons returns every coupon from the repository")
+    void getAllCoupons_returnsAllCoupons() {
+        when(couponRepository.findAll()).thenReturn(java.util.List.of(activeCoupon));
+
+        var result = couponService.getAllCoupons();
+
+        assertEquals(1, result.size());
+        assertEquals("SAVE10", result.get(0).getCode());
+        verify(couponRepository).findAll();
+    }
+
+    @Test
+    @DisplayName("getAllCoupons returns an empty list when no coupons exist")
+    void getAllCoupons_noCoupons_returnsEmptyList() {
+        when(couponRepository.findAll()).thenReturn(java.util.List.of());
+
+        var result = couponService.getAllCoupons();
+
+        assertTrue(result.isEmpty());
+    }
+
     // ===== validateCoupon =====
 
     @Test

@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 4.7 |
-| **Date** | 2026-07-19 06:00 IST |
+| **Version** | 4.8 |
+| **Date** | 2026-07-19 09:00 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -36,6 +36,7 @@
 | 4.5 | 2026-07-17 20:05 IST | Technical Lead | §4.2's Authentication, Shopping Cart, and Payment rows each had a duplicated priority label from a copy-paste-shaped defect, found incidentally during #470 (#474). Recomputed all three directly from their §3.2 requirement rows rather than guessing the intended third label: Authentication is 9 High/2 Medium (not "8 High, 2 Medium, 1 Medium"), Shopping Cart is 5 High/1 Medium (not "4 High, 1 Medium, 1 High"), Payment is 4 High/1 Medium (not "3 High, 1 Medium, 1 High") — none of the three actually contain a Low-priority requirement, contrary to the issue's own initial guess. Checked every other row in the same table for the same duplicate-label pattern; none found | Pending |
 | 4.6 | 2026-07-18 20:50 IST | Technical Lead | FR-FE-25's requirement text covered only status filters and status updates, but the admin order-management UI now also processes refunds (#438). Extended §3.2.10.2's FR-FE-25 row text to name refund processing explicitly | Pending |
 | 4.7 | 2026-07-19 06:00 IST | Technical Lead | Added FR-ADM-10 (admin manages product tags — create/view/update/delete) to §3.2.8 — no FR row existed for tag management at all despite `AdminProductTagController`'s backend already being fully implemented and Appendix A.19 already documenting its endpoints; the admin frontend UI for it was built in the same change (#429). Recomputed §4.2's Admin Operations aggregate row (9→10 requirements, 6→7 Medium) | Pending |
+| 4.8 | 2026-07-19 09:00 IST | Technical Lead | Added FR-ADM-11 (admin manages coupons — view, create, deactivate) to §3.2.8. Appendix A.20's endpoint table was itself stale, listing only `POST`/`DELETE` — corrected to include the `GET` list endpoint added in the same change (#435), since the admin frontend UI (`CouponsTab.tsx`) can't function without one, matching the pattern already fixed once for A.19. Recomputed §4.2's Admin Operations aggregate row (10→11 requirements, 7→8 Medium) | Pending |
 
 ### Document Change Procedure
 
@@ -566,6 +567,7 @@ This system has no direct hardware interfaces. It runs as a containerised applic
 | FR-ADM-08 | Access to all `/api/admin/**` endpoints shall require the `ADMIN` role | High | Ph-1 | Test |
 | FR-ADM-09 | The system shall allow admins to create, update, and delete product categories, including hierarchical parent/child relationships, and shall prevent deletion of a category that still has products or subcategories referencing it | Medium | Ph-1 | Test |
 | FR-ADM-10 | The system shall allow admins to create, view, update, and delete product tags | Medium | Ph-1 | Test |
+| FR-ADM-11 | The system shall allow admins to view, create, and deactivate coupons | Medium | Ph-1 | Test |
 
 #### 3.2.9 Monitoring and Observability (FG-09)
 
@@ -893,7 +895,7 @@ Test integrity requirements define the properties that the test suite itself mus
 | Payment (FR-PAY-01–05) | 5 | Ph-2 | 4 High, 1 Medium | Test, Inspection |
 | Inventory (FR-INV-01–07) | 7 | Ph-1 / Ph-2 | 3 High, 4 Medium | Test |
 | Reviews / Wishlists (FR-REV, FR-WISH) | 5 | Ph-1 | 0 High, 3 Medium, 2 Low | Test |
-| Admin Operations (FR-ADM-01–10) | 10 | Ph-1 / Ph-2 | 2 High, 7 Medium, 1 Low | Test |
+| Admin Operations (FR-ADM-01–11) | 11 | Ph-1 / Ph-2 | 2 High, 8 Medium, 1 Low | Test |
 | Monitoring (FR-MON-01–08) | 8 | Ph-1 / Ph-2 | 3 High, 3 Medium, 2 Low | Test, Inspection |
 | Frontend (FR-FE-01–31) | 31 | Ph-2 | 16 High, 12 Medium, 3 Low | Test, Inspection, Demonstration |
 | **Total Functional** | **99** | | | |
@@ -1165,8 +1167,9 @@ the flow the frontend's `CheckoutPage` actually consumes.
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/coupons` | ADMIN | List all coupons |
 | POST | `/api/v1/admin/coupons` | ADMIN | Create coupon |
-| DELETE | `/api/v1/admin/coupons/{id}` | ADMIN | Delete coupon |
+| DELETE | `/api/v1/admin/coupons/{id}` | ADMIN | Deactivate coupon |
 
 #### A.21 Admin Shipping Method Management (`AdminShippingController`, base `/api/v1/admin/shipping-methods`)
 

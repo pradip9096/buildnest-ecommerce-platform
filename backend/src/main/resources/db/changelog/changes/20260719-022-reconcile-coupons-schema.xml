@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #435 (CHK-02, #77): 20260624-005-create-coupons.xml and
+         20260711-019-create-coupons.xml both define a "coupons" table for
+         the same entity, using different column names (minimum_order_amount/
+         valid_from/valid_until vs. min_order_value/expires_at). #019 guards
+         itself with "skip if table exists", so on any environment where #005
+         runs first (its normal chronological order), #019 always no-ops and
+         the resulting schema never matches the Coupon entity — every insert
+         fails on the legacy valid_from column (NOT NULL, no default, never
+         set by the entity). This reconciles the table to the entity's real
+         shape: adds the columns #019 intended (guarded, since a drifted dev
+         volume may already have them from an earlier out-of-band Hibernate
+         run), and drops the dead legacy columns #005 created that the
+         entity never maps.
+
+         Tightly coupled (3 changeSets, one file): all three reconcile the
+         same "coupons" table toward the same single end-state (matching the
+         Coupon entity) as one logical schema-drift fix; they are split into
+         separate changeSets only because each needs its own independent
+         preConditions guard (a drifted dev volume may already have one
+         column but not another), not because they are unrelated changes. -->
+    <changeSet id="20260719-022-reconcile-coupons-schema" author="buildnest-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="coupons" columnName="min_order_value"/>
+            </not>
+        </preConditions>
+        <comment>Reconcile coupons table with the Coupon entity (CHK-02, #77, #435)</comment>
+
+        <addColumn tableName="coupons">
+            <column name="min_order_value" type="DECIMAL(19,2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20260719-022a-reconcile-coupons-schema-expires-at" author="buildnest-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="coupons" columnName="expires_at"/>
+            </not>
+        </preConditions>
+        <comment>Reconcile coupons table with the Coupon entity (CHK-02, #77, #435)</comment>
+
+        <addColumn tableName="coupons">
+            <column name="expires_at" type="DATETIME"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20260719-022b-drop-legacy-coupons-columns" author="buildnest-team">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="coupons" columnName="valid_from"/>
+        </preConditions>
+        <comment>Drop legacy columns never mapped by the Coupon entity (CHK-02, #77, #435)</comment>
+
+        <!-- #005's idx_coupons_active_validity indexes valid_from/valid_until;
+             it must be dropped before those columns, or the DROP COLUMN fails
+             (confirmed on H2: "Column may be referenced by ...INDEX"). -->
+        <dropIndex tableName="coupons" indexName="idx_coupons_active_validity"/>
+
+        <dropColumn tableName="coupons" columnName="valid_from"/>
+        <dropColumn tableName="coupons" columnName="valid_until"/>
+        <dropColumn tableName="coupons" columnName="minimum_order_amount"/>
+        <dropColumn tableName="coupons" columnName="maximum_discount_amount"/>
+        <dropColumn tableName="coupons" columnName="description"/>
+
+        <rollback>
+            <addColumn tableName="coupons">
+                <column name="valid_from" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                    <constraints nullable="false"/>
+                </column>
+                <column name="valid_until" type="TIMESTAMP"/>
+                <column name="minimum_order_amount" type="DECIMAL(19,2)" defaultValueNumeric="0.00">
+                    <constraints nullable="false"/>
+                </column>
+                <column name="maximum_discount_amount" type="DECIMAL(19,2)"/>
+                <column name="description" type="VARCHAR(500)"/>
+            </addColumn>
+            <createIndex tableName="coupons" indexName="idx_coupons_active_validity">
+                <column name="is_active"/>
+                <column name="valid_from"/>
+                <column name="valid_until"/>
+            </createIndex>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
