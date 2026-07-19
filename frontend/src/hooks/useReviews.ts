@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { fetchReviews, fetchReviewSummary } from '../api/reviews';
 import type { PagedResponse, Review, ReviewSummary } from '../types';
 
@@ -8,6 +8,7 @@ interface UseReviewsResult {
   totalPages: number;
   loading: boolean;
   error: string | null;
+  refetch: () => void;
 }
 
 export function useReviews(productId: number, page: number, pageSize = 5): UseReviewsResult {
@@ -16,6 +17,9 @@ export function useReviews(productId: number, page: number, pageSize = 5): UseRe
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refetchToken, setRefetchToken] = useState(0);
+
+  const refetch = useCallback(() => setRefetchToken(t => t + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,7 +39,7 @@ export function useReviews(productId: number, page: number, pageSize = 5): UseRe
       .catch(err => { if (!cancelled) setError(err instanceof Error ? err.message : 'Unknown error'); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [productId, page, pageSize]);
+  }, [productId, page, pageSize, refetchToken]);
 
-  return { reviews, summary, totalPages, loading, error };
+  return { reviews, summary, totalPages, loading, error, refetch };
 }

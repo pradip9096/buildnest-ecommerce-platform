@@ -1,27 +1,39 @@
 package com.example.buildnest_ecommerce.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import java.util.Set;
 
 @Entity
 @Table(name = "permissions")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Permission {
+@EqualsAndHashCode(exclude = "roles")
+@ToString(exclude = "roles")
+public class Permission implements AggregateRoot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(nullable = false, unique = true)
     private String name;
-    
+
     @Column(length = 500)
     private String description;
-    
-    @ManyToMany(mappedBy = "permissions", fetch = jakarta.persistence.FetchType.LAZY)
+
+    // Lazy back-reference to Role.permissions, unguarded — reached whenever
+    // a raw User is serialized (User.roles EAGER -> Role.permissions EAGER
+    // -> this), throwing post-transaction (#441).
+    @JsonIgnore
+    @ManyToMany(mappedBy = "permissions",
+            fetch = jakarta.persistence.FetchType.LAZY)
     private Set<Role> roles;
 }

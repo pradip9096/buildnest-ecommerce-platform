@@ -10,6 +10,7 @@ import type { Product } from '../types';
 import { StarRating } from '../components/product/StarRating';
 import { QuantitySelector } from '../components/product/QuantitySelector';
 import { ReviewsSection } from '../components/product/ReviewsSection';
+import { WriteReviewForm } from '../components/product/WriteReviewForm';
 import { RelatedProducts } from '../components/product/RelatedProducts';
 import { ErrorMessage } from '../components/common/ErrorMessage';
 
@@ -40,7 +41,7 @@ export function ProductDetailPage() {
 
   const { product, loading: productLoading, error: productError } = useProduct(productId);
   const [reviewPage, setReviewPage] = useState(0);
-  const { reviews, summary, totalPages, loading: reviewsLoading } = useReviews(productId, reviewPage);
+  const { reviews, summary, totalPages, loading: reviewsLoading, refetch: refetchReviews } = useReviews(productId, reviewPage);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -223,6 +224,11 @@ export function ProductDetailPage() {
             page={reviewPage}
             loading={reviewsLoading}
             onPageChange={setReviewPage}
+          />
+          <WriteReviewForm
+            productId={product.id}
+            isAuthenticated={isAuthenticated}
+            onSubmitted={refetchReviews}
           />
         </div>
 

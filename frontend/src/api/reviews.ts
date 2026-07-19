@@ -21,3 +21,15 @@ export async function fetchReviewSummary(productId: number): Promise<ReviewSumma
     s => `Failed to fetch review summary: ${s}`
   );
 }
+
+export async function submitReview(
+  productId: number,
+  rating: number,
+  comment: string,
+): Promise<Review> {
+  return requestData<Review>(
+    `/api/products/${productId}/reviews`,
+    { method: 'POST', body: { rating, comment } },
+    s => `Failed to submit review (${s})`
+  );
+}

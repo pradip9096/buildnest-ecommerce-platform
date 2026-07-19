@@ -13,7 +13,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+// "availableQuantity" is a derived getter with no backing column/setter —
+// serialized fine on write, but a Redis @Cacheable round-trip (read) has
+// nothing to bind it to and fails with "Unrecognized field" unless ignored
+// here on deserialize. Kept out of the getter's own @JsonIgnore because
+// legacy admin inventory endpoints (AdminInventoryController) still return
+// this raw entity and the frontend (InventoryDetailModal.tsx) reads this
+// field from that HTTP response — @JsonIgnore would remove it from writes
+// too. ignoreUnknown here only affects deserialize (#441).
+@JsonIgnoreProperties(value = { "hibernateLazyInitializer", "handler" },
+        ignoreUnknown = true)
 @Entity
 @Table(name = "inventory")
 @Getter

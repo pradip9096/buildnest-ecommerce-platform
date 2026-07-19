@@ -236,12 +236,25 @@ if [ -n "$files" ]; then
 fi
 
 # --- jpa.md: FetchType.EAGER on @OneToMany or @ManyToMany ---
+# Suppressible: a line containing "jpa-rule-exception:" immediately above the
+# @OneToMany/@ManyToMany annotation documents a deliberate, reviewed
+# exception (e.g. jpa.md's own approved User.roles case) and is excluded.
+# Any other rule below may adopt the same marker convention if it needs one.
 files=$(filter '^backend/.*model/entity/.*\.java$')
 if [ -n "$files" ]; then
     matches=""
     for f in $files; do
         [ -f "$f" ] || continue
-        m=$(git show ":$f" 2>/dev/null | grep -nE '@(OneToMany|ManyToMany)\([^)]*FetchType\.EAGER')
+        m=$(git show ":$f" 2>/dev/null | awk '
+            /jpa-rule-exception:/ { suppress=1; next }
+            /@(OneToMany|ManyToMany)\(.*FetchType\.EAGER/ {
+                if (!suppress) print NR": "$0
+                suppress=0
+                next
+            }
+            /^[[:space:]]*\/\// { next }
+            { suppress=0 }
+        ')
         [ -n "$m" ] && matches="${matches}${f}:${m}\n"
     done
     [ -n "$matches" ] && fail "spring/jpa.md" \

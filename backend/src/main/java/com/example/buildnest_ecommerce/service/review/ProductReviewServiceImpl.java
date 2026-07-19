@@ -10,6 +10,7 @@ import com.example.buildnest_ecommerce.repository.ProductReviewRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,22 +35,36 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
 
+    /**
+     * `review.user` is a lazy `@ManyToOne` — a plain
+     * {@code reviewRepository.findById(...)} (used by update/delete/mark-
+     * helpful) never initializes it, and open-in-view is disabled, so
+     * Jackson throws "no session" serializing the response after the
+     * transaction closes. Force-initialize before returning (#441).
+     */
+    private static void initializeUser(ProductReview review) {
+        Hibernate.initialize(review.getUser());
+    }
+
     @Override
     @Transactional
-    public ProductReview createReview(Long productId, Long userId, Integer rating,
-            String comment, boolean verifiedPurchase) {
-        log.info("Creating review for product {} by user {}", productId, userId);
+    public ProductReview createReview(Long productId, Long userId,
+            Integer rating, String comment, boolean verifiedPurchase) {
+        log.info("Creating review for product {} by user {}", productId,
+                userId);
 
-        // Check if user already reviewed this product
         if (reviewRepository.existsByProductIdAndUserId(productId, userId)) {
-            throw new IllegalStateException("User has already reviewed this product");
+            throw new IllegalStateException(
+                    "User has already reviewed this product");
         }
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Product not found with id: " + productId));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found with id: " + userId));
 
         ProductReview review = ProductReview.builder()
                 .product(product)
@@ -71,16 +86,19 @@ public class ProductReviewServiceImpl implements ProductReviewService {
 
     @Override
     @Transactional
-    public ProductReview updateReview(Long reviewId, Integer rating, String comment) {
+    public ProductReview updateReview(Long reviewId, Integer rating,
+            String comment) {
         log.info("Updating review {}", reviewId);
 
         ProductReview review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + reviewId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Review not found with id: " + reviewId));
 
         review.setRating(rating);
         review.setComment(comment);
 
         ProductReview updatedReview = reviewRepository.save(review);
+        initializeUser(updatedReview);
 
         log.info("Review {} updated with new rating: {}", reviewId, rating);
 
@@ -93,11 +111,13 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         log.info("Deleting review {} by user {}", reviewId, userId);
 
         ProductReview review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + reviewId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Review not found with id: " + reviewId));
 
         // Verify user owns the review
         if (!review.getUser().getId().equals(userId)) {
-            throw new IllegalStateException("User is not authorized to delete this review");
+            throw new IllegalStateException(
+                    "User is not authorized to delete this review");
         }
 
         reviewRepository.delete(review);
@@ -106,15 +126,23 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     }
 
     @Override
-    public Page<ProductReview> getProductReviews(Long productId, Pageable pageable) {
+    public Page<ProductReview> getProductReviews(Long productId,
+            Pageable pageable) {
         log.debug("Fetching reviews for product {}", productId);
-        return reviewRepository.findByProductIdAndIsVisibleTrue(productId, pageable);
+        Page<ProductReview> reviews = reviewRepository
+                .findByProductIdAndIsVisibleTrue(productId, pageable);
+        reviews.forEach(ProductReviewServiceImpl::initializeUser);
+        return reviews;
     }
 
     @Override
-    public Page<ProductReview> getUserReviews(Long userId, Pageable pageable) {
+    public Page<ProductReview> getUserReviews(Long userId,
+            Pageable pageable) {
         log.debug("Fetching reviews by user {}", userId);
-        return reviewRepository.findByUserId(userId, pageable);
+        Page<ProductReview> reviews = reviewRepository
+                .findByUserId(userId, pageable);
+        reviews.forEach(ProductReviewServiceImpl::initializeUser);
+        return reviews;
     }
 
     @Override
@@ -123,12 +151,15 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         log.info("Marking review {} as helpful", reviewId);
 
         ProductReview review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + reviewId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Review not found with id: " + reviewId));
 
         review.incrementHelpfulCount();
         ProductReview updatedReview = reviewRepository.save(review);
+        initializeUser(updatedReview);
 
-        log.info("Review {} helpful count incremented to {}", reviewId, updatedReview.getHelpfulCount());
+        log.info("Review {} helpful count incremented to {}", reviewId,
+                updatedReview.getHelpfulCount());
 
         return updatedReview;
     }
@@ -144,7 +175,8 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     public Map<Integer, Long> getRatingDistribution(Long productId) {
         log.debug("Fetching rating distribution for product {}", productId);
 
-        List<Object[]> distribution = reviewRepository.getRatingDistribution(productId);
+        List<Object[]> distribution =
+                reviewRepository.getRatingDistribution(productId);
         Map<Integer, Long> ratingMap = new HashMap<>();
 
         // Initialize all ratings to 0
@@ -163,23 +195,34 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     }
 
     @Override
-    public Page<ProductReview> getTopHelpfulReviews(Long productId, Pageable pageable) {
+    public Page<ProductReview> getTopHelpfulReviews(Long productId,
+            Pageable pageable) {
         log.debug("Fetching top helpful reviews for product {}", productId);
-        return reviewRepository.findTopHelpfulReviews(productId, pageable);
+        Page<ProductReview> reviews = reviewRepository
+                .findTopHelpfulReviews(productId, pageable);
+        reviews.forEach(ProductReviewServiceImpl::initializeUser);
+        return reviews;
     }
 
     @Override
-    public Page<ProductReview> getVerifiedPurchaseReviews(Long productId, Pageable pageable) {
-        log.debug("Fetching verified purchase reviews for product {}", productId);
-        return reviewRepository.findVerifiedPurchaseReviews(productId, pageable);
+    public Page<ProductReview> getVerifiedPurchaseReviews(Long productId,
+            Pageable pageable) {
+        log.debug("Fetching verified purchase reviews for product {}",
+                productId);
+        Page<ProductReview> reviews = reviewRepository
+                .findVerifiedPurchaseReviews(productId, pageable);
+        reviews.forEach(ProductReviewServiceImpl::initializeUser);
+        return reviews;
     }
 
     @Override
     public boolean hasUserPurchasedProduct(Long userId, Long productId) {
-        log.debug("Checking if user {} has purchased product {}", userId, productId);
+        log.debug("Checking if user {} has purchased product {}", userId,
+                productId);
         // Check if user has any completed orders containing this product
         return orderRepository.findByUserId(userId).stream()
                 .anyMatch(order -> order.getOrderItems().stream()
-                        .anyMatch(item -> item.getProduct().getId().equals(productId)));
+                        .anyMatch(item -> item.getProduct().getId()
+                                .equals(productId)));
     }
 }

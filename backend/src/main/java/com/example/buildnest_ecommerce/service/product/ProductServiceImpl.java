@@ -27,6 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -60,10 +62,13 @@ public class ProductServiceImpl implements ProductService {
     public List<Product> getAllProducts() {
         log.info("Fetching all products");
         List<Product> products = productRepository.findAll();
-        // Force-initialize lazy `tags` while the session is open — open-in-view
-        // is disabled, so an uninitialized proxy throws once Jackson serializes
-        // the response after the transaction has already closed.
-        products.forEach(product -> Hibernate.initialize(product.getTags()));
+        // Force-initialize lazy `tags`/`variants` while the session is open —
+        // open-in-view is disabled, so an uninitialized proxy throws once
+        // Jackson serializes the response after the transaction has already
+        // closed. Copied into plain collections (not just initialized) so a
+        // Redis-cached caller of getProductById never has to deserialize a
+        // Hibernate PersistentSet/PersistentBag — see that method's comment.
+        products.forEach(ProductServiceImpl::detachCollections);
         return products;
     }
 
@@ -80,16 +85,35 @@ public class ProductServiceImpl implements ProductService {
     public Product getProductById(Long productId) {
         log.info("Fetching product with id: {}", productId);
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
-        Hibernate.initialize(product.getTags());
+                .orElseThrow(() -> new RuntimeException(
+                        "Product not found with id: " + productId));
+        detachCollections(product);
         return product;
+    }
+
+    /**
+     * Initializes `tags`/`variants` and copies each into a plain
+     * HashSet/ArrayList. A Hibernate-initialized collection is still a
+     * PersistentSet/PersistentBag at runtime; the Redis cache serializer
+     * (default typing) embeds that concrete class name on write, then fails
+     * to instantiate it on a cache-hit read (those classes require a live
+     * Hibernate session, not a no-arg constructor) — surfacing as a false
+     * "product not found" once cached. Copying to a plain collection avoids
+     * this entirely.
+     */
+    private static void detachCollections(Product product) {
+        Hibernate.initialize(product.getTags());
+        product.setTags(new HashSet<>(product.getTags()));
+        Hibernate.initialize(product.getVariants());
+        product.setVariants(new ArrayList<>(product.getVariants()));
     }
 
     /**
      * Creates a new product from the provided request data.
      *
      * Initializes product with default values and associates it with the
-     * specified category. Clears all product cache entries on successful creation.
+     * specified category. Clears all product cache entries on successful
+     * creation.
      *
      * @param request the CreateProductRequest containing product details
      *                (name, description, price, category ID, etc.) - required
@@ -114,8 +138,10 @@ public class ProductServiceImpl implements ProductService {
         product.setCreatedAt(LocalDateTime.now());
 
         if (request.getCategoryId() != null) {
-            product.setCategory(categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Category not found")));
+            product.setCategory(categoryRepository
+                    .findById(request.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Category not found")));
         }
 
         int initialStock = product.getStockQuantity() != null
@@ -143,9 +169,11 @@ public class ProductServiceImpl implements ProductService {
      * Modifies product details and clears the specific product cache entry
      * to ensure fresh data on next retrieval.
      *
-     * @param productId the unique identifier of the product to update - required
-     * @param request   the CreateProductRequest containing updated product details
-     *                  (name, description, price, category ID, etc.) - required
+     * @param productId the unique identifier of the product to update -
+     *                  required
+     * @param request   the CreateProductRequest containing updated product
+     *                  details (name, description, price, category ID,
+     *                  etc.) - required
      * @return the updated Product entity
      * @throws RuntimeException if the product or category is not found
      */
@@ -169,8 +197,10 @@ public class ProductServiceImpl implements ProductService {
         product.setUpdatedAt(LocalDateTime.now());
 
         if (request.getCategoryId() != null) {
-            product.setCategory(categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Category not found")));
+            product.setCategory(categoryRepository
+                    .findById(request.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Category not found")));
         }
 
         Product saved = productRepository.save(product);
@@ -184,7 +214,8 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(Long productId) {
         log.info("Soft-deleting product with id: {}", productId);
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+                .orElseThrow(() -> new RuntimeException(
+                        "Product not found with id: " + productId));
         product.setIsActive(false);
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
@@ -197,7 +228,8 @@ public class ProductServiceImpl implements ProductService {
     public Product updateProductImage(Long productId, String imageUrl) {
         log.info("Updating image for product id: {}", productId);
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+                .orElseThrow(() -> new RuntimeException(
+                        "Product not found with id: " + productId));
         product.setImageUrl(imageUrl);
         product.setUpdatedAt(LocalDateTime.now());
         return productRepository.save(product);
@@ -206,7 +238,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Product> getProductsByCategory(Long categoryId) {
         log.info("Fetching products for category: {}", categoryId);
-        return productRepository.findByCategory(categoryId, Pageable.unpaged()).getContent();
+        return productRepository
+                .findByCategory(categoryId, Pageable.unpaged())
+                .getContent();
     }
 
     /**
@@ -241,15 +275,20 @@ public class ProductServiceImpl implements ProductService {
     public Product findById(Long id) {
         log.info("Fetching product with id: {}", id);
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException(
+                        "Product not found with id: " + id));
     }
 
     @Override
-    public Page<Product> advancedSearch(String query, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice,
-            Boolean inStock, String tag, Pageable pageable) {
-        log.info("Advanced search (JPA) — query: {}, categoryId: {}, priceRange: {} - {}, tag: {}", query, categoryId,
-                minPrice, maxPrice, tag);
-        return productRepository.advancedSearch(query, categoryId, minPrice, maxPrice, inStock, true, tag, pageable);
+    public Page<Product> advancedSearch(String query, Long categoryId,
+            BigDecimal minPrice, BigDecimal maxPrice, Boolean inStock,
+            String tag, Pageable pageable) {
+        log.info(
+                "Advanced search (JPA) — query: {}, categoryId: {}, "
+                        + "priceRange: {} - {}, tag: {}",
+                query, categoryId, minPrice, maxPrice, tag);
+        return productRepository.advancedSearch(query, categoryId, minPrice,
+                maxPrice, inStock, true, tag, pageable);
     }
 
     @Override
