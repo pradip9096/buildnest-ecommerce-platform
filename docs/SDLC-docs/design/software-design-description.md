@@ -10,12 +10,12 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 3.5 |
-| **Date** | 2026-07-17 21:15 IST |
+| **Version** | 3.6 |
+| **Date** | 2026-07-19 10:40 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
-| **Related SRS** | SRS-BUILDNEST-001 v4.5 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
+| **Related SRS** | SRS-BUILDNEST-001 v4.9 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
 | **Supersedes** | SDD v2.0 (archive/docs/ISO-IEC-IEEE/SDD_IEEE_1016_2017.md, 2026-02-11) |
 
 ---
@@ -34,6 +34,7 @@
 | 3.3 | 2026-07-17 19:11 IST | Software Architect | §4.2.3-adjacent traceability row for "React SPA design" still cited `FR-FE-01–30`, never updated when #450 added `FR-FE-31` (#470) — corrected to `FR-FE-01–31`. Also corrected the `Related SRS` cross-reference from a long-stale v4.0 to the current v4.4, which had drifted through 4 intervening SRS version bumps without ever being updated here | Pending |
 | 3.4 | 2026-07-17 20:45 IST | Software Architect | Full re-derivation of §4.7.3's API Endpoint Catalogue (#471), same staleness class already fixed in SRS Appendix A (#456): 7 stale sections (wrong path prefixes — `/api/auth/refresh-token` instead of real `/api/auth/refresh`, `/api/auth/forgot-password`/`reset-password` instead of real `/api/password/forgot`/`reset`; only legacy `/api/checkout/*`, missing the current `/api/v1/checkout/*` multi-step flow entirely) expanded to 36 groups, each citing its real controller class. Unlike Appendix A, this table also carries a Rate Limit column per row — verified directly against `RateLimitHeaderInterceptor`/`AdminRateLimitFilter`/`RateLimitUtil` source and `application.properties`, surfacing a previously-undocumented gap: `/api/v1/admin/**` (base path for most admin resource controllers — products, categories, tags, coupons, shipping-methods, search, orders, inventory, sales analytics) matches neither the interceptor's nor the filter's literal `/api/admin/` prefix check, so those endpoints receive only the 100/min default header and no dedicated admin-tier blocking, unlike the literal `/api/admin/**` groups (users, analytics, audit, webhooks, monitoring, thresholds, inventory-threshold/analytics/reports) which get 30/min headers + a real 50/min block | Pending |
 | 3.5 | 2026-07-17 21:15 IST | Software Architect | Found during a fresh RTM/SRS/SDD/Test-Plan verification sweep: `Related SRS` had drifted one version behind again (v4.4, SRS is now v4.5 following #474) — the same recurring cross-reference-currency gap already fixed twice before at 3.3/3.4. Updated to current | Pending |
+| 3.6 | 2026-07-19 10:40 IST | Software Architect | §4.7.3's checkout endpoint catalogue row for `POST /api/v1/checkout/coupon` cited the wrong SRS requirement (`FR-CHK-02`, "calculate checkout total") — corrected to the newly-added `FR-CHK-09` (apply coupon during checkout, #436), which had never existed as a row until this issue added it to both SRS and RTM. Updated `Related SRS` from v4.5 to v4.9 (only the one edge this change directly touches — a full cross-reference-mesh sweep is the periodic 15-issue sync's job, not a per-issue one) | Pending |
 
 ### Document Approval
 
@@ -848,7 +849,7 @@ the flow the frontend's `CheckoutPage` actually consumes.
 | :--- | :--- | :--- | :--- | :--- |
 | GET | `/api/v1/checkout/shipping-options` | USER | 100 / min | FR-CHK-01 |
 | POST | `/api/v1/checkout/address` | USER | 100 / min | FR-CHK-01 |
-| POST | `/api/v1/checkout/coupon` | USER | 100 / min | FR-CHK-02 |
+| POST | `/api/v1/checkout/coupon` | USER | 100 / min | FR-CHK-09 |
 | POST | `/api/v1/checkout/shipping` | USER | 100 / min | FR-CHK-02 |
 | POST | `/api/v1/checkout/payment` | USER | 100 / min | FR-CHK-04 |
 | POST | `/api/v1/checkout/confirm` | USER | 100 / min | FR-CHK-05, FR-CHK-06 |

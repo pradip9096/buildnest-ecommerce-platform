@@ -101,6 +101,8 @@ export interface CheckoutSession {
   shippingCost?: number;
   orderId?: number;
   razorpayOrderId?: string;
+  couponCode?: string;
+  discountAmount?: number;
 }
 
 export interface OrderItem {
