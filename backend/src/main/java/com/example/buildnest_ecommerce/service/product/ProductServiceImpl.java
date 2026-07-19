@@ -48,6 +48,10 @@ import java.util.List;
 @CacheConfig(cacheNames = "products")
 @Transactional(readOnly = true)
 public class ProductServiceImpl implements ProductService {
+
+    private static final String PRODUCT_NOT_FOUND_MSG =
+            "Product not found with id: ";
+
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final InventoryRepository inventoryRepository;
@@ -86,7 +90,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Fetching product with id: {}", productId);
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Product not found with id: " + productId));
+                        PRODUCT_NOT_FOUND_MSG + productId));
         detachCollections(product);
         return product;
     }
@@ -215,7 +219,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Soft-deleting product with id: {}", productId);
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Product not found with id: " + productId));
+                        PRODUCT_NOT_FOUND_MSG + productId));
         product.setIsActive(false);
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
@@ -229,7 +233,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Updating image for product id: {}", productId);
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Product not found with id: " + productId));
+                        PRODUCT_NOT_FOUND_MSG + productId));
         product.setImageUrl(imageUrl);
         product.setUpdatedAt(LocalDateTime.now());
         return productRepository.save(product);
@@ -276,7 +280,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Fetching product with id: {}", id);
         return productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(
-                        "Product not found with id: " + id));
+                        PRODUCT_NOT_FOUND_MSG + id));
     }
 
     @Override
@@ -321,7 +325,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Fetching related products for id: {}", productId);
         Product source = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Product not found with id: " + productId));
+                        PRODUCT_NOT_FOUND_MSG + productId));
         Category category = source.getCategory();
         Long categoryId = category == null ? null : category.getId();
         List<Long> tagIds = source.getTags().stream()

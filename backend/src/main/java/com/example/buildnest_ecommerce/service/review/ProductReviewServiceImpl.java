@@ -30,6 +30,9 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class ProductReviewServiceImpl implements ProductReviewService {
 
+    private static final String REVIEW_NOT_FOUND_MSG =
+            "Review not found with id: ";
+
     private final ProductReviewRepository reviewRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
@@ -92,7 +95,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
 
         ProductReview review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Review not found with id: " + reviewId));
+                        REVIEW_NOT_FOUND_MSG + reviewId));
 
         review.setRating(rating);
         review.setComment(comment);
@@ -112,7 +115,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
 
         ProductReview review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Review not found with id: " + reviewId));
+                        REVIEW_NOT_FOUND_MSG + reviewId));
 
         // Verify user owns the review
         if (!review.getUser().getId().equals(userId)) {
@@ -152,7 +155,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
 
         ProductReview review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Review not found with id: " + reviewId));
+                        REVIEW_NOT_FOUND_MSG + reviewId));
 
         review.incrementHelpfulCount();
         ProductReview updatedReview = reviewRepository.save(review);

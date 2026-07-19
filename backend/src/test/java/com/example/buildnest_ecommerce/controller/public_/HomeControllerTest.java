@@ -102,7 +102,7 @@ class HomeControllerTest {
 
         // Act & Assert
         mockMvc.perform(get("/api/public/products"))
-                .andExpect(status().isOk())
+                .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Error retrieving products"));
     }
@@ -130,7 +130,7 @@ class HomeControllerTest {
 
         // Act & Assert
         mockMvc.perform(get("/api/public/products/999"))
-                .andExpect(status().isOk())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Product not found"));
     }
@@ -161,7 +161,7 @@ class HomeControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/public/products/search")
                 .param("keyword", "Test"))
-                .andExpect(status().isOk())
+                .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Error searching products"));
     }
@@ -190,7 +190,7 @@ class HomeControllerTest {
 
         // Act & Assert
         mockMvc.perform(get("/api/public/categories"))
-                .andExpect(status().isOk())
+                .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Error retrieving categories"));
     }
@@ -263,7 +263,7 @@ class HomeControllerTest {
 
         // Act & Assert
         mockMvc.perform(get("/api/public/products/featured"))
-                .andExpect(status().isOk())
+                .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Error retrieving featured products"));
     }
