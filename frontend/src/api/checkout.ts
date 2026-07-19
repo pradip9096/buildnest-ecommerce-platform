@@ -23,6 +23,16 @@ export async function setCheckoutAddress(
   );
 }
 
+export async function applyCheckoutCoupon(
+  code: string
+): Promise<CheckoutSession> {
+  return requestData<CheckoutSession>(
+    `${BASE}/coupon`,
+    { method: 'POST', body: { code } },
+    s => `Failed to apply coupon (${s})`
+  );
+}
+
 export async function selectCheckoutShipping(
   shippingMethodId: number
 ): Promise<CheckoutSession> {

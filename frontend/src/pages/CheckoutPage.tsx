@@ -9,6 +9,7 @@ import { PaymentStep } from '../components/checkout/PaymentStep';
 import {
   fetchShippingOptions,
   setCheckoutAddress,
+  applyCheckoutCoupon,
   selectCheckoutShipping,
   initiateCheckoutPayment,
   confirmCheckout,
@@ -26,6 +27,7 @@ export function CheckoutPage() {
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [shippingLoading, setShippingLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [couponLoading, setCouponLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -68,6 +70,16 @@ export function CheckoutPage() {
       setError(e instanceof Error ? e.message : 'Failed to save address');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleApplyCoupon = async (code: string) => {
+    setCouponLoading(true);
+    try {
+      const sess = await applyCheckoutCoupon(code);
+      setSession(sess);
+    } finally {
+      setCouponLoading(false);
     }
   };
 
@@ -122,6 +134,9 @@ export function CheckoutPage() {
                 options={shippingOptions}
                 loading={shippingLoading}
                 error={error}
+                session={session}
+                couponLoading={couponLoading}
+                onApplyCoupon={handleApplyCoupon}
                 onNext={handleShippingNext}
                 onBack={() => { setStep(0); setError(null); }}
               />
@@ -155,10 +170,16 @@ export function CheckoutPage() {
                       <span>₹{Number(session.shippingCost).toFixed(2)}</span>
                     </div>
                   )}
+                  {session?.discountAmount != null && Number(session.discountAmount) > 0 && (
+                    <div className="flex justify-between text-green-700">
+                      <span>Discount {session.couponCode ? `(${session.couponCode})` : ''}</span>
+                      <span>-₹{Number(session.discountAmount).toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="border-t border-gray-100 pt-2 flex justify-between font-semibold text-gray-900">
                     <span>Total</span>
                     <span>
-                      ₹{(cart.totalAmount + Number(session?.shippingCost ?? 0)).toFixed(2)}
+                      ₹{(cart.totalAmount + Number(session?.shippingCost ?? 0) - Number(session?.discountAmount ?? 0)).toFixed(2)}
                     </span>
                   </div>
                 </div>

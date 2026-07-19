@@ -1,24 +1,49 @@
 import { useState } from 'react';
-import type { ShippingOption } from '../../types';
+import type { CheckoutSession, ShippingOption } from '../../types';
 
 interface Props {
   options: ShippingOption[];
   loading: boolean;
   error: string | null;
+  session: CheckoutSession | null;
+  couponLoading: boolean;
+  onApplyCoupon: (code: string) => Promise<void>;
   onNext: (shippingMethodId: number) => void;
   onBack: () => void;
 }
 
-export function ShippingStep({ options, loading, error, onNext, onBack }: Props) {
+export function ShippingStep({
+  options,
+  loading,
+  error,
+  session,
+  couponLoading,
+  onApplyCoupon,
+  onNext,
+  onBack,
+}: Props) {
   const [selected, setSelected] = useState<number | null>(
     options.length > 0 ? options[0].id : null
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponError, setCouponError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected) { setSubmitError('Please select a shipping method'); return; }
     onNext(selected);
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponError(null);
+    try {
+      await onApplyCoupon(couponCode.trim());
+      setCouponCode('');
+    } catch (err) {
+      setCouponError(err instanceof Error ? err.message : 'Failed to apply coupon');
+    }
   };
 
   if (loading) {
@@ -77,6 +102,39 @@ export function ShippingStep({ options, loading, error, onNext, onBack }: Props)
           ))}
         </div>
       )}
+
+      <div className="mt-6 pt-5 border-t border-gray-100">
+        <h3 className="text-sm font-semibold text-gray-900 mb-2">Coupon Code</h3>
+        {session?.couponCode ? (
+          <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+            Coupon <span className="font-semibold">{session.couponCode}</span> applied — discount ₹{Number(session.discountAmount ?? 0).toFixed(2)}
+          </p>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={couponCode}
+              onChange={e => { setCouponCode(e.target.value); setCouponError(null); }}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleApplyCoupon(); } }}
+              placeholder="Enter coupon code"
+              className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+            />
+            <button
+              type="button"
+              onClick={handleApplyCoupon}
+              disabled={couponLoading || !couponCode.trim()}
+              className="bg-gray-800 hover:bg-gray-900 disabled:opacity-60 text-white font-medium px-4 py-2.5 rounded-xl text-sm transition-colors"
+            >
+              {couponLoading ? 'Applying…' : 'Apply'}
+            </button>
+          </div>
+        )}
+        {couponError && (
+          <p className="mt-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            {couponError}
+          </p>
+        )}
+      </div>
 
       <div className="flex gap-3 mt-6">
         <button

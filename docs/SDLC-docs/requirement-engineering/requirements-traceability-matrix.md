@@ -10,13 +10,13 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.14 |
-| **Date** | 2026-07-19 09:00 IST |
+| **Version** | 1.15 |
+| **Date** | 2026-07-19 10:40 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
-| **Related SRS** | SRS-BUILDNEST-001 v4.8 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
-| **Related SDD** | SDD-BUILDNEST-001 v3.5 — `docs/SDLC-docs/design/software-design-description.md` |
+| **Related SRS** | SRS-BUILDNEST-001 v4.9 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
+| **Related SDD** | SDD-BUILDNEST-001 v3.6 — `docs/SDLC-docs/design/software-design-description.md` |
 | **Related TP** | TP-BUILDNEST-001 v4.2 — `docs/SDLC-docs/software-testing/test-plan.md` |
 | **Baseline Assessment** | `docs/reports/baseline-assessment-2026-06-19.md` |
 
@@ -43,6 +43,7 @@
 | 1.12 | 2026-07-19 02:00 IST | QA Manager | FR-PROD-08 and FR-FE-23 were both already ✅ Implemented, backend-only for FR-PROD-08 (variant CRUD had no admin UI) and citation-incomplete for FR-FE-23. Added `ProductVariantsModal.tsx`/`ProductVariantsModal.test.tsx` (the new admin variant-management UI) to both rows' citations, and `ProductVariantRepositoryTest` (new regression test for a live-verified `LazyInitializationException` bug found while building the UI — `ProductVariantRepository.findByProductId`'s `@EntityGraph` was missing `"product"`, plus a related missing-`updatedAt`-on-create NOT NULL bug and a `Product.tags` serialization leak, all fixed in the same change) to FR-PROD-08 (#427). Status stays ✅ Implemented on both rows — citation/evidence gap closure, no count changes | Pending |
 | 1.13 | 2026-07-19 06:00 IST | QA Manager | Added FR-ADM-10 (admin CRUD for product tags) — no RTM row existed for tag management at all, matching SRS's newly-added FR-ADM-10 (same fix, v4.7). Backend (`AdminProductTagController`, `ProductTagServiceImpl`) was already complete; added the new frontend `TagsTab.tsx`/`TagFormModal.tsx` consuming it, with `TagsTab.test.tsx` coverage (#429). Recomputed the Admin Operations (FR-ADM) Coverage Summary row (8→9 total, 4→5 Implemented) and the Coverage Summary Totals row (180→181 total, 115→116 Implemented). Updated `Related SRS` from v4.6 to v4.7 | Pending |
 | 1.14 | 2026-07-19 09:00 IST | QA Manager | Added FR-ADM-11 (admin CRUD for coupons: list, create, deactivate) — no RTM row existed for coupon admin management, matching SRS's newly-added FR-ADM-11 (same fix, v4.8). `AdminCouponController` had no `GET`/list endpoint at all before this issue (only `POST`/`DELETE`, confirmed via source read) — added in the same change (#435), since a table/list-based admin UI cannot function without one, matching every sibling admin CRUD UI's shape. Live browser verification also surfaced a genuine, pre-existing Liquibase schema-drift defect (two conflicting `coupons`-table changesets) blocking coupon creation entirely, fixed via a new reconciling migration in the same PR. Recomputed the Admin Operations (FR-ADM) Coverage Summary row (9→10 total, 5→6 Implemented) and the Coverage Summary Totals row (181→182 total, 116→117 Implemented). Updated `Related SRS` from v4.7 to v4.8 | Pending |
+| 1.15 | 2026-07-19 10:40 IST | QA Manager | Added FR-CHK-09 (apply coupon/discount code during checkout) — the backend endpoint (`MultiStepCheckoutController.applyCoupon`, `CheckoutServiceImpl.applyCoupon`) shipped under #77 and was already documented in SRS Appendix A.10, but no RTM row was ever added for it, unlike its sibling admin-side requirement (FR-ADM-11). Frontend wiring (coupon input on the checkout `ShippingStep`, discount reflected in `CheckoutPage`/`PaymentStep` totals) added in this change (#436), with `ShippingStep.test.tsx`/`PaymentStep.test.tsx` coverage. Live browser verification (Chrome DevTools MCP) caught a genuine bug invisible to the mocked RTL unit tests: the coupon input was originally nested inside `ShippingStep`'s outer `<form>`, an invalid-HTML nesting that caused the "Apply" button to submit the outer form (real page navigation) instead of calling the coupon handler — fixed by converting it to a plain `<div>` with a `type="button"` click handler. Recomputed the Checkout & Orders (FR-CHK) Coverage Summary row (8→9 total, 7→8 Implemented) and the Coverage Summary Totals row (182→183 total, 117→118 Implemented). Updated `Related SRS` from v4.8 to v4.9 and `Related SDD` from v3.5 to v3.6 (SDD's own §4.7.3 endpoint-catalogue row for this endpoint cited the wrong FR, fixed in the same pass) | Pending |
 
 ### Document Approval
 
@@ -97,7 +98,7 @@ The RTM serves to:
 | Authentication (FR-AUTH) | 11 | 9 | 0 | 2 | 0 | 0 |
 | Product Catalogue (FR-PROD) | 7 | 7 | 0 | 0 | 0 | 0 |
 | Shopping Cart (FR-CART) | 6 | 6 | 0 | 0 | 0 | 0 |
-| Checkout & Orders (FR-CHK) | 8 | 7 | 0 | 1 | 0 | 0 |
+| Checkout & Orders (FR-CHK) | 9 | 8 | 0 | 1 | 0 | 0 |
 | Payment (FR-PAY) | 5 | 0 | 3 | 2 | 0 | 0 |
 | Inventory (FR-INV) | 7 | 5 | 0 | 2 | 0 | 0 |
 | Reviews & Wishlists (FR-REV, FR-WISH) | 5 | 5 | 0 | 0 | 0 | 0 |
@@ -118,7 +119,7 @@ The RTM serves to:
 | Safety (SAF) | 3 | 1 | 0 | 2 | 0 | 0 |
 | Design Constraints (DC) | 8 | 7 | 1 | 0 | 0 | 0 |
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
-| **Totals** | **182** | **117** | **16** | **49** | **0** | **0** |
+| **Totals** | **183** | **118** | **16** | **49** | **0** | **0** |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 
@@ -229,6 +230,7 @@ The RTM serves to:
 | FR-CHK-06 | Deduct inventory on order placement | High | Ph-1 | §4.8.2, §4.9.3 | `CheckoutServiceImpl.deductInventoryFromCart()`, `InventoryServiceImpl.deductStock()` | `CheckoutServiceImplTest`, `InventoryServiceImplTest` | Test | ✅ Implemented |
 | FR-CHK-07 | User views order history | Medium | Ph-1 | §4.7.3 | `UserOrderController.getUserOrders()`, `OrderServiceImpl.getUserOrders()` | `UserOrderControllerTest`, `OrderServiceImplTest` | Test | ✅ Implemented |
 | FR-CHK-08 | Admin views and manages all orders | Medium | Ph-1 | §4.7.3, §5.1.3 | `AdminOrderController`, `AdminServiceImpl.getAllOrders()` | `AdminOrderControllerTest` | Test | ✅ Implemented |
+| FR-CHK-09 | Apply coupon/discount code during checkout | Medium | Ph-1 | §4.7.3 | `MultiStepCheckoutController.applyCoupon()`, `CheckoutServiceImpl.applyCoupon()` (#77); frontend consumption via `ShippingStep.tsx`, `CheckoutPage.tsx` (#436) | `ShippingStep.test.tsx`, `PaymentStep.test.tsx` | Test | ✅ Implemented (#77 backend, #436 frontend) |
 
 ### 6.5 Payment Processing (FG-05)
 
@@ -499,6 +501,7 @@ The RTM serves to:
 | `Cart` entity | FR-CART-06 |
 | `CartRepository` | FR-CART-02, FR-CART-06 |
 | `CheckoutController` + `CheckoutServiceImpl` | FR-CHK-01 to FR-CHK-06, FR-CHK-07, SAF-02 |
+| `MultiStepCheckoutController` | FR-CHK-09 |
 | `AdminOrderController` | FR-CHK-08, FR-ADM-08 |
 | `OrderServiceImpl` | FR-CHK-05, FR-CHK-07, FR-CHK-08 |
 | `PaymentServiceImpl` + `RazorpayClientAdapter` | FR-PAY-01, FR-PAY-02, FR-PAY-03, SAF-01 |
@@ -566,6 +569,7 @@ The RTM serves to:
 | `OrderServiceIntegrationTest` | FR-CHK-05, FR-CHK-06, SAF-03 |
 | `OrderApiTest` (E2E) | FR-CHK-05, FR-CHK-07 (**TIR-01 defect present**) |
 | `AdminOrderControllerTest` | FR-CHK-08, FR-ADM-08 |
+| `ShippingStep.test.tsx`, `PaymentStep.test.tsx` | FR-CHK-09 |
 | `PaymentServiceImplTest` | FR-PAY-01, FR-PAY-02, FR-PAY-03 |
 | `PaymentSignatureValidationServiceTest` | FR-PAY-02, SAF-01 |
 | `RazorpayClientAdapterTest` | FR-PAY-01 |

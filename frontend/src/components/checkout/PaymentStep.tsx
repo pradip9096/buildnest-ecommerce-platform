@@ -11,7 +11,8 @@ interface Props {
 
 export function PaymentStep({ session, totalAmount, loading, error, onPay, onBack }: Props) {
   const shippingCost = Number(session?.shippingCost ?? 0);
-  const grandTotal = totalAmount + shippingCost;
+  const discountAmount = Number(session?.discountAmount ?? 0);
+  const grandTotal = totalAmount + shippingCost - discountAmount;
 
   return (
     <div>
@@ -26,6 +27,12 @@ export function PaymentStep({ session, totalAmount, loading, error, onPay, onBac
           <span>Shipping</span>
           <span>₹{shippingCost.toFixed(2)}</span>
         </div>
+        {discountAmount > 0 && (
+          <div className="flex justify-between text-green-700">
+            <span>Discount {session?.couponCode ? `(${session.couponCode})` : ''}</span>
+            <span>-₹{discountAmount.toFixed(2)}</span>
+          </div>
+        )}
         <div className="flex justify-between font-semibold text-gray-900 pt-2 border-t border-gray-100">
           <span>Total</span>
           <span>₹{grandTotal.toFixed(2)}</span>

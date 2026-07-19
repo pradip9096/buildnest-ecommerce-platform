@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 4.8 |
-| **Date** | 2026-07-19 09:00 IST |
+| **Version** | 4.9 |
+| **Date** | 2026-07-19 10:40 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -37,6 +37,7 @@
 | 4.6 | 2026-07-18 20:50 IST | Technical Lead | FR-FE-25's requirement text covered only status filters and status updates, but the admin order-management UI now also processes refunds (#438). Extended §3.2.10.2's FR-FE-25 row text to name refund processing explicitly | Pending |
 | 4.7 | 2026-07-19 06:00 IST | Technical Lead | Added FR-ADM-10 (admin manages product tags — create/view/update/delete) to §3.2.8 — no FR row existed for tag management at all despite `AdminProductTagController`'s backend already being fully implemented and Appendix A.19 already documenting its endpoints; the admin frontend UI for it was built in the same change (#429). Recomputed §4.2's Admin Operations aggregate row (9→10 requirements, 6→7 Medium) | Pending |
 | 4.8 | 2026-07-19 09:00 IST | Technical Lead | Added FR-ADM-11 (admin manages coupons — view, create, deactivate) to §3.2.8. Appendix A.20's endpoint table was itself stale, listing only `POST`/`DELETE` — corrected to include the `GET` list endpoint added in the same change (#435), since the admin frontend UI (`CouponsTab.tsx`) can't function without one, matching the pattern already fixed once for A.19. Recomputed §4.2's Admin Operations aggregate row (10→11 requirements, 7→8 Medium) | Pending |
+| 4.9 | 2026-07-19 10:40 IST | Technical Lead | Added FR-CHK-09 (users apply a coupon/discount code during checkout) to §3.2.4 — the backend endpoint (`MultiStepCheckoutController.applyCoupon`, `/api/v1/checkout/coupon`) already existed and was already documented in Appendix A.10, but no requirement row was ever added for it despite FR-ADM-11's sibling admin-side requirement existing since #435; the customer-facing frontend wiring (coupon input on the checkout Shipping step, discount reflected in order-summary/payment totals) was built in the same change (#436). Recomputed §4.2's Checkout aggregate row (8→9 requirements, 2→3 Medium) | Pending |
 
 ### Document Change Procedure
 
@@ -520,6 +521,7 @@ This system has no direct hardware interfaces. It runs as a containerised applic
 | FR-CHK-06 | The system shall deduct inventory stock upon successful order placement | High | Ph-1 | Test |
 | FR-CHK-07 | The system shall allow users to view their order history | Medium | Ph-1 | Test |
 | FR-CHK-08 | The system shall allow admins to view and manage all orders | Medium | Ph-1 | Test |
+| FR-CHK-09 | The system shall allow users to apply a coupon/discount code during checkout | Medium | Ph-1 | Test |
 
 #### 3.2.5 Payment Processing (FG-05)
 
@@ -891,7 +893,7 @@ Test integrity requirements define the properties that the test suite itself mus
 | Authentication (FR-AUTH-01–11) | 11 | Ph-1 / Ph-2 | 9 High, 2 Medium | Test, Inspection |
 | Product Catalogue (FR-PROD-01–09) | 9 | Ph-1 | 3 High, 4 Medium, 2 Low | Test, Inspection |
 | Shopping Cart (FR-CART-01–06) | 6 | Ph-1 | 5 High, 1 Medium | Test, Inspection |
-| Checkout (FR-CHK-01–08) | 8 | Ph-1 / Ph-2 | 6 High, 2 Medium | Test |
+| Checkout (FR-CHK-01–09) | 9 | Ph-1 / Ph-2 | 6 High, 3 Medium | Test |
 | Payment (FR-PAY-01–05) | 5 | Ph-2 | 4 High, 1 Medium | Test, Inspection |
 | Inventory (FR-INV-01–07) | 7 | Ph-1 / Ph-2 | 3 High, 4 Medium | Test |
 | Reviews / Wishlists (FR-REV, FR-WISH) | 5 | Ph-1 | 0 High, 3 Medium, 2 Low | Test |
