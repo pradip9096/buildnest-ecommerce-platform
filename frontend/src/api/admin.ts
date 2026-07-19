@@ -213,6 +213,43 @@ export async function deleteAdminCategory(id: number): Promise<void> {
   await request(`/api/v1/admin/categories/${id}`, { method: 'DELETE' }, 'Failed to delete category');
 }
 
+// ── Tags ─────────────────────────────────────────────────────────────────────
+
+export interface AdminTag {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface TagFormInput {
+  name: string;
+}
+
+export async function fetchAdminTags(): Promise<AdminTag[]> {
+  const data = await requestData<AdminTag[]>('/api/v1/admin/tags', {}, 'Failed to load tags');
+  return Array.isArray(data) ? data : [];
+}
+
+export async function createAdminTag(input: TagFormInput): Promise<AdminTag> {
+  return requestData<AdminTag>(
+    '/api/v1/admin/tags',
+    { method: 'POST', body: input },
+    'Failed to create tag'
+  );
+}
+
+export async function updateAdminTag(id: number, input: TagFormInput): Promise<AdminTag> {
+  return requestData<AdminTag>(
+    `/api/v1/admin/tags/${id}`,
+    { method: 'PUT', body: input },
+    'Failed to update tag'
+  );
+}
+
+export async function deleteAdminTag(id: number): Promise<void> {
+  await request(`/api/v1/admin/tags/${id}`, { method: 'DELETE' }, 'Failed to delete tag');
+}
+
 // ── Products ─────────────────────────────────────────────────────────────────
 
 export interface AdminProduct {
