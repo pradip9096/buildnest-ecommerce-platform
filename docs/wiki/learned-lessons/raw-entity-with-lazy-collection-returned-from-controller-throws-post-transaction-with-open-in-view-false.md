@@ -3,8 +3,8 @@ title: Raw Entity With a Lazy Collection Returned From a Controller Throws Post-
 category: jpa
 tags: [hibernate, jpa, lazy-loading, open-in-view, serialization, jackson]
 keywords: [LazyInitializationException, open-in-view, Hibernate.initialize, ManyToMany, Jackson serialization, ResponseEntity]
-source_conversations: ["#425", "#426", "#440", "#427"]
-last_updated: 2026-07-19
+source_conversations: ["#425", "#426", "#440", "#427", "#441"]
+last_updated: 2026-07-19 (extended by #441 — cache round-trip asymmetry)
 confidence: high
 evidence_strength: verified — reproduced live against a running backend, root-caused via stack trace, fixed and re-verified
 related_lessons: [service-layer-mocked-unit-tests-can-fully-cover-a-method-while-its-query-logic-stays-untested.md]
@@ -152,3 +152,79 @@ things, not one: (1) does the query's `@EntityGraph`/fetch-join actually initial
 association the response DTO/entity needs, and (2) does every one of those now-initialized
 associations itself carry `@JsonIgnore` on any further lazy fields it exposes. Fixing only one
 still leaves the other path open.
+
+**#441 hit a fifth occurrence, and two genuinely new sub-shapes of this bug family — one through a
+completely different trigger point (Redis `@Cacheable`, not HTTP response serialization) that this
+lesson's prior four occurrences never covered:**
+
+1. **The cache round-trip asymmetry.** `ProductServiceImpl.getProductById()` already called
+   `Hibernate.initialize(product.getTags())` (this lesson's own #425 fix) before returning — but
+   `Hibernate.initialize()` only forces the proxy's *contents* to load; it does not replace the
+   collection's *runtime type*. The field stays a Hibernate `PersistentSet` (for `tags`) or
+   `PersistentBag` (for `variants`), not a plain `HashSet`/`ArrayList`. The method is also
+   `@Cacheable`, backed by Redis with `GenericJackson2JsonRedisSerializer`'s default typing (embeds
+   `@class` in the JSON). Writing to the cache works fine — Jackson can *serialize* a
+   `PersistentSet` like any `Set`. Reading it back on a cache **hit** fails: Jackson tries to
+   *instantiate* `org.hibernate.collection.spi.PersistentSet` directly from the stored `@class`
+   name, and that class requires a live Hibernate session constructor argument, not a no-arg
+   constructor — throwing inside the `@Cacheable` proxy's cache-lookup path. The practical symptom
+   was a **false "product not found"** on the very next request for any product once its first
+   successful fetch got cached (a 400 with `{"success":false,"message":"Product not found"}`, since
+   `HomeController`'s broad `catch (Exception e)` swallowed the real
+   `SerializationException`/`InvalidTypeIdException` into that generic message) — a materially
+   different symptom shape than this lesson's prior HTTP-response-serialization occurrences (bare
+   500 / `"Failed to write request"`), because the failure happens on the *next* request's cache
+   read, not the request that populated the cache. Fixed by copying both collections into plain
+   `HashSet`/`ArrayList` after `Hibernate.initialize()`, not just initializing them.
+2. **The same asymmetry hits a derived getter too.** `Inventory.getAvailableQuantity()` computes
+   `quantityInStock - quantityReserved` with no backing column. It serializes into the cached JSON
+   fine (Jackson serializes any getter by default), but on a cache-hit deserialize, Jackson has
+   nowhere to bind it — no field, no setter — and throws `UnrecognizedPropertyException`
+   (`"Unrecognized field \"availableQuantity\"..., not marked as ignorable"`). `@JsonIgnore` on the
+   getter was the wrong fix here: `AdminInventoryController`'s legacy endpoints still return this
+   raw entity directly and the frontend (`InventoryDetailModal.tsx`) reads this exact field from
+   that (non-cached) HTTP response, so removing it from *serialization* would have broken a working
+   feature. The correct fix is asymmetric: `@JsonIgnoreProperties(ignoreUnknown = true)` at the
+   class level, which only affects *deserialization* (unknown fields get silently dropped) and
+   leaves writes untouched.
+3. **`@ManyToOne` scalar references are not automatically safe** — a real, confirmed counterexample
+   to an assumption this lesson's occurrences 1-4 could plausibly suggest (all four were about
+   collections, never a scalar reference). `ProductReview.user` (`@ManyToOne(fetch = LAZY)`) threw
+   `"Could not initialize proxy [User#6] - no session"` when `updateReview`/`markAsHelpful`/the
+   paginated list methods returned a `ProductReview` fetched via a plain
+   `reviewRepository.findById(...)` with no fetch-join — the proxy was never touched anywhere in
+   the transaction, so it stayed uninitialized exactly like an unguarded collection would. (A
+   *sibling* scalar reference, `Product.category`, had appeared to "just work" fetch-and-cache
+   in earlier testing this same session — the actual reason turned out to be incidental: something
+   else in that particular request path happened to touch/initialize it, not that `@ManyToOne`
+   proxies are inherently exempt from this bug class. Don't infer "scalar references are safe" from
+   one working example — verify it directly, the same discipline this lesson already asks for
+   collections.) Fixed by `Hibernate.initialize(review.getUser())` in the service layer before every
+   return, mirroring this lesson's own established `Hibernate.initialize()` pattern.
+
+**Fifth-occurrence generalization**: this bug family's root cause ("a Hibernate-managed reference
+touched outside a live session") is not scoped to HTTP response serialization — `@Cacheable`
+(or any other post-transaction consumer of the entity, e.g. a message queue serializer) hits the
+identical class of failure, just with a different, sometimes actively misleading symptom (a false
+"not found" instead of a bare 500) because the failure surfaces on a *later* request, not the one
+that populated the cache. When adding `@Cacheable` to a method that already does
+`Hibernate.initialize()` for HTTP-serialization safety, that alone is not sufficient — check
+whether the *cache serializer* uses default/polymorphic typing (Redis's
+`GenericJackson2JsonRedisSerializer` does by default) and, if so, convert every touched
+lazy-then-initialized collection to a plain type before returning, not just initialize it.
+
+## A second, unrelated defect found via the same live-verification pass: `User.password` had no `@JsonIgnore` anywhere in the codebase
+
+Not part of this lesson's root cause (it's a missing security guard, not a lazy-loading bug), but
+found and fixed in the same #441 session and worth recording here since it was directly adjacent:
+tracing why `ProductReview.user` (a raw `User` reference, once made safely serializable per the fix
+above) would have leaked meant checking `User.java`'s own Jackson annotations — and `password` had
+none at all. No endpoint in the codebase had ever returned a raw `User` before this issue (`UserController`/`AdminUserController`
+both already map to DTOs, per this repo's own `jpa.md` convention), so nothing had actually leaked
+yet — but `ProductReview.user` would have been the first to do so had the entity-graph fix above
+shipped without also checking `User`'s own serialization safety. **The generalization**: when a fix
+in this lesson's family makes a previously-unreachable entity newly reachable through Jackson
+(whether by `Hibernate.initialize()`, a fetch-join, or removing a blocking `@JsonIgnore`), audit
+that entity's *own* field-level Jackson safety before shipping — not just whether it now
+initializes/loads without throwing. "It successfully serializes" and "it's safe to serialize" are
+different questions; this lesson's other occurrences only ever answered the first one.
