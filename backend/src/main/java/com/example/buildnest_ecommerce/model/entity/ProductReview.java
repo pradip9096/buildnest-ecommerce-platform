@@ -1,5 +1,6 @@
 package com.example.buildnest_ecommerce.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -32,12 +33,18 @@ import java.time.LocalDateTime;
 @Builder
 @EqualsAndHashCode(exclude = { "product", "user", "createdAt", "updatedAt" })
 @ToString(exclude = { "product", "user" })
-public class ProductReview {
+public class ProductReview implements AggregateRoot {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // The caller already knows which product this review belongs to (it's
+    // the path parameter) — never needed nested, and Product carries its own
+    // lazy tags/variants collections that would throw serializing this raw
+    // entity post-transaction (#441; same defect family as the ProductImage/
+    // ProductVariant `product` back-references elsewhere in this codebase).
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
