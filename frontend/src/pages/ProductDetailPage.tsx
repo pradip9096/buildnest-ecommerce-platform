@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { fetchProducts } from '../api/products';
 import { addToCart } from '../api/cart';
 import { ImageGallery } from '../components/product/ImageGallery';
+import { WishlistButton } from '../components/product/WishlistButton';
 import type { Product } from '../types';
 import { StarRating } from '../components/product/StarRating';
 import { QuantitySelector } from '../components/product/QuantitySelector';
@@ -136,7 +137,10 @@ export function ProductDetailPage() {
               </span>
             )}
 
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">{product.name}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">{product.name}</h1>
+              <WishlistButton productId={product.id} className="shrink-0 mt-1" />
+            </div>
 
             {summary && summary.totalReviews > 0 && (
               <a href="#reviews" className="flex items-center gap-2 w-fit">

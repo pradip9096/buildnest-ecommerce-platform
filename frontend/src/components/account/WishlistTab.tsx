@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAsync } from '../../hooks/useAsync';
-import { fetchWishlist, removeFromWishlist } from '../../api/wishlist';
+import { fetchWishlist, removeFromWishlist, clearWishlist } from '../../api/wishlist';
 import { addToCart } from '../../api/cart';
 import type { Product } from '../../types';
 
@@ -15,7 +15,21 @@ export function WishlistTab({ userId }: Props) {
   const items = data ?? [];
   const [removing, setRemoving] = useState<number | null>(null);
   const [movingToCart, setMovingToCart] = useState<number | null>(null);
+  const [clearing, setClearing] = useState(false);
   const [feedback, setFeedback] = useState<{ id: number; msg: string } | null>(null);
+
+  const handleClearAll = async () => {
+    if (!confirm('Remove all items from your wishlist?')) return;
+    setClearing(true);
+    try {
+      await clearWishlist();
+      setData([]);
+    } catch {
+      // silently ignore, same as handleRemove
+    } finally {
+      setClearing(false);
+    }
+  };
 
   const handleRemove = async (productId: number) => {
     setRemoving(productId);
@@ -55,9 +69,21 @@ export function WishlistTab({ userId }: Props) {
 
   return (
     <>
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">
-        Wishlist {items.length > 0 && <span className="text-sm font-normal text-gray-400">({items.length} items)</span>}
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Wishlist {items.length > 0 && <span className="text-sm font-normal text-gray-400">({items.length} items)</span>}
+        </h2>
+        {items.length > 0 && (
+          <button
+            type="button"
+            onClick={handleClearAll}
+            disabled={clearing}
+            className="text-xs font-medium text-gray-500 hover:text-red-500 disabled:opacity-50 transition-colors"
+          >
+            {clearing ? 'Clearing…' : 'Clear All'}
+          </button>
+        )}
+      </div>
 
       {feedback && (
         <p className="mb-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-3 py-2">{feedback.msg}</p>

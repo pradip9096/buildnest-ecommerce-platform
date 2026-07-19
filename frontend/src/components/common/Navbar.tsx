@@ -2,12 +2,30 @@ import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useCart } from '../../hooks/useCart';
+import { getWishlistCount } from '../../api/wishlist';
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const { cart } = useCart(user?.id ?? null);
   const cartCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+
+  const [wishlistCount, setWishlistCount] = useState(0);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setWishlistCount(0);
+      return;
+    }
+    let cancelled = false;
+    getWishlistCount()
+      .then(count => {
+        if (!cancelled) setWishlistCount(count);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
 
   const [searchInput, setSearchInput] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -63,6 +81,16 @@ export function Navbar() {
         </form>
 
         <div className="ml-auto hidden sm:flex items-center gap-4">
+          {isAuthenticated && (
+            <Link to="/account" className="relative text-gray-600 hover:text-gray-900" aria-label="Wishlist">
+              <span className="text-xl">❤️</span>
+              {wishlistCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  {wishlistCount > 99 ? '99+' : wishlistCount}
+                </span>
+              )}
+            </Link>
+          )}
           <Link to="/cart" className="relative text-gray-600 hover:text-gray-900" aria-label="Cart">
             <span className="text-xl">🛒</span>
             {cartCount > 0 && (
@@ -143,6 +171,12 @@ export function Navbar() {
           <Link to="/cart" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 text-sm text-gray-700">
             🛒 Cart{cartCount > 0 && ` (${cartCount})`}
           </Link>
+
+          {isAuthenticated && (
+            <Link to="/account" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 text-sm text-gray-700">
+              ❤️ Wishlist{wishlistCount > 0 && ` (${wishlistCount})`}
+            </Link>
+          )}
 
           {isAuthenticated ? (
             <>
