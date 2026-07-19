@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DataJpaTest
 @ActiveProfiles("test")
-class WishlistServiceImplLazyLoadingTest {
+class WishlistServiceImplLazyLoadingImplTest {
 
     @Autowired
     private TestEntityManager entityManager;
