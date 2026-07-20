@@ -1,4 +1,5 @@
 import { request, requestData } from './client';
+import type { ApiResponse } from '../types';
 
 // ── Dashboard stats ──────────────────────────────────────────────────────────
 
@@ -464,6 +465,15 @@ export async function updateAdminProduct(id: number, input: ProductFormInput): P
 
 export async function deleteAdminProduct(id: number): Promise<void> {
   await request(`/api/v1/admin/products/${id}`, { method: 'DELETE' }, 'Failed to delete product');
+}
+
+export async function triggerSearchReindex(): Promise<string> {
+  const body = await request<ApiResponse<null>>(
+    '/api/v1/admin/search/reindex',
+    { method: 'POST' },
+    'Failed to trigger search re-index'
+  );
+  return body.message;
 }
 
 // ── Product Images ──────────────────────────────────────────────────────────
