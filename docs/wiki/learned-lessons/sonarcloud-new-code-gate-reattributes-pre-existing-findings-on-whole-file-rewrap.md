@@ -2,7 +2,7 @@
 title: SonarCloud's "New Code" Quality Gate Is Git-Blame-Based — a Full-File Line-Wrap Reattributes Every Pre-Existing Finding on That File as New
 category: technical
 tags: [sonarcloud, checkstyle, git-blame, quality-gate, ci]
-keywords: [new_security_rating, sonar.qualitygate.wait, S4502, S1192, line-length, rewrap, NOSONAR, SuppressWarnings]
+keywords: [new_security_rating, sonar.qualitygate.wait, S4502, S1192, line-length, rewrap, NOSONAR, SuppressWarnings, former-hotspot, false-positive]
 source_conversations: ["#443"]
 last_updated: 2026-07-20
 confidence: high
@@ -76,3 +76,41 @@ rule ID after `NOSONAR` is just a comment convention — Sonar suppresses
 `@SuppressWarnings` precedent generalizes to a different rule; verify the
 next analysis run actually cleared the finding before trusting either
 mechanism.
+
+## `// NOSONAR` didn't work either — the rule was a `former-hotspot`
+
+Even after switching to `// NOSONAR` on both `csrf.disable()` calls, one
+of the two S4502 occurrences (the Prometheus monitoring chain) kept
+reappearing on the next 2 analysis runs — tracked under the *same*
+SonarCloud issue key across all of them, with its reported line number
+frozen at the value from the very first analysis (before either fix),
+even though the file's real line numbers had since shifted. The
+SonarCloud UI tagged the rule `former-hotspot`: `java:S4502` used to be a
+Security Hotspot (which SonarQube/SonarCloud requires reviewing and
+marking Safe/Fixed through the **UI**, not inline comments) before being
+reclassified as a regular `VULNERABILITY`-type issue — its legacy
+hotspot heritage appears to make Sonar's Java analyzer *not* reliably
+honor an inline suppression for it, unlike a rule that was always a
+plain issue. The other occurrence (the Swagger docs chain) *did* clear
+via `// NOSONAR` on the first attempt — so this isn't a blanket
+"NOSONAR never works" finding, it's rule-specific and not predictable
+from the rule's current `type` field alone.
+
+**Resolution**: the issue's own status dropdown in the SonarCloud UI
+(`Open` → `False Positive`, with an optional justification comment) is
+the mechanism that actually cleared it — confirmed by a subsequent
+analysis run passing cleanly. This is a genuine state-changing action on
+a security-tagged finding, so — same as a GitHub code-scanning alert
+dismissal — don't do it unilaterally; get explicit user sign-off and,
+ideally, have the user (or someone with SonarCloud write access) perform
+it directly, since neither `gh api` nor an anonymous read-only SonarCloud
+API token can execute the transition (`do_transition` requires
+authentication this session didn't have).
+
+**When a code-level suppression comment (`NOSONAR`/`@SuppressWarnings`)
+keeps failing to clear a specific SonarCloud issue across multiple
+re-analyses despite being correctly positioned**, check the issue's own
+tags in the SonarCloud UI for `former-hotspot` (or similar rule-heritage
+markers) before assuming the suppression syntax itself is wrong — the
+next fix attempt should go straight to the dashboard's status dropdown,
+not another inline-comment variant.
