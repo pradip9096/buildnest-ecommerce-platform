@@ -4,6 +4,7 @@ import {
   fetchAdminProducts,
   deleteAdminProduct,
   fetchAdminCategories,
+  triggerSearchReindex,
   type AdminProduct,
 } from '../../api/admin';
 import { ProductFormModal } from './ProductFormModal';
@@ -21,6 +22,9 @@ export function ProductsTab() {
   const [modalProduct, setModalProduct] = useState<AdminProduct | 'new' | null>(null);
   const [imagesProduct, setImagesProduct] = useState<AdminProduct | null>(null);
   const [variantsProduct, setVariantsProduct] = useState<AdminProduct | null>(null);
+  const [reindexing, setReindexing] = useState(false);
+  const [reindexMessage, setReindexMessage] = useState<string | null>(null);
+  const [reindexError, setReindexError] = useState<string | null>(null);
 
   const filtered = search
     ? products.filter(
@@ -41,6 +45,20 @@ export function ProductsTab() {
       setDeleteError(e instanceof Error ? e.message : 'Failed to delete product');
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const handleReindex = async () => {
+    setReindexing(true);
+    setReindexMessage(null);
+    setReindexError(null);
+    try {
+      const message = await triggerSearchReindex();
+      setReindexMessage(message);
+    } catch (e) {
+      setReindexError(e instanceof Error ? e.message : 'Failed to trigger search re-index');
+    } finally {
+      setReindexing(false);
     }
   };
 
@@ -71,6 +89,14 @@ export function ProductsTab() {
           <span className="text-sm text-gray-400">{products.length} total</span>
           <button
             type="button"
+            onClick={handleReindex}
+            disabled={reindexing}
+            className="bg-gray-100 hover:bg-gray-200 disabled:opacity-50 text-gray-700 rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors"
+          >
+            {reindexing ? 'Reindexing…' : '⟳ Reindex Search'}
+          </button>
+          <button
+            type="button"
             onClick={() => setModalProduct('new')}
             className="bg-primary-500 hover:bg-primary-600 text-white rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors"
           >
@@ -81,6 +107,8 @@ export function ProductsTab() {
 
       {error && <p className="text-red-600 text-sm">{error}</p>}
       {deleteError && <p className="text-red-600 text-sm">{deleteError}</p>}
+      {reindexMessage && <p className="text-green-600 text-sm">{reindexMessage}</p>}
+      {reindexError && <p className="text-red-600 text-sm">{reindexError}</p>}
 
       <div className="overflow-x-auto rounded-xl border border-gray-100">
         <table className="w-full text-sm">

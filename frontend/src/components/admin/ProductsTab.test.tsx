@@ -8,6 +8,7 @@ import {
   updateAdminProduct,
   deleteAdminProduct,
   fetchAdminCategories,
+  triggerSearchReindex,
   type AdminProduct,
   type AdminCategory,
 } from '../../api/admin';
@@ -18,6 +19,7 @@ vi.mock('../../api/admin', () => ({
   updateAdminProduct: vi.fn(),
   deleteAdminProduct: vi.fn(),
   fetchAdminCategories: vi.fn(),
+  triggerSearchReindex: vi.fn(),
 }));
 
 const mockFetch = vi.mocked(fetchAdminProducts);
@@ -25,6 +27,7 @@ const mockCreate = vi.mocked(createAdminProduct);
 const mockUpdate = vi.mocked(updateAdminProduct);
 const mockDelete = vi.mocked(deleteAdminProduct);
 const mockFetchCategories = vi.mocked(fetchAdminCategories);
+const mockReindex = vi.mocked(triggerSearchReindex);
 
 const cement: AdminProduct = {
   id: 1,
@@ -165,5 +168,32 @@ describe('ProductsTab', () => {
       const statusBadges = screen.getAllByText('Inactive');
       expect(statusBadges.length).toBeGreaterThan(0);
     });
+  });
+
+  it('triggers a search re-index and shows the success message', async () => {
+    mockFetch.mockResolvedValue([cement]);
+    mockReindex.mockResolvedValue('Product re-index completed successfully');
+
+    render(<ProductsTab />);
+    await waitFor(() => expect(screen.getByText('Premium Cement 50kg')).toBeInTheDocument());
+
+    await userEvent.setup().click(screen.getByRole('button', { name: /Reindex Search/ }));
+
+    expect(mockReindex).toHaveBeenCalledTimes(1);
+    await waitFor(() =>
+      expect(screen.getByText('Product re-index completed successfully')).toBeInTheDocument()
+    );
+  });
+
+  it('surfaces the backend error message when reindex fails', async () => {
+    mockFetch.mockResolvedValue([cement]);
+    mockReindex.mockRejectedValue(new Error('Elasticsearch is not enabled'));
+
+    render(<ProductsTab />);
+    await waitFor(() => expect(screen.getByText('Premium Cement 50kg')).toBeInTheDocument());
+
+    await userEvent.setup().click(screen.getByRole('button', { name: /Reindex Search/ }));
+
+    await waitFor(() => expect(screen.getByText('Elasticsearch is not enabled')).toBeInTheDocument());
   });
 });
