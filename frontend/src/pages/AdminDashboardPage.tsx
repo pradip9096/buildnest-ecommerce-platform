@@ -9,8 +9,9 @@ import { ProductsTab } from '../components/admin/ProductsTab';
 import { TagsTab } from '../components/admin/TagsTab';
 import { CouponsTab } from '../components/admin/CouponsTab';
 import { ShippingMethodsTab } from '../components/admin/ShippingMethodsTab';
+import { WebhookSubscriptionsTab } from '../components/admin/WebhookSubscriptionsTab';
 
-type Tab = 'overview' | 'orders' | 'inventory' | 'products' | 'categories' | 'tags' | 'coupons' | 'shipping' | 'users' | 'audit';
+type Tab = 'overview' | 'orders' | 'inventory' | 'products' | 'categories' | 'tags' | 'coupons' | 'shipping' | 'webhooks' | 'users' | 'audit';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'overview',   label: 'Overview',   icon: '📊' },
@@ -21,6 +22,7 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'tags',       label: 'Tags',       icon: '🔖' },
   { id: 'coupons',    label: 'Coupons',    icon: '🎟️' },
   { id: 'shipping',   label: 'Shipping',   icon: '🚚' },
+  { id: 'webhooks',   label: 'Webhooks',   icon: '🔗' },
   { id: 'users',      label: 'Users',      icon: '👥' },
   { id: 'audit',      label: 'Audit Log',  icon: '🔍' },
 ];
@@ -67,6 +69,7 @@ export function AdminDashboardPage() {
             {activeTab === 'tags'       && <TagsTab />}
             {activeTab === 'coupons'    && <CouponsTab />}
             {activeTab === 'shipping'   && <ShippingMethodsTab />}
+            {activeTab === 'webhooks'   && <WebhookSubscriptionsTab />}
             {activeTab === 'users'     && <UsersTab />}
             {activeTab === 'audit'     && <AuditLogTab />}
           </div>

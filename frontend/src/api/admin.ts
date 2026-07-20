@@ -273,6 +273,59 @@ export async function deactivateAdminShippingMethod(id: number): Promise<void> {
   );
 }
 
+// ── Webhook Subscriptions ───────────────────────────────────────────────────
+
+export interface AdminWebhookSubscription {
+  id: number;
+  eventType: string;
+  targetUrl: string;
+  active: boolean;
+  failureCount: number;
+  lastDeliveryStatus?: string;
+  createdAt: string;
+}
+
+export interface WebhookSubscriptionFormInput {
+  eventType: string;
+  targetUrl: string;
+  secret?: string;
+}
+
+export async function fetchAdminWebhookSubscriptions(): Promise<AdminWebhookSubscription[]> {
+  const data = await requestData<AdminWebhookSubscription[]>(
+    '/api/admin/webhooks',
+    {},
+    'Failed to load webhook subscriptions'
+  );
+  return Array.isArray(data) ? data : [];
+}
+
+export async function createAdminWebhookSubscription(
+  input: WebhookSubscriptionFormInput
+): Promise<AdminWebhookSubscription> {
+  return requestData<AdminWebhookSubscription>(
+    '/api/admin/webhooks',
+    { method: 'POST', body: input },
+    'Failed to create webhook subscription'
+  );
+}
+
+export async function deactivateAdminWebhookSubscription(id: number): Promise<AdminWebhookSubscription> {
+  return requestData<AdminWebhookSubscription>(
+    `/api/admin/webhooks/${id}/deactivate`,
+    { method: 'PUT' },
+    'Failed to deactivate webhook subscription'
+  );
+}
+
+export async function deleteAdminWebhookSubscription(id: number): Promise<void> {
+  await request(
+    `/api/admin/webhooks/${id}`,
+    { method: 'DELETE' },
+    'Failed to delete webhook subscription'
+  );
+}
+
 // ── Tags ─────────────────────────────────────────────────────────────────────
 
 export interface AdminTag {
