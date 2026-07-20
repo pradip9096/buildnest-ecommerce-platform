@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useCart } from '../../hooks/useCart';
 import { getWishlistCount } from '../../api/wishlist';
+import { NotificationBell } from './NotificationBell';
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -99,6 +100,8 @@ export function Navbar() {
               </span>
             )}
           </Link>
+
+          {isAuthenticated && <NotificationBell />}
 
           {isAuthenticated ? (
             <div className="relative" ref={accountRef}>
