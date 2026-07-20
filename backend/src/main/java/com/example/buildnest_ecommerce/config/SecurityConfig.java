@@ -79,6 +79,10 @@ public class SecurityConfig {
     /** Role name reused across the main chain's admin-only path rules. */
     private static final String ROLE_ADMIN = "ADMIN";
 
+    /** Path patterns reused across the main chain's admin-only rules. */
+    private static final String ADMIN_PATH = "/api/admin/**";
+    private static final String ADMIN_V1_PATH = "/api/v1/admin/**";
+
     /**
      * Read-only monitoring password, local-dev default only — same
      * pattern as jwt.secret's fallback. Production rejection is
@@ -177,10 +181,6 @@ public class SecurityConfig {
      * @param http the HttpSecurity to configure
      * @return the built monitoring security filter chain
      */
-    // java:S4502 -- CSRF is deliberately disabled below; see the .csrf(...)
-    // call's own inline comment for the full rationale (no browser session
-    // exists for this machine-scraper-only chain to ride).
-    @SuppressWarnings("java:S4502")
     @Bean
     @Order(0)
     public SecurityFilterChain actuatorMonitoringSecurityFilterChain(
@@ -207,7 +207,7 @@ public class SecurityConfig {
                 // to ride. Same rationale spring-security.md already documents
                 // for why CSRF was safe to disable before tokens moved to
                 // cookies (#359).
-                .csrf(csrf -> csrf.disable());
+                .csrf(csrf -> csrf.disable()); // NOSONAR java:S4502
         return http.build();
     }
 
@@ -240,6 +240,9 @@ public class SecurityConfig {
      * Retains 'unsafe-inline' scoped exclusively to documentation endpoints,
      * which SpringDoc requires to render its bundled inline scripts and styles.
      * All API paths are handled by the main chain below with a strict CSP.
+     * CSRF is disabled: this chain permitAll()'s every path, serves only
+     * read-only API documentation, and performs no state-changing action
+     * a forged cross-site request could exploit.
      */
     @Bean
     @Order(1)
@@ -253,7 +256,7 @@ public class SecurityConfig {
                                 SecurityHeaderPolicies.SWAGGER_CSP))
                         .frameOptions(frameOptions -> frameOptions.deny()))
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .csrf(csrf -> csrf.disable());
+                .csrf(csrf -> csrf.disable()); // NOSONAR java:S4502
         return http.build();
     }
 
@@ -357,7 +360,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/password/forgot",
                                 "/api/password/reset").permitAll()
                         .requestMatchers("/api/password/change")
-                                .hasAnyRole("USER", "ADMIN")
+                                .hasAnyRole("USER", ROLE_ADMIN)
                         .requestMatchers("/api/v1/webhooks/**").permitAll()
                         .requestMatchers("/swagger-ui.html",
                                 "/swagger-ui/**", "/v3/api-docs/**")
@@ -369,23 +372,23 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").hasRole(ROLE_ADMIN)
                         // Admin endpoints (legacy /api/admin/** and
                         // versioned /api/v1/admin/**)
-                        .requestMatchers("/api/admin/**").hasRole(ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.POST, "/api/admin/**")
+                        .requestMatchers(ADMIN_PATH).hasRole(ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.POST, ADMIN_PATH)
                                 .hasRole(ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.PUT, "/api/admin/**")
+                        .requestMatchers(HttpMethod.PUT, ADMIN_PATH)
                                 .hasRole(ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.DELETE, "/api/admin/**")
+                        .requestMatchers(HttpMethod.DELETE, ADMIN_PATH)
                                 .hasRole(ROLE_ADMIN)
-                        .requestMatchers("/api/v1/admin/**").hasRole(ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.POST, "/api/v1/admin/**")
+                        .requestMatchers(ADMIN_V1_PATH).hasRole(ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.POST, ADMIN_V1_PATH)
                                 .hasRole(ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/admin/**")
+                        .requestMatchers(HttpMethod.PUT, ADMIN_V1_PATH)
                                 .hasRole(ROLE_ADMIN)
                         .requestMatchers(HttpMethod.DELETE,
-                                "/api/v1/admin/**").hasRole(ROLE_ADMIN)
+                                ADMIN_V1_PATH).hasRole(ROLE_ADMIN)
                         // User endpoints
                         .requestMatchers("/api/user/**")
-                                .hasAnyRole("USER", "ADMIN")
+                                .hasAnyRole("USER", ROLE_ADMIN)
                         // Any other request
                         .anyRequest().authenticated())
                         .addFilterBefore(
