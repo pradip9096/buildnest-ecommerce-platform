@@ -213,6 +213,66 @@ export async function deleteAdminCategory(id: number): Promise<void> {
   await request(`/api/v1/admin/categories/${id}`, { method: 'DELETE' }, 'Failed to delete category');
 }
 
+// ── Shipping Methods ────────────────────────────────────────────────────────
+
+export interface AdminShippingMethod {
+  id: number;
+  name: string;
+  description?: string;
+  baseCost: number;
+  costPerKg: number;
+  estimatedDaysMin: number;
+  estimatedDaysMax: number;
+  isActive: boolean;
+}
+
+export interface ShippingMethodFormInput {
+  name: string;
+  description?: string;
+  baseCost: number;
+  costPerKg: number;
+  estimatedDaysMin: number;
+  estimatedDaysMax: number;
+}
+
+export async function fetchAdminShippingMethods(): Promise<AdminShippingMethod[]> {
+  const data = await requestData<AdminShippingMethod[]>(
+    '/api/v1/admin/shipping-methods',
+    {},
+    'Failed to load shipping methods'
+  );
+  return Array.isArray(data) ? data : [];
+}
+
+export async function createAdminShippingMethod(
+  input: ShippingMethodFormInput
+): Promise<AdminShippingMethod> {
+  return requestData<AdminShippingMethod>(
+    '/api/v1/admin/shipping-methods',
+    { method: 'POST', body: input },
+    'Failed to create shipping method'
+  );
+}
+
+export async function updateAdminShippingMethod(
+  id: number,
+  input: ShippingMethodFormInput
+): Promise<AdminShippingMethod> {
+  return requestData<AdminShippingMethod>(
+    `/api/v1/admin/shipping-methods/${id}`,
+    { method: 'PUT', body: input },
+    'Failed to update shipping method'
+  );
+}
+
+export async function deactivateAdminShippingMethod(id: number): Promise<void> {
+  await request(
+    `/api/v1/admin/shipping-methods/${id}`,
+    { method: 'DELETE' },
+    'Failed to deactivate shipping method'
+  );
+}
+
 // ── Tags ─────────────────────────────────────────────────────────────────────
 
 export interface AdminTag {
