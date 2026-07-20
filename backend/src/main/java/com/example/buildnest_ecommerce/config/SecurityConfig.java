@@ -76,6 +76,9 @@ public class SecurityConfig {
     private static final String DEFAULT_MONITORING_PASSWORD_MARKER =
             "changeme-monitoring-password";
 
+    /** Role name reused across the main chain's admin-only path rules. */
+    private static final String ROLE_ADMIN = "ADMIN";
+
     /**
      * Read-only monitoring password, local-dev default only — same
      * pattern as jwt.secret's fallback. Production rejection is
@@ -174,6 +177,10 @@ public class SecurityConfig {
      * @param http the HttpSecurity to configure
      * @return the built monitoring security filter chain
      */
+    // java:S4502 -- CSRF is deliberately disabled below; see the .csrf(...)
+    // call's own inline comment for the full rationale (no browser session
+    // exists for this machine-scraper-only chain to ride).
+    @SuppressWarnings("java:S4502")
     @Bean
     @Order(0)
     public SecurityFilterChain actuatorMonitoringSecurityFilterChain(
@@ -359,23 +366,23 @@ public class SecurityConfig {
                         // Actuator endpoints - health is public, others
                         // require ADMIN (RQ-ES-SEC-01, RQ-ES-SEC-02)
                         .requestMatchers("/actuator/health/**").permitAll()
-                        .requestMatchers("/actuator/**").hasRole("ADMIN")
+                        .requestMatchers("/actuator/**").hasRole(ROLE_ADMIN)
                         // Admin endpoints (legacy /api/admin/** and
                         // versioned /api/v1/admin/**)
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole(ROLE_ADMIN)
                         .requestMatchers(HttpMethod.POST, "/api/admin/**")
-                                .hasRole("ADMIN")
+                                .hasRole(ROLE_ADMIN)
                         .requestMatchers(HttpMethod.PUT, "/api/admin/**")
-                                .hasRole("ADMIN")
+                                .hasRole(ROLE_ADMIN)
                         .requestMatchers(HttpMethod.DELETE, "/api/admin/**")
-                                .hasRole("ADMIN")
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                                .hasRole(ROLE_ADMIN)
+                        .requestMatchers("/api/v1/admin/**").hasRole(ROLE_ADMIN)
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin/**")
-                                .hasRole("ADMIN")
+                                .hasRole(ROLE_ADMIN)
                         .requestMatchers(HttpMethod.PUT, "/api/v1/admin/**")
-                                .hasRole("ADMIN")
+                                .hasRole(ROLE_ADMIN)
                         .requestMatchers(HttpMethod.DELETE,
-                                "/api/v1/admin/**").hasRole("ADMIN")
+                                "/api/v1/admin/**").hasRole(ROLE_ADMIN)
                         // User endpoints
                         .requestMatchers("/api/user/**")
                                 .hasAnyRole("USER", "ADMIN")
