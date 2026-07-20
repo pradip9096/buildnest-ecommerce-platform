@@ -18,6 +18,13 @@ export interface Product {
   createdAt: string;
 }
 
+export interface InventoryStatusInfo {
+  productId: number;
+  status: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' | 'DISCONTINUED';
+  displayName: string;
+  description: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;

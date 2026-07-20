@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useProduct } from '../hooks/useProduct';
+import { useInventoryStatus } from '../hooks/useInventoryStatus';
 import { useReviews } from '../hooks/useReviews';
 import { useAuth } from '../hooks/useAuth';
 import { fetchProducts } from '../api/products';
@@ -41,6 +42,7 @@ export function ProductDetailPage() {
   const productId = Number(id);
 
   const { product, loading: productLoading, error: productError } = useProduct(productId);
+  const { status: inventoryStatus } = useInventoryStatus(productId);
   const [reviewPage, setReviewPage] = useState(0);
   const { reviews, summary, totalPages, loading: reviewsLoading, refetch: refetchReviews } = useReviews(productId, reviewPage);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -162,7 +164,21 @@ export function ProductDetailPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              {inStock ? (
+              {inventoryStatus ? (
+                <span
+                  className={`text-sm font-medium ${
+                    inventoryStatus.status === 'OUT_OF_STOCK'
+                      ? 'text-red-500'
+                      : inventoryStatus.status === 'LOW_STOCK'
+                        ? 'text-amber-600'
+                        : 'text-green-600'
+                  }`}
+                  title={inventoryStatus.description}
+                >
+                  {inventoryStatus.status === 'OUT_OF_STOCK' ? '✗' : '✓'} {inventoryStatus.displayName}
+                  {inStock && ` (${product.stockQuantity} available)`}
+                </span>
+              ) : inStock ? (
                 <span className="text-sm font-medium text-green-600">
                   ✓ In Stock ({product.stockQuantity} available)
                 </span>
