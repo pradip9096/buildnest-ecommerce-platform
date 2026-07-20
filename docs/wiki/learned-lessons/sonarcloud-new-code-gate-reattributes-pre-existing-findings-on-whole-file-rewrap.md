@@ -2,7 +2,7 @@
 title: SonarCloud's "New Code" Quality Gate Is Git-Blame-Based — a Full-File Line-Wrap Reattributes Every Pre-Existing Finding on That File as New
 category: technical
 tags: [sonarcloud, checkstyle, git-blame, quality-gate, ci]
-keywords: [new_security_rating, sonar.qualitygate.wait, S4502, S1192, line-length, rewrap]
+keywords: [new_security_rating, sonar.qualitygate.wait, S4502, S1192, line-length, rewrap, NOSONAR, SuppressWarnings]
 source_conversations: ["#443"]
 last_updated: 2026-07-20
 confidence: high
@@ -53,8 +53,26 @@ line number), the finding is pre-existing — confirmed via
 `development-workflow.md`'s own "same failure on `master` before this
 branch existed" standard for CI Failure Handling item 4, just applied via
 the SonarCloud API instead of a workflow-run comparison. Fix it anyway if
-cheap and genuinely correct (a real constant extraction, a documented
-`@SuppressWarnings` referencing the already-existing rationale comment) —
-don't just note it as "pre-existing, unrelated" and try to merge past a
+cheap and genuinely correct (a real constant extraction, a code-level
+suppression referencing the already-existing rationale comment) — don't
+just note it as "pre-existing, unrelated" and try to merge past a
 branch-protection-required check, which this repo's own CI Failure
 Handling rules against without confirming enforcement state first.
+
+## `@SuppressWarnings("java:S<rule>")` is not reliably respected — use `// NOSONAR`
+
+The first fix attempt annotated the *enclosing method* with
+`@SuppressWarnings("java:S4502")`, following this repo's one existing
+precedent (`AppConfig.java`'s `@SuppressWarnings("java:S1604")`). It had
+no effect — the next analysis still flagged the same `csrf.disable()`
+call. Sonar's Java analyzer only honors `@SuppressWarnings` for a subset
+of rules (mostly code-smell/style rules like S1604); security-category
+rules such as S4502 are not guaranteed to respect it, and there's no
+error or warning when the annotation silently does nothing. The
+universally-respected mechanism is a **same-line** `// NOSONAR` comment
+(optionally `// NOSONAR java:S4502` to document which rule, though the
+rule ID after `NOSONAR` is just a comment convention — Sonar suppresses
+*every* rule on that line regardless). Don't assume one repo's working
+`@SuppressWarnings` precedent generalizes to a different rule; verify the
+next analysis run actually cleared the finding before trusting either
+mechanism.
