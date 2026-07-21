@@ -73,6 +73,96 @@ export async function fetchCustomerLifetimeValue(userId: number): Promise<number
   );
 }
 
+// ── Inventory analytics ──────────────────────────────────────────────────────
+
+export interface InventoryDemandProduct {
+  productId: number;
+  productName: string;
+  currentStock: number;
+  minimumThreshold: number;
+  shortfall: number;
+  demandScore: number;
+  riskLevel: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  recommendedAction: string;
+}
+
+export interface InventorySeasonalPattern {
+  productId: number;
+  productName: string;
+  totalBreaches: number;
+  breachFrequency: string;
+  pattern: 'VERY_HIGH_DEMAND' | 'HIGH_DEMAND' | 'MODERATE_DEMAND' | 'LOW_DEMAND';
+  currentStock: number;
+  suggestedSafetyStock: number;
+}
+
+export interface InventoryTurnoverProduct {
+  productId: number;
+  productName: string;
+  currentStock: number;
+  recentTransactions: number;
+  turnoverCategory: 'VERY_HIGH_TURNOVER' | 'HIGH_TURNOVER' | 'MODERATE_TURNOVER' | 'LOW_TURNOVER' | 'STAGNANT';
+  healthStatus: 'HEALTHY' | 'OVERSTOCKED' | 'UNDERSTOCKED' | 'CRITICAL';
+}
+
+export interface InventoryRestockingPlan {
+  generatedAt: string;
+  analysisPeriod: string;
+  urgentRestocks: InventoryDemandProduct[];
+  urgentCount: number;
+  seasonalPatterns: InventorySeasonalPattern[];
+  patternCount: number;
+  stockAnalysis: InventoryTurnoverProduct[];
+}
+
+function dateRangeQuery(params: { startDate?: string; endDate?: string }): string {
+  const q = new URLSearchParams();
+  if (params.startDate) q.set('startDate', params.startDate);
+  if (params.endDate) q.set('endDate', params.endDate);
+  const qs = q.toString();
+  return qs ? `?${qs}` : '';
+}
+
+export async function fetchInventoryHighDemandLowStock(
+  params: { startDate: string; endDate: string }
+): Promise<InventoryDemandProduct[]> {
+  return requestData<InventoryDemandProduct[]>(
+    `/api/admin/inventory-analytics/high-demand-low-inventory${dateRangeQuery(params)}`,
+    {},
+    'Failed to load high-demand low-inventory products'
+  );
+}
+
+export async function fetchInventorySeasonalPatterns(
+  params: { startDate: string; endDate: string }
+): Promise<InventorySeasonalPattern[]> {
+  return requestData<InventorySeasonalPattern[]>(
+    `/api/admin/inventory-analytics/seasonal-patterns${dateRangeQuery(params)}`,
+    {},
+    'Failed to load seasonal demand patterns'
+  );
+}
+
+export async function fetchInventoryStockTurnover(
+  params: { startDate: string; endDate: string }
+): Promise<InventoryTurnoverProduct[]> {
+  return requestData<InventoryTurnoverProduct[]>(
+    `/api/admin/inventory-analytics/stock-turnover${dateRangeQuery(params)}`,
+    {},
+    'Failed to load stock turnover analysis'
+  );
+}
+
+export async function fetchInventoryRestockingPlan(
+  daysPeriod: number
+): Promise<InventoryRestockingPlan> {
+  return requestData<InventoryRestockingPlan>(
+    `/api/admin/inventory-analytics/restocking-plan?daysPeriod=${daysPeriod}`,
+    {},
+    'Failed to load predictive restocking plan'
+  );
+}
+
 // ── Orders ───────────────────────────────────────────────────────────────────
 
 export interface AdminOrder {
