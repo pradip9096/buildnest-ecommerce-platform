@@ -236,15 +236,19 @@ public class ProductServiceImpl implements ProductService {
                         PRODUCT_NOT_FOUND_MSG + productId));
         product.setImageUrl(imageUrl);
         product.setUpdatedAt(LocalDateTime.now());
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+        detachCollections(saved);
+        return saved;
     }
 
     @Override
     public List<Product> getProductsByCategory(Long categoryId) {
         log.info("Fetching products for category: {}", categoryId);
-        return productRepository
+        List<Product> products = productRepository
                 .findByCategory(categoryId, Pageable.unpaged())
                 .getContent();
+        products.forEach(ProductServiceImpl::detachCollections);
+        return products;
     }
 
     /**
@@ -260,7 +264,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Product> searchProducts(String keyword) {
         log.info("Searching products with keyword: {}", keyword);
-        return productRepository.findByNameContainingIgnoreCase(keyword);
+        List<Product> products = productRepository
+                .findByNameContainingIgnoreCase(keyword);
+        products.forEach(ProductServiceImpl::detachCollections);
+        return products;
     }
 
     @Override
