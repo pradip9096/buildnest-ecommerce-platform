@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 3.6 |
-| **Date** | 2026-07-19 10:40 IST |
+| **Version** | 3.7 |
+| **Date** | 2026-07-21 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
@@ -35,6 +35,7 @@
 | 3.4 | 2026-07-17 20:45 IST | Software Architect | Full re-derivation of §4.7.3's API Endpoint Catalogue (#471), same staleness class already fixed in SRS Appendix A (#456): 7 stale sections (wrong path prefixes — `/api/auth/refresh-token` instead of real `/api/auth/refresh`, `/api/auth/forgot-password`/`reset-password` instead of real `/api/password/forgot`/`reset`; only legacy `/api/checkout/*`, missing the current `/api/v1/checkout/*` multi-step flow entirely) expanded to 36 groups, each citing its real controller class. Unlike Appendix A, this table also carries a Rate Limit column per row — verified directly against `RateLimitHeaderInterceptor`/`AdminRateLimitFilter`/`RateLimitUtil` source and `application.properties`, surfacing a previously-undocumented gap: `/api/v1/admin/**` (base path for most admin resource controllers — products, categories, tags, coupons, shipping-methods, search, orders, inventory, sales analytics) matches neither the interceptor's nor the filter's literal `/api/admin/` prefix check, so those endpoints receive only the 100/min default header and no dedicated admin-tier blocking, unlike the literal `/api/admin/**` groups (users, analytics, audit, webhooks, monitoring, thresholds, inventory-threshold/analytics/reports) which get 30/min headers + a real 50/min block | Pending |
 | 3.5 | 2026-07-17 21:15 IST | Software Architect | Found during a fresh RTM/SRS/SDD/Test-Plan verification sweep: `Related SRS` had drifted one version behind again (v4.4, SRS is now v4.5 following #474) — the same recurring cross-reference-currency gap already fixed twice before at 3.3/3.4. Updated to current | Pending |
 | 3.6 | 2026-07-19 10:40 IST | Software Architect | §4.7.3's checkout endpoint catalogue row for `POST /api/v1/checkout/coupon` cited the wrong SRS requirement (`FR-CHK-02`, "calculate checkout total") — corrected to the newly-added `FR-CHK-09` (apply coupon during checkout, #436), which had never existed as a row until this issue added it to both SRS and RTM. Updated `Related SRS` from v4.5 to v4.9 (only the one edge this change directly touches — a full cross-reference-mesh sweep is the periodic 15-issue sync's job, not a per-issue one) | Pending |
+| 3.7 | 2026-07-21 IST | Software Architect | Added a Dead-Code Audit Decision Record to §4.7.3 (#448) for four zero-frontend-caller endpoint groups (`ProductControllerV1`, `ProductControllerV2`, legacy `CheckoutController`, `/auth/validate-token`) — audited each against `frontend/src/api/{products,checkout}.ts` and `ApiSunsetInterceptor` directly; none removed on this pass (product-scope calls about unbuilt external/mobile consumers, not code-cleanup calls). Surfaced and filed as follow-ups: #535 (V2/`HomeController` "Current"/"Legacy" label contradiction — V2 is labeled current but carries zero traffic) and #536 (revisit V1 removal once its 2026-12-31 sunset passes) | Pending |
 
 ### Document Approval
 
@@ -853,6 +854,23 @@ the flow the frontend's `CheckoutPage` actually consumes.
 | POST | `/api/v1/checkout/shipping` | USER | 100 / min | FR-CHK-02 |
 | POST | `/api/v1/checkout/payment` | USER | 100 / min | FR-CHK-04 |
 | POST | `/api/v1/checkout/confirm` | USER | 100 / min | FR-CHK-05, FR-CHK-06 |
+
+##### Dead-Code Audit Decision Record (#448, 2026-07-21)
+
+Four endpoint groups with zero frontend callers were audited for disposition (candidate for
+removal vs. serving a not-yet-built external/mobile consumer). Verified directly against
+`frontend/src/api/{products,checkout}.ts`, `ApiSunsetInterceptor`, and the endpoint tables above:
+
+| Endpoint group | Frontend caller? | Disposition | Rationale |
+| :--- | :--- | :--- | :--- |
+| **Product V1 Deprecated** (`ProductControllerV1`, `/api/v1/products`) | None | **Keep until sunset** | Already a deliberate, documented deprecation-lifecycle demonstration (`@Deprecated(since="2.0", forRemoval=true)`, sunset 2026-12-31, `ApiSunsetInterceptor` headers, §6.1) — not accidental dead code. Remove only once the sunset date passes |
+| **Product V2 Current** (`ProductControllerV2`, `/api/v2/products`) | None | **Keep, but see labeling note below** | Zero real traffic despite being labeled "Current" — real traffic goes through `HomeController` (`/api/public`), labeled "Legacy" in this same document. No proof an external/mobile consumer targets `/api/v2/products` specifically, so not removed on this pass, but the "Current"/"Legacy" labels contradict actual usage and are misleading (see follow-up) |
+| **Checkout — Legacy Single-Step** (`CheckoutController`, `/api/checkout`) | None (frontend uses `/api/v1/checkout` exclusively, confirmed via `checkout.ts`) | **Keep** | Functionally superseded by `MultiStepCheckoutController` (same FR-CHK-01–04 coverage), but no proof no external/mobile consumer targets a direct single-step payment flow. Removing a payment-adjacent endpoint on absence-of-evidence alone is a product-scope call, not a code-cleanup call — left to a future issue if/when that's confirmed |
+| **Auth token validation** (`AuthController.validateToken`, `/api/auth/validate-token`) | None found (frontend, tests, docs) | **Keep** | Standard, stateless, public token-validation surface (FR-AUTH-02) — plausible for an external client (mobile app, third-party integration) to call independently of the SPA's own session handling. Low cost to keep, high cost (breaking, hard to undo) to remove without evidence either way |
+
+**No code removed on this pass** — this issue's scope is the audit and decision record, not code
+changes. See #535 (labeling fix) and #536 (V1 sunset-removal reminder) for the two follow-ups this
+audit surfaced.
 
 ##### Order (`UserOrderController`, base `/api/user/orders`)
 
