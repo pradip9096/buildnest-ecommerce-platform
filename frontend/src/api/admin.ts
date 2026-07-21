@@ -14,6 +14,65 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
   return requestData<DashboardStats>('/api/admin/reports/dashboard', {}, 'Failed to load dashboard stats');
 }
 
+// ── Sales analytics ──────────────────────────────────────────────────────────
+
+export interface SalesTopProduct {
+  productId: number;
+  productName: string;
+  unitsSold: number;
+  revenue: number;
+}
+
+export interface SalesRevenueTrendPoint {
+  date: string;
+  revenue: number;
+  orderCount: number;
+}
+
+export interface SalesDashboard {
+  dailyRevenue: number;
+  weeklyRevenue: number;
+  monthlyRevenue: number;
+  yearlyRevenue: number;
+  dailyOrders: number;
+  weeklyOrders: number;
+  monthlyOrders: number;
+  totalOrders: number;
+  averageOrderValue: number;
+  totalCustomers: number;
+  newCustomersThisMonth: number;
+  customerRetentionRate: number;
+  topSellingProducts: SalesTopProduct[];
+  revenueByCategory: Record<string, number>;
+  cartAbandonmentRate: number;
+  conversionRate: number;
+  revenueTrend: SalesRevenueTrendPoint[];
+  startDate: string;
+  endDate: string;
+}
+
+export async function fetchSalesDashboard(
+  params: { startDate?: string; endDate?: string } = {}
+): Promise<SalesDashboard> {
+  const q = new URLSearchParams();
+  if (params.startDate) q.set('startDate', params.startDate);
+  if (params.endDate) q.set('endDate', params.endDate);
+  const qs = q.toString();
+  return requestData<SalesDashboard>(
+    `/api/v1/admin/analytics/sales/dashboard${qs ? `?${qs}` : ''}`,
+    {},
+    'Failed to load sales dashboard'
+  );
+}
+
+export async function fetchCustomerLifetimeValue(userId: number): Promise<number> {
+  return requestData<number>(
+    `/api/v1/admin/analytics/sales/customer-lifetime-value/${userId}`,
+    {},
+    'Failed to load customer lifetime value'
+  );
+}
+
 // ── Orders ───────────────────────────────────────────────────────────────────
 
 export interface AdminOrder {

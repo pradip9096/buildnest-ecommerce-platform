@@ -10,11 +10,13 @@ import { TagsTab } from '../components/admin/TagsTab';
 import { CouponsTab } from '../components/admin/CouponsTab';
 import { ShippingMethodsTab } from '../components/admin/ShippingMethodsTab';
 import { WebhookSubscriptionsTab } from '../components/admin/WebhookSubscriptionsTab';
+import { SalesAnalyticsTab } from '../components/admin/SalesAnalyticsTab';
 
-type Tab = 'overview' | 'orders' | 'inventory' | 'products' | 'categories' | 'tags' | 'coupons' | 'shipping' | 'webhooks' | 'users' | 'audit';
+type Tab = 'overview' | 'analytics' | 'orders' | 'inventory' | 'products' | 'categories' | 'tags' | 'coupons' | 'shipping' | 'webhooks' | 'users' | 'audit';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'overview',   label: 'Overview',   icon: '📊' },
+  { id: 'analytics',  label: 'Analytics',  icon: '📈' },
   { id: 'orders',     label: 'Orders',     icon: '🛒' },
   { id: 'inventory',  label: 'Inventory',  icon: '📦' },
   { id: 'products',   label: 'Products',   icon: '🏷️' },
@@ -62,6 +64,7 @@ export function AdminDashboardPage() {
 
           <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 min-h-[500px]">
             {activeTab === 'overview'  && <OverviewTab />}
+            {activeTab === 'analytics' && <SalesAnalyticsTab />}
             {activeTab === 'orders'    && <OrdersTab />}
             {activeTab === 'inventory' && <InventoryTab />}
             {activeTab === 'products' && <ProductsTab />}
