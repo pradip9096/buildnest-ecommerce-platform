@@ -163,6 +163,112 @@ export async function fetchInventoryRestockingPlan(
   );
 }
 
+// ── Inventory thresholds & breach reporting ────────────────────────────────────
+
+export interface InventoryBelowThreshold {
+  productId: number;
+  productName: string;
+  currentQuantity: number;
+  minimumThreshold: number;
+  shortfall: number;
+  status: string;
+  lastBreach: string | null;
+}
+
+export interface InventoryThresholdBreach {
+  id: number;
+  productId: number;
+  productName: string;
+  breachType: string;
+  currentQuantity: number;
+  thresholdLevel: number;
+  timestamp: string;
+  details: string;
+}
+
+export interface InventoryFrequentProblem {
+  productId: number;
+  productName: string;
+  breachCount: number;
+  latestBreach: string | null;
+  currentStock: number;
+}
+
+export interface InventoryProductReport {
+  productId: number;
+  productName: string;
+  currentStock: number;
+  minimumThreshold: number;
+  status: string;
+  reserved: number;
+  available: number;
+  lastRestocked: string | null;
+  lastThresholdBreach: string | null;
+  breachHistory: Array<{ breachType: string; quantity: number; timestamp: string }>;
+}
+
+export interface InventorySummary {
+  totalProducts: number;
+  inStock: number;
+  lowStock: number;
+  outOfStock: number;
+  totalQuantityInStock: number;
+  totalQuantityReserved: number;
+  totalAvailable: number;
+}
+
+export async function fetchInventoryBelowThreshold(): Promise<InventoryBelowThreshold[]> {
+  return requestData<InventoryBelowThreshold[]>(
+    '/api/admin/inventory-reports/below-threshold',
+    {},
+    'Failed to load below-threshold products'
+  );
+}
+
+export async function fetchInventoryThresholdBreaches(
+  params: { startDate: string; endDate: string }
+): Promise<InventoryThresholdBreach[]> {
+  return requestData<InventoryThresholdBreach[]>(
+    `/api/admin/inventory-reports/breaches${dateRangeQuery(params)}`,
+    {},
+    'Failed to load threshold breaches'
+  );
+}
+
+export async function fetchInventoryFrequentProblems(
+  params: { startDate: string; endDate: string }
+): Promise<InventoryFrequentProblem[]> {
+  return requestData<InventoryFrequentProblem[]>(
+    `/api/admin/inventory-reports/frequent-problems${dateRangeQuery(params)}`,
+    {},
+    'Failed to load frequently low-stock products'
+  );
+}
+
+export async function fetchInventoryProductReport(productId: number): Promise<InventoryProductReport> {
+  return requestData<InventoryProductReport>(
+    `/api/admin/inventory-reports/product/${productId}`,
+    {},
+    'Failed to load product inventory report'
+  );
+}
+
+export async function fetchInventoryReportSummary(): Promise<InventorySummary> {
+  return requestData<InventorySummary>(
+    '/api/admin/inventory-reports/summary',
+    {},
+    'Failed to load inventory summary'
+  );
+}
+
+export async function setProductThreshold(productId: number, minimumLevel: number): Promise<void> {
+  await request(
+    `/api/admin/inventory-threshold/product/${productId}?minimumLevel=${minimumLevel}`,
+    { method: 'POST' },
+    'Failed to set product threshold'
+  );
+}
+
 // ── Orders ───────────────────────────────────────────────────────────────────
 
 export interface AdminOrder {

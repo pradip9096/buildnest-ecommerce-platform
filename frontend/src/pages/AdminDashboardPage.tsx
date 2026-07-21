@@ -12,8 +12,9 @@ import { ShippingMethodsTab } from '../components/admin/ShippingMethodsTab';
 import { WebhookSubscriptionsTab } from '../components/admin/WebhookSubscriptionsTab';
 import { SalesAnalyticsTab } from '../components/admin/SalesAnalyticsTab';
 import { InventoryAnalyticsTab } from '../components/admin/InventoryAnalyticsTab';
+import { InventoryThresholdsTab } from '../components/admin/InventoryThresholdsTab';
 
-type Tab = 'overview' | 'analytics' | 'orders' | 'inventory' | 'inventory-analytics' | 'products' | 'categories' | 'tags' | 'coupons' | 'shipping' | 'webhooks' | 'users' | 'audit';
+type Tab = 'overview' | 'analytics' | 'orders' | 'inventory' | 'inventory-analytics' | 'inventory-thresholds' | 'products' | 'categories' | 'tags' | 'coupons' | 'shipping' | 'webhooks' | 'users' | 'audit';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'overview',   label: 'Overview',   icon: '📊' },
@@ -21,6 +22,7 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'orders',     label: 'Orders',     icon: '🛒' },
   { id: 'inventory',  label: 'Inventory',  icon: '📦' },
   { id: 'inventory-analytics', label: 'Inventory Analytics', icon: '📉' },
+  { id: 'inventory-thresholds', label: 'Inventory Thresholds', icon: '🚨' },
   { id: 'products',   label: 'Products',   icon: '🏷️' },
   { id: 'categories', label: 'Categories', icon: '🗂️' },
   { id: 'tags',       label: 'Tags',       icon: '🔖' },
@@ -70,6 +72,7 @@ export function AdminDashboardPage() {
             {activeTab === 'orders'    && <OrdersTab />}
             {activeTab === 'inventory' && <InventoryTab />}
             {activeTab === 'inventory-analytics' && <InventoryAnalyticsTab />}
+            {activeTab === 'inventory-thresholds' && <InventoryThresholdsTab />}
             {activeTab === 'products' && <ProductsTab />}
             {activeTab === 'categories' && <CategoriesTab />}
             {activeTab === 'tags'       && <TagsTab />}

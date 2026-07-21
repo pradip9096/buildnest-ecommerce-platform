@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.21 |
-| **Date** | 2026-07-21 14:00 IST |
+| **Version** | 1.22 |
+| **Date** | 2026-07-21 18:10 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
@@ -50,6 +50,7 @@
 | 1.19 | 2026-07-20 22:20 IST | QA Manager | FR-ADM-07 (admin manages webhook subscriptions) corrected from 🔵 Pending Ph-2 to ✅ Implemented: `WebhookAdminController`/`WebhookServiceImpl` were already fully implemented and tested, but had no frontend consumer (#446, direct 1:1 mirror of the Shipping-methods admin tab pattern, #445/PR #519). Added `WebhookSubscriptionsTab.tsx`/`WebhookSubscriptionFormModal.tsx` (create-only — no full-update endpoint exists on the backend, unlike Shipping/Categories) and extended the citation. Recomputed the Admin Operations (FR-ADM) Coverage Summary row (6→7 Implemented, 3→2 Pending), the Coverage Summary Totals row (118→119 Implemented, 49→48 Pending), and the §12 Phase 2 Admin full-suite Started/Not-Started counts (1→2 Started, 5→4 Not Started) and Phase 2 total (36→37 Started, 45→44 Not Started) | Pending |
 | 1.20 | 2026-07-21 12:00 IST | QA Manager | FR-ADM-01 (sales analytics dashboard for admins) corrected from 🔵 Pending Ph-2 to ✅ Implemented: `SalesAnalyticsController`/`SalesAnalyticsServiceImpl` were already fully implemented and tested, but had no frontend consumer (#431, direct 1:1 mirror of the Overview/Webhooks/Users admin-tab stat-card pattern — no chart library, custom CSS bars). Added `SalesAnalyticsTab.tsx` (revenue/conversion/cart-abandonment/AOV stat cards, revenue trend, top products, revenue-by-category, and a customer-lifetime-value lookup) with `SalesAnalyticsTab.test.tsx` coverage, and extended the citation. Recomputed the Admin Operations (FR-ADM) Coverage Summary row (7→8 Implemented, 2→1 Pending), the Coverage Summary Totals row (119→120 Implemented, 48→47 Pending), and the §12 Phase 2 Admin full-suite Started/Not-Started counts (2→3 Started, 4→3 Not Started) and Phase 2 total (37→38 Started, 44→43 Not Started) | Pending |
 | 1.21 | 2026-07-21 14:00 IST | QA Manager | FR-ADM-02 (inventory analytics and reports) corrected from 🔵 Pending Ph-2 to ✅ Implemented: `AdminInventoryAnalyticsController`/`InventoryAnalyticsService` were already fully implemented and tested, but had no frontend consumer (#432, direct 1:1 mirror of the FR-ADM-01/#431 `SalesAnalyticsTab.tsx` stat-card + list pattern — no chart library). Added `InventoryAnalyticsTab.tsx` (high-demand/low-stock list, seasonal demand patterns, stock turnover, and an on-demand predictive restocking plan) with `InventoryAnalyticsTab.test.tsx` coverage, and extended the citation. `FR-INV-07` (which additionally covers `InventoryReportService`/`AdminInventoryReportController`, out of #432's scope) stays 🔵 Pending Ph-2 — not marked Implemented by this change. Recomputed the Admin Operations (FR-ADM) Coverage Summary row (8→9 Implemented, 1→0 Pending), the Coverage Summary Totals row (120→121 Implemented, 47→46 Pending), and the §12 Phase 2 Admin full-suite Started/Not-Started counts (3→4 Started, 3→2 Not Started) and Phase 2 total (38→39 Started, 43→42 Not Started) | Pending |
+| 1.22 | 2026-07-21 18:10 IST | QA Manager | FR-INV-07 (admin inventory analytics and reports) corrected from 🔵 Pending Ph-2 to ✅ Implemented: `AdminInventoryReportController`/`InventoryReportService` (the report/breach half of FR-INV-07, left explicitly out of scope by #432/1.21) had no frontend consumer (#433, direct 1:1 mirror of the FR-ADM-02/#432 `InventoryAnalyticsTab.tsx` admin-dashboard-tab pattern). Added `InventoryThresholdsTab.tsx` (summary stats, below-threshold products with inline minimum-level editing via `AdminInventoryThresholdController.setProductThreshold`, threshold breach list, frequently low-stock products) with `InventoryThresholdsTab.test.tsx` coverage, and extended the FR-INV-07 citation. FR-ADM-06 (admin configures inventory alert thresholds) citation also extended to the same new component — status stays 🟡 Partial, since only product-level threshold configuration shipped; category-level threshold configuration and the category-inheritance toggle (`AdminInventoryThresholdController.setCategoryThreshold`/`useProductCategoryThreshold`) remain deferred, tracked as a follow-up issue. Note: the issue's own body cited `AdminThresholdController` as an alternate controller name for this feature — verified against source and found incorrect; that controller is unrelated (system-monitoring CPU/memory/error-rate thresholds), not inventory. Recomputed the Inventory (FR-INV) Coverage Summary row (5→6 Implemented, 2→1 Pending), the Coverage Summary Totals row (121→122 Implemented, 46→45 Pending), and the §12 Phase 2 "Auth / Safety / Checkout / Inventory Ph-2" Started/Not-Started counts (0→1 Started, 10→9 Not Started) and Phase 2 total Started/Not-Started (39→40 / 42→41) | Pending |
 
 ### Document Approval
 
@@ -106,7 +107,7 @@ The RTM serves to:
 | Shopping Cart (FR-CART) | 6 | 6 | 0 | 0 | 0 | 0 |
 | Checkout & Orders (FR-CHK) | 9 | 8 | 0 | 1 | 0 | 0 |
 | Payment (FR-PAY) | 5 | 0 | 3 | 2 | 0 | 0 |
-| Inventory (FR-INV) | 7 | 5 | 0 | 2 | 0 | 0 |
+| Inventory (FR-INV) | 7 | 6 | 0 | 1 | 0 | 0 |
 | Reviews & Wishlists (FR-REV, FR-WISH) | 5 | 5 | 0 | 0 | 0 | 0 |
 | Admin Operations (FR-ADM) | 10 | 9 | 1 | 0 | 0 | 0 |
 | Monitoring (FR-MON) | 8 | 2 | 1 | 5 | 0 | 0 |
@@ -125,7 +126,7 @@ The RTM serves to:
 | Safety (SAF) | 3 | 1 | 0 | 2 | 0 | 0 |
 | Design Constraints (DC) | 8 | 7 | 1 | 0 | 0 | 0 |
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
-| **Totals** | **183** | **121** | **16** | **46** | **0** | **0** |
+| **Totals** | **183** | **122** | **16** | **45** | **0** | **0** |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 
@@ -258,7 +259,7 @@ The RTM serves to:
 | FR-INV-04 | Admin updates stock quantities | High | Ph-1 | §4.7.3 | `AdminInventoryController.updateStock()`, `InventoryServiceImpl.updateStock()` | `AdminInventoryControllerTest`, `InventoryServiceImplTest` | Test | ✅ Implemented |
 | FR-INV-05 | Inventory status tracking (`IN_STOCK`, `LOW_STOCK`, `OUT_OF_STOCK`, `DISCONTINUED`) | Medium | Ph-1 | §4.9.3 | `Inventory` entity — `InventoryStatus` enum, `InventoryServiceImpl.updateStatus()` | `InventoryTest`, `InventoryServiceImplTest`, `InventoryManagementTest` | Test | ✅ Implemented |
 | FR-INV-06 | Emit `InventoryThresholdBreachEvent` on low stock | Medium | Ph-2 | §4.6.2 | `InventoryServiceImpl`, `DomainEventPublisher.publishEvent(InventoryThresholdBreachEvent)` | `InventoryMonitoringServiceTest`, `InventoryThresholdManagementServiceTest` | Test | 🔵 Pending Ph-2 |
-| FR-INV-07 | Admin inventory analytics and reports | Medium | Ph-2 | §4.7.3 | `AdminInventoryAnalyticsController`, `InventoryAnalyticsService`, `InventoryReportService` | `AdminInventoryAnalyticsControllerTest`, `InventoryAnalyticsServiceTest`, `InventoryReportServiceTest` | Test | 🔵 Pending Ph-2 |
+| FR-INV-07 | Admin inventory analytics and reports | Medium | Ph-2 | §4.7.3 | `AdminInventoryAnalyticsController`, `InventoryAnalyticsService`, `AdminInventoryReportController`, `InventoryReportService`, `frontend/src/components/admin/InventoryThresholdsTab.tsx` | `AdminInventoryAnalyticsControllerTest`, `InventoryAnalyticsServiceTest`, `InventoryReportServiceTest`, `InventoryThresholdsTab.test.tsx` | Test | ✅ Implemented (#433) |
 
 ### 6.7 Reviews and Wishlists (FG-07)
 
@@ -279,7 +280,7 @@ The RTM serves to:
 | FR-ADM-03 | Admin manages user accounts (view, update, deactivate) | Medium | Ph-2 | §4.7.3 | `AdminUserController`, `AdminServiceImpl`, `frontend/src/components/admin/UsersTab.tsx`, `UserDetailModal.tsx` | `AdminUserControllerTest`, `UserDetailModal.test.tsx`, `UsersTab.test.tsx` | Test | ✅ Implemented (#439) |
 | FR-ADM-04 | Tamper-evident audit log of all admin actions | High | Ph-1 | §4.3.5, §4.6.1 | `AuditAspect` (`@Around @Auditable`), `AuditLogService`, `AuditLogController` | `AuditAspectTest`, `AuditLogServiceTest`, `AuditLogControllerTest` | Test | ✅ Implemented |
 | FR-ADM-05 | Admin reporting endpoints | Medium | Ph-2 | §4.7.3 | `AdminReportController` | `AdminReportControllerTest` | Test | 🔵 Pending Ph-2 |
-| FR-ADM-06 | Admin configures inventory alert thresholds | Medium | Ph-2 | §4.7.3 | `AdminInventoryThresholdController`, `InventoryThresholdManagementService` | `AdminInventoryThresholdControllerTest`, `InventoryThresholdManagementServiceTest` | Test | 🟡 Partial (controller + service exist; feature toggle deferred) |
+| FR-ADM-06 | Admin configures inventory alert thresholds | Medium | Ph-2 | §4.7.3 | `AdminInventoryThresholdController`, `InventoryThresholdManagementService`, `frontend/src/components/admin/InventoryThresholdsTab.tsx` (product-level threshold set) | `AdminInventoryThresholdControllerTest`, `InventoryThresholdManagementServiceTest`, `InventoryThresholdsTab.test.tsx` | Test | 🟡 Partial (#433 added product-level threshold UI; category-level threshold + inheritance toggle UI still deferred, tracked as a follow-up) |
 | FR-ADM-07 | Admin manages webhook subscriptions | Low | Ph-2 | §4.7.3 | `WebhookAdminController`, `WebhookServiceImpl`; frontend consumption via `WebhookSubscriptionsTab.tsx`, `WebhookSubscriptionFormModal.tsx` | `WebhookAdminControllerTest`, `WebhookServiceImplTest`, `WebhookSubscriptionsTab.test.tsx` | Test | ✅ Implemented (#446 frontend UI; backend was already complete) |
 | FR-ADM-08 | All `/api/admin/**` requires `ADMIN` role | High | Ph-1 | §5.1.3 | `SecurityConfig` — `.requestMatchers("/api/admin/**").hasRole("ADMIN")` | `AuthenticationAuthorizationSecurityTest`, `RBACTest` | Test | ✅ Implemented |
 | FR-ADM-09 | Admin CRUD for product categories with hierarchical parent/child support; deletion blocked while products or subcategories still reference the category | Medium | Ph-1 | §4.7.3 | `Category` (`parentCategory`/`subcategories`), `CategoryServiceImpl`, `AdminCategoryController`; frontend consumption via `CategoriesTab`, `CategoryFormModal` | `CategoryServiceImplTest`, `CategoryTest`, `AdminCategoryControllerIntegrationTest`, `CategoriesTab.test.tsx` | Test | ✅ Implemented (#68 backend, #428 frontend UI) |
@@ -665,10 +666,10 @@ The RTM serves to:
 | Availability (AVL-01 to AVL-03) | 3 | 0 | 3 |
 | Admin full suite (FR-ADM-01 to FR-ADM-07) | 6 | 4 (FR-ADM-01 ✅ #431, FR-ADM-02 ✅ #432, FR-ADM-06 partial, FR-ADM-07 ✅) | 2 |
 | Maintainability (MNT-02, TIR-05) | 2 | 2 (MNT-02 now ✅ at 85% JaCoCo gate, corrected 2026-07-17 from a stale 40% record; TIR-05 at 77% PIT, ratcheting to 79% end-M4) | 0 |
-| Auth / Safety / Checkout / Inventory Ph-2 | 10 | 0 | 10 |
-| **Phase 2 total** | **81** | **39*** | **42** |
+| Auth / Safety / Checkout / Inventory Ph-2 | 10 | 1 (FR-INV-07 ✅ #433) | 9 |
+| **Phase 2 total** | **81** | **40*** | **41** |
 
-*\* The MNT-02/TIR-05 row was corrected 2026-07-17 (#452); the Frontend row was corrected 2026-07-17 (#453, full per-requirement audit — see §6.10). Recomputing this table from its own corrected rows also fixed a pre-existing, unrelated arithmetic error: the row totals had always summed to 81, not the 80 this table previously stated (31+5+6+5+13+3+6+2+10 = 81) — a separate, mechanical off-by-one that predates and is independent of the Frontend staleness this issue targeted. The Admin row was updated 2026-07-21 (#431, FR-ADM-01 sales analytics dashboard UI implemented; #432, FR-ADM-02 inventory analytics dashboard UI implemented).*
+*\* The MNT-02/TIR-05 row was corrected 2026-07-17 (#452); the Frontend row was corrected 2026-07-17 (#453, full per-requirement audit — see §6.10). Recomputing this table from its own corrected rows also fixed a pre-existing, unrelated arithmetic error: the row totals had always summed to 81, not the 80 this table previously stated (31+5+6+5+13+3+6+2+10 = 81) — a separate, mechanical off-by-one that predates and is independent of the Frontend staleness this issue targeted. The Admin row was updated 2026-07-21 (#431, FR-ADM-01 sales analytics dashboard UI implemented; #432, FR-ADM-02 inventory analytics dashboard UI implemented). The Auth/Safety/Checkout/Inventory row was updated 2026-07-21 (#433, FR-INV-07 inventory threshold & breach reporting UI implemented).*
 
 ---
 
