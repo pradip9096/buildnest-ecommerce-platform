@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.19 |
-| **Date** | 2026-07-20 06:00 IST |
+| **Version** | 1.20 |
+| **Date** | 2026-07-21 12:00 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
@@ -48,6 +48,7 @@
 | 1.17 | 2026-07-19 22:30 IST | QA Manager | FR-FE-20 (wishlist page) was already ✅-equivalent (🟡 Partial, tab-not-route) but only cited `WishlistTab.tsx`; the issue's own three named endpoints (`contains/{productId}`, `count`, `clear-all`) were unused by the frontend (#442). Extended the citation with `WishlistButton.tsx` (add/remove/contains toggle) and `Navbar.tsx` (count badge). Live browser verification also surfaced and fixed a 6th occurrence of the `raw-entity-with-lazy-collection-...` bug family: `WishlistServiceImpl.getWishlistProducts` returned raw `Product` entities with uninitialized lazy fields, throwing on every real `GET /api/user/wishlist` call — fixed via `Hibernate.initialize()`, new `WishlistServiceImplLazyLoadingTest` regression test added. Status stays 🟡 Partial (the tab-vs-route reason is unchanged) — citation/evidence gap closure, no count changes | Pending |
 | 1.18 | 2026-07-20 06:00 IST | QA Manager | FR-INV-01 (#443) — `InventoryStatusController`'s `/status`/`/details`/`/available` endpoints were unused by the frontend; also found not actually reachable by unauthenticated visitors despite the controller's own "Public controller" javadoc (`SecurityConfig` never listed `/api/inventory/**` in `permitAll()`). Widened `SecurityConfig`/`TestSecurityConfig` to `permitAll()` the 3 GET endpoints, wired `/status` into `ProductDetailPage.tsx` (via new `useInventoryStatus.ts`/`api/inventory.ts`); listing-page (`ProductCard`) wiring deliberately deferred — no bulk endpoint exists, would be N+1 per card. Extended FR-INV-01's citation accordingly. Status stays ✅ Implemented (backend requirement was already satisfied; this closes the citation/reachability gap) — no count changes | Pending |
 | 1.19 | 2026-07-20 22:20 IST | QA Manager | FR-ADM-07 (admin manages webhook subscriptions) corrected from 🔵 Pending Ph-2 to ✅ Implemented: `WebhookAdminController`/`WebhookServiceImpl` were already fully implemented and tested, but had no frontend consumer (#446, direct 1:1 mirror of the Shipping-methods admin tab pattern, #445/PR #519). Added `WebhookSubscriptionsTab.tsx`/`WebhookSubscriptionFormModal.tsx` (create-only — no full-update endpoint exists on the backend, unlike Shipping/Categories) and extended the citation. Recomputed the Admin Operations (FR-ADM) Coverage Summary row (6→7 Implemented, 3→2 Pending), the Coverage Summary Totals row (118→119 Implemented, 49→48 Pending), and the §12 Phase 2 Admin full-suite Started/Not-Started counts (1→2 Started, 5→4 Not Started) and Phase 2 total (36→37 Started, 45→44 Not Started) | Pending |
+| 1.20 | 2026-07-21 12:00 IST | QA Manager | FR-ADM-01 (sales analytics dashboard for admins) corrected from 🔵 Pending Ph-2 to ✅ Implemented: `SalesAnalyticsController`/`SalesAnalyticsServiceImpl` were already fully implemented and tested, but had no frontend consumer (#431, direct 1:1 mirror of the Overview/Webhooks/Users admin-tab stat-card pattern — no chart library, custom CSS bars). Added `SalesAnalyticsTab.tsx` (revenue/conversion/cart-abandonment/AOV stat cards, revenue trend, top products, revenue-by-category, and a customer-lifetime-value lookup) with `SalesAnalyticsTab.test.tsx` coverage, and extended the citation. Recomputed the Admin Operations (FR-ADM) Coverage Summary row (7→8 Implemented, 2→1 Pending), the Coverage Summary Totals row (119→120 Implemented, 48→47 Pending), and the §12 Phase 2 Admin full-suite Started/Not-Started counts (2→3 Started, 4→3 Not Started) and Phase 2 total (37→38 Started, 44→43 Not Started) | Pending |
 
 ### Document Approval
 
@@ -106,7 +107,7 @@ The RTM serves to:
 | Payment (FR-PAY) | 5 | 0 | 3 | 2 | 0 | 0 |
 | Inventory (FR-INV) | 7 | 5 | 0 | 2 | 0 | 0 |
 | Reviews & Wishlists (FR-REV, FR-WISH) | 5 | 5 | 0 | 0 | 0 | 0 |
-| Admin Operations (FR-ADM) | 10 | 7 | 1 | 2 | 0 | 0 |
+| Admin Operations (FR-ADM) | 10 | 8 | 1 | 1 | 0 | 0 |
 | Monitoring (FR-MON) | 8 | 2 | 1 | 5 | 0 | 0 |
 | Frontend (FR-FE) | 31 | 21 | 7 | 3 | 0 | 0 |
 | User Interfaces (UI) | 4 | 3 | 0 | 1 | 0 | 0 |
@@ -123,7 +124,7 @@ The RTM serves to:
 | Safety (SAF) | 3 | 1 | 0 | 2 | 0 | 0 |
 | Design Constraints (DC) | 8 | 7 | 1 | 0 | 0 | 0 |
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
-| **Totals** | **183** | **119** | **16** | **48** | **0** | **0** |
+| **Totals** | **183** | **120** | **16** | **47** | **0** | **0** |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 
@@ -272,7 +273,7 @@ The RTM serves to:
 
 | Req ID | Description | Priority | Phase | SDD Reference | Implementation | Test Class(es) | Verification | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| FR-ADM-01 | Sales analytics dashboard for admins | Medium | Ph-2 | §4.7.3 | `SalesAnalyticsController`, `SalesAnalyticsServiceImpl` | `SalesAnalyticsControllerTest`, `SalesAnalyticsServiceImplTest`, `AnalyticsReportingTest` | Test | 🔵 Pending Ph-2 |
+| FR-ADM-01 | Sales analytics dashboard for admins | Medium | Ph-2 | §4.7.3 | `SalesAnalyticsController`, `SalesAnalyticsServiceImpl`, `frontend/src/components/admin/SalesAnalyticsTab.tsx` | `SalesAnalyticsControllerTest`, `SalesAnalyticsServiceImplTest`, `AnalyticsReportingTest`, `SalesAnalyticsTab.test.tsx` | Test | ✅ Implemented (#431) |
 | FR-ADM-02 | Inventory analytics and reports | Medium | Ph-2 | §4.7.3 | `AdminInventoryAnalyticsController`, `InventoryAnalyticsService` | `AdminInventoryAnalyticsControllerTest`, `InventoryAnalyticsServiceTest` | Test | 🔵 Pending Ph-2 |
 | FR-ADM-03 | Admin manages user accounts (view, update, deactivate) | Medium | Ph-2 | §4.7.3 | `AdminUserController`, `AdminServiceImpl`, `frontend/src/components/admin/UsersTab.tsx`, `UserDetailModal.tsx` | `AdminUserControllerTest`, `UserDetailModal.test.tsx`, `UsersTab.test.tsx` | Test | ✅ Implemented (#439) |
 | FR-ADM-04 | Tamper-evident audit log of all admin actions | High | Ph-1 | §4.3.5, §4.6.1 | `AuditAspect` (`@Around @Auditable`), `AuditLogService`, `AuditLogController` | `AuditAspectTest`, `AuditLogServiceTest`, `AuditLogControllerTest` | Test | ✅ Implemented |
@@ -661,12 +662,12 @@ The RTM serves to:
 | Payment full flow (FR-PAY-01 to FR-PAY-05) | 5 | 3 (partial) | 2 |
 | Performance / Scalability / Reliability (PR, REL, SCL) | 13 | 0 | 13 |
 | Availability (AVL-01 to AVL-03) | 3 | 0 | 3 |
-| Admin full suite (FR-ADM-01 to FR-ADM-07) | 6 | 2 (FR-ADM-06 partial, FR-ADM-07 ✅) | 4 |
+| Admin full suite (FR-ADM-01 to FR-ADM-07) | 6 | 3 (FR-ADM-01 ✅ #431, FR-ADM-06 partial, FR-ADM-07 ✅) | 3 |
 | Maintainability (MNT-02, TIR-05) | 2 | 2 (MNT-02 now ✅ at 85% JaCoCo gate, corrected 2026-07-17 from a stale 40% record; TIR-05 at 77% PIT, ratcheting to 79% end-M4) | 0 |
 | Auth / Safety / Checkout / Inventory Ph-2 | 10 | 0 | 10 |
-| **Phase 2 total** | **81** | **37*** | **44** |
+| **Phase 2 total** | **81** | **38*** | **43** |
 
-*\* The MNT-02/TIR-05 row was corrected 2026-07-17 (#452); the Frontend row was corrected 2026-07-17 (#453, full per-requirement audit — see §6.10). Recomputing this table from its own corrected rows also fixed a pre-existing, unrelated arithmetic error: the row totals had always summed to 81, not the 80 this table previously stated (31+5+6+5+13+3+6+2+10 = 81) — a separate, mechanical off-by-one that predates and is independent of the Frontend staleness this issue targeted.*
+*\* The MNT-02/TIR-05 row was corrected 2026-07-17 (#452); the Frontend row was corrected 2026-07-17 (#453, full per-requirement audit — see §6.10). Recomputing this table from its own corrected rows also fixed a pre-existing, unrelated arithmetic error: the row totals had always summed to 81, not the 80 this table previously stated (31+5+6+5+13+3+6+2+10 = 81) — a separate, mechanical off-by-one that predates and is independent of the Frontend staleness this issue targeted. The Admin row was updated 2026-07-21 (#431, FR-ADM-01 sales analytics dashboard UI implemented).*
 
 ---
 
