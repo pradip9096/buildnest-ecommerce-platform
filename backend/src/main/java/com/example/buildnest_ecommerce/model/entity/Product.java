@@ -86,7 +86,7 @@ public class Product implements AggregateRoot {
     private Set<ProductTag> tags = new HashSet<>();
 
     /**
-     * Derived from {@link Inventory#getQuantityInStock()} — {@code Inventory}
+     * Derived from {@code Inventory.quantityInStock} — {@code Inventory}
      * is the single source of truth for stock (#485); there is no backing
      * column here. Requires {@code inventory} to already be initialized
      * (fetch join or {@code Hibernate.initialize()}) before this is called
