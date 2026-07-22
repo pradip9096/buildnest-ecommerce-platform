@@ -7,8 +7,8 @@ source_conversations: ["#554"]
 last_updated: 2026-07-22
 confidence: high
 evidence_strength: direct-repo-verification
-root_cause: "SonarCloud's per-PR Quality Gate evaluates security rating only over the New Code diff; a pre-existing, already-shared log sink (NotificationServiceImpl.send()'s log.debug) had never failed the gate for any prior caller, but adding one new caller that routes admin/user-supplied strings through it re-triggers the taint analysis and fails the gate on code the PR didn't touch at the sink itself — the vulnerability was already latent, just never scored. Fixing it with a null-safety ternary then handed SpotBugs's dataflow analyzer proof that the same variable could be null, retroactively flagging a separate, pre-existing unguarded dereference of it later in the same method"
-impact: medium — blocked PR #568's merge on two required checks (Code Quality Analysis, twice, for two different root causes) until both were properly root-caused rather than patched around
+root_cause: "SonarCloud's per-PR Quality Gate evaluates security rating only over the New Code diff; a pre-existing, already-shared log sink (NotificationServiceImpl.send()'s log.debug) had never failed the gate for any prior caller, but adding one new caller that routes admin/user-supplied strings through it re-triggers the taint analysis and fails the gate on code the PR didn't touch at the sink itself — the vulnerability was already latent, just never scored. Fixing it with a null-safety ternary then handed SpotBugs's dataflow analyzer proof that the same variable could be null, retroactively flagging a separate, pre-existing unguarded dereference of it later in the same method. A regex-based sanitizer for the original finding also didn't clear it, since SonarJava's javasecurity taint engine only recognizes a curated allowlist of sanitizer patterns, not arbitrary code — removing the tainted value from the sink was the only fix that actually registered"
+impact: medium — blocked PR #568's merge on a required check (Code Quality Analysis) across three separate root causes in the same incident, each requiring its own investigation rather than a single obvious fix
 related_lessons:
   - pit-mutation-testing-patterns.md
   - sonarcloud-new-code-gate-reattributes-pre-existing-findings-on-whole-file-rewrap.md
@@ -121,3 +121,38 @@ free — it can hand a different, unrelated dataflow analyzer (or a mutation-tes
 the signal it needed to flag every other unguarded use of that variable as newly provable. When a
 null-check is added, grep the rest of the method for other uses of the same variable before
 assuming the check is a self-contained, no-side-effect fix.
+
+## Second follow-on: a custom regex "sanitizer" does not clear SonarJava's own taint rule
+
+The `sanitizeForLog()` helper above (`value.replaceAll("[\r\n]", "_")`) is a real, functioning
+fix for CRLF log-forging — but the *next* SonarCloud analysis still reported the exact same
+`javasecurity:S5145` issue, on the exact same line, as if nothing had changed. Re-querying the
+SonarCloud API directly (`api/issues/search?...&types=VULNERABILITY`) confirmed it was the same
+issue, not a new one elsewhere.
+
+**Why**: SonarJava's security-rule taint engine (the `javasecurity:*` rule family, distinct from
+the general-purpose `java:*` rules) only clears a taint flow when the sanitizing call matches a
+small, curated internal list of recognized sanitizer methods/patterns (specific JDK/library
+encoders, a handful of known-safe idioms) — not any code that is *functionally* a sanitizer.
+Calling `.replaceAll(...)` on the tainted value doesn't break the flow from the engine's
+perspective, because `String.replaceAll` isn't on that recognized list; the engine still treats
+the return value as tainted.
+
+**Fix**: don't try to guess a sanitizer shape the engine will accept — remove the tainted value
+from the log statement entirely:
+
+```java
+// Before (still flagged despite the regex "sanitizer")
+log.debug("Email sent to={} subject={}", sanitizeForLog(to), sanitizeForLog(subject));
+
+// After — no tainted data reaches the sink at all
+log.debug("Email sent successfully");
+```
+
+**Generalizes**: for any SonarQube/SonarCloud `javasecurity:*` (or equivalent taint-based)
+finding, verify a fix actually cleared the specific issue via the tool's own API/dashboard before
+assuming a "reasonable-looking" mitigation (regex strip, custom escaping, a bespoke validator)
+satisfies it — these rules check against a recognized-sanitizer allowlist, not general code
+correctness, and a fix that is genuinely secure in practice can still fail to register as such.
+When in doubt, the fastest reliable fix is removing the tainted value from the sink rather than
+trying to launder it through a transformation the analyzer might not recognize.
