@@ -4,6 +4,7 @@ import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.entity.ProductTag;
 import com.example.buildnest_ecommerce.model.entity.Category;
+import com.example.buildnest_ecommerce.model.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -288,5 +289,68 @@ class ProductRepositoryTest {
 
         // Assert
         assertEquals(2, results.size());
+    }
+
+    // --- seller ownership FK (FR-SEL-03/04, #555) ---
+    // Reactivates the dormant supplier_id/fk_product_supplier FK — this
+    // is framework/mapping-level risk (does the @JoinColumn actually
+    // resolve against the real, already-existing physical column and FK
+    // from db.changelog-master.sql?), so a mocked unit test proves
+    // nothing here; only a real H2-backed JPA context can.
+
+    private User persistSeller(String username) {
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(username + "@example.com");
+        user.setPassword("hashed");
+        entityManager.persist(user);
+        return user;
+    }
+
+    @Test
+    void testFindByIdAndSellerIdReturnsOwnedProduct() {
+        User seller = persistSeller("seller-owner");
+        testProduct.setSeller(seller);
+        entityManager.persist(testProduct);
+        entityManager.flush();
+        entityManager.clear();
+
+        Optional<Product> found = productRepository
+                .findByIdAndSeller_Id(testProduct.getId(), seller.getId());
+
+        assertTrue(found.isPresent());
+        assertEquals(seller.getId(), found.get().getSeller().getId());
+    }
+
+    @Test
+    void testFindByIdAndSellerIdEmptyForDifferentSeller() {
+        User owner = persistSeller("real-owner");
+        User other = persistSeller("other-user");
+        testProduct.setSeller(owner);
+        entityManager.persist(testProduct);
+        entityManager.flush();
+        entityManager.clear();
+
+        Optional<Product> found = productRepository
+                .findByIdAndSeller_Id(testProduct.getId(), other.getId());
+
+        assertTrue(found.isEmpty());
+    }
+
+    @Test
+    void testFindBySellerIdReturnsOnlyOwnProducts() {
+        User seller = persistSeller("catalogue-owner");
+        Product owned = persistProduct(
+                "Owned", testCategory, true, null, 5, 0);
+        owned.setSeller(seller);
+        entityManager.persist(owned);
+        entityManager.flush();
+        entityManager.clear();
+
+        Page<Product> page = productRepository.findBySeller_Id(
+                seller.getId(), PageRequest.of(0, 10));
+
+        assertEquals(1, page.getTotalElements());
+        assertEquals("Owned", page.getContent().get(0).getName());
     }
 }

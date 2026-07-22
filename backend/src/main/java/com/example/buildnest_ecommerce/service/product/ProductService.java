@@ -40,4 +40,17 @@ public interface ProductService {
     // Returns up to 8 products related to productId: same category first,
     // then shared tags (PROD-04, #84).
     List<Product> getRelatedProducts(Long productId);
+
+    // Seller-owned catalogue (FR-SEL-03/04, #555) — a verified seller's
+    // own product CRUD, scoped to their own listings only.
+    Product createProductForSeller(
+            CreateProductRequest request, Long sellerUserId);
+
+    Product updateProductForSeller(
+            Long sellerUserId, Long productId, CreateProductRequest request);
+
+    void deleteProductForSeller(Long sellerUserId, Long productId);
+
+    Page<Product> getProductsForSeller(
+            Long sellerUserId, Pageable pageable);
 }

@@ -13,6 +13,17 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Seller-owned product catalogue (FR-SEL-03, FR-SEL-04, #555) — reactivates the dormant
+  `supplier_id`/`fk_product_supplier` FK (`product` → `users`) already present in the original
+  bootstrap schema, mapped onto `Product.seller`, per SDD v4.0's documented finding and design
+  recommendation. No new Liquibase changeset — the column/FK already exist physically. A
+  verified seller (`Seller.verificationStatus == VERIFIED`) can now create, update, and delete
+  their own product listings, scoped so a seller can never touch another seller's products
+  (`POST`/`PUT`/`DELETE`/`GET` under `/api/user/seller/products`, defense-in-depth secured via
+  `@PreAuthorize("hasRole('SELLER')")` plus a service-layer `findByIdAndSeller_Id` ownership
+  check). An unverified seller creating a product is rejected with 403. Verified via a real
+  H2-backed `@DataJpaTest` that the FK mapping round-trips correctly (framework-mapping risk,
+  not just service-layer logic).
 - Admin seller verification/approval workflow (FR-SEL-02, #554) — mirrors
   `AdminOrderController.updateOrderStatus`'s admin-gated status-transition shape. Admins can
   list sellers by verification status (`GET /api/v1/admin/sellers?status=PENDING|VERIFIED|

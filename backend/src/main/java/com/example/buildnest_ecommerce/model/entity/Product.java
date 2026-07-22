@@ -24,8 +24,8 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(exclude = { "category", "inventory", "variants", "tags",
-        "createdAt", "updatedAt" })
-@ToString(exclude = { "category", "inventory", "variants", "tags" })
+        "seller", "createdAt", "updatedAt" })
+@ToString(exclude = { "category", "inventory", "variants", "tags", "seller" })
 public class Product implements AggregateRoot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,6 +49,18 @@ public class Product implements AggregateRoot {
     @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
+
+    /**
+     * Owning seller (FR-SEL-03) — reactivates the dormant {@code
+     * supplier_id}/{@code fk_product_supplier} FK to {@code users} already
+     * present in the original bootstrap schema (db.changelog-master.sql),
+     * per SDD v4.0 Revision History and §4.5.2. Nullable — pre-marketplace
+     * products (admin-created, no owning seller) are unaffected.
+     */
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @JoinColumn(name = "supplier_id")
+    private User seller;
 
     @JsonIgnoreProperties({ "product", "hibernateLazyInitializer", "handler" })
     @OneToOne(mappedBy = "product", cascade = CascadeType.ALL,

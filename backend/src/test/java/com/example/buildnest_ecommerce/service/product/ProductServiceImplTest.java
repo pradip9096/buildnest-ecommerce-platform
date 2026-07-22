@@ -6,8 +6,13 @@ import com.example.buildnest_ecommerce.model.entity.Category;
 import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.model.entity.Seller;
+import com.example.buildnest_ecommerce.model.entity.User;
+import com.example.buildnest_ecommerce.exception.AccessDeniedException;
+import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.CategoryRepository;
+import com.example.buildnest_ecommerce.repository.SellerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +44,9 @@ class ProductServiceImplTest {
 
     @Mock
     private CategoryRepository categoryRepository;
+
+    @Mock
+    private SellerRepository sellerRepository;
 
     @Mock
     private DomainEventPublisher domainEventPublisher;
@@ -654,5 +662,119 @@ class ProductServiceImplTest {
         // matches no real tag id must be passed instead
         assertTrue(result.isEmpty());
         assertEquals(List.of(-1L), tagIdsCaptor.getValue());
+    }
+
+    // --- Seller-owned catalogue (FR-SEL-03/04, #555) ---
+
+    private Seller verifiedSeller(Long userId) {
+        User user = new User();
+        user.setId(userId);
+        Seller seller = new Seller();
+        seller.setId(100L);
+        seller.setUser(user);
+        seller.setVerificationStatus(Seller.VerificationStatus.VERIFIED);
+        return seller;
+    }
+
+    @Test
+    void testCreateProductForSellerRejectsUnverifiedSeller() {
+        Seller pending = verifiedSeller(5L);
+        pending.setVerificationStatus(Seller.VerificationStatus.PENDING);
+        when(sellerRepository.findByUser_Id(5L))
+                .thenReturn(Optional.of(pending));
+
+        assertThrows(AccessDeniedException.class,
+                () -> productService
+                        .createProductForSeller(createRequest, 5L));
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+    @Test
+    void testCreateProductForSellerRejectsUnknownSeller() {
+        when(sellerRepository.findByUser_Id(5L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> productService
+                        .createProductForSeller(createRequest, 5L));
+    }
+
+    @Test
+    void testCreateProductForSellerSetsOwningSeller() {
+        Seller seller = verifiedSeller(5L);
+        when(sellerRepository.findByUser_Id(5L))
+                .thenReturn(Optional.of(seller));
+        when(categoryRepository.findById(1L))
+                .thenReturn(Optional.of(testCategory));
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        Product result = productService
+                .createProductForSeller(createRequest, 5L);
+
+        assertNotNull(result.getSeller());
+        assertEquals(5L, result.getSeller().getId());
+    }
+
+    @Test
+    void testUpdateProductForSellerRejectsNonOwner() {
+        when(productRepository.findByIdAndSeller_Id(1L, 5L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(AccessDeniedException.class,
+                () -> productService.updateProductForSeller(
+                        5L, 1L, createRequest));
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+    @Test
+    void testUpdateProductForSellerAllowsOwner() {
+        testProduct.setSeller(verifiedSeller(5L).getUser());
+        when(productRepository.findByIdAndSeller_Id(1L, 5L))
+                .thenReturn(Optional.of(testProduct));
+        when(categoryRepository.findById(1L))
+                .thenReturn(Optional.of(testCategory));
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        Product result = productService.updateProductForSeller(
+                5L, 1L, createRequest);
+
+        assertEquals(createRequest.getName(), result.getName());
+    }
+
+    @Test
+    void testDeleteProductForSellerRejectsNonOwner() {
+        when(productRepository.findByIdAndSeller_Id(1L, 5L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(AccessDeniedException.class,
+                () -> productService.deleteProductForSeller(5L, 1L));
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+    @Test
+    void testDeleteProductForSellerAllowsOwner() {
+        when(productRepository.findByIdAndSeller_Id(1L, 5L))
+                .thenReturn(Optional.of(testProduct));
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        productService.deleteProductForSeller(5L, 1L);
+
+        assertFalse(testProduct.getIsActive());
+    }
+
+    @Test
+    void testGetProductsForSellerScopedToOwner() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(productRepository.findBySeller_Id(5L, pageable))
+                .thenReturn(new PageImpl<>(List.of(testProduct)));
+
+        Page<Product> result =
+                productService.getProductsForSeller(5L, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        verify(productRepository).findBySeller_Id(5L, pageable);
     }
 }
