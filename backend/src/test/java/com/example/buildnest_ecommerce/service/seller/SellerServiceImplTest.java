@@ -217,8 +217,12 @@ class SellerServiceImplTest {
         when(sellerRepository.save(any(Seller.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
-        SellerResponseDTO result = sellerService
-                .updateVerificationStatus(10L, "VERIFIED", null);
+        // A non-null rejectionReason is passed even though this is an
+        // approval — proves the approved ? null : rejectionReason ternary
+        // actually suppresses it, rather than merely being untested because
+        // rejectionReason happened to be null anyway.
+        SellerResponseDTO result = sellerService.updateVerificationStatus(
+                10L, "VERIFIED", "ignored on approval");
 
         assertThat(result.verificationStatus())
                 .isEqualTo(Seller.VerificationStatus.VERIFIED);
@@ -267,6 +271,25 @@ class SellerServiceImplTest {
 
         assertThatThrownBy(() -> sellerService
                 .updateVerificationStatus(10L, "REJECTED", null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void updateVerificationStatus_pendingToPending_throwsIllegalArgument() {
+        // Distinct from the alreadyVerified case above: VERIFIED has no
+        // entry in VALID_TRANSITIONS at all (allowed == null), whereas
+        // PENDING does have an entry whose set simply excludes PENDING
+        // itself (allowed != null but !allowed.contains(PENDING)) — the
+        // two halves of the allowed == null || !allowed.contains(...)
+        // guard need separate coverage.
+        Seller seller = new Seller();
+        seller.setId(10L);
+        seller.setUser(user);
+        seller.setVerificationStatus(Seller.VerificationStatus.PENDING);
+        when(sellerRepository.findById(10L)).thenReturn(Optional.of(seller));
+
+        assertThatThrownBy(() -> sellerService
+                .updateVerificationStatus(10L, "PENDING", null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
