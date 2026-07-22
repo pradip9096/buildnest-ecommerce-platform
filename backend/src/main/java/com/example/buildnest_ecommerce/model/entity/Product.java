@@ -58,7 +58,7 @@ public class Product implements AggregateRoot {
      * products (admin-created, no owning seller) are unaffected.
      */
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
-    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supplier_id")
     private User seller;
 
