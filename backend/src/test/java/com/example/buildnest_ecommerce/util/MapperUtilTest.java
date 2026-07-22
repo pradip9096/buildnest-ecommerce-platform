@@ -31,7 +31,9 @@ class MapperUtilTest {
         product.setDiscountPrice(BigDecimal.ONE);
         product.setSku("SKU");
         product.setImageUrl("img");
-        product.setStockQuantity(10);
+        Inventory inventory = new Inventory();
+        inventory.setQuantityInStock(10);
+        product.setInventory(inventory);
         product.setIsActive(true);
         product.setCategory(category);
 

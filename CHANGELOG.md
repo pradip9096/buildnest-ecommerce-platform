@@ -12,6 +12,39 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Changed
+- Eliminate `Product.stockQuantity`/`Inventory` dual source of truth (#485, INV-01), follow-up from
+  #309: `Product.stockQuantity` is no longer a persisted column — it's now a derived getter reading
+  `Inventory.quantityInStock` (`Product.getInventory()`), so there is exactly one writable
+  representation of stock. Confirmed the drift the issue warned about was already live, not
+  hypothetical: `ProductServiceImpl.updateProduct()` wrote `product.stockQuantity` from the request
+  DTO but never touched `Inventory`, desyncing the two on every ordinary product edit immediately
+  after creation. `createProduct()` now seeds `Inventory` and links it in-memory onto the returned
+  entity (needed since `Product.inventory` is `mappedBy="product"`, never populated from the
+  `Inventory` side); `updateProduct()` no longer writes stock at all — `CreateProductRequest.stockQuantity`
+  is now create-only and explicitly ignored on update (stock changes go through
+  `AdminInventoryController`'s adjust-inventory endpoint). `PublicProductDTO`/`ProductDocument`
+  (search index)/`MapperUtil`/`ProductSearchServiceImpl` needed no changes — they already call
+  `product.getStockQuantity()`, now transparently backed by `Inventory`. Liquibase changeset
+  `20260721-023-drop-product-stock-quantity` drops the now-unused `products.stock_quantity` column
+  (guarded the same way as `20260704-012`/`20260718-021`, since `products` is Hibernate-created in
+  the test profile, not Liquibase-created). Frontend: `ProductFormModal.tsx`'s stock field is now
+  create-only (disabled + not submitted on edit, with a hint pointing at the Inventory tab), since
+  the backend silently ignoring it on update would otherwise be an invisible dead control.
+  `ProductServiceImpl.detachCollections()` extended to also initialize the lazy `inventory`
+  association (mirroring its existing tags/variants handling), needed both for the derived getter
+  to be safe post-transaction and because a raw `Product` entity is still returned directly from
+  `AdminProductController`'s create/update endpoints. New `ProductInventorySingleSourceOfTruthIT`
+  (`@SpringBootTest`, real H2 persistence) is the regression guard for the actual bug: create seeds
+  `Inventory` correctly, and an update carrying a different `stockQuantity` in the request DTO does
+  not change the persisted `Inventory` row. One implementation pitfall worth recording: an earlier
+  version of this fix called `inventoryRepository.save(inventory)` explicitly *and* linked it via
+  `saved.setInventory(inventory)` — since `Product.inventory` is `cascade = ALL`, Hibernate's own
+  cascade-persist at transaction flush re-inserted the identical row, causing a real (not
+  hypothetical) unique-constraint violation caught by the new IT test itself; fixed by relying on
+  cascade alone (dropped the explicit `inventoryRepository.save()` call and the now-unused
+  `InventoryRepository` dependency from `ProductServiceImpl`).
+
 ### Added
 - `ProductVariant` serialization regression test (#482): the issue's premise (`ProductVariant.product`
   lacking `@JsonIgnore`, same latent `LazyInitializationException` risk as #426's `ProductImage.product`

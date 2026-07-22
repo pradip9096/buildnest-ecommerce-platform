@@ -23,7 +23,8 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = { "category", "inventory", "variants", "tags", "createdAt", "updatedAt" })
+@EqualsAndHashCode(exclude = { "category", "inventory", "variants", "tags",
+        "createdAt", "updatedAt" })
 @ToString(exclude = { "category", "inventory", "variants", "tags" })
 public class Product implements AggregateRoot {
     @Id
@@ -42,9 +43,6 @@ public class Product implements AggregateRoot {
     @Column(name = "discount_price")
     private BigDecimal discountPrice;
 
-    @Column(name = "stock_quantity")
-    private Integer stockQuantity;
-
     @Column(name = "sku", unique = true)
     private String sku;
 
@@ -53,11 +51,13 @@ public class Product implements AggregateRoot {
     private Category category;
 
     @JsonIgnoreProperties({ "product", "hibernateLazyInitializer", "handler" })
-    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, fetch = jakarta.persistence.FetchType.LAZY)
+    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL,
+            fetch = jakarta.persistence.FetchType.LAZY)
     private Inventory inventory;
 
     @JsonIgnoreProperties({ "product", "hibernateLazyInitializer", "handler" })
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = jakarta.persistence.FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL,
+            fetch = jakarta.persistence.FetchType.LAZY, orphanRemoval = true)
     private List<ProductVariant> variants = new ArrayList<>();
 
     @Column(name = "image_url")
@@ -80,6 +80,19 @@ public class Product implements AggregateRoot {
 
     @JsonIgnoreProperties({ "products", "hibernateLazyInitializer", "handler" })
     @ManyToMany(fetch = jakarta.persistence.FetchType.LAZY)
-    @JoinTable(name = "product_tag_map", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    @JoinTable(name = "product_tag_map",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<ProductTag> tags = new HashSet<>();
+
+    /**
+     * Derived from {@code Inventory.quantityInStock} — {@code Inventory}
+     * is the single source of truth for stock (#485); there is no backing
+     * column here. Requires {@code inventory} to already be initialized
+     * (fetch join or {@code Hibernate.initialize()}) before this is called
+     * outside an active session.
+     */
+    public Integer getStockQuantity() {
+        return inventory != null ? inventory.getQuantityInStock() : null;
+    }
 }

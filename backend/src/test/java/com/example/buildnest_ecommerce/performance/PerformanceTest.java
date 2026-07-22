@@ -56,7 +56,6 @@ class PerformanceTest {
         testProduct.setName("Test Product");
         testProduct.setDescription("Performance test product");
         testProduct.setPrice(new BigDecimal("100.00"));
-        testProduct.setStockQuantity(10000);
         testProduct.setIsActive(true);
         testProduct = productRepository.save(testProduct);
     }
