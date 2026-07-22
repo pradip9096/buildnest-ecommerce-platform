@@ -294,6 +294,13 @@ class SellerServiceImplTest {
     }
 
     @Test
+    void updateVerificationStatus_nullStatus_throwsIllegalArgument() {
+        assertThatThrownBy(() -> sellerService
+                .updateVerificationStatus(10L, null, null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void updateVerificationStatus_invalidStatusValue_throwsIllegalArgument() {
         Seller seller = new Seller();
         seller.setId(10L);

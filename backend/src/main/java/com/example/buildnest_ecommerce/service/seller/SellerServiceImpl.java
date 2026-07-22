@@ -99,9 +99,12 @@ public class SellerServiceImpl implements SellerService {
     @Transactional
     public SellerResponseDTO updateVerificationStatus(
             Long sellerId, String newStatus, String rejectionReason) {
+        if (newStatus == null) {
+            throw new IllegalArgumentException(
+                    "Invalid verification status: null");
+        }
         log.info("Admin: updating seller id={} verification to={}",
-                sellerId, newStatus == null ? null
-                        : newStatus.replaceAll("[\r\n]", "_"));
+                sellerId, newStatus.replaceAll("[\r\n]", "_"));
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException(
