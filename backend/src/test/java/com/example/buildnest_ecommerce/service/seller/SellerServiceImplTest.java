@@ -72,13 +72,54 @@ class SellerServiceImplTest {
 
         assertThat(result.id()).isEqualTo(10L);
         assertThat(result.businessName()).isEqualTo("Acme Décor");
+        assertThat(result.businessRegistrationNumber())
+                .isEqualTo("REG-123");
         assertThat(result.verificationStatus())
                 .isEqualTo(Seller.VerificationStatus.PENDING);
+        assertThat(result.createdAt()).isNotNull();
+
+        ArgumentCaptor<Seller> sellerCaptor =
+                ArgumentCaptor.forClass(Seller.class);
+        verify(sellerRepository).save(sellerCaptor.capture());
+        assertThat(sellerCaptor.getValue().getBusinessRegistrationNumber())
+                .isEqualTo("REG-123");
+        assertThat(sellerCaptor.getValue().getVerificationStatus())
+                .isEqualTo(Seller.VerificationStatus.PENDING);
+        assertThat(sellerCaptor.getValue().getCreatedAt()).isNotNull();
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
         Set<Role> savedRoles = userCaptor.getValue().getRoles();
         assertThat(savedRoles).contains(sellerRole);
+        assertThat(userCaptor.getValue().getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    void registerSeller_roleDoesNotExistYet_createsAndGrantsNewRole() {
+        RegisterSellerRequest request =
+                new RegisterSellerRequest("Acme Décor", null);
+        when(sellerRepository.existsByUser_Id(3L)).thenReturn(false);
+        when(userRepository.findById(3L)).thenReturn(Optional.of(user));
+        when(sellerRepository.save(any(Seller.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(roleRepository.findByName("ROLE_SELLER"))
+                .thenReturn(Optional.empty());
+        when(roleRepository.save(any(Role.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        sellerService.registerSeller(3L, request);
+
+        ArgumentCaptor<Role> roleCaptor = ArgumentCaptor.forClass(Role.class);
+        verify(roleRepository).save(roleCaptor.capture());
+        assertThat(roleCaptor.getValue().getName()).isEqualTo("ROLE_SELLER");
+        assertThat(roleCaptor.getValue().getDescription())
+                .isEqualTo("Seller account — owns a product catalogue");
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getRoles())
+                .extracting(Role::getName)
+                .contains("ROLE_SELLER");
     }
 
     @Test
