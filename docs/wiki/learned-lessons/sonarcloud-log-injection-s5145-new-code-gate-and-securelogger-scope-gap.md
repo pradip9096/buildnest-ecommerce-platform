@@ -1,14 +1,14 @@
 ---
 title: "SonarCloud's Log-Injection Rule (S5145) Can Fail the New-Code Gate Through a Pre-Existing Sink, and This Repo's SecureLogger Doesn't Cover It"
 category: technical
-tags: [sonarcloud, security, log-injection, javasecurity-s5145, quality-gate, new-code]
-keywords: [S5145, log forging, CRLF injection, SecureLogger, new_security_rating, quality gate new code]
+tags: [sonarcloud, spotbugs, security, log-injection, javasecurity-s5145, np-null-on-some-path, quality-gate, new-code]
+keywords: [S5145, log forging, CRLF injection, SecureLogger, new_security_rating, quality gate new code, NP_NULL_ON_SOME_PATH, defensive null check side effect]
 source_conversations: ["#554"]
 last_updated: 2026-07-22
 confidence: high
 evidence_strength: direct-repo-verification
-root_cause: "SonarCloud's per-PR Quality Gate evaluates security rating only over the New Code diff; a pre-existing, already-shared log sink (NotificationServiceImpl.send()'s log.debug) had never failed the gate for any prior caller, but adding one new caller that routes admin/user-supplied strings through it re-triggers the taint analysis and fails the gate on code the PR didn't touch at the sink itself — the vulnerability was already latent, just never scored"
-impact: medium — blocked PR #568's merge on a required check (Code Quality Analysis) until root-caused and fixed at the shared sink, not just the new call site
+root_cause: "SonarCloud's per-PR Quality Gate evaluates security rating only over the New Code diff; a pre-existing, already-shared log sink (NotificationServiceImpl.send()'s log.debug) had never failed the gate for any prior caller, but adding one new caller that routes admin/user-supplied strings through it re-triggers the taint analysis and fails the gate on code the PR didn't touch at the sink itself — the vulnerability was already latent, just never scored. Fixing it with a null-safety ternary then handed SpotBugs's dataflow analyzer proof that the same variable could be null, retroactively flagging a separate, pre-existing unguarded dereference of it later in the same method"
+impact: medium — blocked PR #568's merge on two required checks (Code Quality Analysis, twice, for two different root causes) until both were properly root-caused rather than patched around
 related_lessons:
   - pit-mutation-testing-patterns.md
   - sonarcloud-new-code-gate-reattributes-pre-existing-findings-on-whole-file-rewrap.md
@@ -77,3 +77,47 @@ Distinct from [SonarCloud's "New Code" Quality Gate Is Git-Blame-Based](sonarclo
 - A named "secure logging" utility's scope should be verified against the *specific* rule that
   fired, not assumed from its name — PII masking and log-injection/CRLF-forging are two distinct
   concerns, and a utility built for one does not imply coverage of the other.
+
+## Follow-on: the S5145 fix itself introduced a real SpotBugs NPE finding
+
+The first fix for `SellerServiceImpl.updateVerificationStatus`'s own log-injection sink used a
+ternary purely to keep the log call null-safe:
+
+```java
+log.info("Admin: updating seller id={} verification to={}",
+        sellerId, newStatus == null ? null
+                : newStatus.replaceAll("[\r\n]", "_"));
+```
+
+CI's next run then failed a *different*, genuinely new check: SpotBugs (`NP_NULL_ON_SOME_PATH`,
+High) — "Possible null pointer dereference of `newStatus`... Known null at line 103" — pointing
+at the very next line, `newStatus.toUpperCase()`, which had never been guarded. This dereference
+predates this PR (it was `#553`/`#554`-era code, unguarded from the start), but SpotBugs's
+dataflow analysis had never flagged it before, because *nothing in the method previously proved
+to the analyzer that `newStatus` could be null on some path*. Writing `newStatus == null ? ... :
+...` for an unrelated reason (making one log line null-safe) is exactly that proof — it
+retroactively turns a latent, previously-invisible NPE risk into a flagged one, on a completely
+different line than the one just edited.
+
+**Fix**: don't null-safe a symptom (the log call) while leaving the actual unguarded dereference
+untouched — fail fast at the top of the method instead:
+
+```java
+if (newStatus == null) {
+    throw new IllegalArgumentException("Invalid verification status: null");
+}
+log.info("Admin: updating seller id={} verification to={}",
+        sellerId, newStatus.replaceAll("[\r\n]", "_"));
+```
+
+This also gave PIT a real, testable branch (`updateVerificationStatus_nullStatus_throwsIllegalArgument`),
+recovering the mutation-score dip the log-injection ternary itself introduced (PIT mutates the
+ternary's own `==` check, and a fixture that never calls the method with a null `newStatus` can't
+kill that mutant).
+
+**Generalizes**: adding a defensive null-check to satisfy one static-analysis tool (or just to be
+"safe") on a variable that is dereferenced unconditionally *elsewhere in the same method* is not
+free — it can hand a different, unrelated dataflow analyzer (or a mutation-testing tool) exactly
+the signal it needed to flag every other unguarded use of that variable as newly provable. When a
+null-check is added, grep the rest of the method for other uses of the same variable before
+assuming the check is a self-contained, no-side-effect fix.
