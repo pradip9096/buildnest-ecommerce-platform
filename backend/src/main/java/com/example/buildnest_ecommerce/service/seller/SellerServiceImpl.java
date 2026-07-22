@@ -100,7 +100,8 @@ public class SellerServiceImpl implements SellerService {
     public SellerResponseDTO updateVerificationStatus(
             Long sellerId, String newStatus, String rejectionReason) {
         log.info("Admin: updating seller id={} verification to={}",
-                sellerId, newStatus);
+                sellerId, newStatus == null ? null
+                        : newStatus.replaceAll("[\r\n]", "_"));
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException(
