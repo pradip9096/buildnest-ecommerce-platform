@@ -10,13 +10,18 @@ import com.example.buildnest_ecommerce.model.payload.RegisterSellerRequest;
 import com.example.buildnest_ecommerce.repository.RoleRepository;
 import com.example.buildnest_ecommerce.repository.SellerRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import com.example.buildnest_ecommerce.service.notification
+        .INotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -33,9 +38,16 @@ public class SellerServiceImpl implements SellerService {
 
     private static final String ROLE_SELLER = "ROLE_SELLER";
 
+    private static final Map<Seller.VerificationStatus,
+            Set<Seller.VerificationStatus>> VALID_TRANSITIONS = Map.of(
+                    Seller.VerificationStatus.PENDING,
+                    Set.of(Seller.VerificationStatus.VERIFIED,
+                            Seller.VerificationStatus.REJECTED));
+
     private final SellerRepository sellerRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final INotificationService notificationService;
 
     @Override
     @Transactional
@@ -73,6 +85,56 @@ public class SellerServiceImpl implements SellerService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Seller profile not found for user: " + userId));
         return SellerResponseDTO.from(seller);
+    }
+
+    @Override
+    public Page<SellerResponseDTO> getSellersByVerificationStatus(
+            Seller.VerificationStatus status, Pageable pageable) {
+        return sellerRepository
+                .findByVerificationStatus(status, pageable)
+                .map(SellerResponseDTO::from);
+    }
+
+    @Override
+    @Transactional
+    public SellerResponseDTO updateVerificationStatus(
+            Long sellerId, String newStatus, String rejectionReason) {
+        log.info("Admin: updating seller id={} verification to={}",
+                sellerId, newStatus);
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                "Seller", sellerId));
+
+        Seller.VerificationStatus targetStatus;
+        try {
+            targetStatus = Seller.VerificationStatus
+                    .valueOf(newStatus.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    "Invalid verification status: " + newStatus);
+        }
+
+        Set<Seller.VerificationStatus> allowed =
+                VALID_TRANSITIONS.get(seller.getVerificationStatus());
+        if (allowed == null || !allowed.contains(targetStatus)) {
+            throw new IllegalArgumentException(
+                    "Cannot transition seller from "
+                            + seller.getVerificationStatus() + " to "
+                            + targetStatus);
+        }
+
+        seller.setVerificationStatus(targetStatus);
+        seller.setUpdatedAt(LocalDateTime.now());
+        Seller saved = sellerRepository.save(seller);
+
+        boolean approved =
+                targetStatus == Seller.VerificationStatus.VERIFIED;
+        notificationService.sendSellerVerificationDecision(
+                seller.getUser().getEmail(), seller.getBusinessName(),
+                approved, approved ? null : rejectionReason);
+
+        return SellerResponseDTO.from(saved);
     }
 
     private void grantSellerRole(User user) {

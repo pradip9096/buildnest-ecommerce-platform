@@ -30,7 +30,8 @@ import java.time.format.DateTimeFormatter;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements INotificationService {
 
-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
+    private static final DateTimeFormatter DATE_FMT =
+            DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
@@ -60,11 +61,14 @@ public class NotificationServiceImpl implements INotificationService {
                backoff = @Backoff(delay = 2000, multiplier = 2))
     public void sendOrderConfirmation(Order order) {
         String customerName = order.getUser() != null
-                ? order.getUser().getFirstName() + " " + order.getUser().getLastName()
+                ? order.getUser().getFirstName() + " "
+                        + order.getUser().getLastName()
                 : "Customer";
-        String email = order.getUser() != null ? order.getUser().getEmail() : null;
+        String email = order.getUser() != null
+                ? order.getUser().getEmail() : null;
         if (email == null) {
-            log.warn("sendOrderConfirmation: no email on order {}", order.getId());
+            log.warn("sendOrderConfirmation: no email on order {}",
+                    order.getId());
             return;
         }
 
@@ -78,7 +82,10 @@ public class NotificationServiceImpl implements INotificationService {
                 ? order.getShippingAddress().toString() : "—");
 
         String html = templateEngine.process("email/order-confirmation", ctx);
-        send(email, "Your BuildNest Order is Confirmed — " + order.getOrderNumber(), html);
+        send(email,
+                "Your BuildNest Order is Confirmed — "
+                        + order.getOrderNumber(),
+                html);
     }
 
     @Override
@@ -97,14 +104,16 @@ public class NotificationServiceImpl implements INotificationService {
                maxAttempts = 3,
                backoff = @Backoff(delay = 2000, multiplier = 2))
     public void sendShipmentNotification(Long orderId, String trackingNumber) {
-        log.info("sendShipmentNotification: orderId={}, tracking={} — enrich via order lookup if needed",
+        log.info("sendShipmentNotification: orderId={}, tracking={} "
+                        + "— enrich via order lookup if needed",
                 orderId, trackingNumber);
         Context ctx = new Context();
         ctx.setVariable("customerName", "Customer");
         ctx.setVariable("orderNumber", "ORD-" + orderId);
         ctx.setVariable("trackingNumber", trackingNumber);
         ctx.setVariable("estimatedDelivery", "3–5 business days");
-        log.debug("Shipment notification template rendered for orderId={}", orderId);
+        log.debug("Shipment notification template rendered for orderId={}",
+                orderId);
     }
 
     /**
@@ -114,8 +123,9 @@ public class NotificationServiceImpl implements INotificationService {
     @Retryable(retryFor = {MailException.class, MessagingException.class},
                maxAttempts = 3,
                backoff = @Backoff(delay = 2000, multiplier = 2))
-    public void sendShipmentNotification(String email, String customerName, String orderNumber,
-                                         String trackingNumber, String estimatedDelivery) {
+    public void sendShipmentNotification(String email, String customerName,
+            String orderNumber, String trackingNumber,
+            String estimatedDelivery) {
         Context ctx = new Context();
         ctx.setVariable("customerName", customerName);
         ctx.setVariable("orderNumber", orderNumber);
@@ -123,7 +133,9 @@ public class NotificationServiceImpl implements INotificationService {
         ctx.setVariable("estimatedDelivery", estimatedDelivery);
 
         String html = templateEngine.process("email/shipping-update", ctx);
-        send(email, "Your BuildNest Order Has Shipped — " + orderNumber, html);
+        send(email,
+                "Your BuildNest Order Has Shipped — " + orderNumber,
+                html);
     }
 
     @Override
@@ -141,7 +153,8 @@ public class NotificationServiceImpl implements INotificationService {
                maxAttempts = 3,
                backoff = @Backoff(delay = 2000, multiplier = 2))
     public void sendLowStockAlert(Long productId, Integer currentStock) {
-        log.warn("sendLowStockAlert: productId={}, stock={}", productId, currentStock);
+        log.warn("sendLowStockAlert: productId={}, stock={}",
+                productId, currentStock);
     }
 
     @Override
@@ -152,7 +165,8 @@ public class NotificationServiceImpl implements INotificationService {
     public void sendPasswordResetEmail(String email, String resetToken) {
         Context ctx = new Context();
         ctx.setVariable("email", email);
-        ctx.setVariable("resetUrl", baseUrl + "/reset-password?token=" + resetToken);
+        ctx.setVariable("resetUrl",
+                baseUrl + "/reset-password?token=" + resetToken);
         ctx.setVariable("expiryMinutes", 60);
 
         String html = templateEngine.process("email/password-reset", ctx);
@@ -167,16 +181,38 @@ public class NotificationServiceImpl implements INotificationService {
     public void sendVerificationEmail(String email, String verificationToken) {
         Context ctx = new Context();
         ctx.setVariable("customerName", "there");
-        ctx.setVariable("verificationUrl", baseUrl + "/verify?token=" + verificationToken);
+        ctx.setVariable("verificationUrl",
+                baseUrl + "/verify?token=" + verificationToken);
 
         String html = templateEngine.process("email/registration-welcome", ctx);
         send(email, "Welcome to BuildNest — Please Verify Your Email", html);
     }
 
+    @Override
+    @Async
+    @Retryable(retryFor = {MailException.class, MessagingException.class},
+               maxAttempts = 3,
+               backoff = @Backoff(delay = 2000, multiplier = 2))
+    public void sendSellerVerificationDecision(String email,
+            String businessName, boolean approved, String rejectionReason) {
+        Context ctx = new Context();
+        ctx.setVariable("businessName", businessName);
+        ctx.setVariable("approved", approved);
+        ctx.setVariable("rejectionReason", rejectionReason);
+
+        String html = templateEngine.process(
+                "email/seller-verification-decision", ctx);
+        String subject = approved
+                ? "Your BuildNest Seller Account is Verified"
+                : "Update on Your BuildNest Seller Application";
+        send(email, subject, html);
+    }
+
     private void send(String to, String subject, String htmlBody) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(message, true, "UTF-8");
             helper.setFrom(fromAddress, fromName);
             helper.setTo(to);
             helper.setSubject(subject);
@@ -185,7 +221,8 @@ public class NotificationServiceImpl implements INotificationService {
             log.debug("Email sent to={} subject={}", to, subject);
         } catch (MessagingException | UnsupportedEncodingException e) {
             log.error("Failed to construct email to={}", to, e);
-            throw new MailException("Failed to build email: " + e.getMessage()) {};
+            throw new MailException(
+                    "Failed to build email: " + e.getMessage()) {};
         }
     }
 }

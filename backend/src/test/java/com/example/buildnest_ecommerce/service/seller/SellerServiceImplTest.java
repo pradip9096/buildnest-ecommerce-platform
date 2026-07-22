@@ -10,20 +10,30 @@ import com.example.buildnest_ecommerce.model.payload.RegisterSellerRequest;
 import com.example.buildnest_ecommerce.repository.RoleRepository;
 import com.example.buildnest_ecommerce.repository.SellerRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import com.example.buildnest_ecommerce.service.notification
+        .INotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,14 +46,16 @@ class SellerServiceImplTest {
     private UserRepository userRepository;
     @Mock
     private RoleRepository roleRepository;
+    @Mock
+    private INotificationService notificationService;
 
     private SellerServiceImpl sellerService;
     private User user;
 
     @BeforeEach
     void setUp() {
-        sellerService = new SellerServiceImpl(
-                sellerRepository, userRepository, roleRepository);
+        sellerService = new SellerServiceImpl(sellerRepository,
+                userRepository, roleRepository, notificationService);
         user = new User();
         user.setId(3L);
         user.setUsername("shopowner");
@@ -191,5 +203,113 @@ class SellerServiceImplTest {
 
         assertThatThrownBy(() -> sellerService.getSellerProfile(3L))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void updateVerificationStatus_pendingToVerified_updatesAndNotifies() {
+        user.setEmail("shopowner@example.com");
+        Seller seller = new Seller();
+        seller.setId(10L);
+        seller.setUser(user);
+        seller.setBusinessName("Acme Décor");
+        seller.setVerificationStatus(Seller.VerificationStatus.PENDING);
+        when(sellerRepository.findById(10L)).thenReturn(Optional.of(seller));
+        when(sellerRepository.save(any(Seller.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        SellerResponseDTO result = sellerService
+                .updateVerificationStatus(10L, "VERIFIED", null);
+
+        assertThat(result.verificationStatus())
+                .isEqualTo(Seller.VerificationStatus.VERIFIED);
+
+        ArgumentCaptor<Seller> captor =
+                ArgumentCaptor.forClass(Seller.class);
+        verify(sellerRepository).save(captor.capture());
+        assertThat(captor.getValue().getVerificationStatus())
+                .isEqualTo(Seller.VerificationStatus.VERIFIED);
+        assertThat(captor.getValue().getUpdatedAt()).isNotNull();
+
+        verify(notificationService).sendSellerVerificationDecision(
+                eq("shopowner@example.com"), eq("Acme Décor"),
+                eq(true), isNull());
+    }
+
+    @Test
+    void updateVerificationStatus_pendingToRejected_passesReasonToNotify() {
+        user.setEmail("shopowner@example.com");
+        Seller seller = new Seller();
+        seller.setId(10L);
+        seller.setUser(user);
+        seller.setBusinessName("Acme Décor");
+        seller.setVerificationStatus(Seller.VerificationStatus.PENDING);
+        when(sellerRepository.findById(10L)).thenReturn(Optional.of(seller));
+        when(sellerRepository.save(any(Seller.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        SellerResponseDTO result = sellerService.updateVerificationStatus(
+                10L, "REJECTED", "Invalid registration number");
+
+        assertThat(result.verificationStatus())
+                .isEqualTo(Seller.VerificationStatus.REJECTED);
+        verify(notificationService).sendSellerVerificationDecision(
+                anyString(), anyString(), eq(false),
+                eq("Invalid registration number"));
+    }
+
+    @Test
+    void updateVerificationStatus_alreadyVerified_throwsIllegalArgument() {
+        Seller seller = new Seller();
+        seller.setId(10L);
+        seller.setUser(user);
+        seller.setVerificationStatus(Seller.VerificationStatus.VERIFIED);
+        when(sellerRepository.findById(10L)).thenReturn(Optional.of(seller));
+
+        assertThatThrownBy(() -> sellerService
+                .updateVerificationStatus(10L, "REJECTED", null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void updateVerificationStatus_invalidStatusValue_throwsIllegalArgument() {
+        Seller seller = new Seller();
+        seller.setId(10L);
+        seller.setVerificationStatus(Seller.VerificationStatus.PENDING);
+        when(sellerRepository.findById(10L)).thenReturn(Optional.of(seller));
+
+        assertThatThrownBy(() -> sellerService
+                .updateVerificationStatus(10L, "BOGUS", null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void updateVerificationStatus_unknownSeller_throwsResourceNotFound() {
+        when(sellerRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> sellerService
+                .updateVerificationStatus(99L, "VERIFIED", null))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void getSellersByVerificationStatus_returnsMappedPage() {
+        Seller seller = new Seller();
+        seller.setId(10L);
+        seller.setUser(user);
+        seller.setBusinessName("Acme Décor");
+        seller.setVerificationStatus(Seller.VerificationStatus.PENDING);
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Seller> page = new PageImpl<>(List.of(seller));
+        when(sellerRepository.findByVerificationStatus(
+                Seller.VerificationStatus.PENDING, pageable))
+                .thenReturn(page);
+
+        Page<SellerResponseDTO> result = sellerService
+                .getSellersByVerificationStatus(
+                        Seller.VerificationStatus.PENDING, pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).businessName())
+                .isEqualTo("Acme Décor");
     }
 }

@@ -65,9 +65,20 @@ public interface INotificationService {
 
     /**
      * Send account verification email
-     * 
+     *
      * @param email             User email
      * @param verificationToken Verification token
      */
     void sendVerificationEmail(String email, String verificationToken);
+
+    /**
+     * Send seller verification decision notification (FR-SEL-02, #554)
+     *
+     * @param email           Seller's account email
+     * @param businessName    Seller's registered business name
+     * @param approved        true if VERIFIED, false if REJECTED
+     * @param rejectionReason Reason given when rejected (null when approved)
+     */
+    void sendSellerVerificationDecision(String email, String businessName,
+            boolean approved, String rejectionReason);
 }
