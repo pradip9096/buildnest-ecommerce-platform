@@ -10,8 +10,13 @@ import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.entity.ProductTag;
+import com.example.buildnest_ecommerce.model.entity.Seller;
+import com.example.buildnest_ecommerce.model.entity.User;
+import com.example.buildnest_ecommerce.exception.AccessDeniedException;
+import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.CategoryRepository;
+import com.example.buildnest_ecommerce.repository.SellerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
@@ -53,6 +58,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final SellerRepository sellerRepository;
     private final DomainEventPublisher domainEventPublisher;
 
     /**
@@ -136,8 +142,38 @@ public class ProductServiceImpl implements ProductService {
     @CacheEvict(allEntries = true)
     @SuppressWarnings("null")
     public Product createProduct(CreateProductRequest request) {
+        return buildAndSaveProduct(request, null);
+    }
+
+    /**
+     * Creates a product owned by a verified seller (FR-SEL-03/04, #555).
+     * Rejects the request unless {@code seller} has a {@link Seller}
+     * record with {@code VerificationStatus.VERIFIED} — a pending or
+     * rejected seller cannot list products.
+     */
+    @Override
+    @Transactional
+    @CacheEvict(allEntries = true)
+    public Product createProductForSeller(
+            CreateProductRequest request, Long sellerUserId) {
+        Seller sellerProfile = sellerRepository
+                .findByUser_Id(sellerUserId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Seller profile not found for user: "
+                                + sellerUserId));
+        if (sellerProfile.getVerificationStatus()
+                != Seller.VerificationStatus.VERIFIED) {
+            throw new AccessDeniedException(
+                    "Seller is not verified; cannot create products");
+        }
+        return buildAndSaveProduct(request, sellerProfile.getUser());
+    }
+
+    private Product buildAndSaveProduct(
+            CreateProductRequest request, User seller) {
         log.info("Creating new product: {}", request.getName());
         Product product = new Product();
+        product.setSeller(seller);
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
@@ -203,8 +239,31 @@ public class ProductServiceImpl implements ProductService {
     @CacheEvict(key = "#productId")
     @SuppressWarnings("null")
     public Product updateProduct(Long productId, CreateProductRequest request) {
-        log.info("Updating product with id: {}", productId);
         Product product = getProductById(productId);
+        return applyUpdate(product, request);
+    }
+
+    /**
+     * Updates a product owned by the given seller (FR-SEL-04, #555) —
+     * scoped so a seller can only ever update their own listings.
+     */
+    @Override
+    @Transactional
+    @CacheEvict(key = "#productId")
+    public Product updateProductForSeller(
+            Long sellerUserId, Long productId, CreateProductRequest request) {
+        Product product = productRepository
+                .findByIdAndSeller_Id(productId, sellerUserId)
+                .orElseThrow(() -> new AccessDeniedException(
+                        "Product " + productId
+                                + " does not belong to seller "
+                                + sellerUserId));
+        return applyUpdate(product, request);
+    }
+
+    private Product applyUpdate(
+            Product product, CreateProductRequest request) {
+        log.info("Updating product with id: {}", product.getId());
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
@@ -238,14 +297,47 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     @CacheEvict(key = "#productId")
     public void deleteProduct(Long productId) {
-        log.info("Soft-deleting product with id: {}", productId);
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException(
                         PRODUCT_NOT_FOUND_MSG + productId));
+        softDeleteProduct(product);
+    }
+
+    /**
+     * Soft-deletes a product owned by the given seller (FR-SEL-04, #555) —
+     * scoped so a seller can only ever remove their own listings.
+     */
+    @Override
+    @Transactional
+    @CacheEvict(key = "#productId")
+    public void deleteProductForSeller(Long sellerUserId, Long productId) {
+        Product product = productRepository
+                .findByIdAndSeller_Id(productId, sellerUserId)
+                .orElseThrow(() -> new AccessDeniedException(
+                        "Product " + productId
+                                + " does not belong to seller "
+                                + sellerUserId));
+        softDeleteProduct(product);
+    }
+
+    private void softDeleteProduct(Product product) {
+        log.info("Soft-deleting product with id: {}", product.getId());
         product.setIsActive(false);
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
-        domainEventPublisher.publish(new ProductDeletedEvent(this, productId));
+        domainEventPublisher.publish(
+                new ProductDeletedEvent(this, product.getId()));
+    }
+
+    @Override
+    public Page<Product> getProductsForSeller(
+            Long sellerUserId, Pageable pageable) {
+        return productRepository
+                .findBySeller_Id(sellerUserId, pageable)
+                .map(p -> {
+                    detachCollections(p);
+                    return p;
+                });
     }
 
     @Override

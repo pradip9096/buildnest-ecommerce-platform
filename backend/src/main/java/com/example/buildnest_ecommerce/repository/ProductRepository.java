@@ -50,6 +50,22 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
         Optional<Product> findById(Long id);
 
         /**
+         * Find a product by ID scoped to its owning seller (FR-SEL-04) —
+         * used to enforce that a seller can only update/delete their own
+         * listings; empty if the product doesn't exist or belongs to a
+         * different seller.
+         */
+        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
+        Optional<Product> findByIdAndSeller_Id(Long id, Long sellerId);
+
+        /**
+         * Paginated listing of a seller's own product catalogue
+         * (FR-SEL-04).
+         */
+        @EntityGraph(attributePaths = { "category", "inventory" })
+        Page<Product> findBySeller_Id(Long sellerId, Pageable pageable);
+
+        /**
          * Find all active products with eager loading of related entities.
          * Prevents N+1 queries for bulk product retrieval.
          */
