@@ -32,6 +32,7 @@ class ProductTest {
                 new BigDecimal("79.99"),
                 "SKU-123",
                 category,
+                null,
                 inventory,
                 new ArrayList<>(),
                 "http://image.url",
