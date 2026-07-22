@@ -41,8 +41,10 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   marked complete. Corrected via the milestone API (not `gh issue list --milestone`, which is known
   to silently undercount — see
   `docs/wiki/learned-lessons/gh-issue-list-milestone-undercounts-use-gh-search-issues-instead.md`):
-  M2 16/16 → 17/17, M3 **Complete** → **In progress**, 13/13 → 15/41, M5 29/72 → 52/90. M1 and M4
-  were already accurate and left unchanged.
+  M2 16/16 → 17/17, M3 **Complete** → **In progress**, 13/13 → 15/41, M5 29/72 → 52/90. M1 was
+  already accurate and left unchanged. M4's own 190/212 was accurate at the time of the fix but
+  drifted to 191/212 within minutes, since #489's own closure carries the M4 milestone label —
+  corrected in the same closure pass via a small follow-up PR rather than left stale.
 
 ### Changed
 - Eliminate `Product.stockQuantity`/`Inventory` dual source of truth (#485, INV-01), follow-up from
