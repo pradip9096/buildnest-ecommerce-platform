@@ -32,6 +32,18 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   bean-validation binding rejects the request before the service is ever called
   (`verifyNoInteractions`).
 
+### Documentation
+- README Roadmap table was badly stale across multiple milestones (#489): M3 was marked
+  **Complete — 13/13** even though 26 issues from a later CheckStyle debt-reduction initiative
+  (epics #371/#376/#380/#387/#391 and their sub-issues, filed 2026-07-13) had been tagged into the
+  M3 milestone afterward without ever updating M3's Roadmap status — root cause confirmed via
+  `gh api .../milestones` plus a listing of M3's 26 open issues, all dated after M3 was originally
+  marked complete. Corrected via the milestone API (not `gh issue list --milestone`, which is known
+  to silently undercount — see
+  `docs/wiki/learned-lessons/gh-issue-list-milestone-undercounts-use-gh-search-issues-instead.md`):
+  M2 16/16 → 17/17, M3 **Complete** → **In progress**, 13/13 → 15/41, M5 29/72 → 52/90. M1 and M4
+  were already accurate and left unchanged.
+
 ### Changed
 - Eliminate `Product.stockQuantity`/`Inventory` dual source of truth (#485, INV-01), follow-up from
   #309: `Product.stockQuantity` is no longer a persisted column — it's now a derived getter reading
