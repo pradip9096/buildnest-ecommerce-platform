@@ -32,5 +32,6 @@
     <include file="db/changelog/changes/20260718-021-backfill-inventory-for-products.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260719-022-reconcile-coupons-schema.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260721-023-drop-product-stock-quantity.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260722-024-create-sellers.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

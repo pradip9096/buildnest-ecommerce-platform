@@ -12,6 +12,19 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Added
+- Seller registration (FR-SEL-01, #553) — the first requirement implemented from the Ph-3
+  marketplace-pivot addendum. An authenticated buyer can register as a seller
+  (`POST /api/user/seller/register`), creating a `Seller` entity (1:1 extension of `User`,
+  mirroring the existing `Address` pattern) and granting `ROLE_SELLER`. `district_id` is
+  implemented as a plain nullable column with no FK constraint — the SDD's planned
+  `Seller ──N:1──► District` FK depends on an unresolved ADR (#561, OQ-01/OQ-02: strict
+  same-district vs. seller-declared-radius matching); registration itself does not require it,
+  so district assignment is deferred to a follow-up once #561 resolves. Added
+  `GET /api/user/seller/profile` and a `DuplicateResourceException` → 409 handler to
+  `GlobalExceptionHandler` (the exception class existed but had no handler before this issue,
+  so a duplicate seller registration would have fallen through to a 500).
+
 ### Fixed
 - Legacy inventory add-stock/update-stock endpoints had no server-side floor validation on
   quantity (#487, discovered during #440): `InventoryServiceImpl.addStock()`/`updateStock()`

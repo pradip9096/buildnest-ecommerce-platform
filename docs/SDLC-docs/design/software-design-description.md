@@ -10,12 +10,12 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 3.8 |
+| **Version** | 4.1 |
 | **Date** | 2026-07-22 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
-| **Related SRS** | SRS-BUILDNEST-001 v4.9 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
+| **Related SRS** | SRS-BUILDNEST-001 v5.1 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
 | **Supersedes** | SDD v2.0 (archive/docs/ISO-IEC-IEEE/SDD_IEEE_1016_2017.md, 2026-02-11) |
 
 ---
@@ -35,6 +35,8 @@
 | 3.4 | 2026-07-17 20:45 IST | Software Architect | Full re-derivation of §4.7.3's API Endpoint Catalogue (#471), same staleness class already fixed in SRS Appendix A (#456): 7 stale sections (wrong path prefixes — `/api/auth/refresh-token` instead of real `/api/auth/refresh`, `/api/auth/forgot-password`/`reset-password` instead of real `/api/password/forgot`/`reset`; only legacy `/api/checkout/*`, missing the current `/api/v1/checkout/*` multi-step flow entirely) expanded to 36 groups, each citing its real controller class. Unlike Appendix A, this table also carries a Rate Limit column per row — verified directly against `RateLimitHeaderInterceptor`/`AdminRateLimitFilter`/`RateLimitUtil` source and `application.properties`, surfacing a previously-undocumented gap: `/api/v1/admin/**` (base path for most admin resource controllers — products, categories, tags, coupons, shipping-methods, search, orders, inventory, sales analytics) matches neither the interceptor's nor the filter's literal `/api/admin/` prefix check, so those endpoints receive only the 100/min default header and no dedicated admin-tier blocking, unlike the literal `/api/admin/**` groups (users, analytics, audit, webhooks, monitoring, thresholds, inventory-threshold/analytics/reports) which get 30/min headers + a real 50/min block | Pending |
 | 3.5 | 2026-07-17 21:15 IST | Software Architect | Found during a fresh RTM/SRS/SDD/Test-Plan verification sweep: `Related SRS` had drifted one version behind again (v4.4, SRS is now v4.5 following #474) — the same recurring cross-reference-currency gap already fixed twice before at 3.3/3.4. Updated to current | Pending |
 | 3.6 | 2026-07-19 10:40 IST | Software Architect | §4.7.3's checkout endpoint catalogue row for `POST /api/v1/checkout/coupon` cited the wrong SRS requirement (`FR-CHK-02`, "calculate checkout total") — corrected to the newly-added `FR-CHK-09` (apply coupon during checkout, #436), which had never existed as a row until this issue added it to both SRS and RTM. Updated `Related SRS` from v4.5 to v4.9 (only the one edge this change directly touches — a full cross-reference-mesh sweep is the periodic 15-issue sync's job, not a per-issue one) | Pending |
+| 4.0 | 2026-07-22 15:30 IST | Software Architect | **Marketplace pivot addendum**, design counterpart to SRS v5.0's FG-11/FG-12 addendum (FR-SEL-*/FR-LOC-*). Added planned entity design for `Seller` and `District` (§4.3.3, §4.5.1, §4.5.2) and a Location-Based Matching design sketch (new §4.5.6). **Notable finding during existing-system assessment**: the original bootstrap schema (`db.changelog-master.sql`, pre-004 changeset) already has a dormant `supplier_id BIGINT` column + `fk_product_supplier` FK on `product` → `users(id)`, never mapped onto the `Product` JPA entity or referenced by any service/repository code (confirmed via full-source grep — the only other `supplier` hits are an excluded-fields code comment and unrelated `ThrowableSupplier` functional-interface usages). §4.5.2's existing row claiming `Product` has `FK → supplier_id (users)` as an active constraint was itself stale/misleading — corrected to note it as legacy and unmapped. Design recommendation: reactivate and repurpose this existing FK for seller ownership (FR-SEL-03) rather than adding a redundant parallel column, once the `District`/`Seller` entity split below is finalised. All new content is explicitly Ph-3/Planned — no code changed in this revision; `Related SRS` updated 4.9 → 5.0 | Pending |
+| 4.1 | 2026-07-22 17:30 IST | Software Architect | §4.5.2's `Seller` row updated from *(Ph-3, Planned)* to reflect real implementation (#553): the entity/Liquibase changeset/service/controller exist now. `district_id` was implemented as a plain nullable column with no FK constraint — the FK's actual shape (single vs. N:M) is still blocked on ADR #561 (OQ-01/OQ-02), unchanged from v4.0's sketch; only the deferral decision itself is newly documented here | Pending |
 | 3.7 | 2026-07-21 IST | Software Architect | Added a Dead-Code Audit Decision Record to §4.7.3 (#448) for four zero-frontend-caller endpoint groups (`ProductControllerV1`, `ProductControllerV2`, legacy `CheckoutController`, `/auth/validate-token`) — audited each against `frontend/src/api/{products,checkout}.ts` and `ApiSunsetInterceptor` directly; none removed on this pass (product-scope calls about unbuilt external/mobile consumers, not code-cleanup calls). Surfaced and filed as follow-ups: #535 (V2/`HomeController` "Current"/"Legacy" label contradiction — V2 is labeled current but carries zero traffic) and #536 (revisit V1 removal once its 2026-12-31 sunset passes) | Pending |
 | 3.8 | 2026-07-22 IST | Software Architect | §5.2.1's Exception-to-HTTP Mapping table was missing `ConstraintViolationException` (400/`VALIDATION_ERROR`) — added as part of #487's fix (`AdminInventoryController`'s `add-stock`/`update-stock` `@RequestParam Integer quantity` gained `@Min(0)` + `@Validated`, which throws this exception type; `GlobalExceptionHandler` needed its own new handler for it, not previously required since no `@RequestParam`/`@PathVariable` constraint existed anywhere in the codebase before this fix) | Pending |
 
@@ -421,6 +423,11 @@ JPA Entity Hierarchy:
   User ──[1:N]──► ProductReview ──[N:1]──► Product
   User ──[1:N]──► Wishlist
   Inventory ──[1:N]──► InventoryThresholdBreachEvent
+
+Planned (Ph-3, SRS FG-11/FG-12 — not yet implemented):
+  User ──[0..1:1]──► Seller ──[N:1]──► District
+  Seller ──[1:N]──► Product   (reactivates legacy product.supplier_id FK, see §4.5.2)
+  User ──[N:1]──► District   (buyer's own district, derived from Address)
 ```
 
 **Fetch Type Decisions**:
@@ -556,6 +563,15 @@ User ──[1:1]──── Cart
  └──[1:N]──── Wishlist
 
 WebhookSubscription  (standalone — no User FK)
+
+Planned (Ph-3, SRS FG-11/FG-12 — not yet implemented, design sketch only):
+Seller ──[1:1]──── User (extension table, mirrors the existing Address pattern)
+   │
+   ├──[N:1]──── District
+   └──[1:N]──── Product  (reactivates product.supplier_id, see §4.5.2 note above)
+
+District  (admin-maintained reference table — see §4.5.6 for the open sourcing/matching questions)
+   └──[1:N]──── User  (buyer's district, likely derived from Address rather than a direct FK — TBD)
 ```
 
 #### 4.5.2 Core Entity Details
@@ -565,7 +581,7 @@ WebhookSubscription  (standalone — no User FK)
 | `User` | `users` | `id BIGINT AUTO_INCREMENT` | `email` UNIQUE, `username` UNIQUE |
 | `Role` | `roles` | `id BIGINT AUTO_INCREMENT` | `name` UNIQUE (`USER`, `ADMIN`) |
 | `Permission` | `permissions` | `id BIGINT AUTO_INCREMENT` | `name` UNIQUE |
-| `Product` | `product` | `id BIGINT AUTO_INCREMENT` | FK → `category`, FK → `supplier_id` (users) |
+| `Product` | `product` | `id BIGINT AUTO_INCREMENT` | FK → `category`. Also has a legacy, **unmapped** `supplier_id` column + `fk_product_supplier` FK → `users` from the original bootstrap schema — present in the database, absent from the `Product` JPA entity and all service code (see Revision History v4.0). Not an active constraint today; a candidate for reactivation as the seller-ownership FK (§4.5.2 `Seller`/`District`, Ph-3) |
 | `Category` | `category` | `id BIGINT AUTO_INCREMENT` | `name` UNIQUE |
 | `Cart` | `cart` | `id BIGINT AUTO_INCREMENT` | FK → `user_id` (one-to-one) |
 | `CartItem` | `cart_item` | `id BIGINT AUTO_INCREMENT` | FK → `cart_id`, FK → `product_id` |
@@ -581,6 +597,8 @@ WebhookSubscription  (standalone — no User FK)
 | `Address` | `addresses` | `id BIGINT AUTO_INCREMENT` | FK → `user_id` |
 | `WebhookSubscription` | `webhook_subscription` | `id BIGINT AUTO_INCREMENT` | `event_type`, `target_url` |
 | `InventoryThresholdBreachEvent` | `inventory_threshold_breach_events` | `id BIGINT AUTO_INCREMENT` | FK → `inventory_id` |
+| `Seller` *(#553, registration implemented)* | `sellers` | `id BIGINT AUTO_INCREMENT` | FK → `user_id` (one-to-one, mirrors `Address`'s extension-table pattern), `district_id` implemented as a plain nullable column with no FK constraint yet (deferred pending ADR #561/OQ-01/OQ-02), verification-status column (FR-SEL-02, still Planned) |
+| `District` *(Ph-3, Planned)* | `districts` | `id BIGINT AUTO_INCREMENT` | `name` UNIQUE (assumes an admin-maintained reference table — see §4.5.6 OQ-02) |
 
 #### 4.5.3 Data Flow — Order Placement with Payment
 
@@ -628,6 +646,22 @@ WebhookSubscription  (standalone — no User FK)
 There is no Redux, React Query, or SWR in the dependency tree — all client state is either the one
 `AuthContext` Provider or hook-local component state, per the project's own `react/coding-style.md`
 guidance ("Context for cross-cutting state... not for high-frequency updates").
+
+---
+
+#### 4.5.6 Location-Based Matching — Design Sketch (Ph-3, Planned)
+
+**Status**: Design sketch only, deliberately incomplete pending two open decisions carried over from SRS §3.2.12 (OQ-01, OQ-02). Nothing below is implemented; no entity, migration, or query described here exists in the codebase.
+
+**Candidate query strategy** (assuming OQ-01 resolves to strict same-district matching, the simpler of the two options): filter the existing Elasticsearch-backed product search (FG-02) by an added `districtId` field on `ProductDocument`, populated from the owning `Seller.district` at index time via the existing event-driven sync flow (`ProductIndexEventListener`, per `spring/elasticsearch.md`) — the buyer's own `districtId` (resolved from their `Address`) becomes a mandatory filter clause alongside the existing `isActive: true` filter, following the same pattern already used for soft-delete exclusion.
+
+**If OQ-01 instead resolves to radius/seller-declared delivery districts** (a seller serves N districts, not just their home one), this becomes a `Seller ──[N:M]──► District` join table instead of a single FK, and the ES filter becomes a `terms` query against the seller's declared district list rather than an exact match — a materially different design, which is why this decision needs to be made (`solution-options-adr`) before either the entity model above or this query strategy is finalised.
+
+**Why Elasticsearch, not a JPA query**: product search already goes through `ProductElasticsearchRepository` (§ `spring/elasticsearch.md`), and district filtering is naturally a search-time filter alongside existing relevance/fuzziness scoring — re-deriving this in JPQL would create a second, divergent search path for the same data.
+
+**Explicitly deferred design questions** (do not implement against this sketch until resolved):
+- OQ-01 (strict-district vs. radius) — changes the entity relationship (`N:1` vs. `N:M`) and the ES query shape
+- OQ-02 (district reference data: fixed admin-maintained table vs. geocoded) — changes whether `District` is a simple lookup table (as sketched in §4.5.1/§4.5.2) or something more involved (geocoding integration, lat/long-based radius math instead of a discrete district match)
 
 ---
 
@@ -1656,6 +1690,8 @@ Bucket4j token-bucket strategy backed by Redis:
 | `HttpsEnforcementFilter`, `@PostConstruct` SSL check | SEC-03, FR-MON-01 | Security Overlay |
 | React SPA design (§4.3.6, §4.7.4, §4.10.5) | FR-FE-01–31 | Composition, Interface |
 | Domain events (`DomainEventPublisher`) | FR-INV-06, FR-PAY-04 | Logical, Interaction |
+| `Seller`, `District` entities *(Ph-3, Planned — not yet implemented)* | FR-SEL-01–08 | Information (§4.3.3, §4.5.1, §4.5.2) |
+| Location-Based Matching design sketch *(Ph-3, Planned — not yet implemented)* | FR-LOC-01–04 | Information (§4.5.6) |
 
 ---
 

@@ -11,7 +11,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.servlet.mvc.method.annotation.
+        ResponseEntityExceptionHandler;
 
 @Slf4j
 @RestControllerAdvice
@@ -27,10 +28,25 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 ex.getMessage(),
                 "Resource not found"
         );
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
+        errorResponse.setPath(
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
     
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
+            DuplicateResourceException ex, WebRequest request) {
+        log.warn("Duplicate resource: {}", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage(),
+                "Duplicate resource"
+        );
+        errorResponse.setPath(
+                request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
             ValidationException ex, WebRequest request) {
@@ -40,7 +56,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 ex.getMessage(),
                 "Validation failed"
         );
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
+        errorResponse.setPath(
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -53,20 +70,25 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 ex.getMessage(),
                 "Access denied"
         );
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
+        errorResponse.setPath(
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
 
-    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleSpringSecurityAccessDeniedException(
-            org.springframework.security.access.AccessDeniedException ex, WebRequest request) {
+    @ExceptionHandler(
+            org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse>
+            handleSpringSecurityAccessDeniedException(
+            org.springframework.security.access.AccessDeniedException ex,
+            WebRequest request) {
         log.warn("Authorization denied: {}", ex.getMessage());
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.FORBIDDEN.value(),
                 "You do not have permission to perform this action",
                 "Access denied"
         );
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
+        errorResponse.setPath(
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
     
@@ -79,7 +101,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 ex.getMessage(),
                 "Payment processing failed"
         );
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
+        errorResponse.setPath(
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -92,7 +115,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 ex.getMessage(),
                 "Invalid argument"
         );
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
+        errorResponse.setPath(
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -128,7 +152,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 message,
                 "Validation failed"
         );
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
+        errorResponse.setPath(
+                request.getDescription(false).replace("uri=", ""));
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
@@ -142,7 +167,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 "An unexpected error occurred",
                 ex.getMessage()
         );
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        errorResponse.setPath(
+                request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(
+                errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
