@@ -7,17 +7,20 @@ import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import com.example.buildnest_ecommerce.service.inventory.InventoryService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/admin/inventory")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
+@Validated
 public class AdminInventoryController {
 
     private final InventoryService inventoryService;
@@ -60,8 +63,9 @@ public class AdminInventoryController {
 
     @PostMapping("/add-stock/{productId}")
     @Auditable(action = "ADMIN_ADD_STOCK", entityType = "INVENTORY")
-    public ResponseEntity<ApiResponse> addStock(@PathVariable Long productId,
-                                                @RequestParam Integer quantity) {
+    public ResponseEntity<ApiResponse> addStock(
+            @PathVariable Long productId,
+            @RequestParam @Min(0) Integer quantity) {
         try {
             Inventory updated = inventoryService.addStock(productId, quantity);
             return ResponseEntity.ok(new ApiResponse(true, "Stock added successfully", updated));
@@ -73,8 +77,9 @@ public class AdminInventoryController {
 
     @PostMapping("/update-stock/{productId}")
     @Auditable(action = "ADMIN_UPDATE_STOCK", entityType = "INVENTORY")
-    public ResponseEntity<ApiResponse> updateStock(@PathVariable Long productId,
-                                                   @RequestParam Integer quantity) {
+    public ResponseEntity<ApiResponse> updateStock(
+            @PathVariable Long productId,
+            @RequestParam @Min(0) Integer quantity) {
         try {
             Inventory updated = inventoryService.updateStock(productId, quantity);
             return ResponseEntity.ok(new ApiResponse(true, "Stock updated", updated));

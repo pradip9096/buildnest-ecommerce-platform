@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 3.7 |
-| **Date** | 2026-07-21 IST |
+| **Version** | 3.8 |
+| **Date** | 2026-07-22 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
@@ -36,6 +36,7 @@
 | 3.5 | 2026-07-17 21:15 IST | Software Architect | Found during a fresh RTM/SRS/SDD/Test-Plan verification sweep: `Related SRS` had drifted one version behind again (v4.4, SRS is now v4.5 following #474) — the same recurring cross-reference-currency gap already fixed twice before at 3.3/3.4. Updated to current | Pending |
 | 3.6 | 2026-07-19 10:40 IST | Software Architect | §4.7.3's checkout endpoint catalogue row for `POST /api/v1/checkout/coupon` cited the wrong SRS requirement (`FR-CHK-02`, "calculate checkout total") — corrected to the newly-added `FR-CHK-09` (apply coupon during checkout, #436), which had never existed as a row until this issue added it to both SRS and RTM. Updated `Related SRS` from v4.5 to v4.9 (only the one edge this change directly touches — a full cross-reference-mesh sweep is the periodic 15-issue sync's job, not a per-issue one) | Pending |
 | 3.7 | 2026-07-21 IST | Software Architect | Added a Dead-Code Audit Decision Record to §4.7.3 (#448) for four zero-frontend-caller endpoint groups (`ProductControllerV1`, `ProductControllerV2`, legacy `CheckoutController`, `/auth/validate-token`) — audited each against `frontend/src/api/{products,checkout}.ts` and `ApiSunsetInterceptor` directly; none removed on this pass (product-scope calls about unbuilt external/mobile consumers, not code-cleanup calls). Surfaced and filed as follow-ups: #535 (V2/`HomeController` "Current"/"Legacy" label contradiction — V2 is labeled current but carries zero traffic) and #536 (revisit V1 removal once its 2026-12-31 sunset passes) | Pending |
+| 3.8 | 2026-07-22 IST | Software Architect | §5.2.1's Exception-to-HTTP Mapping table was missing `ConstraintViolationException` (400/`VALIDATION_ERROR`) — added as part of #487's fix (`AdminInventoryController`'s `add-stock`/`update-stock` `@RequestParam Integer quantity` gained `@Min(0)` + `@Validated`, which throws this exception type; `GlobalExceptionHandler` needed its own new handler for it, not previously required since no `@RequestParam`/`@PathVariable` constraint existed anywhere in the codebase before this fix) | Pending |
 
 ### Document Approval
 
@@ -1551,6 +1552,7 @@ Bucket4j token-bucket strategy backed by Redis:
 | `PaymentProcessingException` | 502 Bad Gateway | `PAYMENT_ERROR` |
 | `ExternalServiceException` | 503 Service Unavailable | `EXTERNAL_SERVICE_ERROR` |
 | `MethodArgumentNotValidException` | 400 Bad Request | `VALIDATION_ERROR` |
+| `ConstraintViolationException` | 400 Bad Request | `VALIDATION_ERROR` |
 | `Exception` (catch-all) | 500 Internal Server Error | `INTERNAL_ERROR` |
 
 #### 5.2.2 Error Response Design Principles
