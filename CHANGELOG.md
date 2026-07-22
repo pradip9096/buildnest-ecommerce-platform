@@ -13,6 +13,15 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Admin seller verification/approval workflow (FR-SEL-02, #554) — mirrors
+  `AdminOrderController.updateOrderStatus`'s admin-gated status-transition shape. Admins can
+  list sellers by verification status (`GET /api/v1/admin/sellers?status=PENDING|VERIFIED|
+  REJECTED`, defaulting to `PENDING`) and decide on a pending seller
+  (`PATCH /api/v1/admin/sellers/{id}/verification-status`, `ROLE_ADMIN`-only), transitioning
+  `PENDING`→`VERIFIED` or `PENDING`→`REJECTED` only (any other transition rejected with 400).
+  The decided seller receives an email notification (approval or rejection with an optional
+  reason). Live-verified against a running instance: 403 for a non-admin caller, correct state
+  change for an admin decision, 400 for an invalid re-transition, 404 for an unknown seller.
 - Seller registration (FR-SEL-01, #553) — the first requirement implemented from the Ph-3
   marketplace-pivot addendum. An authenticated buyer can register as a seller
   (`POST /api/user/seller/register`), creating a `Seller` entity (1:1 extension of `User`,

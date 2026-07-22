@@ -7,7 +7,7 @@ source_conversations: ["#443"]
 last_updated: 2026-07-20
 confidence: high
 evidence_strength: direct — reproduced via SonarCloud API cross-check (same rule/file, confirmed OPEN on master pre-PR) and the PR's own quality-gate failure/pass before/after the fix
-related_lessons: [checkstyle-ratchet-counts-whole-file-not-diff-add-javadoc-per-new-method.md]
+related_lessons: [checkstyle-ratchet-counts-whole-file-not-diff-add-javadoc-per-new-method.md, sonarcloud-log-injection-s5145-new-code-gate-and-securelogger-scope-gap.md]
 root_cause: SonarCloud's PR "new code" period is defined by git blame on the changed lines, not by whether the underlying logic actually changed — a pure reformat (every line's blame now points at this commit) makes 100% of a file's existing findings count as "new", even ones with zero semantic change.
 impact: medium — blocked merge on a required, branch-protection-enforced check (`Code Quality Analysis`) for a change with no actual new security/quality regression
 ---

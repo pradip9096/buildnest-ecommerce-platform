@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Seller Verification Update</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #333;">
+<div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+    <h1 style="color: #2c7a4b;" th:if="${approved}">Your Seller Account is Verified</h1>
+    <h1 style="color: #b02a2a;" th:unless="${approved}">Seller Verification Update</h1>
+
+    <p>Hi, seller of <span th:text="${businessName}">Business</span>,</p>
+
+    <p th:if="${approved}">
+        Congratulations — your seller account has been reviewed and verified.
+        You can now list products and start selling on BuildNest.
+    </p>
+    <p th:unless="${approved}">
+        Your seller account application was not approved at this time.
+    </p>
+    <p th:if="${rejectionReason != null}">
+        Reason: <span th:text="${rejectionReason}">reason</span>
+    </p>
+
+    <p style="color: #999; font-size: 12px;">BuildNest — Your Home Construction &amp; Décor Partner</p>
+</div>
+</body>
+</html>
