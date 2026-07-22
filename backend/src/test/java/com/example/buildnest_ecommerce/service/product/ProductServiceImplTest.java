@@ -8,7 +8,6 @@ import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.CategoryRepository;
-import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,9 +39,6 @@ class ProductServiceImplTest {
 
     @Mock
     private CategoryRepository categoryRepository;
-
-    @Mock
-    private InventoryRepository inventoryRepository;
 
     @Mock
     private DomainEventPublisher domainEventPublisher;
@@ -123,7 +119,12 @@ class ProductServiceImplTest {
     void testCreateProduct() {
         // Arrange
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
-        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+        // Return the same argument (not the unrelated testProduct fixture) —
+        // createProduct() links Inventory onto its own `saved` reference
+        // in-memory (#485), so the stub must mirror real save() semantics
+        // (same entity back) for that link to be observable here.
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
         Product result = productService.createProduct(createRequest);
@@ -147,10 +148,15 @@ class ProductServiceImplTest {
 
         verify(categoryRepository).findById(1L);
 
-        ArgumentCaptor<Inventory> inventoryCaptor = ArgumentCaptor.forClass(Inventory.class);
-        verify(inventoryRepository).save(inventoryCaptor.capture());
-        Inventory createdInventory = inventoryCaptor.getValue();
-        assertEquals(testProduct, createdInventory.getProduct());
+        // #485: Inventory is persisted via cascade (Product.inventory is
+        // cascade=ALL) rather than an explicit inventoryRepository.save()
+        // call — an explicit call here plus Hibernate's own cascade-persist
+        // at flush double-inserted the identical row (verified empirically
+        // against a real H2 instance). Assert directly on the linked
+        // Inventory instead of a repository interaction.
+        Inventory createdInventory = saved.getInventory();
+        assertNotNull(createdInventory);
+        assertEquals(saved, createdInventory.getProduct());
         assertEquals(25, createdInventory.getQuantityInStock());
         assertEquals(InventoryStatus.IN_STOCK, createdInventory.getStatus());
     }
@@ -160,15 +166,16 @@ class ProductServiceImplTest {
         // Arrange
         createRequest.setStockQuantity(0);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
-        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        productService.createProduct(createRequest);
+        Product result = productService.createProduct(createRequest);
 
-        // Assert
-        ArgumentCaptor<Inventory> inventoryCaptor = ArgumentCaptor.forClass(Inventory.class);
-        verify(inventoryRepository).save(inventoryCaptor.capture());
-        Inventory createdInventory = inventoryCaptor.getValue();
+        // Assert — Inventory is cascade-persisted (#485), not saved via an
+        // explicit inventoryRepository call; see testCreateProduct's comment.
+        Inventory createdInventory = result.getInventory();
+        assertNotNull(createdInventory);
         assertEquals(0, createdInventory.getQuantityInStock());
         assertEquals(InventoryStatus.OUT_OF_STOCK, createdInventory.getStatus());
     }
@@ -197,6 +204,8 @@ class ProductServiceImplTest {
         updateRequest.setDescription("Updated desc");
         updateRequest.setPrice(BigDecimal.valueOf(500.00));
         updateRequest.setDiscountPrice(BigDecimal.valueOf(450.00));
+        // #485: stockQuantity on an update request must be ignored —
+        // Inventory is the sole writable source of stock.
         updateRequest.setStockQuantity(99);
         updateRequest.setSku("CEM-UPDATED");
         updateRequest.setImageUrl("https://cdn.example.com/updated.jpg");
@@ -217,7 +226,9 @@ class ProductServiceImplTest {
         assertEquals("Updated desc", saved.getDescription());
         assertEquals(0, BigDecimal.valueOf(500.00).compareTo(saved.getPrice()));
         assertEquals(0, BigDecimal.valueOf(450.00).compareTo(saved.getDiscountPrice()));
-        assertEquals(99, saved.getStockQuantity());
+        // #485: request.getStockQuantity() (99) must NOT reach the product
+        // or its Inventory — updateProduct has no writable stock field left.
+        assertNull(saved.getInventory());
         assertEquals("CEM-UPDATED", saved.getSku());
         assertEquals("https://cdn.example.com/updated.jpg", saved.getImageUrl());
         assertNotNull(saved.getUpdatedAt());

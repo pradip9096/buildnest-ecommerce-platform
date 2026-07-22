@@ -1,5 +1,6 @@
 package com.example.buildnest_ecommerce.controller.public_;
 
+import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.entity.Category;
 import com.example.buildnest_ecommerce.service.product.ProductService;
@@ -50,7 +51,9 @@ class HomeControllerTest {
         testProduct.setName("Test Product");
         testProduct.setDescription("Test Description");
         testProduct.setPrice(BigDecimal.valueOf(100.00));
-        testProduct.setStockQuantity(10);
+        Inventory testInventory = new Inventory();
+        testInventory.setQuantityInStock(10);
+        testProduct.setInventory(testInventory);
 
         testCategory = new Category();
         testCategory.setId(1L);

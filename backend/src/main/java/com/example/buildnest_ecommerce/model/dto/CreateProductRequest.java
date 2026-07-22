@@ -18,13 +18,16 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class CreateProductRequest {
     @NotBlank(message = "Product name is required")
-    @Size(min = 3, max = 255, message = "Product name must be between 3 and 255 characters")
+    @Size(min = 3, max = 255,
+            message = "Product name must be between 3 and 255 characters")
     @Schema(example = "Premium Cement 50kg")
     private String name;
 
     @NotBlank(message = "Product description is required")
-    @Size(min = 10, max = 2000, message = "Description must be between 10 and 2000 characters")
-    @Schema(example = "High-strength cement suitable for construction and renovation projects.")
+    @Size(min = 10, max = 2000,
+            message = "Description must be between 10 and 2000 characters")
+    @Schema(example = "High-strength cement suitable for construction and "
+            + "renovation projects.")
     private String description;
 
     @NotNull(message = "Price is required")
@@ -36,8 +39,17 @@ public class CreateProductRequest {
     @Schema(example = "449.99")
     private BigDecimal discountPrice;
 
+    /**
+     * Initial stock only — used solely by {@code createProduct} to seed the
+     * product's {@code Inventory} row. Ignored on update; {@code Inventory}
+     * is the sole writable source of stock afterward (#485) — use
+     * {@code AdminInventoryController}'s adjust-inventory endpoint instead.
+     */
     @ValidQuantity
-    @Schema(example = "100")
+    @Schema(example = "100",
+            description = "Initial stock at creation only — ignored on "
+                    + "update, use the inventory adjustment endpoint "
+                    + "instead")
     private Integer stockQuantity;
 
     @ValidSKU
@@ -48,11 +60,14 @@ public class CreateProductRequest {
     @Schema(example = "3")
     private Long categoryId;
 
-    @Pattern(regexp = "^https?://.+", message = "Image URL must be a valid http/https URL")
+    @Pattern(regexp = "^https?://.+",
+            message = "Image URL must be a valid http/https URL")
     @Size(max = 500, message = "Image URL must not exceed 500 characters")
     @Schema(example = "https://cdn.example.com/products/cement-50kg.jpg")
     private String imageUrl;
 
-    @Schema(example = "false", description = "Whether this product appears in the home page featured section")
+    @Schema(example = "false",
+            description = "Whether this product appears in the home page "
+                    + "featured section")
     private Boolean isFeatured;
 }

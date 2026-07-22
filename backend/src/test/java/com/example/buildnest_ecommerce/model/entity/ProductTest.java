@@ -22,6 +22,7 @@ class ProductTest {
         category.setId(1L);
         Inventory inventory = new Inventory();
         inventory.setId(1L);
+        inventory.setQuantityInStock(100);
 
         Product product = new Product(
                 10L,
@@ -29,7 +30,6 @@ class ProductTest {
                 "Description here",
                 new BigDecimal("99.99"),
                 new BigDecimal("79.99"),
-                100,
                 "SKU-123",
                 category,
                 inventory,
@@ -80,7 +80,9 @@ class ProductTest {
         product.setDescription("New description");
         product.setPrice(new BigDecimal("150.00"));
         product.setDiscountPrice(new BigDecimal("120.00"));
-        product.setStockQuantity(50);
+        Inventory inventory = new Inventory();
+        inventory.setQuantityInStock(50);
+        product.setInventory(inventory);
         product.setSku("SKU-456");
         product.setCategory(category);
         product.setImageUrl("http://new-image.url");

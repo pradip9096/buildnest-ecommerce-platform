@@ -121,7 +121,6 @@ public abstract class BaseApiTest {
         product.setName("Test Product " + java.util.UUID.randomUUID().toString().substring(0, 8));
         product.setDescription("Product for testing purposes only");
         product.setPrice(new BigDecimal("100.00"));
-        product.setStockQuantity(50);
         product.setSku("TEST-SKU-" + java.util.UUID.randomUUID().toString().substring(0, 8));
         product.setCategory(category);
         product.setIsActive(true);

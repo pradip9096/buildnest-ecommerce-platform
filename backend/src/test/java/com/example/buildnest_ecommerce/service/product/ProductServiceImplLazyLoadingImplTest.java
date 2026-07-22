@@ -6,7 +6,6 @@ import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.entity.ProductTag;
 import com.example.buildnest_ecommerce.model.entity.ProductVariant;
 import com.example.buildnest_ecommerce.repository.CategoryRepository;
-import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,9 +51,6 @@ class ProductServiceImplLazyLoadingImplTest {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    @Autowired
-    private InventoryRepository inventoryRepository;
-
     private ProductServiceImpl productService;
     private Long productId;
     private Long categoryId;
@@ -64,7 +60,7 @@ class ProductServiceImplLazyLoadingImplTest {
         DomainEventPublisher domainEventPublisher =
                 new DomainEventPublisher(mock(ApplicationEventPublisher.class));
         productService = new ProductServiceImpl(productRepository,
-                categoryRepository, inventoryRepository, domainEventPublisher);
+                categoryRepository, domainEventPublisher);
 
         Category category = new Category();
         category.setName("Lazy Load Category 481");

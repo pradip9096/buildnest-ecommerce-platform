@@ -1,7 +1,9 @@
 package com.example.buildnest_ecommerce.validation;
 
+import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.entity.User;
+import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +34,9 @@ class DataValidationTest {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private InventoryRepository inventoryRepository;
+
     private User testUser;
     private Product testProduct;
 
@@ -50,9 +55,15 @@ class DataValidationTest {
         testProduct.setName("Test Product");
         testProduct.setDescription("Test");
         testProduct.setPrice(new BigDecimal("100.00"));
-        testProduct.setStockQuantity(50);
         testProduct.setIsActive(true);
         testProduct = productRepository.save(testProduct);
+
+        Inventory inventory = new Inventory();
+        inventory.setProduct(testProduct);
+        inventory.setQuantityInStock(50);
+        inventory.setMinimumStockLevel(0);
+        inventory = inventoryRepository.save(inventory);
+        testProduct.setInventory(inventory);
     }
 
     @Test

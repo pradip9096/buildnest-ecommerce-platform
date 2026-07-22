@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #485 (INV-01): Inventory.quantityInStock becomes the sole
+         source of truth for product stock; products.stock_quantity was an
+         independently-writable duplicate that already drifted out of sync
+         in ProductServiceImpl.updateProduct (fixed data by #309's backfill,
+         not by removing the second writable field). -->
+    <changeSet id="20260721-023-drop-product-stock-quantity" author="buildnest-team">
+        <!-- "products" is not created by any Liquibase changeset in this repo (same drift
+             class as #289/20260704-012). In the test profile, Liquibase runs before
+             Hibernate's create-drop creates the table, so it does not exist yet here. -->
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="products"/>
+        </preConditions>
+
+        <comment>Drop products.stock_quantity (INV-01, #485) — Inventory.quantityInStock is now the only writable representation of stock</comment>
+
+        <dropColumn tableName="products" columnName="stock_quantity"/>
+
+        <rollback>
+            <addColumn tableName="products">
+                <column name="stock_quantity" type="INT" defaultValueNumeric="0"/>
+            </addColumn>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

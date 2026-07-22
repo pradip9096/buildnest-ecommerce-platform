@@ -2,6 +2,7 @@ package com.example.buildnest_ecommerce.service.product;
 
 import com.example.buildnest_ecommerce.model.elasticsearch.ProductDocument;
 import com.example.buildnest_ecommerce.model.entity.Category;
+import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.elasticsearch.ProductElasticsearchRepository;
@@ -53,8 +54,19 @@ class ProductSearchServiceTest {
     private Product product(Long id, String name) {
         Product p = new Product();
         p.setId(id); p.setName(name); p.setPrice(new BigDecimal("100.00"));
-        p.setStockQuantity(10); p.setIsActive(true); p.setCreatedAt(LocalDateTime.now());
+        setStock(p, 10);
+        p.setIsActive(true); p.setCreatedAt(LocalDateTime.now());
         return p;
+    }
+
+    private void setStock(Product p, Integer quantity) {
+        if (quantity == null) {
+            p.setInventory(null);
+            return;
+        }
+        Inventory inventory = new Inventory();
+        inventory.setQuantityInStock(quantity);
+        p.setInventory(inventory);
     }
 
     @Test
@@ -317,7 +329,7 @@ class ProductSearchServiceTest {
     @DisplayName("indexProduct — product with null stockQuantity maps to inStock=false")
     void indexProduct_nullStockQuantity_inStockFalse() {
         Product p = product(7L, "mortar");
-        p.setStockQuantity(null);
+        setStock(p, null);
 
         service.indexProduct(p);
 
@@ -328,7 +340,7 @@ class ProductSearchServiceTest {
     @DisplayName("indexProduct — product with stockQuantity=0 maps to inStock=false")
     void indexProduct_zeroStockQuantity_inStockFalse() {
         Product p = product(8L, "plaster");
-        p.setStockQuantity(0);
+        setStock(p, 0);
 
         service.indexProduct(p);
 

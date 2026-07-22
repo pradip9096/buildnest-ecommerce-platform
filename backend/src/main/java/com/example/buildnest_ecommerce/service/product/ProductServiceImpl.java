@@ -12,7 +12,6 @@ import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.entity.ProductTag;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.CategoryRepository;
-import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
@@ -54,7 +53,6 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private final InventoryRepository inventoryRepository;
     private final DomainEventPublisher domainEventPublisher;
 
     /**
@@ -104,12 +102,21 @@ public class ProductServiceImpl implements ProductService {
      * Hibernate session, not a no-arg constructor) — surfacing as a false
      * "product not found" once cached. Copying to a plain collection avoids
      * this entirely.
+     *
+     * Also initializes the lazy `inventory` one-to-one so
+     * {@link Product#getStockQuantity()} (derived from it, #485) is safe to
+     * call after this transaction/session has closed — e.g. from the
+     * {@code @Async} Elasticsearch index listener, or when this raw entity
+     * is later Jackson-serialized post-transaction.
      */
     private static void detachCollections(Product product) {
         Hibernate.initialize(product.getTags());
         product.setTags(new HashSet<>(product.getTags()));
         Hibernate.initialize(product.getVariants());
         product.setVariants(new ArrayList<>(product.getVariants()));
+        if (product.getInventory() != null) {
+            Hibernate.initialize(product.getInventory());
+        }
     }
 
     /**
@@ -135,7 +142,6 @@ public class ProductServiceImpl implements ProductService {
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setDiscountPrice(request.getDiscountPrice());
-        product.setStockQuantity(request.getStockQuantity());
         product.setSku(request.getSku());
         product.setImageUrl(request.getImageUrl());
         product.setIsFeatured(Boolean.TRUE.equals(request.getIsFeatured()));
@@ -148,8 +154,8 @@ public class ProductServiceImpl implements ProductService {
                             "Category not found")));
         }
 
-        int initialStock = product.getStockQuantity() != null
-                ? product.getStockQuantity()
+        int initialStock = request.getStockQuantity() != null
+                ? request.getStockQuantity()
                 : 0;
         Product saved = productRepository.save(product);
         Inventory inventory = new Inventory();
@@ -161,7 +167,18 @@ public class ProductServiceImpl implements ProductService {
                 ? InventoryStatus.IN_STOCK
                 : InventoryStatus.OUT_OF_STOCK);
         inventory.setUpdatedAt(LocalDateTime.now());
-        inventoryRepository.save(inventory);
+        // Link in-memory (not an explicit inventoryRepository.save() call —
+        // Product.inventory is cascade=ALL, so an explicit save() here plus
+        // the cascade-persist Hibernate performs on this same transaction's
+        // flush double-inserts the identical row; verified empirically via
+        // a duplicate-key H2 error with identical bound values on both
+        // inserts). Cascade alone persists it once, and getStockQuantity()
+        // (derived from inventory, #485) is correct immediately for this
+        // same request/response and for the ProductCreatedEvent below — the
+        // OneToOne is mappedBy="product", so it's never populated
+        // automatically from the Inventory side.
+        saved.setInventory(inventory);
+        detachCollections(saved);
 
         domainEventPublisher.publish(new ProductCreatedEvent(this, saved));
         return saved;
@@ -192,7 +209,12 @@ public class ProductServiceImpl implements ProductService {
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setDiscountPrice(request.getDiscountPrice());
-        product.setStockQuantity(request.getStockQuantity());
+        // request.getStockQuantity() is intentionally NOT applied here —
+        // Inventory is the sole writable source of stock (#485); stock
+        // changes on an existing product go through AdminInventoryController
+        // /adjustInventory, not this product-update request. A non-null
+        // value here is silently ignored, matching how creation-only fields
+        // already behave in this shared Create*Request DTO.
         product.setSku(request.getSku());
         product.setImageUrl(request.getImageUrl());
         if (request.getIsFeatured() != null) {

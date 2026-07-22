@@ -31,5 +31,6 @@
     <include file="db/changelog/changes/20260712-020-fix-product-tag-map-fk.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260718-021-backfill-inventory-for-products.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260719-022-reconcile-coupons-schema.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260721-023-drop-product-stock-quantity.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

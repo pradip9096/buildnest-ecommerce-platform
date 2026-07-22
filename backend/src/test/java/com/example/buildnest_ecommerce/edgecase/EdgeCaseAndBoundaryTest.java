@@ -1,8 +1,10 @@
 package com.example.buildnest_ecommerce.edgecase;
 
+import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.Order;
 import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.entity.User;
+import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import com.example.buildnest_ecommerce.repository.OrderRepository;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
@@ -38,8 +40,28 @@ class EdgeCaseAndBoundaryTest {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private InventoryRepository inventoryRepository;
+
     private User testUser;
     private Product testProduct;
+
+    /**
+     * Creates (or replaces) testProduct's Inventory row with the given
+     * quantity and links it in-memory, mirroring how
+     * ProductServiceImpl.createProduct() links inventory after save (#485
+     * — Inventory is the sole writable source of stock).
+     */
+    private void setStock(int quantity) {
+        Inventory inventory = testProduct.getInventory() != null
+                ? testProduct.getInventory()
+                : new Inventory();
+        inventory.setProduct(testProduct);
+        inventory.setQuantityInStock(quantity);
+        inventory.setMinimumStockLevel(0);
+        inventory = inventoryRepository.save(inventory);
+        testProduct.setInventory(inventory);
+    }
 
     @BeforeEach
     void setUp() {
@@ -56,9 +78,9 @@ class EdgeCaseAndBoundaryTest {
         testProduct.setName("Edge Case Product");
         testProduct.setDescription("Test");
         testProduct.setPrice(new BigDecimal("0.01"));
-        testProduct.setStockQuantity(1);
         testProduct.setIsActive(true);
         testProduct = productRepository.save(testProduct);
+        setStock(1);
     }
 
     @Test
@@ -81,19 +103,17 @@ class EdgeCaseAndBoundaryTest {
     @Test
     @DisplayName("TC-EDGE-003: Should handle zero stock quantity")
     void testZeroStockQuantity() {
-        testProduct.setStockQuantity(0);
-        Product updated = productRepository.save(testProduct);
+        setStock(0);
 
-        assertEquals(0, updated.getStockQuantity());
+        assertEquals(0, testProduct.getStockQuantity());
     }
 
     @Test
     @DisplayName("TC-EDGE-004: Should handle maximum stock quantity")
     void testMaximumStockQuantity() {
-        testProduct.setStockQuantity(Integer.MAX_VALUE);
-        Product updated = productRepository.save(testProduct);
+        setStock(Integer.MAX_VALUE);
 
-        assertEquals(Integer.MAX_VALUE, updated.getStockQuantity());
+        assertEquals(Integer.MAX_VALUE, testProduct.getStockQuantity());
     }
 
     @Test
@@ -197,10 +217,9 @@ class EdgeCaseAndBoundaryTest {
     @Test
     @DisplayName("TC-EDGE-013: Should handle negative stock adjustment")
     void testNegativeStockAdjustment() {
-        testProduct.setStockQuantity(-10);
-        Product updated = productRepository.save(testProduct);
+        setStock(-10);
 
-        assertEquals(-10, updated.getStockQuantity());
+        assertEquals(-10, testProduct.getStockQuantity());
     }
 
     @Test

@@ -70,7 +70,10 @@ export function ProductFormModal({ product, categories, onClose, onSaved }: Prop
       description: description.trim(),
       price: priceValue,
       discountPrice: discountPrice ? Number(discountPrice) : undefined,
-      stockQuantity: stockQuantity ? Number(stockQuantity) : undefined,
+      // Stock is Inventory-owned (#485) — the backend now ignores
+      // stockQuantity on update, so only send it at creation time to avoid
+      // an edit field that silently does nothing.
+      stockQuantity: !isEdit && stockQuantity ? Number(stockQuantity) : undefined,
       sku: sku.trim() || undefined,
       categoryId: Number(categoryId),
       imageUrl: imageUrl.trim() || undefined,
@@ -161,7 +164,9 @@ export function ProductFormModal({ product, categories, onClose, onSaved }: Prop
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="product-stock" className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
+              <label htmlFor="product-stock" className="block text-sm font-medium text-gray-700 mb-1">
+                Initial Stock Quantity
+              </label>
               <input
                 id="product-stock"
                 type="number"
@@ -170,8 +175,13 @@ export function ProductFormModal({ product, categories, onClose, onSaved }: Prop
                 value={stockQuantity}
                 onChange={e => setStockQuantity(e.target.value)}
                 placeholder="100"
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                disabled={isEdit}
+                title={isEdit ? 'Manage stock from the Inventory tab' : undefined}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:bg-gray-50 disabled:text-gray-400"
               />
+              {isEdit && (
+                <p className="mt-1 text-xs text-gray-400">Manage stock from the Inventory tab.</p>
+              )}
             </div>
             <div>
               <label htmlFor="product-sku" className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
