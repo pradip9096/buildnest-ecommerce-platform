@@ -1,14 +1,14 @@
 ---
 title: PIT Mutation Testing — Surviving Mutation Patterns and Fixes
 category: testing
-tags: [pit, mutation-testing, junit5, assertthrows, argumentcaptor, archunit]
-keywords: [survived mutation, lambda null return, setter removal, orElseThrow, NPE, ImplTest, targetTests]
-source_conversations: [Session 2026-07-01]
-last_updated: 2026-07-01
+tags: [pit, mutation-testing, junit5, assertthrows, argumentcaptor, archunit, ternary, removeconditionalmutator]
+keywords: [survived mutation, lambda null return, setter removal, orElseThrow, NPE, ImplTest, targetTests, ternary sentinel, isNull assertion]
+source_conversations: [Session 2026-07-01, Session 2026-07-22]
+last_updated: 2026-07-22
 confidence: high
 evidence_strength: strong
-root_cause: "three independent assertion-weakness patterns (asserting exception type instead of message, asserting a DTO that hides a mutated field, and a naming-convention filter silently excluding a test class) each let a real mutation survive PIT without the test genuinely exercising the mutated behavior"
-impact: medium — mutation coverage silently understated actual test quality, masking gaps a coverage-percentage metric alone wouldn't reveal
+root_cause: "four independent assertion-weakness patterns (asserting exception type instead of message, asserting a DTO that hides a mutated field, a naming-convention filter silently excluding a test class, and a null-control-value ternary assertion) each let a real mutation survive PIT without the test genuinely exercising the mutated behavior"
+impact: medium — mutation coverage silently understated actual test quality, masking gaps a coverage-percentage metric alone wouldn't reveal; blocked CI's PIT gate (76% < 77% threshold) on #554
 related_lessons:
   - docs/knowledge-base/project/quality-gate-ratchet-pattern.md
 ---
@@ -95,3 +95,32 @@ Broaden `targetTests` in `pom.xml` to include plain `*Test`:
 ```
 
 This is simpler but picks up unrelated test helpers. The ArchUnit approach enforces convention rather than relaxing the filter.
+
+---
+
+## Pattern 4 — A ternary's untested branch survives when the control value happens to equal both branches' output
+
+### Problem
+
+```java
+notificationService.sendSellerVerificationDecision(
+        email, businessName, approved, approved ? null : rejectionReason);
+```
+
+PIT mutates the `approved` check so the ternary always evaluates the `rejectionReason` branch (`RemoveConditionalMutator_EQUAL_ELSE`). A test for the `approved == true` path called with `rejectionReason = null` (the caller had no reason to pass one — it's an approval) asserts `isNull()` on the fourth argument. The mutant also produces `null` here, since the untaken branch's *input* was null anyway — the assertion can't distinguish "the ternary correctly suppressed a non-null value" from "the ternary was never really exercised because there was nothing to suppress." The mutation survives even though the test superficially covers both branches (`approved=true`, `approved=false`).
+
+### Fix
+
+Pass a distinguishable, non-null sentinel into the untaken branch's argument even when the caller wouldn't realistically pass one, so the assertion only passes if the ternary actually discards it:
+
+```java
+// approved=true path — rejectionReason passed as a non-null sentinel value
+// specifically so isNull() only passes if the ternary actually suppresses it
+SellerResponseDTO result = sellerService.updateVerificationStatus(
+        10L, "VERIFIED", "ignored on approval");
+...
+verify(notificationService).sendSellerVerificationDecision(
+        eq(email), eq(businessName), eq(true), isNull());
+```
+
+Generalizes beyond this repo: any `assertThat(x).isNull()` (or `isEqualTo(y)`) is only a real assertion about a conditional's behavior if the fixture supplies a value that would visibly differ between the mutated and unmutated code paths. If the untaken branch's value coincides with the null/default the mutant also produces, the assertion is a tautology with respect to that mutant.

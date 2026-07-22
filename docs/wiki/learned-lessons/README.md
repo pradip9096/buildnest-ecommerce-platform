@@ -107,7 +107,7 @@ The manifest — one row per lesson file, no prose beyond this table.
 
 | File | Topic | Category | Last Updated |
 |---|---|---|---|
-| [pit-mutation-testing-patterns.md](pit-mutation-testing-patterns.md) | Three common PIT mutation survival patterns and their fixes: lambda null-return, setter-removal hidden by DTO, and `targetTests` naming exclusion | testing | 2026-07-01 |
+| [pit-mutation-testing-patterns.md](pit-mutation-testing-patterns.md) | Four common PIT mutation survival patterns and their fixes: lambda null-return, setter-removal hidden by DTO, `targetTests` naming exclusion, and a ternary assertion that's a tautology when the untaken branch's control value is null | testing | 2026-07-22 |
 | [shell-pipeline-exit-code-masking.md](shell-pipeline-exit-code-masking.md) | Pipelines ending in `tail`/`grep` always exit 0 — masks build failures; use `$PIPESTATUS` or `set -o pipefail` | tooling | 2026-07-01 |
 | [github-issue-hygiene.md](github-issue-hygiene.md) | Root causes of stale issue accumulation and a repeatable closure protocol | process | 2026-07-01 |
 | [dotenv-not-auto-loaded-by-local-processes.md](dotenv-not-auto-loaded-by-local-processes.md) | Docker Compose auto-loads `.env`; locally-run processes (`mvnw`, `npm run dev`) do not — must be sourced explicitly | tooling | 2026-07-02 |
