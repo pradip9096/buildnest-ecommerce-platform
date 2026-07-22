@@ -200,6 +200,32 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("Should handle DuplicateResourceException correctly")
+    void testHandleDuplicateResourceException() {
+        // Arrange
+        DuplicateResourceException exception =
+                new DuplicateResourceException("Seller", "userId", "3");
+
+        // Act
+        ResponseEntity<ErrorResponse> response =
+                exceptionHandler.handleDuplicateResourceException(
+                        exception, webRequest);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+
+        ErrorResponse errorResponse = response.getBody();
+        assertNotNull(errorResponse);
+        assertEquals(409, errorResponse.getStatusCode());
+        assertEquals(
+                "Seller with userId '3' already exists",
+                errorResponse.getMessage());
+        assertEquals("Duplicate resource", errorResponse.getError());
+        assertEquals("/api/test", errorResponse.getPath());
+    }
+
+    @Test
     @DisplayName("Should handle ValidationException correctly")
     void testHandleValidationException() {
         // Arrange

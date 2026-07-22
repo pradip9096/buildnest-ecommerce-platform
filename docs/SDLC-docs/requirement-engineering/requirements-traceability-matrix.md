@@ -10,14 +10,14 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.24 |
-| **Date** | 2026-07-22 10:30 IST |
+| **Version** | 1.26 |
+| **Date** | 2026-07-22 17:30 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
-| **Related SRS** | SRS-BUILDNEST-001 v4.9 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
-| **Related SDD** | SDD-BUILDNEST-001 v3.6 — `docs/SDLC-docs/design/software-design-description.md` |
-| **Related TP** | TP-BUILDNEST-001 v4.2 — `docs/SDLC-docs/software-testing/test-plan.md` |
+| **Related SRS** | SRS-BUILDNEST-001 v5.1 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
+| **Related SDD** | SDD-BUILDNEST-001 v4.1 — `docs/SDLC-docs/design/software-design-description.md` |
+| **Related TP** | TP-BUILDNEST-001 v4.3 — `docs/SDLC-docs/software-testing/test-plan.md` |
 | **Baseline Assessment** | `docs/reports/baseline-assessment-2026-06-19.md` |
 
 ---
@@ -52,7 +52,9 @@
 | 1.21 | 2026-07-21 14:00 IST | QA Manager | FR-ADM-02 (inventory analytics and reports) corrected from 🔵 Pending Ph-2 to ✅ Implemented: `AdminInventoryAnalyticsController`/`InventoryAnalyticsService` were already fully implemented and tested, but had no frontend consumer (#432, direct 1:1 mirror of the FR-ADM-01/#431 `SalesAnalyticsTab.tsx` stat-card + list pattern — no chart library). Added `InventoryAnalyticsTab.tsx` (high-demand/low-stock list, seasonal demand patterns, stock turnover, and an on-demand predictive restocking plan) with `InventoryAnalyticsTab.test.tsx` coverage, and extended the citation. `FR-INV-07` (which additionally covers `InventoryReportService`/`AdminInventoryReportController`, out of #432's scope) stays 🔵 Pending Ph-2 — not marked Implemented by this change. Recomputed the Admin Operations (FR-ADM) Coverage Summary row (8→9 Implemented, 1→0 Pending), the Coverage Summary Totals row (120→121 Implemented, 47→46 Pending), and the §12 Phase 2 Admin full-suite Started/Not-Started counts (3→4 Started, 3→2 Not Started) and Phase 2 total (38→39 Started, 43→42 Not Started) | Pending |
 | 1.23 | 2026-07-22 09:30 IST | QA Manager | FR-INV-04 (admin updates stock quantities): eliminated the `Product.stockQuantity`/`Inventory` dual source of truth (#485, follow-up from #309) — `Product.stockQuantity` is no longer a persisted column, only a derived getter reading `Inventory.quantityInStock`, so there is exactly one writable representation of stock. Confirmed the drift was already live (not hypothetical): `ProductServiceImpl.updateProduct()` wrote `Product.stockQuantity` from the request without touching `Inventory`, desyncing the two on every ordinary edit. `CreateProductRequest.stockQuantity` is now create-only; stock changes on an existing product must go through `AdminInventoryController`'s adjust-inventory endpoint. Added `ProductInventorySingleSourceOfTruthIT` as the regression guard (real H2 persistence, not mocks — proves an update carrying a different `stockQuantity` does not change the persisted `Inventory` row). Extended FR-INV-04's Test citation; status stays ✅ Implemented (no functional capability changed, only the storage/consistency guarantee) — no count changes |
 | 1.24 | 2026-07-22 10:30 IST | QA Manager | FR-INV-03 (admin adds stock) / FR-INV-04 (admin updates stock quantities): closed a server-side floor-validation gap (#487, discovered during #440) — `AdminInventoryController.addStock()`/`updateStock()`'s `@RequestParam Integer quantity` had no `@Min(0)`, and `InventoryServiceImpl.addStock()`/`updateStock()` performed no defensive check either, so a negative value (bypassing the frontend's client-side guard, e.g. via a raw API client) could push `Inventory.quantityInStock` negative with no validation error. Fixed via `@Min(0)` + `@Validated` on the controller (added a `ConstraintViolationException` handler to `GlobalExceptionHandler`, which didn't exist before) and a defensive service-layer check in both methods, matching this repo's existing defense-in-depth pattern (`@PreAuthorize` at both URL and service layers). Both Test citations already list `AdminInventoryControllerTest`/`InventoryServiceImplTest` — no new test class added, both extended with negative-quantity cases (2 MockMvc tests proving real bean-validation binding, 3 unit tests including a corrupted-pre-existing-row scenario). Status stays ✅ Implemented for both (no functional capability changed, only the validation guarantee) — no count changes |
+| 1.25 | 2026-07-22 16:00 IST | QA Manager | **Marketplace pivot addendum**, RTM counterpart to SRS v5.0/SDD v4.0's FG-11/FG-12 addendum. Added §6.11 (Seller & Marketplace Management, FR-SEL-01–08) and §6.12 (Location-Based Matching, FR-LOC-01–04), all rows ⬜ Not Started — nothing in this addendum is implemented. Added both new categories to the Coverage Summary (§3) as separate rows explicitly excluded from the existing Totals row, matching the same treatment SRS §4.2/SDD §7 already gave this addendum. Also found and fixed pre-existing cross-reference drift independent of this addendum: `Related SDD` was stale at v3.6 (actual current v3.8 before this revision's own v4.0 bump) and `Related TP` was stale at v4.2 (actual current v4.3) — both corrected alongside the `Related SRS` 4.9→5.0 update this addendum itself required | Pending |
 | 1.22 | 2026-07-21 18:10 IST | QA Manager | FR-INV-07 (admin inventory analytics and reports) corrected from 🔵 Pending Ph-2 to ✅ Implemented: `AdminInventoryReportController`/`InventoryReportService` (the report/breach half of FR-INV-07, left explicitly out of scope by #432/1.21) had no frontend consumer (#433, direct 1:1 mirror of the FR-ADM-02/#432 `InventoryAnalyticsTab.tsx` admin-dashboard-tab pattern). Added `InventoryThresholdsTab.tsx` (summary stats, below-threshold products with inline minimum-level editing via `AdminInventoryThresholdController.setProductThreshold`, threshold breach list, frequently low-stock products) with `InventoryThresholdsTab.test.tsx` coverage, and extended the FR-INV-07 citation. FR-ADM-06 (admin configures inventory alert thresholds) citation also extended to the same new component — status stays 🟡 Partial, since only product-level threshold configuration shipped; category-level threshold configuration and the category-inheritance toggle (`AdminInventoryThresholdController.setCategoryThreshold`/`useProductCategoryThreshold`) remain deferred, tracked as a follow-up issue. Note: the issue's own body cited `AdminThresholdController` as an alternate controller name for this feature — verified against source and found incorrect; that controller is unrelated (system-monitoring CPU/memory/error-rate thresholds), not inventory. Recomputed the Inventory (FR-INV) Coverage Summary row (5→6 Implemented, 2→1 Pending), the Coverage Summary Totals row (121→122 Implemented, 46→45 Pending), and the §12 Phase 2 "Auth / Safety / Checkout / Inventory Ph-2" Started/Not-Started counts (0→1 Started, 10→9 Not Started) and Phase 2 total Started/Not-Started (39→40 / 42→41) | Pending |
+| 1.26 | 2026-07-22 17:30 IST | QA Manager | FR-SEL-01 (seller registration, distinct from a buyer account) corrected from ⬜ Not Started to ✅ Implemented (#553, first requirement implemented from the Ph-3 marketplace-pivot addendum): `Seller` entity/Liquibase changeset (1:1 extension of `User`, mirrors `Address`), `SellerServiceImpl.registerSeller`/`SellerController`, granting `ROLE_SELLER` on registration. `district_id` is a deliberately deferred/nullable column — the SDD's own `Seller ──[N:1]──► District` FK depends on ADR #561 (OQ-01/OQ-02), still open; registration does not functionally require it. Recomputed the Seller & Marketplace (FR-SEL) Coverage Summary row (0→1 Implemented, 8→7 Not Started) — Totals row unaffected (this category stays explicitly excluded per 1.25) | Pending |
 
 ### Document Approval
 
@@ -129,8 +131,12 @@ The RTM serves to:
 | Design Constraints (DC) | 8 | 7 | 1 | 0 | 0 | 0 |
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
 | **Totals** | **183** | **122** | **16** | **45** | **0** | **0** |
+| Seller & Marketplace (FR-SEL) *(Ph-3, Planned — excluded from Totals above)* | 8 | 1 | 0 | 0 | 0 | 7 |
+| Location-Based Matching (FR-LOC) *(Ph-3, Planned — excluded from Totals above)* | 4 | 0 | 0 | 0 | 0 | 4 |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
+>
+> **Ph-3 (Marketplace Expansion) posture**: 12 requirements added by the SRS v5.0/SDD v4.0 marketplace-pivot addendum, all ⬜ Not Started — deliberately excluded from the Totals row above, which represents existing Ph-1/Ph-2 tracked scope. These will be folded into Totals once implementation begins and the OQ-01/OQ-02 design questions (§6.12) are resolved.
 
 ---
 
@@ -344,6 +350,32 @@ The RTM serves to:
 | FR-FE-29 | Breadcrumb navigation | Low | Ph-2 | §4.3.6 | None found — no Breadcrumb component exists anywhere in `frontend/src/` | Playwright | Demonstration | 🔵 Pending Ph-2 |
 | FR-FE-30 | ErrorBoundary with fallback UI | Medium | Ph-2 | §4.3.6 | `frontend/src/components/common/ErrorBoundary.tsx` (class component, `getDerivedStateFromError`/`componentDidCatch`, renders a real fallback UI with reload button) | `ErrorBoundary.test.tsx` | Test | ✅ Implemented |
 | FR-FE-31 | Admin category management | Medium | Ph-2 | §4.7.4 | `frontend/src/components/admin/CategoriesTab.tsx`, `frontend/src/components/admin/CategoryFormModal.tsx` | Vitest | Test | ✅ Implemented (#428) |
+
+### 6.11 Seller & Marketplace Management (FG-11) *(Ph-3, Planned)*
+
+> No implementation exists for any row below — added as part of the marketplace-pivot addendum (SRS v5.0, SDD v4.0). See SDD §4.5.2's note on the existing dormant `product.supplier_id` FK as the likely reactivation target for FR-SEL-03, once the `Seller`/`District` design is finalised.
+
+| Req ID | Description | Priority | Phase | SDD Reference | Implementation | Test Class(es) | Verification | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| FR-SEL-01 | Seller registration, distinct from a buyer (USER) account | High | Ph-3 | §4.3.3, §4.5.1, §4.5.2 | `Seller` entity/changeset, `SellerServiceImpl.registerSeller`, `SellerController` (#553). `district_id` deliberately deferred/nullable pending ADR #561 (OQ-01/OQ-02) | `SellerServiceImplTest`, `SellerControllerTest`, `SellerRegistrationIT` | Test | ✅ Implemented |
+| FR-SEL-02 | Admin verification/approval before a seller can list products | High | Ph-3 | §4.5.2 | Not started | — | Test | ⬜ Not Started |
+| FR-SEL-03 | Each product associated with exactly one owning seller | High | Ph-3 | §4.5.2 (dormant `product.supplier_id` FK) | Not started | — | Test | ⬜ Not Started |
+| FR-SEL-04 | Seller manages their own product listings only | High | Ph-3 | §4.5.1, §4.5.2 | Not started | — | Test | ⬜ Not Started |
+| FR-SEL-05 | Seller manages inventory for their own products only | High | Ph-3 | §4.5.1, §4.5.2 | Not started | — | Test | ⬜ Not Started |
+| FR-SEL-06 | Seller views/manages orders containing their own products only | High | Ph-3 | §4.5.1 | Not started | — | Test | ⬜ Not Started |
+| FR-SEL-07 | Buyers rate/review individual sellers | Medium | Ph-3 | §4.5.1 | Not started | — | Test | ⬜ Not Started |
+| FR-SEL-08 | Seller cannot access/modify another seller's data (defense in depth) | High | Ph-3 | Security Overlay (pattern per `spring/spring-security.md`) | Not started | — | Test | ⬜ Not Started |
+
+### 6.12 Location-Based Matching (FG-12) *(Ph-3, Planned)*
+
+> No implementation exists for any row below. §3.2.12's Open Questions (OQ-01 strict-district vs. radius; OQ-02 fixed reference table vs. geocoded) are unresolved — see SDD §4.5.6 for why these rows cannot be finalised into a concrete design yet.
+
+| Req ID | Description | Priority | Phase | SDD Reference | Implementation | Test Class(es) | Verification | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| FR-LOC-01 | Record a district (or equivalent) for each seller | High | Ph-3 | §4.5.1, §4.5.2 | Not started | — | Test | ⬜ Not Started |
+| FR-LOC-02 | Record a district (or equivalent) for each buyer | High | Ph-3 | §4.5.1, §4.5.2 | Not started | — | Test | ⬜ Not Started |
+| FR-LOC-03 | Restrict buyer's catalogue view to district-matching sellers | High | Ph-3 | §4.5.6 | Not started | — | Test | ⬜ Not Started |
+| FR-LOC-04 | Prevent checkout from a seller outside the buyer's matching radius | High | Ph-3 | §4.5.6 | Not started | — | Test | ⬜ Not Started |
 
 ---
 

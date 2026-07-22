@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 4.9 |
-| **Date** | 2026-07-19 10:40 IST |
+| **Version** | 5.1 |
+| **Date** | 2026-07-22 15:00 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -38,6 +38,8 @@
 | 4.7 | 2026-07-19 06:00 IST | Technical Lead | Added FR-ADM-10 (admin manages product tags — create/view/update/delete) to §3.2.8 — no FR row existed for tag management at all despite `AdminProductTagController`'s backend already being fully implemented and Appendix A.19 already documenting its endpoints; the admin frontend UI for it was built in the same change (#429). Recomputed §4.2's Admin Operations aggregate row (9→10 requirements, 6→7 Medium) | Pending |
 | 4.8 | 2026-07-19 09:00 IST | Technical Lead | Added FR-ADM-11 (admin manages coupons — view, create, deactivate) to §3.2.8. Appendix A.20's endpoint table was itself stale, listing only `POST`/`DELETE` — corrected to include the `GET` list endpoint added in the same change (#435), since the admin frontend UI (`CouponsTab.tsx`) can't function without one, matching the pattern already fixed once for A.19. Recomputed §4.2's Admin Operations aggregate row (10→11 requirements, 7→8 Medium) | Pending |
 | 4.9 | 2026-07-19 10:40 IST | Technical Lead | Added FR-CHK-09 (users apply a coupon/discount code during checkout) to §3.2.4 — the backend endpoint (`MultiStepCheckoutController.applyCoupon`, `/api/v1/checkout/coupon`) already existed and was already documented in Appendix A.10, but no requirement row was ever added for it despite FR-ADM-11's sibling admin-side requirement existing since #435; the customer-facing frontend wiring (coupon input on the checkout Shipping step, discount reflected in order-summary/payment totals) was built in the same change (#436). Recomputed §4.2's Checkout aggregate row (8→9 requirements, 2→3 Medium) | Pending |
+| 5.0 | 2026-07-22 15:00 IST | Technical Lead | **Marketplace pivot addendum.** Promoted FUT-02 ("Multi-vendor marketplace support") from a one-line deferred placeholder into a scoped requirements addendum, following a business-model discussion establishing the platform's actual direction: a district/location-scoped multi-seller marketplace connecting existing offline construction-material and décor shops to nearby buyers, phased B2C-first with a B2B (bulk/RFQ) extension to follow. Added: new Ph-3 delivery phase (§2.8) for this expansion, distinct from Ph-1/Ph-2's stabilisation-and-production-readiness scope; new SELLER user characteristic (§2.3); new SN-08 stakeholder need (§2.7); two new Feature Groups, FG-11 Seller & Marketplace Management and FG-12 Location-Based Matching, with placeholder FR-SEL-* / FR-LOC-* requirement rows (§3.2.11, §3.2.12) — all rows explicitly Phase=Ph-3 and unverified (nothing in this addendum is implemented yet; no backend/frontend code changed in this revision). Updated §1.2 Scope and §1.3.2/§2.2 Product Functions Summary to list the two new groups. This is additive only — no existing FR row was removed, renumbered, or reinterpreted; existing Ph-1/Ph-2 requirements and their RTM traceability are unaffected. SDD/RTM/Test Plan updates to follow as separate revisions once this addendum is reviewed | Pending |
+| 5.1 | 2026-07-22 17:30 IST | Technical Lead | FR-SEL-01 (seller registration) implemented (#553) — first requirement delivered from the Ph-3 marketplace-pivot addendum. Updated §4.2's Seller & Marketplace aggregate status row (0→1 Implemented, 8→7 Not started); Grand Total unaffected (category stays explicitly excluded per v5.0) | Pending |
 
 ### Document Change Procedure
 
@@ -131,6 +133,7 @@ The purpose of this document is to:
 | Admin Operations | Analytics, reports, user management, inventory administration, audit logs |
 | Monitoring & Observability | Health checks, Prometheus metrics, alerting, structured log aggregation |
 | Frontend Application | Responsive React SPA with client-side routing, state management, form validation |
+| Seller & Marketplace Management *(Ph-3, Planned)* | Seller onboarding/verification, seller-owned product catalogue, district-based seller-buyer matching — see §3.2.11–§3.2.12 |
 
 **System Boundary**: This SRS covers the entire BuildNest platform — the **Spring Boot 3.5 backend API** and the **React 19 Frontend SPA**.
 
@@ -175,6 +178,8 @@ The system is designed for deployment on **Kubernetes** (manifests provided) or 
 | FG-08 | Admin Operations | User management, order management, product management, analytics, reports, audit logs |
 | FG-09 | Monitoring & Alerting | Health checks (DB, Redis), Prometheus metrics, Elasticsearch alerting, webhook events |
 | FG-10 | Frontend Experience | Responsive SPA, client-side routing, form validation, error handling, state management |
+| FG-11 | Seller & Marketplace Management *(Ph-3, Planned)* | Seller onboarding/verification, seller-owned product catalogue, seller dashboard |
+| FG-12 | Location-Based Matching *(Ph-3, Planned)* | District-scoped seller/product visibility for buyers, based on transport-cost constraints |
 
 #### 1.3.3 System Interfaces
 
@@ -326,6 +331,8 @@ BuildNest is a new, self-contained product. It is not a replacement for or enhan
 | FG-08 | Admin Operations | User management, order management, product management, analytics, reports, audit logs |
 | FG-09 | Monitoring & Alerting | Health checks, Prometheus metrics, Elasticsearch alerting, webhook events |
 | FG-10 | Frontend Experience | Responsive SPA, client-side routing, form validation, error handling, state management |
+| FG-11 | Seller & Marketplace Management *(Ph-3, Planned)* | Seller onboarding/verification, seller-owned product catalogue, seller dashboard |
+| FG-12 | Location-Based Matching *(Ph-3, Planned)* | District-scoped seller/product visibility for buyers, based on transport-cost constraints |
 
 ### 2.3 User Characteristics
 
@@ -333,6 +340,7 @@ BuildNest is a new, self-contained product. It is not a replacement for or enhan
 | :--- | :--- | :--- | :--- |
 | **End User (USER)** | Registered customer browsing and purchasing products | Low to moderate; interacts via frontend SPA | Browse products, manage cart, place orders, write reviews, manage wishlist |
 | **Administrator (ADMIN)** | Platform operator managing products, inventory, and system health | Moderate to high; may use admin UI or direct API | Manage products/inventory, view analytics/reports, manage users, audit logs |
+| **Seller (SELLER)** *(Ph-3, Planned)* | Verified offline shop owner (construction materials or décor) selling through the platform to buyers within their district | Low to moderate; interacts via seller dashboard | Manage own product listings/inventory, view own orders, fulfil within served districts |
 | **API Consumer (Developer)** | Frontend or third-party developer integrating with the API | High; direct REST API interaction | All API endpoints per granted role |
 | **DevOps / SRE** | Operations team managing deployment and monitoring | High; infrastructure and monitoring tools | Deployment, health monitoring, alerting, disaster recovery |
 
@@ -386,7 +394,7 @@ Requirements deferred to future releases:
 | ID | Requirement | Target Release |
 | :--- | :--- | :--- |
 | FUT-01 | Kafka-based event streaming (infrastructure present; not active) | v1.1 |
-| FUT-02 | Multi-vendor marketplace support | v2.0 |
+| FUT-02 | Multi-vendor marketplace support — scoped in §3.2.11 (FG-11) / §3.2.12 (FG-12); B2B bulk/RFQ extension remains deferred beyond Ph-3 | Ph-3 |
 | FUT-03 | Native mobile application (iOS / Android) | v2.0 |
 | FUT-04 | Multi-region deployment | v2.0 |
 | FUT-05 | Pact consumer contract tests (infrastructure present; 0 active tests) | v1.1 |
@@ -404,15 +412,17 @@ Per ISO/IEC/IEEE 29148:2018 Clause 6.3:
 | SN-05 | DevOps / SRE | Observable, container-ready application with zero-downtime deployments | FG-09, PRT-01–04 |
 | SN-06 | Security Auditors | Compliance with OWASP, PCI-DSS, and GDPR standards | SEC-01–14 |
 | SN-07 | QA Engineers | A test suite whose pass signal is trustworthy and reflects real system behaviour | TIR-01–05 |
+| SN-08 | Sellers *(Ph-3, Planned)* | A way to reach buyers beyond their existing offline shop's foot traffic, within a service area they can realistically fulfil | FG-11, FG-12 |
 
 ### 2.8 Delivery Phases
 
-All requirements are classified by delivery phase. Phase 1 is a prerequisite for Phase 2.
+All requirements are classified by delivery phase. Phase 1 is a prerequisite for Phase 2. Phase 3 is a business-model expansion, not a further stabilisation step — it is independent of Ph-1/Ph-2's technical-debt scope and may proceed once Ph-2 is reasonably stable, without requiring Ph-2's full completion criteria to be met first.
 
 | Phase | Name | Goal | Completion Criteria |
 | :--- | :--- | :--- | :--- |
 | **Ph-1** | **Stable** | Backend build gate is trustworthy; zero test failures | `./mvnw test -P unit-tests` reports 0 failures, 0 errors |
 | **Ph-2** | **Production Ready** | System is deployable, observable, secure, and end-user accessible | All Ph-2 requirements met; staging validation passed; frontend functional |
+| **Ph-3** | **Marketplace Expansion** *(Planned)* | Platform supports multiple verified sellers, each district-scoped, selling to buyers via a B2C flow; B2B (bulk/RFQ) is an explicit later sub-phase, not required for Ph-3 completion | All Ph-3 FR-SEL-*/FR-LOC-* requirements implemented and tested; seller onboarding, district matching, and B2C checkout against seller-owned products functional end-to-end |
 
 ---
 
@@ -631,6 +641,41 @@ This system has no direct hardware interfaces. It runs as a containerised applic
 | FR-FE-28 | ProductCard: product image, name, price, rating, "Add to Cart" | High | Ph-2 | Demonstration |
 | FR-FE-29 | Breadcrumb: navigation hierarchy on product and category pages | Low | Ph-2 | Demonstration |
 | FR-FE-30 | ErrorBoundary: catches React rendering errors and displays a fallback UI | Medium | Ph-2 | Test |
+
+---
+
+#### 3.2.11 Seller & Marketplace Management (FG-11) — *Ph-3, Planned*
+
+> **Status note**: Every requirement in this subsection is planned, not implemented. No `Seller` entity, onboarding flow, or seller-scoped catalogue exists in the codebase as of v5.0 of this document. Verification method stated is the intended method once built; none of these rows are currently verifiable.
+
+| ID | Requirement | Priority | Phase | Verification |
+| :--- | :--- | :--- | :--- | :--- |
+| FR-SEL-01 | The system shall allow a prospective seller to register an account distinct from a buyer (USER) account | High | Ph-3 | Test |
+| FR-SEL-02 | The system shall require admin verification/approval of a seller registration (e.g. shop registration/GST details) before the seller can list products | High | Ph-3 | Test |
+| FR-SEL-03 | The system shall associate each product with exactly one owning seller | High | Ph-3 | Test |
+| FR-SEL-04 | The system shall allow a verified seller to create, update, and remove their own product listings, scoped to only their own products | High | Ph-3 | Test |
+| FR-SEL-05 | The system shall allow a verified seller to manage inventory/stock for their own products only | High | Ph-3 | Test |
+| FR-SEL-06 | The system shall allow a verified seller to view and manage orders containing their own products only | High | Ph-3 | Test |
+| FR-SEL-07 | The system shall allow buyers to rate and review individual sellers, in addition to existing per-product reviews (FG-07) | Medium | Ph-3 | Test |
+| FR-SEL-08 | The system shall prevent a seller from accessing or modifying another seller's products, inventory, or orders (defense in depth: URL authorisation + method-level `@PreAuthorize` per existing RBAC convention) | High | Ph-3 | Test |
+
+#### 3.2.12 Location-Based Matching (FG-12) — *Ph-3, Planned*
+
+> **Status note**: Every requirement in this subsection is planned, not implemented. The current product search/catalogue (FG-02, Elasticsearch-backed) has no geographic dimension. This subsection intentionally leaves the district-matching mechanism (strict same-district vs. seller-selected delivery radius) undecided — see Open Questions below; requirement wording will be finalised once that design decision is made (`solution-options-adr`).
+
+| ID | Requirement | Priority | Phase | Verification |
+| :--- | :--- | :--- | :--- | :--- |
+| FR-LOC-01 | The system shall record a district (or equivalent administrative area) for each seller | High | Ph-3 | Test |
+| FR-LOC-02 | The system shall record a district (or equivalent) for each buyer, derived from their registered/delivery address | High | Ph-3 | Test |
+| FR-LOC-03 | The system shall restrict the product catalogue a buyer browses/searches to sellers matching the buyer's district-matching rule (exact match or seller-declared delivery radius — mechanism TBD, see Open Question OQ-01) | High | Ph-3 | Test |
+| FR-LOC-04 | The system shall prevent checkout of a product from a seller outside the buyer's permitted matching radius | High | Ph-3 | Test |
+
+**Open Questions (to resolve before implementation):**
+
+| ID | Question | Status |
+| :--- | :--- | :--- |
+| OQ-01 | Is district matching strict (buyer sees only same-district sellers) or radius-based (seller declares which nearby districts they'll deliver to)? | Open |
+| OQ-02 | Is district determined from a fixed, admin-maintained reference table, or free-text/geocoded from address? | Open |
 
 ---
 
@@ -913,6 +958,8 @@ Test integrity requirements define the properties that the test suite itself mus
 | Test Integrity (TIR-01–05) | 5 | Ph-1 / Ph-2 | 2 High, 3 Medium | Build, Inspection |
 | **Total Non-Functional** | **61** | | | |
 | **Grand Total** | **156** | | | |
+| Seller & Marketplace (FR-SEL-01–08) *(Ph-3, Planned — excluded from Grand Total above)* | 8 | Ph-3 | 6 High, 2 Medium | 1 Implemented (#553), 7 Not started |
+| Location-Based Matching (FR-LOC-01–04) *(Ph-3, Planned — excluded from Grand Total above)* | 4 | Ph-3 | 4 High | Not started |
 
 ### 4.3 Phase 1 Acceptance Criteria
 

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #553 (FR-SEL-01): Seller registration — a Seller is a 1:1
+         extension of User, mirroring the existing Address pattern (SDD v4.0
+         §4.3.3/§4.5.1/§4.5.2). district_id is deliberately a plain nullable
+         BIGINT with no FK constraint yet: the District entity/table itself
+         is blocked on an unresolved ADR (#561, OQ-01/OQ-02 — strict
+         same-district vs. seller-declared-radius matching changes whether
+         this becomes a single FK or an N:M join table). Assigning the
+         district comes later, once #561/#562 resolve — registration itself
+         does not require it. -->
+    <changeSet id="20260722-024-create-sellers" author="buildnest-team">
+        <comment>Create sellers table (FR-SEL-01, #553) — 1:1 extension of users, district_id deferred pending ADR #561</comment>
+
+        <createTable tableName="sellers">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_sellers_user_id"/>
+            </column>
+            <column name="business_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="business_registration_number" type="VARCHAR(100)"/>
+            <column name="district_id" type="BIGINT"/>
+            <column name="verification_status" type="VARCHAR(30)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            constraintName="fk_sellers_user"
+            baseTableName="sellers" baseColumnNames="user_id"
+            referencedTableName="users" referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <createIndex indexName="idx_sellers_verification_status" tableName="sellers">
+            <column name="verification_status"/>
+        </createIndex>
+
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="sellers" constraintName="fk_sellers_user"/>
+            <dropTable tableName="sellers"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
