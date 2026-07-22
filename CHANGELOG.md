@@ -12,6 +12,26 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Fixed
+- Legacy inventory add-stock/update-stock endpoints had no server-side floor validation on
+  quantity (#487, discovered during #440): `InventoryServiceImpl.addStock()`/`updateStock()`
+  applied the caller-supplied value with no floor check, and `AdminInventoryController`'s
+  `@RequestParam Integer quantity` had no `@Min(0)` — a negative value (e.g. via a raw API
+  client, bypassing the frontend's client-side guard added in #440) could push
+  `Inventory.quantityInStock` negative with no validation error. Not a #440 regression — the new
+  frontend guard (`InventoryDetailModal`) rejects negative input client-side; this closed the
+  pre-existing backend gap itself. Fixed with defense-in-depth, matching this repo's existing
+  `@PreAuthorize`-at-both-layers pattern: `@Min(0)` + `@Validated` on the controller (added a
+  `ConstraintViolationException` handler to `GlobalExceptionHandler`, which didn't exist before —
+  needed since `@RequestParam` validation failures aren't caught by the endpoints' own
+  `try/catch(Exception)` blocks, and would otherwise 500 instead of 400), plus a defensive check
+  in both service methods (`addStock` also guards the *resulting* quantity, not just the
+  argument, to protect against rows already corrupted by this exact bug before the fix shipped).
+  5 new tests: 3 unit tests (`InventoryServiceImplTest`, including a pre-existing-negative-row
+  scenario) and 2 `@WebMvcTest` tests (`AdminInventoryControllerTest`) proving the real Spring
+  bean-validation binding rejects the request before the service is ever called
+  (`verifyNoInteractions`).
+
 ### Changed
 - Eliminate `Product.stockQuantity`/`Inventory` dual source of truth (#485, INV-01), follow-up from
   #309: `Product.stockQuantity` is no longer a persisted column — it's now a derived getter reading

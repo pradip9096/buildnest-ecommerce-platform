@@ -36,14 +36,27 @@ public class InventoryServiceImpl implements InventoryService {
         public Inventory addStock(Long productId, Integer stock) {
                 log.info("Adding stock {} for product {}", stock, productId);
 
+                if (stock == null || stock < 0) {
+                        throw new IllegalArgumentException(
+                                "Stock to add must not be negative: " + stock);
+                }
+
                 Product product = productRepository.findById(productId)
                                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
                 Inventory inventory = inventoryRepository.findByProduct(product)
                                 .orElse(new Inventory());
 
+                int resultingQuantity = inventory.getQuantityInStock() + stock;
+                if (resultingQuantity < 0) {
+                        throw new IllegalArgumentException(
+                                "Resulting stock would be negative. Current: "
+                                        + inventory.getQuantityInStock()
+                                        + ", adding: " + stock);
+                }
+
                 inventory.setProduct(product);
-                inventory.setQuantityInStock(inventory.getQuantityInStock() + stock);
+                inventory.setQuantityInStock(resultingQuantity);
                 inventory.setUpdatedAt(LocalDateTime.now());
                 updateStatusBasedOnQuantity(inventory);
 
@@ -66,6 +79,11 @@ public class InventoryServiceImpl implements InventoryService {
         @Transactional
         public Inventory updateStock(Long productId, Integer quantity) {
                 log.info("Updating stock for product {} to {}", productId, quantity);
+
+                if (quantity == null || quantity < 0) {
+                        throw new IllegalArgumentException(
+                                "Stock quantity must not be negative: " + quantity);
+                }
 
                 Product product = productRepository.findById(productId)
                                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));

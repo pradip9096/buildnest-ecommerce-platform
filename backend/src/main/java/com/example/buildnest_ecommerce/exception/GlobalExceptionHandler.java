@@ -1,6 +1,7 @@
 package com.example.buildnest_ecommerce.exception;
 
 import com.example.buildnest_ecommerce.model.payload.ErrorResponse;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -92,6 +93,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 "Invalid argument"
         );
         errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolationException(
+            ConstraintViolationException ex, WebRequest request) {
+        log.warn("Constraint violation: {}", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                "Validation failed"
+        );
+        errorResponse.setPath(
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 

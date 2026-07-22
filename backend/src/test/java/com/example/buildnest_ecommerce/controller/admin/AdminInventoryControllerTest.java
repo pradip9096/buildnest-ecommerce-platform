@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -149,6 +150,19 @@ class AdminInventoryControllerTest {
     }
 
     @Test
+    @DisplayName("#487: add-stock rejects a negative quantity via real @Min(0) "
+            + "bean-validation binding, never reaching the service")
+    void testAddStockRejectsNegativeQuantityViaValidation() throws Exception {
+        mockMvc.perform(post("/api/v1/admin/inventory/add-stock/1")
+                .with(user(adminDetails))
+                .param("quantity", "-10")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(inventoryService);
+    }
+
+    @Test
     @DisplayName("TC-ADMIN-INV-008: Update stock works and errors")
     void testUpdateStock() throws Exception {
         Inventory updatedInventory = new Inventory();
@@ -170,6 +184,19 @@ class AdminInventoryControllerTest {
                 .param("quantity", "20")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("#487: update-stock rejects a negative quantity via real @Min(0) "
+            + "bean-validation binding, never reaching the service")
+    void testUpdateStockRejectsNegativeQuantityViaValidation() throws Exception {
+        mockMvc.perform(post("/api/v1/admin/inventory/update-stock/1")
+                .with(user(adminDetails))
+                .param("quantity", "-5")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(inventoryService);
     }
 
     @Test

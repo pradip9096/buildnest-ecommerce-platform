@@ -87,6 +87,28 @@ class InventoryServiceImplTest {
     }
 
     @Test
+    @DisplayName("Should reject negative stock argument to addStock (#487)")
+    void testAddStockRejectsNegativeArgument() {
+        assertThrows(IllegalArgumentException.class,
+                () -> inventoryService.addStock(1L, -5));
+        verifyNoInteractions(productRepository, inventoryRepository);
+    }
+
+    @Test
+    @DisplayName("Should reject addStock resulting in negative quantity even with a "
+            + "non-negative delta, guarding pre-existing corrupted rows (#487)")
+    void testAddStockRejectsNegativeResultingQuantity() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        // Simulates a row already corrupted by this exact bug before the fix shipped.
+        Inventory inventory = buildInventory(product, -3, 2);
+        when(inventoryRepository.findByProduct(product)).thenReturn(Optional.of(inventory));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> inventoryService.addStock(1L, 1));
+        verify(inventoryRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Should update stock")
     void testUpdateStock() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
@@ -106,6 +128,14 @@ class InventoryServiceImplTest {
         when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> inventoryService.updateStock(1L, 10));
+    }
+
+    @Test
+    @DisplayName("Should reject negative quantity argument to updateStock (#487)")
+    void testUpdateStockRejectsNegativeArgument() {
+        assertThrows(IllegalArgumentException.class,
+                () -> inventoryService.updateStock(1L, -1));
+        verifyNoInteractions(productRepository, inventoryRepository);
     }
 
     @Test
