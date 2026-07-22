@@ -218,22 +218,11 @@ public class NotificationServiceImpl implements INotificationService {
             helper.setSubject(subject);
             helper.setText(htmlBody, true);
             mailSender.send(message);
-            log.debug("Email sent to={} subject={}",
-                    sanitizeForLog(to), sanitizeForLog(subject));
+            log.debug("Email sent successfully");
         } catch (MessagingException | UnsupportedEncodingException e) {
-            log.error("Failed to construct email to={}",
-                    sanitizeForLog(to), e);
+            log.error("Failed to construct email", e);
             throw new MailException(
                     "Failed to build email: " + e.getMessage()) {};
         }
-    }
-
-    /**
-     * Strips CR/LF from user-influenced values before they reach a log
-     * sink, preventing log-forging via injected newlines (SonarCloud
-     * javasecurity:S5145).
-     */
-    private static String sanitizeForLog(String value) {
-        return value == null ? null : value.replaceAll("[\r\n]", "_");
     }
 }
