@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 4.3 |
-| **Date** | 2026-07-22 20:30 IST |
+| **Version** | 4.4 |
+| **Date** | 2026-07-25 20:00 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
@@ -41,6 +41,7 @@
 | 4.3 | 2026-07-22 20:30 IST | Software Architect | §4.5.2's `Product` row updated to reflect real implementation of the v4.0-recommended reactivation (#555): the legacy `supplier_id`/`fk_product_supplier` FK is now mapped as `Product.seller` (`@ManyToOne` to `User`, no new Liquibase changeset — the physical column/FK already existed). Added `SellerProductController`/`ProductServiceImpl`'s seller-scoped CRUD methods, enforcing verified-seller-only creation and per-seller ownership scoping | Pending |
 | 3.7 | 2026-07-21 IST | Software Architect | Added a Dead-Code Audit Decision Record to §4.7.3 (#448) for four zero-frontend-caller endpoint groups (`ProductControllerV1`, `ProductControllerV2`, legacy `CheckoutController`, `/auth/validate-token`) — audited each against `frontend/src/api/{products,checkout}.ts` and `ApiSunsetInterceptor` directly; none removed on this pass (product-scope calls about unbuilt external/mobile consumers, not code-cleanup calls). Surfaced and filed as follow-ups: #535 (V2/`HomeController` "Current"/"Legacy" label contradiction — V2 is labeled current but carries zero traffic) and #536 (revisit V1 removal once its 2026-12-31 sunset passes) | Pending |
 | 3.8 | 2026-07-22 IST | Software Architect | §5.2.1's Exception-to-HTTP Mapping table was missing `ConstraintViolationException` (400/`VALIDATION_ERROR`) — added as part of #487's fix (`AdminInventoryController`'s `add-stock`/`update-stock` `@RequestParam Integer quantity` gained `@Min(0)` + `@Validated`, which throws this exception type; `GlobalExceptionHandler` needed its own new handler for it, not previously required since no `@RequestParam`/`@PathVariable` constraint existed anywhere in the codebase before this fix) | Pending |
+| 4.4 | 2026-07-25 20:00 IST | Software Architect | §4.5.2 updated for #578 (sub-issue of #557, FR-SEL-06): added new `OrderGroup` entity row (`order_groups` table, FK → `user_id`) and extended `Order`'s row with the new nullable `order_group_id` FK — parent linkage for splitting a multi-seller cart into per-seller orders. Design decision (no repo precedent — confirmed via `gh search`): split into per-seller sub-orders rather than a single shared Order with a read-only per-seller filter, since the latter leaves order-status/fulfillment ownership ambiguous once sellers ship independently. Additive-only schema change, no backfill (existing orders keep `order_group_id = NULL`). #579 (checkout split) and #580 (seller-scoped order API) remain unimplemented | Pending |
 
 ### Document Approval
 
@@ -587,7 +588,8 @@ District  (admin-maintained reference table — see §4.5.6 for the open sourcin
 | `Category` | `category` | `id BIGINT AUTO_INCREMENT` | `name` UNIQUE |
 | `Cart` | `cart` | `id BIGINT AUTO_INCREMENT` | FK → `user_id` (one-to-one) |
 | `CartItem` | `cart_item` | `id BIGINT AUTO_INCREMENT` | FK → `cart_id`, FK → `product_id` |
-| `Order` | `orders` | `id BIGINT AUTO_INCREMENT` | `order_number` UNIQUE, FK → `user_id` |
+| `Order` | `orders` | `id BIGINT AUTO_INCREMENT` | `order_number` UNIQUE, FK → `user_id`. Also FK → `order_groups` via `order_group_id` (mapped as `Order.orderGroup`, nullable) — parent linkage for a multi-seller checkout split into per-seller orders (FR-SEL-06, #578) |
+| `OrderGroup` *(#578, sub-issue of #557)* | `order_groups` | `id BIGINT AUTO_INCREMENT` | FK → `user_id`. Represents one checkout split into multiple per-seller `Order`s — a single-seller checkout never creates a row here (`Order.order_group_id` stays `NULL`) |
 | `OrderItem` | `order_item` | `id BIGINT AUTO_INCREMENT` | FK → `order_id`, FK → `product_id` |
 | `Payment` | `payment` | `id BIGINT AUTO_INCREMENT` | FK → `order_id` |
 | `Inventory` | `inventory` | `id BIGINT AUTO_INCREMENT` | FK → `product_id` (one-to-one) |

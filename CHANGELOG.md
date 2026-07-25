@@ -13,6 +13,22 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Order-group schema for seller-scoped order splitting (FR-SEL-06, #578, first of three
+  sub-issues under parent #557) — a cart spanning multiple sellers currently produces one
+  shared `Order`; a real design decision (no repo precedent, confirmed via `gh search`) resolved
+  to splitting a multi-seller cart into one `Order` per seller at checkout, rejecting a
+  filter-only alternative that would have left order-status/fulfillment ownership ambiguous
+  once sellers ship independently. This issue covers only the additive schema/entity layer: new
+  `order_groups` table + nullable `orders.order_group_id` FK (Liquibase changeset
+  `20260725-025-create-order-groups.xml`, no backfill needed — existing orders keep
+  `order_group_id = NULL`), new `OrderGroup` JPA entity, `Order.orderGroup` mapping. Verified via
+  a real H2-backed `@DataJpaTest` addition to `OrderRepositoryTest` (framework/mapping-level
+  risk, not a mocked unit test). Fixed a pre-existing `OrderTest` break along the way: adding a
+  field to `Order`'s Lombok `@AllArgsConstructor` broke its one positional `new Order(...)` test
+  call site (a known recurring pattern — see the allargs-constructor-positional-test-fragility
+  wiki lesson) — converted to setter-based construction. The checkout-split rewrite (#579) and
+  seller-scoped order API (#580) remain unimplemented; a linked frontend follow-up (#581) covers
+  the buyer/seller UI once those land.
 - Seller-scoped inventory management (FR-SEL-05, #556) — mirrors #555's
   `SellerProductController`/`ProductServiceImpl` ownership-scoping pattern for inventory. A
   verified seller can list their own inventory (`GET /api/user/seller/inventory`, paginated)
