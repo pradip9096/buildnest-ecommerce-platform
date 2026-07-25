@@ -1,6 +1,7 @@
 package com.example.buildnest_ecommerce.repository;
 
 import com.example.buildnest_ecommerce.model.entity.Order;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -157,6 +158,35 @@ public interface OrderRepository extends JpaRepository<Order, Long>,
      */
     @EntityGraph(attributePaths = { "orderItems", "user", "shippingAddress" })
     Optional<Order> findById(Long id);
+
+    /**
+     * Seller-scoped order listing (FR-SEL-06, #580). {@code Order} carries
+     * no direct seller reference — ownership is derived transitively via
+     * {@code OrderItem.product.seller}, since #579's checkout split
+     * guarantees every item in one {@code Order} belongs to a single
+     * seller. Uses an {@code EXISTS} subquery rather than an explicit
+     * join so pagination stays correct — see the wiki lesson on explicit
+     * joins breaking DISTINCT/pagination under fetch-joined collections.
+     */
+    @Query("SELECT o FROM Order o WHERE o.isDeleted = false AND EXISTS "
+            + "(SELECT 1 FROM OrderItem oi WHERE oi.order = o "
+            + "AND oi.product.seller.id = :sellerId)")
+    Page<Order> findBySellerId(
+            @Param("sellerId") Long sellerId, Pageable pageable);
+
+    /**
+     * Seller-scoped single-order lookup with ownership enforced in the
+     * query itself (FR-SEL-06, #580) — mirrors
+     * {@code ProductRepository.findByIdAndSeller_Id}'s
+     * find-or-not-found-at-all pattern rather than a separate ownership
+     * check after an unscoped fetch.
+     */
+    @Query("SELECT o FROM Order o WHERE o.id = :orderId "
+            + "AND o.isDeleted = false AND EXISTS "
+            + "(SELECT 1 FROM OrderItem oi WHERE oi.order = o "
+            + "AND oi.product.seller.id = :sellerId)")
+    Optional<Order> findByIdAndSellerId(
+            @Param("orderId") Long orderId, @Param("sellerId") Long sellerId);
 
     /**
      * Find all orders with eager loading of related entities.

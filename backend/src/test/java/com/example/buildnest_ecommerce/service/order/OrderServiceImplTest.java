@@ -2,6 +2,7 @@ package com.example.buildnest_ecommerce.service.order;
 
 import com.example.buildnest_ecommerce.event.DomainEventPublisher;
 import com.example.buildnest_ecommerce.event.OrderStatusChangedEvent;
+import com.example.buildnest_ecommerce.exception.AccessDeniedException;
 import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import com.example.buildnest_ecommerce.model.dto.AdminOrderDetailDTO;
 import com.example.buildnest_ecommerce.model.dto.OrderResponseDTO;
@@ -17,6 +18,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -412,5 +417,101 @@ class OrderServiceImplTest {
         assertEquals(7L, dto.getUserId());
         assertEquals("customer@example.com", dto.getUserEmail());
         assertEquals("PENDING", dto.getStatus());
+    }
+
+    // --- seller-scoped orders (FR-SEL-06, #580) ---
+
+    @Test
+    @DisplayName("getSellerOrders – maps repository page to DTOs")
+    void getSellerOrders_returnsMappedPage() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(orderRepository.findBySellerId(42L, pageable))
+                .thenReturn(new PageImpl<>(List.of(order)));
+
+        Page<OrderResponseDTO> result =
+                orderService.getSellerOrders(42L, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(100L, result.getContent().get(0).getId());
+        verify(orderRepository).findBySellerId(42L, pageable);
+    }
+
+    @Test
+    @DisplayName("getSellerOrderById – owned order – returns DTO")
+    void getSellerOrderById_owned_returnsDTO() {
+        when(orderRepository.findByIdAndSellerId(100L, 42L))
+                .thenReturn(Optional.of(order));
+
+        OrderResponseDTO dto = orderService.getSellerOrderById(42L, 100L);
+
+        assertEquals(100L, dto.getId());
+    }
+
+    @Test
+    @DisplayName("getSellerOrderById – not owned – throws "
+            + "AccessDeniedException")
+    void getSellerOrderById_notOwned_throwsAccessDeniedException() {
+        when(orderRepository.findByIdAndSellerId(100L, 99L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(AccessDeniedException.class,
+                () -> orderService.getSellerOrderById(99L, 100L));
+    }
+
+    @Test
+    @DisplayName("updateSellerOrderStatus – valid transition – updates "
+            + "and returns DTO")
+    void updateSellerOrderStatus_validTransition_updatesOrder() {
+        order.setStatus(Order.OrderStatus.CONFIRMED);
+        when(orderRepository.findByIdAndSellerId(100L, 42L))
+                .thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        OrderResponseDTO dto = orderService
+                .updateSellerOrderStatus(42L, 100L, "SHIPPED");
+
+        assertEquals("SHIPPED", dto.getStatus());
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    @DisplayName("updateSellerOrderStatus – not owned – throws "
+            + "AccessDeniedException, never saves")
+    void updateSellerOrderStatus_notOwned_throwsAccessDeniedException() {
+        when(orderRepository.findByIdAndSellerId(100L, 99L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(AccessDeniedException.class,
+                () -> orderService
+                        .updateSellerOrderStatus(99L, 100L, "SHIPPED"));
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("updateSellerOrderStatus – seller cannot set PAID "
+            + "(payment-webhook-only status) – throws")
+    void updateSellerOrderStatus_cannotSetPaid_throwsException() {
+        order.setStatus(Order.OrderStatus.CONFIRMED);
+        when(orderRepository.findByIdAndSellerId(100L, 42L))
+                .thenReturn(Optional.of(order));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> orderService
+                        .updateSellerOrderStatus(42L, 100L, "PAID"));
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("updateSellerOrderStatus – invalid target from current "
+            + "state – throws")
+    void updateSellerOrderStatus_invalidTransition_throwsException() {
+        order.setStatus(Order.OrderStatus.DELIVERED);
+        when(orderRepository.findByIdAndSellerId(100L, 42L))
+                .thenReturn(Optional.of(order));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> orderService
+                        .updateSellerOrderStatus(42L, 100L, "CANCELLED"));
+        verify(orderRepository, never()).save(any());
     }
 }

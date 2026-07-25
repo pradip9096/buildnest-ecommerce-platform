@@ -8,9 +8,11 @@ import com.example.buildnest_ecommerce.model.entity.Order.OrderStatus;
 import com.example.buildnest_ecommerce.event.DomainEventPublisher;
 import com.example.buildnest_ecommerce.event.OrderPlacedEvent;
 import com.example.buildnest_ecommerce.event.OrderStatusChangedEvent;
+import com.example.buildnest_ecommerce.exception.AccessDeniedException;
 import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import com.example.buildnest_ecommerce.repository.OrderRepository;
-import com.example.buildnest_ecommerce.service.notification.INotificationService;
+import com.example.buildnest_ecommerce.service.notification
+        .INotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -45,14 +47,24 @@ import java.util.stream.Collectors;
 @SuppressWarnings("null")
 public class OrderServiceImpl implements OrderService {
 
-    private static final Map<OrderStatus, Set<OrderStatus>> VALID_TRANSITIONS = new java.util.EnumMap<>(Map.of(
-            OrderStatus.PENDING,        EnumSet.of(OrderStatus.CONFIRMED, OrderStatus.CANCELLED),
-            OrderStatus.CONFIRMED,      EnumSet.of(OrderStatus.SHIPPED,   OrderStatus.CANCELLED),
-            OrderStatus.SHIPPED,        EnumSet.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED),
+    private static final Map<OrderStatus, Set<OrderStatus>>
+            VALID_TRANSITIONS = new java.util.EnumMap<>(Map.of(
+            OrderStatus.PENDING,
+                    EnumSet.of(OrderStatus.CONFIRMED,
+                            OrderStatus.CANCELLED),
+            OrderStatus.CONFIRMED,
+                    EnumSet.of(OrderStatus.SHIPPED,
+                            OrderStatus.CANCELLED),
+            OrderStatus.SHIPPED,
+                    EnumSet.of(OrderStatus.DELIVERED,
+                            OrderStatus.CANCELLED),
             OrderStatus.DELIVERED,      Collections.emptySet(),
             OrderStatus.CANCELLED,      Collections.emptySet(),
-            OrderStatus.PAID,           EnumSet.of(OrderStatus.SHIPPED,   OrderStatus.CANCELLED),
-            OrderStatus.PAYMENT_FAILED, EnumSet.of(OrderStatus.CANCELLED)
+            OrderStatus.PAID,
+                    EnumSet.of(OrderStatus.SHIPPED,
+                            OrderStatus.CANCELLED),
+            OrderStatus.PAYMENT_FAILED,
+                    EnumSet.of(OrderStatus.CANCELLED)
     ));
 
     private final OrderRepository orderRepository;
@@ -83,13 +95,15 @@ public class OrderServiceImpl implements OrderService {
     public Order getOrderById(Long orderId) {
         log.info("Fetching order with id: {}", orderId);
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new RuntimeException(
+                        "Order not found with id: " + orderId));
     }
 
     /**
      * Creates a new order.
      *
-     * Sets initial status to PENDING, timestamps, and publishes OrderPlacedEvent.
+     * Sets initial status to PENDING, timestamps, and publishes
+     * OrderPlacedEvent.
      *
      * @param order the Order entity to create (required)
      * @return the created Order with auto-generated ID
@@ -102,7 +116,8 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(Order.OrderStatus.PENDING);
         order.setIsDeleted(false);
         Order saved = orderRepository.save(order);
-        domainEventPublisher.publish(new OrderPlacedEvent(this, saved, saved.getUser().getId()));
+        domainEventPublisher.publish(
+                new OrderPlacedEvent(this, saved, saved.getUser().getId()));
         return saved;
     }
 
@@ -150,7 +165,8 @@ public class OrderServiceImpl implements OrderService {
     public List<Order> getOrdersByUserId(Long userId) {
         log.info("Fetching non-deleted orders for user: {}", userId);
         return orderRepository.findAll().stream()
-                .filter(o -> o.getUser().getId().equals(userId) && !Boolean.TRUE.equals(o.getIsDeleted()))
+                .filter(o -> o.getUser().getId().equals(userId)
+                        && !Boolean.TRUE.equals(o.getIsDeleted()))
                 .collect(Collectors.toList());
     }
 
@@ -161,14 +177,15 @@ public class OrderServiceImpl implements OrderService {
      * OrderStatusChangedEvent.
      *
      * @param orderId the ID of the order to update (required)
-     * @param status  the new order status (required, must be valid OrderStatus enum
-     *                value)
+     * @param status  the new order status (required, must be valid
+     *                OrderStatus enum value)
      * @return the updated Order entity
      * @throws RuntimeException if order is not found or status is invalid
      */
     @Override
     public Order updateOrderStatus(Long orderId, String status) {
-        log.info("Updating order status with id: {}, status: {}", orderId, status);
+        log.info("Updating order status with id: {}, status: {}",
+                orderId, status);
         Order order = getOrderById(orderId);
         try {
             String previousStatus = order.getStatus().toString();
@@ -176,7 +193,8 @@ public class OrderServiceImpl implements OrderService {
             order.setUpdatedAt(LocalDateTime.now());
             Order saved = orderRepository.save(order);
             domainEventPublisher.publish(
-                    new OrderStatusChangedEvent(this, saved.getId(), saved.getUser().getId(), previousStatus,
+                    new OrderStatusChangedEvent(this, saved.getId(),
+                            saved.getUser().getId(), previousStatus,
                             saved.getStatus().toString()));
             return saved;
         } catch (IllegalArgumentException e) {
@@ -201,35 +219,45 @@ public class OrderServiceImpl implements OrderService {
     /**
      * Retrieves a specific order for a user (with ownership verification).
      *
-     * Verifies that the order belongs to the specified user before returning it.
+     * Verifies that the order belongs to the specified user before
+     * returning it.
      *
      * @param userId  the ID of the user (required)
      * @param orderId the ID of the order to retrieve (required)
      * @return the OrderResponseDTO for the order
      * @throws RuntimeException       if order is not found
-     * @throws IllegalAccessException if order does not belong to the specified user
+     * @throws IllegalAccessException if order does not belong to the
+     *                                specified user
      */
     @Override
-    public OrderResponseDTO getUserOrderById(Long userId, Long orderId) throws IllegalAccessException {
-        log.info("Fetching order response for user: {}, order: {}", userId, orderId);
+    public OrderResponseDTO getUserOrderById(Long userId, Long orderId)
+            throws IllegalAccessException {
+        log.info("Fetching order response for user: {}, order: {}",
+                userId, orderId);
         Order order = getOrderById(orderId);
 
         // Verify ownership
         if (!order.getUser().getId().equals(userId)) {
-            log.warn("Access denied: User {} tried to access order {} of user {}", userId, orderId,
+            log.warn("Access denied: User {} tried to access order {} "
+                    + "of user {}", userId, orderId,
                     order.getUser().getId());
-            throw new IllegalAccessException("Access denied: This order does not belong to you");
+            throw new IllegalAccessException(
+                    "Access denied: This order does not belong to you");
         }
 
         return mapToResponseDTO(order);
     }
 
     @Override
-    public Page<AdminOrderDetailDTO> getAdminOrders(OrderStatus status, Long userId,
-            LocalDateTime dateFrom, LocalDateTime dateTo, Pageable pageable) {
-        log.info("Admin: listing orders status={}, userId={}, dateFrom={}, dateTo={}", status, userId, dateFrom, dateTo);
+    public Page<AdminOrderDetailDTO> getAdminOrders(OrderStatus status,
+            Long userId, LocalDateTime dateFrom, LocalDateTime dateTo,
+            Pageable pageable) {
+        log.info("Admin: listing orders status={}, userId={}, "
+                + "dateFrom={}, dateTo={}",
+                status, userId, dateFrom, dateTo);
         return orderRepository
-                .findAll(OrderSpecification.withFilters(status, userId, dateFrom, dateTo), pageable)
+                .findAll(OrderSpecification.withFilters(
+                        status, userId, dateFrom, dateTo), pageable)
                 .map(this::mapToAdminDetailDTO);
     }
 
@@ -237,29 +265,23 @@ public class OrderServiceImpl implements OrderService {
     public AdminOrderDetailDTO getAdminOrderDetail(Long orderId) {
         log.info("Admin: fetching order detail for id={}", orderId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Order not found with id: " + orderId));
         return mapToAdminDetailDTO(order);
     }
 
     @Override
     @Transactional
-    public Order adminUpdateOrderStatus(Long orderId, String newStatus, String cancellationReason) {
-        log.info("Admin: updating order id={} to status={}", orderId, newStatus);
+    public Order adminUpdateOrderStatus(
+            Long orderId, String newStatus, String cancellationReason) {
+        log.info("Admin: updating order id={} to status={}",
+                orderId, newStatus);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Order not found with id: " + orderId));
 
-        OrderStatus targetStatus;
-        try {
-            targetStatus = OrderStatus.valueOf(newStatus.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid order status: " + newStatus);
-        }
-
-        Set<OrderStatus> allowed = VALID_TRANSITIONS.get(order.getStatus());
-        if (!allowed.contains(targetStatus)) {
-            throw new IllegalArgumentException(
-                    "Cannot transition order from " + order.getStatus() + " to " + targetStatus);
-        }
+        OrderStatus targetStatus = parseStatus(newStatus);
+        validateTransition(order.getStatus(), targetStatus);
 
         String previousStatus = order.getStatus().name();
         order.setStatus(targetStatus);
@@ -267,18 +289,135 @@ public class OrderServiceImpl implements OrderService {
         Order saved = orderRepository.save(order);
 
         domainEventPublisher.publish(
-                new OrderStatusChangedEvent(this, saved.getId(), saved.getUser().getId(), previousStatus,
+                new OrderStatusChangedEvent(this, saved.getId(),
+                        saved.getUser().getId(), previousStatus,
                         saved.getStatus().name()));
 
         switch (targetStatus) {
-            case CONFIRMED -> notificationService.sendOrderConfirmation(saved);
-            case SHIPPED   -> notificationService.sendShipmentNotification(saved.getId(), saved.getTrackingNumber());
-            case DELIVERED -> notificationService.sendDeliveryNotification(saved.getId());
-            case CANCELLED -> log.info("Order {} cancelled. Reason: {}", saved.getId(), cancellationReason);
-            default        -> { /* no notification for other transitions */ }
+            case CONFIRMED ->
+                    notificationService.sendOrderConfirmation(saved);
+            case SHIPPED -> notificationService.sendShipmentNotification(
+                    saved.getId(), saved.getTrackingNumber());
+            case DELIVERED ->
+                    notificationService.sendDeliveryNotification(
+                            saved.getId());
+            case CANCELLED -> log.info("Order {} cancelled. Reason: {}",
+                    saved.getId(), cancellationReason);
+            default -> { /* no notification for other transitions */ }
         }
 
         return saved;
+    }
+
+    /**
+     * Seller-scoped paginated order listing (FR-SEL-06, #580).
+     *
+     * @param sellerId the seller's own user ID (required)
+     * @param pageable pagination/sort parameters
+     * @return a page of OrderResponseDTOs for orders owned by the seller
+     */
+    @Override
+    public Page<OrderResponseDTO> getSellerOrders(
+            Long sellerId, Pageable pageable) {
+        log.info("Fetching orders for seller: {}", sellerId);
+        return orderRepository.findBySellerId(sellerId, pageable)
+                .map(this::mapToResponseDTO);
+    }
+
+    /**
+     * Seller-scoped single-order detail lookup, with ownership enforced
+     * inside the repository query itself (FR-SEL-06, #580).
+     *
+     * @param sellerId the seller's own user ID (required)
+     * @param orderId  the ID of the order to retrieve (required)
+     * @return the OrderResponseDTO for the order
+     * @throws AccessDeniedException if the order does not exist or does
+     *                                not belong to this seller
+     */
+    @Override
+    public OrderResponseDTO getSellerOrderById(Long sellerId, Long orderId) {
+        log.info("Fetching order {} for seller {}", orderId, sellerId);
+        Order order = orderRepository
+                .findByIdAndSellerId(orderId, sellerId)
+                .orElseThrow(() -> new AccessDeniedException(
+                        "Order not found or does not belong to "
+                                + "seller with id: " + sellerId));
+        return mapToResponseDTO(order);
+    }
+
+    /**
+     * Seller-scoped order status update (FR-SEL-06, #580). Reuses the
+     * same {@link #VALID_TRANSITIONS} state machine as the admin
+     * transition — PAID/PAYMENT_FAILED never appear as reachable targets
+     * there, so a seller can never set a payment-webhook-only status
+     * through this path without any extra restriction logic needed.
+     *
+     * @param sellerId  the seller's own user ID (required)
+     * @param orderId   the ID of the order to update (required)
+     * @param newStatus the requested target status (required)
+     * @return the updated OrderResponseDTO
+     * @throws AccessDeniedException   if the order does not belong to
+     *                                  this seller
+     * @throws IllegalArgumentException if newStatus is invalid or the
+     *                                   transition is not allowed
+     */
+    @Override
+    @Transactional
+    public OrderResponseDTO updateSellerOrderStatus(
+            Long sellerId, Long orderId, String newStatus) {
+        log.info("Seller {} updating order {} to status {}",
+                sellerId, orderId, newStatus);
+        Order order = orderRepository
+                .findByIdAndSellerId(orderId, sellerId)
+                .orElseThrow(() -> new AccessDeniedException(
+                        "Order not found or does not belong to "
+                                + "seller with id: " + sellerId));
+
+        OrderStatus targetStatus = parseStatus(newStatus);
+        validateTransition(order.getStatus(), targetStatus);
+
+        String previousStatus = order.getStatus().name();
+        order.setStatus(targetStatus);
+        order.setUpdatedAt(LocalDateTime.now());
+        Order saved = orderRepository.save(order);
+
+        domainEventPublisher.publish(
+                new OrderStatusChangedEvent(this, saved.getId(),
+                        saved.getUser().getId(), previousStatus,
+                        saved.getStatus().name()));
+
+        switch (targetStatus) {
+            case SHIPPED -> notificationService.sendShipmentNotification(
+                    saved.getId(), saved.getTrackingNumber());
+            case DELIVERED ->
+                    notificationService.sendDeliveryNotification(
+                            saved.getId());
+            case CANCELLED -> log.info(
+                    "Order {} cancelled by seller {}",
+                    saved.getId(), sellerId);
+            default -> { /* no notification for other transitions */ }
+        }
+
+        return mapToResponseDTO(saved);
+    }
+
+    private OrderStatus parseStatus(String newStatus) {
+        try {
+            return OrderStatus.valueOf(newStatus.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    "Invalid order status: " + newStatus);
+        }
+    }
+
+    private void validateTransition(
+            OrderStatus currentStatus, OrderStatus targetStatus) {
+        Set<OrderStatus> allowed = VALID_TRANSITIONS.get(currentStatus);
+        if (!allowed.contains(targetStatus)) {
+            throw new IllegalArgumentException(
+                    "Cannot transition order from " + currentStatus
+                            + " to " + targetStatus);
+        }
     }
 
     private AdminOrderDetailDTO mapToAdminDetailDTO(Order order) {

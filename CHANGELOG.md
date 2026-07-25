@@ -47,6 +47,23 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   tests (service-layer splitting/apportionment logic — no new framework
   wiring beyond #578's already-tested JPA mapping). Seller-scoped order
   API (#580) remains unimplemented.
+- Seller-scoped order API (FR-SEL-06, #580, third of three sub-issues under parent #557) —
+  mirrors #555/#556's `SellerProductController`/`SellerInventoryController` ownership-scoping
+  pattern for orders. `Order` carries no direct seller reference; ownership is derived
+  transitively via `OrderItem.product.seller`, since #579's checkout split guarantees every item
+  in one `Order` belongs to a single seller. New `OrderRepository.findBySellerId`/
+  `findByIdAndSellerId` use an `EXISTS` subquery rather than an explicit join so pagination stays
+  correct. A verified seller can list their own orders (`GET /api/user/seller/orders`,
+  paginated), view detail (`GET /api/user/seller/orders/{id}`), and update status
+  (`PATCH /api/user/seller/orders/{id}/status`) — reusing `OrderServiceImpl`'s existing
+  `VALID_TRANSITIONS` state machine, which already excludes `PAID`/`PAYMENT_FAILED` as reachable
+  targets (payment-webhook-only), so a seller can never set those through this path without any
+  extra restriction logic. Defense-in-depth secured via `@PreAuthorize("hasRole('SELLER')")` plus
+  the repository-level ownership filter (`AccessDeniedException` → 404/403 if the order does not
+  belong to the seller). Verified via unit tests (service ownership/transition logic) and a real
+  H2-backed `@DataJpaTest` addition to `OrderRepositoryTest` proving the `EXISTS`-subquery
+  scoping actually filters correctly — a mocked service-layer test only proves parameter
+  pass-through, never the query's own correctness.
 - Seller-scoped inventory management (FR-SEL-05, #556) — mirrors #555's
   `SellerProductController`/`ProductServiceImpl` ownership-scoping pattern for inventory. A
   verified seller can list their own inventory (`GET /api/user/seller/inventory`, paginated)
