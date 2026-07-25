@@ -15,14 +15,16 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecificationExecutor<Order> {
+public interface OrderRepository extends JpaRepository<Order, Long>,
+        JpaSpecificationExecutor<Order> {
 
     /**
      * Find pending orders older than a specified date/time for follow-up
      */
     @Query("SELECT o FROM Order o WHERE o.status = 'PENDING' " +
             "AND o.createdAt < :threshold")
-    List<Order> findPendingOrdersOlderThan(@Param("threshold") LocalDateTime threshold);
+    List<Order> findPendingOrdersOlderThan(
+            @Param("threshold") LocalDateTime threshold);
 
     /**
      * Find orders by date range and status for reporting
@@ -50,7 +52,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
      * Count all non-deleted orders placed in [start, end).
      */
     @Query("SELECT COUNT(o) FROM Order o " +
-            "WHERE o.createdAt >= :start AND o.createdAt < :end AND o.isDeleted = false")
+            "WHERE o.createdAt >= :start AND o.createdAt < :end " +
+            "AND o.isDeleted = false")
     Long countOrdersBetween(
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end);
@@ -68,13 +71,15 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
             @Param("status") Order.OrderStatus status);
 
     /**
-     * Top-selling products by units sold in [start, end) for orders with the given status.
-     * Each element is Object[]{productId (Long), productName (String),
-     *                          unitsSold (Long), revenue (BigDecimal)}.
+     * Top-selling products by units sold in [start, end) for orders with
+     * the given status. Each element is Object[]{productId (Long),
+     * productName (String), unitsSold (Long), revenue (BigDecimal)}.
      */
-    @Query("SELECT oi.product.id, oi.product.name, SUM(oi.quantity), SUM(oi.subtotal) " +
+    @Query("SELECT oi.product.id, oi.product.name, SUM(oi.quantity), " +
+            "SUM(oi.subtotal) " +
             "FROM OrderItem oi " +
-            "WHERE oi.order.createdAt >= :start AND oi.order.createdAt < :end " +
+            "WHERE oi.order.createdAt >= :start " +
+            "AND oi.order.createdAt < :end " +
             "AND oi.order.status = :status AND oi.order.isDeleted = false " +
             "GROUP BY oi.product.id, oi.product.name " +
             "ORDER BY SUM(oi.quantity) DESC")
@@ -85,12 +90,14 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
             Pageable pageable);
 
     /**
-     * Revenue grouped by category name in [start, end) for orders with the given status.
-     * Each element is Object[]{categoryName (String), revenue (BigDecimal)}.
+     * Revenue grouped by category name in [start, end) for orders with
+     * the given status. Each element is Object[]{categoryName (String),
+     * revenue (BigDecimal)}.
      */
     @Query("SELECT oi.product.category.name, SUM(oi.subtotal) " +
             "FROM OrderItem oi " +
-            "WHERE oi.order.createdAt >= :start AND oi.order.createdAt < :end " +
+            "WHERE oi.order.createdAt >= :start " +
+            "AND oi.order.createdAt < :end " +
             "AND oi.order.status = :status AND oi.order.isDeleted = false " +
             "GROUP BY oi.product.category.name")
     List<Object[]> sumRevenueGroupedByCategory(
@@ -99,15 +106,17 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
             @Param("status") Order.OrderStatus status);
 
     /**
-     * Count of distinct customers (by user) who have at least one order with the given status.
+     * Count of distinct customers (by user) who have at least one order
+     * with the given status.
      */
     @Query("SELECT COUNT(DISTINCT o.user.id) FROM Order o " +
             "WHERE o.status = :status AND o.isDeleted = false")
-    Long countDistinctCustomersByStatus(@Param("status") Order.OrderStatus status);
+    Long countDistinctCustomersByStatus(
+            @Param("status") Order.OrderStatus status);
 
     /**
-     * Count of distinct customers who placed more than one order with the given status
-     * (used as a proxy for returning / retained customers).
+     * Count of distinct customers who placed more than one order with the
+     * given status (used as a proxy for returning / retained customers).
      */
     @Query("SELECT COUNT(DISTINCT o.user.id) FROM Order o " +
             "WHERE o.user.id IN (" +
@@ -122,7 +131,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
      * COALESCE returns 0 when the user has no qualifying orders.
      */
     @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o " +
-            "WHERE o.user.id = :userId AND o.status = :status AND o.isDeleted = false")
+            "WHERE o.user.id = :userId AND o.status = :status " +
+            "AND o.isDeleted = false")
     BigDecimal sumRevenueByUser(
             @Param("userId") Long userId,
             @Param("status") Order.OrderStatus status);
@@ -133,6 +143,13 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
      */
     @EntityGraph(attributePaths = { "orderItems", "user" })
     List<Order> findByUserId(Long userId);
+
+    /**
+     * Sibling per-seller orders sharing one {@code order_group_id}
+     * (FR-SEL-06, #579) — used to confirm/inspect an entire multi-seller
+     * checkout split as one unit.
+     */
+    List<Order> findByOrderGroupId(Long orderGroupId);
 
     /**
      * Find order by ID with all related data loaded eagerly.

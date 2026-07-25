@@ -6,6 +6,7 @@ import com.example.buildnest_ecommerce.model.dto.OrderResponseDTO;
 import com.example.buildnest_ecommerce.model.entity.*;
 import com.example.buildnest_ecommerce.repository.AddressRepository;
 import com.example.buildnest_ecommerce.repository.CartRepository;
+import com.example.buildnest_ecommerce.repository.OrderGroupRepository;
 import com.example.buildnest_ecommerce.repository.OrderRepository;
 import com.example.buildnest_ecommerce.repository.ShippingMethodRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
@@ -27,10 +28,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -42,6 +45,7 @@ class CheckoutServiceImplTest {
     @Mock private InventoryService inventoryService;
     @Mock private CartRepository cartRepository;
     @Mock private OrderRepository orderRepository;
+    @Mock private OrderGroupRepository orderGroupRepository;
     @Mock private UserRepository userRepository;
     @Mock private AddressRepository addressRepository;
     @Mock private ShippingMethodRepository shippingMethodRepository;
@@ -116,18 +120,18 @@ class CheckoutServiceImplTest {
         Cart cart = buildCart(1L, 10L);
         when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
         when(inventoryService.hasStock(5L, 2)).thenReturn(true);
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
-            Order order = invocation.getArgument(0);
-            order.setId(100L);
-            return order;
+        when(orderRepository.saveAll(anyList())).thenAnswer(invocation -> {
+            List<Order> orders = invocation.getArgument(0);
+            orders.get(0).setId(100L);
+            return orders;
         });
 
         Order order = checkoutService.checkoutCart(1L, 10L);
         assertNotNull(order.getId());
 
-        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
-        verify(orderRepository).save(orderCaptor.capture());
-        Order saved = orderCaptor.getValue();
+        ArgumentCaptor<List<Order>> orderCaptor = ArgumentCaptor.forClass(List.class);
+        verify(orderRepository).saveAll(orderCaptor.capture());
+        Order saved = orderCaptor.getValue().get(0);
         assertEquals(cart.getUser(), saved.getUser());
         assertNotNull(saved.getOrderNumber());
         assertNotNull(saved.getCreatedAt());
@@ -160,20 +164,19 @@ class CheckoutServiceImplTest {
         User user = cart.getUser();
 
         when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(inventoryService.hasStock(5L, 2)).thenReturn(true);
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
-            Order order = invocation.getArgument(0);
-            order.setId(200L);
-            return order;
+        when(orderRepository.saveAll(anyList())).thenAnswer(invocation -> {
+            List<Order> orders = invocation.getArgument(0);
+            orders.get(0).setId(200L);
+            return orders;
         });
 
         Order order = checkoutService.checkoutWithPayment(1L, 10L, new CheckoutRequestDTO());
         assertNotNull(order.getId());
 
-        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
-        verify(orderRepository).save(orderCaptor.capture());
-        Order saved = orderCaptor.getValue();
+        ArgumentCaptor<List<Order>> orderCaptor = ArgumentCaptor.forClass(List.class);
+        verify(orderRepository).saveAll(orderCaptor.capture());
+        Order saved = orderCaptor.getValue().get(0);
         assertEquals(user, saved.getUser());
         assertNotNull(saved.getOrderNumber());
         assertNotNull(saved.getCreatedAt());
@@ -429,14 +432,16 @@ class CheckoutServiceImplTest {
         when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
         when(inventoryService.hasStock(5L, 2)).thenReturn(true);
 
-        Order savedOrder = new Order();
-        savedOrder.setId(100L);
-        savedOrder.setTotalAmount(new BigDecimal("260.00"));
-        when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+        when(orderRepository.saveAll(anyList())).thenAnswer(invocation -> {
+            List<Order> orders = invocation.getArgument(0);
+            orders.get(0).setId(100L);
+            return orders;
+        });
 
         Payment payment = new Payment();
         payment.setRazorpayOrderId("rzp_order_123");
-        when(paymentService.initiatePayment(100L, 260.0)).thenReturn(payment);
+        when(paymentService.initiatePayment(eq(100L), any(Double.class)))
+                .thenReturn(payment);
 
         CheckoutSessionDTO dto = checkoutService.initiatePayment(1L);
 
@@ -457,7 +462,7 @@ class CheckoutServiceImplTest {
         when(cartRepository.findById(10L)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> checkoutService.initiatePayment(1L));
-        verify(orderRepository, never()).save(any());
+        verify(orderRepository, never()).saveAll(any());
     }
 
     @Test
@@ -471,7 +476,8 @@ class CheckoutServiceImplTest {
         Cart cart = buildCart(1L, 10L);
         when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
         when(inventoryService.hasStock(5L, 2)).thenReturn(true);
-        when(orderRepository.save(any(Order.class))).thenThrow(new RuntimeException("DB error"));
+        when(orderRepository.saveAll(anyList()))
+                .thenThrow(new RuntimeException("DB error"));
 
         assertThrows(RuntimeException.class, () -> checkoutService.initiatePayment(1L));
         verify(inventoryService).releaseReservation(5L, 2);
@@ -502,7 +508,7 @@ class CheckoutServiceImplTest {
 
         Cart cart = buildCart(1L, 10L);
         when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        when(orderRepository.saveAll(anyList())).thenReturn(List.of(order));
 
         OrderResponseDTO dto = checkoutService.confirmCheckout(1L);
 
@@ -621,10 +627,10 @@ class CheckoutServiceImplTest {
         Cart cart = buildCart(1L, 10L); // subtotal = price(100) * qty(2) = 200
         when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
         when(inventoryService.hasStock(5L, 2)).thenReturn(true);
-        when(orderRepository.save(any(Order.class))).thenAnswer(inv -> {
-            Order o = inv.getArgument(0);
-            o.setId(100L);
-            return o;
+        when(orderRepository.saveAll(anyList())).thenAnswer(inv -> {
+            List<Order> orders = inv.getArgument(0);
+            orders.get(0).setId(100L);
+            return orders;
         });
 
         Payment payment = new Payment();
@@ -633,9 +639,9 @@ class CheckoutServiceImplTest {
 
         checkoutService.initiatePayment(1L);
 
-        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
-        verify(orderRepository).save(orderCaptor.capture());
-        Order savedOrder = orderCaptor.getValue();
+        ArgumentCaptor<List<Order>> orderCaptor = ArgumentCaptor.forClass(List.class);
+        verify(orderRepository).saveAll(orderCaptor.capture());
+        Order savedOrder = orderCaptor.getValue().get(0);
 
         // subtotal 200 - discount 20 = 180; tax = 180 * 0.05 = 9.00; total = 180 + 9 + 50 = 239.00
         assertEquals(0, new BigDecimal("20.00").compareTo(savedOrder.getDiscountAmount()));
@@ -666,7 +672,7 @@ class CheckoutServiceImplTest {
 
         Cart cart = buildCart(1L, 10L);
         when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        when(orderRepository.saveAll(anyList())).thenReturn(List.of(order));
 
         checkoutService.confirmCheckout(1L);
 
@@ -694,10 +700,171 @@ class CheckoutServiceImplTest {
 
         Cart cart = buildCart(1L, 10L);
         when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        when(orderRepository.saveAll(anyList())).thenReturn(List.of(order));
 
         checkoutService.confirmCheckout(1L);
 
         verifyNoInteractions(couponService);
+    }
+
+    // ===== Multi-seller order splitting (FR-SEL-06, #579) =====
+
+    private Cart buildMultiSellerCart(Long userId, Long cartId) {
+        User user = new User();
+        user.setId(userId);
+
+        User sellerA = new User();
+        sellerA.setId(50L);
+        User sellerB = new User();
+        sellerB.setId(60L);
+
+        Product productA = new Product();
+        productA.setId(5L);
+        productA.setSeller(sellerA);
+        Product productB = new Product();
+        productB.setId(6L);
+        productB.setSeller(sellerB);
+
+        CartItem itemA = new CartItem();
+        itemA.setProduct(productA);
+        itemA.setQuantity(2);
+        itemA.setPrice(new BigDecimal("100"));
+
+        CartItem itemB = new CartItem();
+        itemB.setProduct(productB);
+        itemB.setQuantity(1);
+        itemB.setPrice(new BigDecimal("200"));
+
+        Cart cart = new Cart();
+        cart.setId(cartId);
+        cart.setUser(user);
+        cart.setItems(java.util.List.of(itemA, itemB));
+        itemA.setCart(cart);
+        itemB.setCart(cart);
+        return cart;
+    }
+
+    @Test
+    @DisplayName("checkoutCart — single-seller cart creates one order with no OrderGroup")
+    void checkoutCart_singleSeller_createsOneOrderNoGroup() {
+        Cart cart = buildCart(1L, 10L);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+        when(inventoryService.hasStock(5L, 2)).thenReturn(true);
+        when(orderRepository.saveAll(anyList())).thenAnswer(invocation -> {
+            List<Order> orders = invocation.getArgument(0);
+            orders.get(0).setId(100L);
+            return orders;
+        });
+
+        checkoutService.checkoutCart(1L, 10L);
+
+        ArgumentCaptor<List<Order>> orderCaptor = ArgumentCaptor.forClass(List.class);
+        verify(orderRepository).saveAll(orderCaptor.capture());
+        List<Order> saved = orderCaptor.getValue();
+        assertEquals(1, saved.size());
+        assertNull(saved.get(0).getOrderGroup(),
+                "single-seller checkout must never create an OrderGroup");
+        verifyNoInteractions(orderGroupRepository);
+    }
+
+    @Test
+    @DisplayName("checkoutCart — multi-seller cart splits into one order per "
+            + "seller, linked via a shared OrderGroup")
+    void checkoutCart_multiSeller_splitsIntoOrdersLinkedByGroup() {
+        Cart cart = buildMultiSellerCart(1L, 10L);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+        when(inventoryService.hasStock(5L, 2)).thenReturn(true);
+        when(inventoryService.hasStock(6L, 1)).thenReturn(true);
+
+        OrderGroup savedGroup = new OrderGroup();
+        savedGroup.setId(900L);
+        when(orderGroupRepository.save(any(OrderGroup.class)))
+                .thenReturn(savedGroup);
+        when(orderRepository.saveAll(anyList())).thenAnswer(invocation -> {
+            List<Order> orders = invocation.getArgument(0);
+            long nextId = 100L;
+            for (Order order : orders) {
+                order.setId(nextId++);
+            }
+            return orders;
+        });
+
+        Order primary = checkoutService.checkoutCart(1L, 10L);
+
+        verify(orderGroupRepository).save(any(OrderGroup.class));
+        ArgumentCaptor<List<Order>> orderCaptor = ArgumentCaptor.forClass(List.class);
+        verify(orderRepository).saveAll(orderCaptor.capture());
+        List<Order> saved = orderCaptor.getValue();
+
+        assertEquals(2, saved.size(), "one order per seller");
+        assertEquals(saved.get(0), primary,
+                "primary order returned is the first seller-group order");
+        for (Order order : saved) {
+            assertEquals(savedGroup, order.getOrderGroup(),
+                    "every sibling order must link to the same OrderGroup");
+        }
+
+        // subtotal split: seller A = 200 (2*100), seller B = 200 (1*200);
+        // shipping (50) splits 50/50 by subtotal share.
+        BigDecimal totalShipping = saved.stream()
+                .map(Order::getShippingAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        assertEquals(0, new BigDecimal("50.00").compareTo(totalShipping),
+                "apportioned shipping across sibling orders must sum to the "
+                        + "original shipping cost");
+    }
+
+    @Test
+    @DisplayName("confirmCheckout — multi-seller group confirms every "
+            + "sibling order as one unit")
+    void confirmCheckout_multiSellerGroup_confirmsAllSiblingOrders() {
+        CheckoutSession session = CheckoutSession.builder()
+                .userId(1L).step(CheckoutStep.PENDING_CONFIRM)
+                .orderId(100L).cartId(10L).build();
+        when(checkoutSessionStore.find(1L)).thenReturn(Optional.of(session));
+
+        User user = new User();
+        user.setId(1L);
+        OrderGroup group = new OrderGroup();
+        group.setId(900L);
+
+        Order primary = new Order();
+        primary.setId(100L);
+        primary.setUser(user);
+        primary.setOrderNumber("ORD-AAAA1111");
+        primary.setTotalAmount(new BigDecimal("139.00"));
+        primary.setDiscountAmount(BigDecimal.ZERO);
+        primary.setStatus(Order.OrderStatus.PENDING);
+        primary.setOrderGroup(group);
+
+        Order sibling = new Order();
+        sibling.setId(101L);
+        sibling.setUser(user);
+        sibling.setOrderNumber("ORD-BBBB2222");
+        sibling.setTotalAmount(new BigDecimal("229.00"));
+        sibling.setDiscountAmount(BigDecimal.ZERO);
+        sibling.setStatus(Order.OrderStatus.PENDING);
+        sibling.setOrderGroup(group);
+
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(primary));
+        when(orderRepository.findByOrderGroupId(900L))
+                .thenReturn(List.of(primary, sibling));
+        when(orderRepository.saveAll(anyList()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Cart cart = buildMultiSellerCart(1L, 10L);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+
+        OrderResponseDTO dto = checkoutService.confirmCheckout(1L);
+
+        assertEquals(100L, dto.getId());
+        ArgumentCaptor<List<Order>> confirmCaptor =
+                ArgumentCaptor.forClass(List.class);
+        verify(orderRepository).saveAll(confirmCaptor.capture());
+        List<Order> confirmed = confirmCaptor.getValue();
+        assertEquals(2, confirmed.size());
+        assertTrue(confirmed.stream()
+                .allMatch(o -> o.getStatus() == Order.OrderStatus.CONFIRMED),
+                "every sibling order in the group must be confirmed");
     }
 }
