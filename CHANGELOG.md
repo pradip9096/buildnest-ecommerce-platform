@@ -64,6 +64,23 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   H2-backed `@DataJpaTest` addition to `OrderRepositoryTest` proving the `EXISTS`-subquery
   scoping actually filters correctly — a mocked service-layer test only proves parameter
   pass-through, never the query's own correctness.
+- Frontend: buyer order-group view + seller order management UI (FR-SEL-06, #581) — completes
+  the FR-SEL-06 sub-issue chain (#578/#579/#580) with a real frontend. Buyer-facing
+  `account/OrdersTab.tsx` now groups sibling orders sharing the same `orderGroupId` under a
+  "1 purchase, N shipments" label, mirroring `admin/OrdersTab.tsx`'s existing table pattern for
+  the new seller side. New seller-facing surface (previously nonexistent): `/seller` route
+  (`SellerDashboardPage`, `RequireAuth role="SELLER"`), `components/seller/OrdersTab.tsx`
+  (list/detail/status-update against `/api/user/seller/orders`), `api/sellerOrders.ts`, and a
+  Navbar entry gated on the `SELLER` role. **Scope expansion discovered mid-implementation**
+  (Mid-Implementation Scope Discovery, judged SAME concern): `OrderResponseDTO` had no
+  `orderGroupId` field despite `Order.orderGroup` existing since #578 — the buyer UI this issue
+  asks for is impossible to build without it, so a small additive backend change
+  (`orderGroupId` on `OrderResponseDTO`, populated in both `OrderServiceImpl.mapToResponseDTO`
+  and `CheckoutServiceImpl.toOrderDTO`) was folded into this same issue rather than filed
+  separately. Verified via backend unit tests (null/non-null `orderGroupId` mapping in both
+  services) and frontend RTL tests (11 new/updated tests: seller list/empty/error/status-update/
+  failed-update, buyer ungrouped-vs-grouped rendering). Full frontend suite (271 tests) and
+  build pass.
 - Seller-scoped inventory management (FR-SEL-05, #556) — mirrors #555's
   `SellerProductController`/`ProductServiceImpl` ownership-scoping pattern for inventory. A
   verified seller can list their own inventory (`GET /api/user/seller/inventory`, paginated)

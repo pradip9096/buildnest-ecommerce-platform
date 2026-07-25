@@ -18,6 +18,8 @@ public class OrderResponseDTO {
 
     private String orderNumber;
 
+    private Long orderGroupId;
+
     private String status;
 
     private BigDecimal totalAmount;

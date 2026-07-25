@@ -123,6 +123,7 @@ export interface OrderItem {
 export interface Order {
   id: number;
   userId: number;
+  orderGroupId?: number;
   status: string;
   totalAmount: number;
   orderItems?: OrderItem[];

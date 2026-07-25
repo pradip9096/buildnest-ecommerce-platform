@@ -58,6 +58,7 @@ export function Navbar() {
   }
 
   const isAdmin = user?.roles?.includes('ADMIN') ?? false;
+  const isSeller = user?.roles?.includes('SELLER') ?? false;
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
@@ -125,6 +126,11 @@ export function Navbar() {
                       Admin
                     </Link>
                   )}
+                  {isSeller && (
+                    <Link to="/seller" onClick={() => setAccountOpen(false)} className="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+                      Seller Dashboard
+                    </Link>
+                  )}
                   <button
                     type="button"
                     onClick={handleLogout}
@@ -189,6 +195,11 @@ export function Navbar() {
               {isAdmin && (
                 <Link to="/admin" onClick={() => setMobileOpen(false)} className="block text-sm text-gray-700">
                   Admin
+                </Link>
+              )}
+              {isSeller && (
+                <Link to="/seller" onClick={() => setMobileOpen(false)} className="block text-sm text-gray-700">
+                  Seller Dashboard
                 </Link>
               )}
               <button type="button" onClick={handleLogout} className="block text-sm text-red-600">

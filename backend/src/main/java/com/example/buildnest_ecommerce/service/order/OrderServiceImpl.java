@@ -455,6 +455,8 @@ public class OrderServiceImpl implements OrderService {
                 order.getId(),
                 order.getUser().getId(),
                 order.getOrderNumber(),
+                order.getOrderGroup() != null
+                        ? order.getOrderGroup().getId() : null,
                 order.getStatus().toString(),
                 order.getTotalAmount(),
                 order.getTaxAmount(),

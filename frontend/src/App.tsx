@@ -15,6 +15,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { AccountPage } from './pages/AccountPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { SellerDashboardPage } from './pages/SellerDashboardPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 export default function App() {
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
             <Route path="/admin" element={<RequireAuth role="ADMIN"><AdminDashboardPage /></RequireAuth>} />
+            <Route path="/seller" element={<RequireAuth role="SELLER"><SellerDashboardPage /></RequireAuth>} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </ErrorBoundary>

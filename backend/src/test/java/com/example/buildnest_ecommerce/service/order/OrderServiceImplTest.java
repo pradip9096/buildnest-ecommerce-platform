@@ -445,6 +445,24 @@ class OrderServiceImplTest {
         OrderResponseDTO dto = orderService.getSellerOrderById(42L, 100L);
 
         assertEquals(100L, dto.getId());
+        assertNull(dto.getOrderGroupId(),
+                "order with no OrderGroup must map to a null orderGroupId");
+    }
+
+    @Test
+    @DisplayName("getSellerOrderById – order linked to an OrderGroup – "
+            + "DTO exposes orderGroupId")
+    void getSellerOrderById_withOrderGroup_mapsOrderGroupId() {
+        com.example.buildnest_ecommerce.model.entity.OrderGroup group =
+                new com.example.buildnest_ecommerce.model.entity.OrderGroup();
+        group.setId(900L);
+        order.setOrderGroup(group);
+        when(orderRepository.findByIdAndSellerId(100L, 42L))
+                .thenReturn(Optional.of(order));
+
+        OrderResponseDTO dto = orderService.getSellerOrderById(42L, 100L);
+
+        assertEquals(900L, dto.getOrderGroupId());
     }
 
     @Test
