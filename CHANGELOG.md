@@ -29,6 +29,24 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   wiki lesson) — converted to setter-based construction. The checkout-split rewrite (#579) and
   seller-scoped order API (#580) remain unimplemented; a linked frontend follow-up (#581) covers
   the buyer/seller UI once those land.
+- Multi-seller checkout order splitting (FR-SEL-06, #579, second of three
+  sub-issues under parent #557) — rewrites `CheckoutServiceImpl`'s 3
+  order-creation call sites (`initiatePayment`, `checkoutCart`,
+  `checkoutWithPayment`) to group cart items by `product.seller` and
+  create one `Order` per seller, linked via the `OrderGroup` schema from
+  #578. A single-seller cart (the common case) still produces exactly one
+  order and never creates an `OrderGroup`. Shipping and the session-level
+  discount are apportioned across sibling orders proportionally to each
+  seller's subtotal share — a deliberate, documented trade-off; precise
+  seller-negotiated splitting is out of scope here (see #580). Payment
+  stays a single combined charge against the group's total, initiated
+  against the "primary" (first) seller-group order — per-seller payment
+  splitting is not part of this issue. Adds `OrderGroupRepository` and
+  `OrderRepository.findByOrderGroupId`, used by `confirmCheckout` to
+  confirm every sibling order in a split as one unit. Verified via unit
+  tests (service-layer splitting/apportionment logic — no new framework
+  wiring beyond #578's already-tested JPA mapping). Seller-scoped order
+  API (#580) remains unimplemented.
 - Seller-scoped inventory management (FR-SEL-05, #556) — mirrors #555's
   `SellerProductController`/`ProductServiceImpl` ownership-scoping pattern for inventory. A
   verified seller can list their own inventory (`GET /api/user/seller/inventory`, paginated)
