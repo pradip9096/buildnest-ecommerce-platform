@@ -71,7 +71,7 @@ public class Order implements AggregateRoot {
             fetch = FetchType.LAZY)
     private Set<OrderItem> orderItems;
 
-    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_group_id")
     private OrderGroup orderGroup;
 
