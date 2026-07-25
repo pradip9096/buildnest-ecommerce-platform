@@ -23,22 +23,22 @@ class OrderTest {
         address.setId(2L);
         Set<OrderItem> items = new HashSet<>();
 
-        Order order = new Order(
-                10L,
-                user,
-                "ORD-123",
-                Order.OrderStatus.CONFIRMED,
-                new BigDecimal("100.00"),
-                new BigDecimal("10.00"),
-                new BigDecimal("5.00"),
-                new BigDecimal("15.00"),
-                address,
-                "TRACK-456",
-                false,
-                null,
-                now,
-                now,
-                items);
+        Order order = new Order();
+        order.setId(10L);
+        order.setUser(user);
+        order.setOrderNumber("ORD-123");
+        order.setStatus(Order.OrderStatus.CONFIRMED);
+        order.setTotalAmount(new BigDecimal("100.00"));
+        order.setDiscountAmount(new BigDecimal("10.00"));
+        order.setTaxAmount(new BigDecimal("5.00"));
+        order.setShippingAmount(new BigDecimal("15.00"));
+        order.setShippingAddress(address);
+        order.setTrackingNumber("TRACK-456");
+        order.setIsDeleted(false);
+        order.setDeletedAt(null);
+        order.setCreatedAt(now);
+        order.setUpdatedAt(now);
+        order.setOrderItems(items);
 
         assertEquals(10L, order.getId());
         assertEquals(user, order.getUser());

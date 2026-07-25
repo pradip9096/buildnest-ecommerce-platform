@@ -17,8 +17,9 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = { "user", "shippingAddress", "orderItems", "createdAt", "updatedAt", "deletedAt" })
-@ToString(exclude = { "user", "shippingAddress", "orderItems" })
+@EqualsAndHashCode(exclude = { "user", "shippingAddress", "orderItems",
+        "orderGroup", "createdAt", "updatedAt", "deletedAt" })
+@ToString(exclude = { "user", "shippingAddress", "orderItems", "orderGroup" })
 public class Order implements AggregateRoot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -66,8 +67,13 @@ public class Order implements AggregateRoot {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY)
     private Set<OrderItem> orderItems;
+
+    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @JoinColumn(name = "order_group_id")
+    private OrderGroup orderGroup;
 
     public enum OrderStatus {
         PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED, PAID, PAYMENT_FAILED

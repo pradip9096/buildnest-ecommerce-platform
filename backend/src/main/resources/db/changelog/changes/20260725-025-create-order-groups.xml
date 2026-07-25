@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #578 (FR-SEL-06, sub-issue of #557): a cart spanning multiple
+         sellers is split at checkout into one Order per seller (#579).
+         order_groups is the shared parent representing "one checkout" —
+         each per-seller Order gets a nullable order_group_id back-reference.
+         Deliberately additive-only: existing single-seller orders keep
+         order_group_id = NULL (no group), so no backfill/data write against
+         already-persisted rows is needed. See spring/liquibase.md — no
+         defaultValue needed since the new column is nullable. -->
+    <changeSet id="20260725-025-create-order-groups" author="buildnest-team">
+        <comment>Create order_groups table + orders.order_group_id (FR-SEL-06, #578) — parent linkage for a multi-seller checkout split into per-seller orders</comment>
+
+        <createTable tableName="order_groups">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            constraintName="fk_order_groups_user"
+            baseTableName="order_groups" baseColumnNames="user_id"
+            referencedTableName="users" referencedColumnNames="id"/>
+
+        <addColumn tableName="orders">
+            <column name="order_group_id" type="BIGINT"/>
+        </addColumn>
+
+        <addForeignKeyConstraint
+            constraintName="fk_orders_order_group"
+            baseTableName="orders" baseColumnNames="order_group_id"
+            referencedTableName="order_groups" referencedColumnNames="id"/>
+
+        <createIndex indexName="idx_orders_order_group_id" tableName="orders">
+            <column name="order_group_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="orders" indexName="idx_orders_order_group_id"/>
+            <dropForeignKeyConstraint baseTableName="orders" constraintName="fk_orders_order_group"/>
+            <dropColumn tableName="orders" columnName="order_group_id"/>
+            <dropForeignKeyConstraint baseTableName="order_groups" constraintName="fk_order_groups_user"/>
+            <dropTable tableName="order_groups"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

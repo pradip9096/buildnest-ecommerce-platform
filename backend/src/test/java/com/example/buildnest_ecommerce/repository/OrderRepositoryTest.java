@@ -1,6 +1,7 @@
 package com.example.buildnest_ecommerce.repository;
 
 import com.example.buildnest_ecommerce.model.entity.Order;
+import com.example.buildnest_ecommerce.model.entity.OrderGroup;
 import com.example.buildnest_ecommerce.model.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -231,5 +232,36 @@ class OrderRepositoryTest {
         Optional<Order> retrievedOrder = orderRepository.findById(savedOrder.getId());
         assertTrue(retrievedOrder.isPresent());
         assertEquals(Order.OrderStatus.PENDING, retrievedOrder.get().getStatus());
+    }
+
+    @Test
+    @DisplayName("Should persist a single-seller order with no order group (#578)")
+    void testOrderWithoutOrderGroupStaysNull() {
+        Order savedOrder = orderRepository.save(testOrder);
+        entityManager.flush();
+        entityManager.clear();
+
+        Optional<Order> retrievedOrder = orderRepository.findById(savedOrder.getId());
+        assertTrue(retrievedOrder.isPresent());
+        assertNull(retrievedOrder.get().getOrderGroup());
+    }
+
+    @Test
+    @DisplayName("Should round-trip an order linked to an order group (#578)")
+    void testOrderWithOrderGroupRoundTrips() {
+        OrderGroup group = new OrderGroup();
+        group.setUser(testUser);
+        group.setCreatedAt(LocalDateTime.now());
+        OrderGroup savedGroup = entityManager.persist(group);
+
+        testOrder.setOrderGroup(savedGroup);
+        Order savedOrder = orderRepository.save(testOrder);
+        entityManager.flush();
+        entityManager.clear();
+
+        Optional<Order> retrievedOrder = orderRepository.findById(savedOrder.getId());
+        assertTrue(retrievedOrder.isPresent());
+        assertNotNull(retrievedOrder.get().getOrderGroup());
+        assertEquals(savedGroup.getId(), retrievedOrder.get().getOrderGroup().getId());
     }
 }
