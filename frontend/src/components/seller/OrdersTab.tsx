@@ -1,0 +1,141 @@
+import { useState } from 'react';
+import { useAsync } from '../../hooks/useAsync';
+import { fetchSellerOrders, updateSellerOrderStatus, type SellerOrdersPage } from '../../api/sellerOrders';
+
+const STATUS_OPTIONS = ['', 'PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+const STATUS_COLORS: Record<string, string> = {
+  PENDING:    'bg-yellow-100 text-yellow-800',
+  CONFIRMED:  'bg-blue-100 text-blue-800',
+  PROCESSING: 'bg-indigo-100 text-indigo-800',
+  SHIPPED:    'bg-purple-100 text-purple-800',
+  DELIVERED:  'bg-green-100 text-green-800',
+  CANCELLED:  'bg-red-100 text-red-800',
+};
+
+export function OrdersTab() {
+  const [page, setPage] = useState(0);
+  const [updating, setUpdating] = useState<number | null>(null);
+
+  const { data, loading, error, setData, reload } = useAsync<SellerOrdersPage>(
+    () => fetchSellerOrders({ page, size: 15 }),
+    [page]
+  );
+  const orders = data?.content ?? [];
+  const totalElements = data?.totalElements ?? 0;
+  const totalPages = data?.totalPages ?? 0;
+
+  const handleStatusChange = async (orderId: number, newStatus: string) => {
+    setUpdating(orderId);
+    try {
+      const updated = await updateSellerOrderStatus(orderId, newStatus);
+      setData(prev => prev && {
+        ...prev,
+        content: prev.content.map(o => o.id === orderId ? updated : o),
+      });
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to update status');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-lg font-semibold text-gray-900">Your Orders</h2>
+        <span className="text-sm text-gray-400">{totalElements} total</span>
+      </div>
+
+      {error && (
+        <div className="text-center py-6">
+          <p className="text-red-600 text-sm mb-3">{error}</p>
+          <button
+            type="button"
+            onClick={reload}
+            className="bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      <div className="overflow-x-auto rounded-xl border border-gray-100">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-50 text-left text-gray-500 text-xs uppercase tracking-wide">
+              <th className="px-4 py-3">Order ID</th>
+              <th className="px-4 py-3">Amount</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Date</th>
+              <th className="px-4 py-3">Update</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {loading ? (
+              [...Array(5)].map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  {[...Array(5)].map((__, j) => (
+                    <td key={j} className="px-4 py-3"><div className="h-4 bg-gray-100 rounded" /></td>
+                  ))}
+                </tr>
+              ))
+            ) : orders.length === 0 && !error ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-400">No orders found</td>
+              </tr>
+            ) : orders.map(order => (
+              <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3 font-mono text-gray-600">#{order.id}</td>
+                <td className="px-4 py-3 font-medium">
+                  ₹{Number(order.totalAmount).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLORS[order.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                    {order.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-gray-500">
+                  {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </td>
+                <td className="px-4 py-3">
+                  <select
+                    value={order.status}
+                    disabled={updating === order.id}
+                    onChange={e => handleStatusChange(order.id, e.target.value)}
+                    className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:opacity-50"
+                  >
+                    {STATUS_OPTIONS.filter(Boolean).map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50"
+          >
+            ← Prev
+          </button>
+          <span className="text-sm text-gray-500">Page {page + 1} of {totalPages}</span>
+          <button
+            type="button"
+            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+            disabled={page >= totalPages - 1}
+            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50"
+          >
+            Next →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

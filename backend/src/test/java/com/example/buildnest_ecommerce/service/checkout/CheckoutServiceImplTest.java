@@ -514,6 +514,9 @@ class CheckoutServiceImplTest {
 
         assertEquals(100L, dto.getId());
         assertEquals("CONFIRMED", dto.getStatus());
+        assertNull(dto.getOrderGroupId(),
+                "single-seller order has no OrderGroup, so orderGroupId "
+                        + "must be null, not 0 or omitted");
         verify(inventoryService).deductStock(5L, 2);
         verify(cartService).clearCart(1L);
         verify(checkoutSessionStore).delete(1L);
@@ -858,6 +861,10 @@ class CheckoutServiceImplTest {
         OrderResponseDTO dto = checkoutService.confirmCheckout(1L);
 
         assertEquals(100L, dto.getId());
+        assertEquals(900L, dto.getOrderGroupId(),
+                "multi-seller confirmed order must expose its OrderGroup "
+                        + "id so the buyer-facing UI can group sibling "
+                        + "orders from one checkout (FR-SEL-06)");
         ArgumentCaptor<List<Order>> confirmCaptor =
                 ArgumentCaptor.forClass(List.class);
         verify(orderRepository).saveAll(confirmCaptor.capture());
