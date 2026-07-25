@@ -94,6 +94,16 @@ ESLint/any CI linter — not an exhaustive whitelist).
   grepped files (development-workflow.md's 7 slugs, work-on-issue.md/retro-issue.md's 9 across
   their combined 21-line saved output), no truncation. **Validated, not a finding** — the #556 fix
   held on the very next issue to exercise it.
+- **#580** — regressed after #578's clean pass: `development-workflow.md`'s leg satisfied both
+  the command-shape and per-slug-quoting sub-requirements, but `work-on-issue.md`/`retro-issue.md`
+  (9+1 distinct slugs) used the correct `grep -n` shape while dispositioning every slug from
+  memory of what it generally means — zero lines quoting actual matched text, the exact
+  quote-shortcut the instruction exists to prevent, just with the command-shape half now
+  compliant. This showed the two sub-requirements (shape vs. quoting) can pass/fail independently
+  and the prose sentence pairing them didn't force both. → Split into two explicitly
+  independently-checkable sub-requirements, with a mandatory one-line-per-distinct-slug bullet
+  format (no aggregate/shared-sentence dispositions) replacing the prose "individually-stated
+  disposition" wording that #580 showed was satisfiable without genuine quoting.
 
 ## Tier statement / N/A discipline / Sequence-table enumeration
 
@@ -293,6 +303,15 @@ grep whatever written artifact the issue did produce instead.
   `.claude/` config); the closing GitHub comment was checked for hedge phrases, but the
   substitution away from the instruction's literal targets (CHANGELOG/PR body) was never flagged
   as such. → Added the no-CHANGELOG/no-PR carve-out requiring the substitution be named explicitly.
+- **#578** — all 3 follow-ups filed that session (#579/#580/#581) had their SRS FR ID in the
+  *title* only, never the *body* — this step previously pointed only at `development-workflow.md`
+  steps 12/14/15 and never cross-referenced step 7's requirement-traceability rule the way step 4
+  already does for the originating issue. → Added the citation-at-creation requirement, folded
+  into the same `gh issue create --body` call as priority/milestone/Project #9.
+- **#440, #556** — `[defect-class: add-to-project-separate-call]` (2nd occurrence at #556): the
+  `-p "<project>"` flag was dropped from `gh issue create` twice despite a cross-reference to
+  `development-workflow.md` steps 12/14/15 by number. → Escalated directly to a literal
+  pre-filing `TaskCreate` line naming the flag, per the artifact-shaped-requirements principle.
 
 ## Merge closure step (Monitor-call discipline)
 
