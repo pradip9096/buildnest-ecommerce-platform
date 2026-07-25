@@ -15,6 +15,8 @@ import com.example.buildnest_ecommerce.exception.InventoryException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -294,6 +296,72 @@ public class InventoryServiceImpl implements InventoryService {
                                 .product(product)
                                 .changedByUserId(changedByUserId)
                                 .changeType("ADJUSTMENT")
+                                .quantityBefore(quantityBefore)
+                                .quantityChange(delta)
+                                .quantityAfter(quantityAfter)
+                                .referenceType("MANUAL")
+                                .notes(reason)
+                                .createdAt(LocalDateTime.now())
+                                .build());
+
+                return saved;
+        }
+
+        @Override
+        public Page<InventoryDTO> getInventoryForSeller(
+                        Long sellerUserId, Pageable pageable) {
+                log.info("Fetching inventory for seller {}", sellerUserId);
+                return inventoryRepository
+                                .findByProduct_Seller_Id(sellerUserId, pageable)
+                                .map(inv -> new InventoryDTO(
+                                                inv.getId(),
+                                                inv.getProduct().getId(),
+                                                inv.getProduct().getName(),
+                                                inv.getQuantityInStock(),
+                                                inv.getQuantityReserved(),
+                                                inv.getAvailableQuantity(),
+                                                inv.getMinimumStockLevel(),
+                                                inv.getStatus().name(),
+                                                inv.getUpdatedAt()));
+        }
+
+        @Override
+        @Transactional
+        public Inventory adjustStockForSeller(
+                        Long sellerUserId, Long productId, int delta,
+                        String reason) {
+                log.info("Seller {} adjusting stock for product {} by "
+                                + "delta={}", sellerUserId, productId, delta);
+
+                Inventory inventory = inventoryRepository
+                                .findByProduct_IdAndProduct_Seller_Id(
+                                                productId, sellerUserId)
+                                .orElseThrow(() ->
+                                                new ResourceNotFoundException(
+                                                "Product " + productId
+                                                + " does not belong to seller "
+                                                + sellerUserId));
+
+                int quantityBefore = inventory.getQuantityInStock();
+                int quantityAfter = quantityBefore + delta;
+
+                if (quantityAfter < 0) {
+                        throw new IllegalArgumentException(
+                                "Adjustment would result in negative stock. "
+                                        + "Current: " + quantityBefore
+                                        + ", delta: " + delta);
+                }
+
+                inventory.setQuantityInStock(quantityAfter);
+                inventory.setUpdatedAt(LocalDateTime.now());
+                updateStatusBasedOnQuantity(inventory);
+                Inventory saved = inventoryRepository.save(inventory);
+
+                inventoryAuditLogRepository.save(InventoryAuditLog.builder()
+                                .inventory(saved)
+                                .product(inventory.getProduct())
+                                .changedByUserId(sellerUserId)
+                                .changeType("SELLER_ADJUSTMENT")
                                 .quantityBefore(quantityBefore)
                                 .quantityChange(delta)
                                 .quantityAfter(quantityAfter)

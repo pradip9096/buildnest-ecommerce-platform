@@ -820,4 +820,73 @@ class InventoryServiceImplTest {
         assertEquals(10, result.getQuantityInStock());
         verify(inventoryAuditLogRepository).save(any());
     }
+
+    // ─── Seller-scoped inventory (FR-SEL-05, #556) ──────────────────
+
+    @Test
+    @DisplayName("getInventoryForSeller — maps owned inventory to DTOs")
+    void testGetInventoryForSeller_returnsMappedPage() {
+        Inventory inventory = buildInventory(product, 10, 2);
+        inventory.setId(1L);
+        org.springframework.data.domain.Pageable pageable =
+                org.springframework.data.domain.PageRequest.of(0, 20);
+        when(inventoryRepository.findByProduct_Seller_Id(5L, pageable))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(
+                        List.of(inventory)));
+
+        org.springframework.data.domain.Page<InventoryDTO> result =
+                inventoryService.getInventoryForSeller(5L, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1L, result.getContent().get(0).getProductId());
+        verify(inventoryRepository).findByProduct_Seller_Id(5L, pageable);
+    }
+
+    @Test
+    @DisplayName("adjustStockForSeller — throws when product not owned by seller")
+    void testAdjustStockForSeller_notOwned_throwsResourceNotFound() {
+        when(inventoryRepository
+                .findByProduct_IdAndProduct_Seller_Id(1L, 5L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(com.example.buildnest_ecommerce.exception
+                .ResourceNotFoundException.class,
+                () -> inventoryService
+                        .adjustStockForSeller(5L, 1L, 5, "restock"));
+        verify(inventoryRepository, never()).save(any());
+        verify(inventoryAuditLogRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("adjustStockForSeller — negative resulting stock rejected")
+    void testAdjustStockForSeller_negativeResult_throws() {
+        Inventory inventory = buildInventory(product, 3, 2);
+        inventory.setId(1L);
+        when(inventoryRepository
+                .findByProduct_IdAndProduct_Seller_Id(1L, 5L))
+                .thenReturn(Optional.of(inventory));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> inventoryService
+                        .adjustStockForSeller(5L, 1L, -10, "correction"));
+        verify(inventoryRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("adjustStockForSeller — owned product adjusts and audits")
+    void testAdjustStockForSeller_owned_savesAndAudits() {
+        Inventory inventory = buildInventory(product, 10, 2);
+        inventory.setId(1L);
+        when(inventoryRepository
+                .findByProduct_IdAndProduct_Seller_Id(1L, 5L))
+                .thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(any(Inventory.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        Inventory result = inventoryService
+                .adjustStockForSeller(5L, 1L, 5, "restock");
+
+        assertEquals(15, result.getQuantityInStock());
+        verify(inventoryAuditLogRepository).save(any());
+    }
 }

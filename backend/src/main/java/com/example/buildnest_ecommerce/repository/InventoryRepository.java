@@ -3,6 +3,8 @@ package com.example.buildnest_ecommerce.repository;
 import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -38,7 +40,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     /**
      * Find products below minimum threshold (RQ-INV-MON-02, RQ-INV-REP-01).
      */
-    @Query("SELECT i FROM Inventory i WHERE i.quantityInStock < i.minimumStockLevel AND i.quantityInStock > 0")
+    @Query("SELECT i FROM Inventory i WHERE i.quantityInStock < "
+            + "i.minimumStockLevel AND i.quantityInStock > 0")
     List<Inventory> findLowStockProducts();
 
     /**
@@ -50,13 +53,30 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     /**
      * Find all products below threshold (RQ-INV-REP-01).
      */
-    @Query("SELECT i FROM Inventory i WHERE i.quantityInStock <= i.minimumStockLevel")
+    @Query("SELECT i FROM Inventory i WHERE i.quantityInStock <= "
+            + "i.minimumStockLevel")
     List<Inventory> findBelowThresholdProducts();
 
     /**
      * Find inventory rows with an expired reservation (INV-01, #73).
      * Used by the cleanup scheduler to release orphaned holds.
      */
-    @Query("SELECT i FROM Inventory i WHERE i.quantityReserved > 0 AND i.reservationExpiresAt IS NOT NULL AND i.reservationExpiresAt < :now")
+    @Query("SELECT i FROM Inventory i WHERE i.quantityReserved > 0 "
+            + "AND i.reservationExpiresAt IS NOT NULL "
+            + "AND i.reservationExpiresAt < :now")
     List<Inventory> findExpiredReservations(@Param("now") LocalDateTime now);
+
+    /**
+     * Seller-scoped inventory listing (FR-SEL-05, #556) — mirrors
+     * ProductRepository's findBySeller_Id pattern from #555.
+     */
+    @EntityGraph(attributePaths = {"product"})
+    Page<Inventory> findByProduct_Seller_Id(Long sellerId, Pageable pageable);
+
+    /**
+     * Seller ownership check before a stock adjustment (FR-SEL-05, #556) —
+     * mirrors ProductRepository's findByIdAndSeller_Id pattern from #555.
+     */
+    Optional<Inventory> findByProduct_IdAndProduct_Seller_Id(
+            Long productId, Long sellerId);
 }
