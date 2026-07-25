@@ -22,6 +22,10 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   seller). No new Liquibase changeset — reuses the existing `inventory`/`product` schema and
   `Product.seller` mapping from #555. Verified via Mockito-mocked unit tests (simple derived
   Spring Data queries, no custom JPQL — no framework-level risk requiring a real-context test).
+  CI caught a genuine defect during this issue's own work: an `@throws` Javadoc reference
+  wrapped across lines (to satisfy CheckStyle's line-length ratchet) is invalid Javadoc syntax,
+  breaking the `javadoc:jar` goal only in CI's real `mvn verify`, not local `compile`/`test` —
+  fixed by importing the exception classes and using simple names instead of FQNs.
 - Seller-owned product catalogue (FR-SEL-03, FR-SEL-04, #555) — reactivates the dormant
   `supplier_id`/`fk_product_supplier` FK (`product` → `users`) already present in the original
   bootstrap schema, mapped onto `Product.seller`, per SDD v4.0's documented finding and design

@@ -1,5 +1,7 @@
 package com.example.buildnest_ecommerce.service.inventory;
 
+import com.example.buildnest_ecommerce.exception.InventoryException;
+import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import com.example.buildnest_ecommerce.model.dto.InventoryDTO;
 import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
@@ -65,9 +67,7 @@ public interface InventoryService {
      * Uses optimistic locking — throws
      * OptimisticLockingFailureException on concurrent conflict.
      *
-     * @throws com.example.buildnest_ecommerce.exception.
-     *         InventoryException if available quantity is
-     *         insufficient
+     * @throws InventoryException if available quantity is insufficient
      */
     void reserveStock(
             Long productId, Integer quantity, LocalDateTime expiresAt);
@@ -97,8 +97,7 @@ public interface InventoryService {
      * (FR-SEL-05, #556) — rejects the adjustment if the product
      * does not belong to the given seller.
      *
-     * @throws com.example.buildnest_ecommerce.exception.
-     *         ResourceNotFoundException if the product is not
+     * @throws ResourceNotFoundException if the product is not
      *         found or not owned by this seller
      * @throws IllegalArgumentException if the resulting quantity
      *         would be negative
