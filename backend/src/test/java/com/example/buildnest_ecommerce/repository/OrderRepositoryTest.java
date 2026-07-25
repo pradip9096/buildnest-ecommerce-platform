@@ -1,7 +1,10 @@
 package com.example.buildnest_ecommerce.repository;
 
+import com.example.buildnest_ecommerce.model.entity.Category;
 import com.example.buildnest_ecommerce.model.entity.Order;
 import com.example.buildnest_ecommerce.model.entity.OrderGroup;
+import com.example.buildnest_ecommerce.model.entity.OrderItem;
+import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -9,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
@@ -263,5 +268,112 @@ class OrderRepositoryTest {
         assertTrue(retrievedOrder.isPresent());
         assertNotNull(retrievedOrder.get().getOrderGroup());
         assertEquals(savedGroup.getId(), retrievedOrder.get().getOrderGroup().getId());
+    }
+
+    // --- seller-scoped order queries (FR-SEL-06, #580) ---
+    // Order has no direct seller reference; ownership is derived
+    // transitively via OrderItem.product.seller, so only a real
+    // H2-backed JPA context proves the EXISTS-subquery scoping actually
+    // filters correctly -- a mocked service-layer test only proves
+    // parameter pass-through, never the query's own correctness.
+
+    private User persistSeller(String username) {
+        User seller = new User();
+        seller.setUsername(username);
+        seller.setEmail(username + "@example.com");
+        seller.setPassword("hashed");
+        entityManager.persist(seller);
+        return seller;
+    }
+
+    private Order persistOrderForSeller(
+            User buyer, User seller, String orderNumber) {
+        Category category = new Category();
+        category.setName("Cat-" + orderNumber);
+        entityManager.persist(category);
+
+        Product product = new Product();
+        product.setName("Product-" + orderNumber);
+        product.setPrice(BigDecimal.TEN);
+        product.setCategory(category);
+        product.setIsActive(true);
+        product.setSeller(seller);
+        entityManager.persist(product);
+
+        Order order = new Order();
+        order.setUser(buyer);
+        order.setOrderNumber(orderNumber);
+        order.setStatus(Order.OrderStatus.PENDING);
+        order.setTotalAmount(BigDecimal.TEN);
+        order.setIsDeleted(false);
+        order.setCreatedAt(LocalDateTime.now());
+        Order savedOrder = entityManager.persist(order);
+
+        OrderItem item = new OrderItem();
+        item.setOrder(savedOrder);
+        item.setProduct(product);
+        item.setQuantity(1);
+        item.setPrice(BigDecimal.TEN);
+        item.setSubtotal(BigDecimal.TEN);
+        entityManager.persist(item);
+
+        return savedOrder;
+    }
+
+    @Test
+    @DisplayName("findBySellerId returns only orders containing that "
+            + "seller's products (#580)")
+    void testFindBySellerIdReturnsOnlyOwnOrders() {
+        User buyer = userRepository.save(testUser);
+        User seller = persistSeller("order-seller-owner");
+        User otherSeller = persistSeller("order-seller-other");
+
+        Order ownOrder = persistOrderForSeller(
+                buyer, seller, "ORD-SELLER-OWN");
+        persistOrderForSeller(buyer, otherSeller, "ORD-SELLER-OTHER");
+        entityManager.flush();
+        entityManager.clear();
+
+        Page<Order> page = orderRepository.findBySellerId(
+                seller.getId(), PageRequest.of(0, 10));
+
+        assertEquals(1, page.getTotalElements());
+        assertEquals(ownOrder.getId(), page.getContent().get(0).getId());
+    }
+
+    @Test
+    @DisplayName("findByIdAndSellerId finds an order the seller owns "
+            + "(#580)")
+    void testFindByIdAndSellerIdReturnsOwnedOrder() {
+        User buyer = userRepository.save(testUser);
+        User seller = persistSeller("order-detail-owner");
+        Order order = persistOrderForSeller(
+                buyer, seller, "ORD-SELLER-DETAIL");
+        entityManager.flush();
+        entityManager.clear();
+
+        Optional<Order> found = orderRepository
+                .findByIdAndSellerId(order.getId(), seller.getId());
+
+        assertTrue(found.isPresent());
+        assertEquals(order.getId(), found.get().getId());
+    }
+
+    @Test
+    @DisplayName("findByIdAndSellerId is empty for a non-owning "
+            + "seller (#580)")
+    void testFindByIdAndSellerIdEmptyForDifferentSeller() {
+        User buyer = userRepository.save(testUser);
+        User owner = persistSeller("order-detail-real-owner");
+        User other = persistSeller("order-detail-other-seller");
+        Order order = persistOrderForSeller(
+                buyer, owner, "ORD-SELLER-DETAIL-2");
+        entityManager.flush();
+        entityManager.clear();
+
+        Optional<Order> found = orderRepository
+                .findByIdAndSellerId(order.getId(), other.getId());
+
+        assertTrue(found.isEmpty());
     }
 }

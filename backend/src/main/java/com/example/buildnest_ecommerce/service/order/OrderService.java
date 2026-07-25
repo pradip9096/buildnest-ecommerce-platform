@@ -18,12 +18,23 @@ public interface OrderService {
     List<Order> getOrdersByUserId(Long userId);
     Order updateOrderStatus(Long orderId, String status);
     List<OrderResponseDTO> getOrderResponsesByUserId(Long userId);
-    OrderResponseDTO getUserOrderById(Long userId, Long orderId) throws IllegalAccessException;
+    OrderResponseDTO getUserOrderById(Long userId, Long orderId)
+            throws IllegalAccessException;
 
-    Page<AdminOrderDetailDTO> getAdminOrders(Order.OrderStatus status, Long userId,
-            LocalDateTime dateFrom, LocalDateTime dateTo, Pageable pageable);
+    Page<AdminOrderDetailDTO> getAdminOrders(Order.OrderStatus status,
+            Long userId, LocalDateTime dateFrom, LocalDateTime dateTo,
+            Pageable pageable);
 
     AdminOrderDetailDTO getAdminOrderDetail(Long orderId);
 
-    Order adminUpdateOrderStatus(Long orderId, String newStatus, String cancellationReason);
+    Order adminUpdateOrderStatus(
+            Long orderId, String newStatus, String cancellationReason);
+
+    // Seller-scoped orders (FR-SEL-06, #580)
+    Page<OrderResponseDTO> getSellerOrders(Long sellerId, Pageable pageable);
+
+    OrderResponseDTO getSellerOrderById(Long sellerId, Long orderId);
+
+    OrderResponseDTO updateSellerOrderStatus(
+            Long sellerId, Long orderId, String newStatus);
 }
