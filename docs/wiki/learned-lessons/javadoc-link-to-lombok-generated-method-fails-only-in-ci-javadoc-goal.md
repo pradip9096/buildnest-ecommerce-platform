@@ -66,3 +66,4 @@ If you need to verify a javadoc-touching change won't break CI, run `./mvnw java
 
 ## Related
 - [CheckStyle Ratchet Counts Whole File, Not Diff — Add Javadoc Per New Method](checkstyle-ratchet-counts-whole-file-not-diff-add-javadoc-per-new-method.md)
+- [Wrapping a Javadoc @throws FQN Reference Across Lines to Satisfy CheckStyle Breaks the javadoc Goal](javadoc-throws-fqn-reference-split-across-lines-is-invalid-syntax.md)

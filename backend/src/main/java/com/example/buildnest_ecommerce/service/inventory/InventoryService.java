@@ -1,10 +1,14 @@
 package com.example.buildnest_ecommerce.service.inventory;
 
+import com.example.buildnest_ecommerce.exception.InventoryException;
+import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
 import com.example.buildnest_ecommerce.model.dto.InventoryDTO;
 import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
 import java.util.List;
 import java.time.LocalDateTime;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface InventoryService {
     Inventory addStock(Long productId, Integer stock);
@@ -51,18 +55,22 @@ public interface InventoryService {
      * Apply a delta (positive or negative) adjustment to inventory quantity,
      * recording the reason and actor in inventory_audit_log (ADM-06, #72).
      *
-     * @throws IllegalArgumentException if the resulting quantity would be negative
+     * @throws IllegalArgumentException if the resulting quantity
+     *         would be negative
      */
-    Inventory adjustStock(Long productId, int delta, String reason, Long changedByUserId);
+    Inventory adjustStock(
+            Long productId, int delta, String reason, Long changedByUserId);
 
     /**
      * Reserve stock for a checkout session (INV-01, #73).
      * Increments quantityReserved and sets reservationExpiresAt.
-     * Uses optimistic locking — throws OptimisticLockingFailureException on concurrent conflict.
+     * Uses optimistic locking — throws
+     * OptimisticLockingFailureException on concurrent conflict.
      *
-     * @throws com.example.buildnest_ecommerce.exception.InventoryException if available quantity is insufficient
+     * @throws InventoryException if available quantity is insufficient
      */
-    void reserveStock(Long productId, Integer quantity, LocalDateTime expiresAt);
+    void reserveStock(
+            Long productId, Integer quantity, LocalDateTime expiresAt);
 
     /**
      * Release a reservation back to the available pool (INV-01, #73).
@@ -75,4 +83,25 @@ public interface InventoryService {
      * Called by the cleanup scheduler every minute.
      */
     void releaseExpiredReservations();
+
+    /**
+     * List inventory for products owned by the given seller
+     * (FR-SEL-05, #556) — mirrors ProductService's
+     * getProductsForSeller pattern from #555.
+     */
+    Page<InventoryDTO> getInventoryForSeller(
+            Long sellerUserId, Pageable pageable);
+
+    /**
+     * Apply a stock delta scoped to a seller's own product
+     * (FR-SEL-05, #556) — rejects the adjustment if the product
+     * does not belong to the given seller.
+     *
+     * @throws ResourceNotFoundException if the product is not
+     *         found or not owned by this seller
+     * @throws IllegalArgumentException if the resulting quantity
+     *         would be negative
+     */
+    Inventory adjustStockForSeller(
+            Long sellerUserId, Long productId, int delta, String reason);
 }
