@@ -613,7 +613,11 @@ public class CheckoutServiceImpl implements CheckoutService {
         }
     }
 
-    @Transactional
+    // No @Transactional here: this private method is only ever called via
+    // `this` from an already-@Transactional public method — Spring's proxy
+    // never intercepts self-invocation, so an annotation here would be
+    // dead code (SonarCloud java:S6809). The outer method's transaction
+    // already covers this call.
     private List<Order> createOrdersFromCart(Cart cart) {
         log.debug("Creating order(s) from cart: {}", cart.getId());
 
@@ -625,7 +629,8 @@ public class CheckoutServiceImpl implements CheckoutService {
         return savedOrders;
     }
 
-    @Transactional
+    // No @Transactional — see createOrdersFromCart's comment above;
+    // same self-invocation reasoning applies here.
     private void reserveInventoryFromCart(
             Cart cart, LocalDateTime expiresAt) {
         log.debug("Reserving inventory for cart: {}", cart.getId());
@@ -652,7 +657,8 @@ public class CheckoutServiceImpl implements CheckoutService {
         }
     }
 
-    @Transactional
+    // No @Transactional — see createOrdersFromCart's comment above;
+    // same self-invocation reasoning applies here.
     private void deductInventoryFromCart(Cart cart) {
         log.debug("Permanently deducting inventory for cart: {}",
                 cart.getId());
