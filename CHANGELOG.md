@@ -13,6 +13,17 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Seller data-isolation hardening (FR-SEL-08, #559) — audited the existing FR-SEL-04/05/06
+  seller-scoped endpoints (`SellerProductController`/`SellerInventoryController`/
+  `SellerOrderController`) and confirmed ownership isolation was already correctly enforced via
+  class-level `@PreAuthorize("hasRole('SELLER')")` plus service-layer ownership-scoped repository
+  queries (`findByIdAndSeller_Id`/`findByIdAndSellerId`/`findByProduct_IdAndProduct_Seller_Id`),
+  already fully unit-tested for the rejection path. The real gap: every existing controller test
+  constructed the controller directly with a mocked service, so `@PreAuthorize` had never been
+  exercised through the real Spring Security proxy/filter chain by any test. Added
+  `SellerDataIsolationIntegrationTest` (`@SpringBootTest`+MockMvc, real filter chain) proving
+  non-SELLER rejection, owner access, and cross-seller rejection end-to-end for
+  products/inventory/orders — the last sub-issue under Epic #552.
 - Buyer-to-seller ratings/reviews (FR-SEL-07, #558) — `SellerReview` entity/table (`seller_review`,
   Liquibase changeset `20260728-026-create-seller-review.xml`), `SellerReviewController`
   (`/api/sellers/{sellerId}/reviews`, GET public), `SellerReviewServiceImpl` (create/update/delete
