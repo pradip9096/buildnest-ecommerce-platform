@@ -1,0 +1,54 @@
+name: Epic Auto-Close
+
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  issues: write
+
+jobs:
+  close-parent-if-all-siblings-closed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check parent and close if fully complete
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          CLOSED_ISSUE: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+
+          parent_url=$(gh api "repos/${REPO}/issues/${CLOSED_ISSUE}" --jq '.parent_issue_url // empty')
+
+          if [ -z "$parent_url" ]; then
+            echo "Issue #${CLOSED_ISSUE} has no parent — nothing to do."
+            exit 0
+          fi
+
+          parent_number=$(basename "$parent_url")
+
+          parent_state=$(gh api "repos/${REPO}/issues/${parent_number}" --jq '.state')
+
+          if [ "$parent_state" != "open" ]; then
+            echo "Parent #${parent_number} is already ${parent_state} — nothing to do."
+            exit 0
+          fi
+
+          sub_issues_json=$(gh api "repos/${REPO}/issues/${parent_number}/sub_issues")
+
+          open_count=$(echo "$sub_issues_json" | jq '[.[] | select(.state != "closed")] | length')
+
+          if [ "$open_count" -gt 0 ]; then
+            echo "Parent #${parent_number} still has ${open_count} open sub-issue(s) — nothing to do."
+            exit 0
+          fi
+
+          summary=$(echo "$sub_issues_json" | jq -r '.[] | "- #\(.number) — \(.title)"')
+
+          comment_body=$(printf 'All sub-issues under this epic are complete:\n\n%s\n\nClosing this epic as complete.' "$summary")
+
+          gh api "repos/${REPO}/issues/${parent_number}/comments" -f body="$comment_body"
+          gh api "repos/${REPO}/issues/${parent_number}" -X PATCH -f state=closed
+
+          echo "Closed parent epic #${parent_number} — all sub-issues complete."

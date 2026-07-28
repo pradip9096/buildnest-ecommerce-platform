@@ -13,6 +13,10 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- `epic-auto-close.yml` GitHub Action (#600) — auto-closes a parent epic with a summary comment
+  once every native sub-issue under it is closed. GitHub's own Sub-issues feature only updates the
+  parent's progress indicator on child-close, never closes it — 4 epics (#424/#430/#434/#437) and
+  most recently #552 previously sat open with 100% completion until manually checked and closed.
 - Seller data-isolation hardening (FR-SEL-08, #559) — audited the existing FR-SEL-04/05/06
   seller-scoped endpoints (`SellerProductController`/`SellerInventoryController`/
   `SellerOrderController`) and confirmed ownership isolation was already correctly enforced via

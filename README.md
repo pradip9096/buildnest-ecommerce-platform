@@ -273,6 +273,8 @@ GitHub Actions workflows in `.github/workflows/` that actively trigger on `maste
 
 `ci-cd.yml` also exists in this directory but only triggers on `main`/`develop` branches (a leftover from before the repo's default branch was `master`) — it does not currently run and is not listed above.
 
+`epic-auto-close.yml` is a separate, issue-tracker-only automation (not listed in the master-triggered table above, since it never runs against code): on `issues: closed`, it checks whether the closed issue has a native GitHub parent and, if every sibling sub-issue is now closed, auto-closes the parent epic with a summary comment (#600).
+
 **Known overlap:** `ci.yml` and `ci-cd-pipeline.yml` both run on every push/PR to master with genuinely overlapping build/test concerns — this is real, current duplication of CI compute, not just a naming quirk. Worth consolidating; not yet done.
 
 ---
