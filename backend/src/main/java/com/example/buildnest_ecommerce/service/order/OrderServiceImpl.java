@@ -5,6 +5,7 @@ import com.example.buildnest_ecommerce.model.dto.OrderItemDTO;
 import com.example.buildnest_ecommerce.model.dto.OrderResponseDTO;
 import com.example.buildnest_ecommerce.model.entity.Order;
 import com.example.buildnest_ecommerce.model.entity.Order.OrderStatus;
+import com.example.buildnest_ecommerce.model.entity.User;
 import com.example.buildnest_ecommerce.event.DomainEventPublisher;
 import com.example.buildnest_ecommerce.event.OrderPlacedEvent;
 import com.example.buildnest_ecommerce.event.OrderStatusChangedEvent;
@@ -460,8 +461,9 @@ public class OrderServiceImpl implements OrderService {
                 || order.getOrderItems().isEmpty()) {
             return null;
         }
-        return order.getOrderItems().iterator().next()
-                .getProduct().getSeller().getId();
+        User seller = order.getOrderItems().iterator().next()
+                .getProduct().getSeller();
+        return seller != null ? seller.getId() : null;
     }
 
     private OrderResponseDTO mapToResponseDTO(Order order) {
