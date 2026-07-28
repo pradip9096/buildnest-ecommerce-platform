@@ -38,6 +38,9 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   rating-distribution logic duplicated between `ProductReviewServiceImpl` and
   `SellerReviewServiceImpl`, resolving a SonarCloud new-code duplication gate failure (6.1% vs
   3% max).
+- (#558 follow-up) Extracted `AbstractReview` (`@MappedSuperclass`) for the remaining duplicated
+  entity fields/`@PrePersist`/`@PreUpdate` callbacks between `ProductReview` and `SellerReview`,
+  resolving the residual SonarCloud duplication (5.3% after the first fix, still above the 3% max).
 
 - Order-group schema for seller-scoped order splitting (FR-SEL-06, #578, first of three
   sub-issues under parent #557) — a cart spanning multiple sellers currently produces one

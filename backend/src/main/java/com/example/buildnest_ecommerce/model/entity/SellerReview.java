@@ -2,16 +2,12 @@ package com.example.buildnest_ecommerce.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.time.LocalDateTime;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Seller Review Entity (FR-SEL-07, #558) — buyer-to-seller rating, distinct
@@ -19,7 +15,8 @@ import java.time.LocalDateTime;
  * {@link User}, not {@link Seller} — mirrors {@code Product.seller} and
  * {@code SellerOrderController}'s own sellerId=User.id convention, since a
  * seller's storefront identity for review purposes is the User account, not
- * the separate business-profile Seller extension table.
+ * the separate business-profile Seller extension table. Shared fields
+ * (rating/comment/timestamps/visibility) live in {@link AbstractReview}.
  */
 @Entity
 @Table(name = "seller_review", indexes = {
@@ -30,11 +27,11 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@EqualsAndHashCode(exclude = { "seller", "user", "createdAt", "updatedAt" })
+@SuperBuilder
+@EqualsAndHashCode(callSuper = false,
+        exclude = { "seller", "user" })
 @ToString(exclude = { "seller", "user" })
-public class SellerReview implements AggregateRoot {
+public class SellerReview extends AbstractReview implements AggregateRoot {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,39 +45,4 @@ public class SellerReview implements AggregateRoot {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @NotNull(message = "Rating is required")
-    @Min(value = 1, message = "Rating must be at least 1")
-    @Max(value = 5, message = "Rating must be at most 5")
-    @Column(nullable = false)
-    private Integer rating;
-
-    @Size(max = 2000, message = "Review comment cannot exceed 2000 characters")
-    @Column(length = 2000)
-    private String comment;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @Column(name = "verified_purchase")
-    @Builder.Default
-    private Boolean verifiedPurchase = false;
-
-    @Column(name = "is_visible")
-    @Builder.Default
-    private Boolean isVisible = true;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }
