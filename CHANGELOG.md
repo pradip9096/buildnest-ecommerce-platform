@@ -26,6 +26,19 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   documented from #581) so the frontend could link a buyer's order to the seller being rated.
   Verified via 20 backend unit tests, 4 frontend RTL tests, and a real H2-backed Spring context
   load (`CivilEcommerceApplicationTests`) confirming the new entity/changeset's schema mapping.
+
+### Fixed
+- (#558 follow-up) Null-checked `Product.seller` when deriving `Order.sellerId` in
+  `OrderServiceImpl`/`CheckoutServiceImpl` — `Product.seller` is nullable (admin-created products
+  have no owning seller), and the initial derivation dereferenced it unconditionally, caught by
+  CI's `CheckoutFlowIntegrationTest` (500 instead of 200) rather than any mocked unit test.
+- (#558 follow-up) Added the missing `SellerReviewControllerTest`, closing a JaCoCo
+  `controller.user` package-coverage gap (0.84 vs 0.85 threshold) the new controller introduced.
+- (#558 follow-up) Extracted `ReviewRatingUtils.buildDistribution` from the identical
+  rating-distribution logic duplicated between `ProductReviewServiceImpl` and
+  `SellerReviewServiceImpl`, resolving a SonarCloud new-code duplication gate failure (6.1% vs
+  3% max).
+
 - Order-group schema for seller-scoped order splitting (FR-SEL-06, #578, first of three
   sub-issues under parent #557) — a cart spanning multiple sellers currently produces one
   shared `Order`; a real design decision (no repo precedent, confirmed via `gh search`) resolved

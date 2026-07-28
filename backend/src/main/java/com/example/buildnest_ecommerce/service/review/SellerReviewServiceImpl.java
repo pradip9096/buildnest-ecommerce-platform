@@ -14,8 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -162,22 +160,8 @@ public class SellerReviewServiceImpl implements SellerReviewService {
     @Override
     public Map<Integer, Long> getRatingDistribution(Long sellerId) {
         log.debug("Fetching rating distribution for seller {}", sellerId);
-
-        List<Object[]> distribution =
-                reviewRepository.getRatingDistribution(sellerId);
-        Map<Integer, Long> ratingMap = new HashMap<>();
-
-        for (int i = 1; i <= 5; i++) {
-            ratingMap.put(i, 0L);
-        }
-
-        for (Object[] row : distribution) {
-            Integer rating = (Integer) row[0];
-            Long count = (Long) row[1];
-            ratingMap.put(rating, count);
-        }
-
-        return ratingMap;
+        return ReviewRatingUtils.buildDistribution(
+                reviewRepository.getRatingDistribution(sellerId));
     }
 
     @Override
