@@ -10,12 +10,12 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 4.7 |
-| **Date** | 2026-07-28 17:00 IST |
+| **Version** | 4.8 |
+| **Date** | 2026-07-28 18:00 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
-| **Related SRS** | SRS-BUILDNEST-001 v5.1 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
+| **Related SRS** | SRS-BUILDNEST-001 v5.2 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
 | **Supersedes** | SDD v2.0 (archive/docs/ISO-IEC-IEEE/SDD_IEEE_1016_2017.md, 2026-02-11) |
 
 ---
@@ -43,6 +43,7 @@
 | 3.8 | 2026-07-22 IST | Software Architect | §5.2.1's Exception-to-HTTP Mapping table was missing `ConstraintViolationException` (400/`VALIDATION_ERROR`) — added as part of #487's fix (`AdminInventoryController`'s `add-stock`/`update-stock` `@RequestParam Integer quantity` gained `@Min(0)` + `@Validated`, which throws this exception type; `GlobalExceptionHandler` needed its own new handler for it, not previously required since no `@RequestParam`/`@PathVariable` constraint existed anywhere in the codebase before this fix) | Pending |
 | 4.4 | 2026-07-25 20:00 IST | Software Architect | §4.5.2 updated for #578 (sub-issue of #557, FR-SEL-06): added new `OrderGroup` entity row (`order_groups` table, FK → `user_id`) and extended `Order`'s row with the new nullable `order_group_id` FK — parent linkage for splitting a multi-seller cart into per-seller orders. Design decision (no repo precedent — confirmed via `gh search`): split into per-seller sub-orders rather than a single shared Order with a read-only per-seller filter, since the latter leaves order-status/fulfillment ownership ambiguous once sellers ship independently. Additive-only schema change, no backfill (existing orders keep `order_group_id = NULL`). #579 (checkout split) and #580 (seller-scoped order API) remain unimplemented | Pending |
 | 4.6 | 2026-07-26 10:30 IST | Software Architect | FR-SEL-06's linked frontend follow-up (#581): new seller-facing route/page (`/seller`, `SellerDashboardPage`) and `components/seller/OrdersTab.tsx`, consuming #580's existing `SellerOrderController` API. Buyer-facing `account/OrdersTab.tsx` extended to group sibling orders sharing an `orderGroupId` under a "1 purchase, N shipments" label. Required extending `OrderResponseDTO` with a new `orderGroupId` field (populated in `OrderServiceImpl.mapToResponseDTO` and `CheckoutServiceImpl.toOrderDTO`) — a small additive backend change discovered mid-implementation, since `Order.orderGroup` existed since #578 but was never exposed via any DTO. §4.7.3's API Endpoint Catalogue gap (seller controllers not yet listed, #576) remains open, not addressed here | Pending |
+| 4.8 | 2026-07-28 18:00 IST | Software Architect | Resolved OQ-01/OQ-02 in §4.5.6 via [ADR 0001](adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) (#561): district matching is radius/seller-declared (`Seller ──[N:M]──► District` join table), district sourced from a fixed, admin-maintained reference table. Updated §4.5.1's entity diagram (`Seller ──[N:1]──► District` → `Seller ──[N:M]──► District`), §4.5.2's `Seller`/`District` rows to drop the "deferred pending ADR" language, and rewrote §4.5.6 from a two-branch conditional sketch into a single finalized design (join table `seller_districts`, ES `terms` query). `Related SRS` updated 5.1 → 5.2 | Pending |
 | 4.7 | 2026-07-28 17:00 IST | Software Architect | FR-SEL-07 (#558): new `SellerReview` entity/table (`seller_review`), mirroring `ProductReview` but scoped by the seller's `User.id`. Added to §4.5.1's ER diagram and §4.5.2's entity table. Same DTO-exposure gap recurred as #581's `orderGroupId` fix — `OrderResponseDTO` needed a new `sellerId` field so the frontend's `SellerReviewPanel` (surfaced from a delivered order's detail view) could link an order to the seller being rated; populated in the same two mapping methods (`OrderServiceImpl.mapToResponseDTO`, `CheckoutServiceImpl`'s equivalent) | Pending |
 | 4.5 | 2026-07-26 09:00 IST | Software Architect | Final sub-issue of #557/FR-SEL-06: added `SellerOrderController`/`OrderServiceImpl`'s new seller-scoped list/detail/status methods, using a new `OrderRepository.findBySellerId`/`findByIdAndSellerId` `EXISTS`-subquery (`Order` has no direct seller reference; ownership derived transitively via `OrderItem.product.seller`) — mirrors #555's `SellerProductController`/#556's `SellerInventoryController` ownership-scoping pattern. All three FR-SEL-06 sub-issues (#578/#579/#580) now closed. **Not addressed in this revision**: §4.7.3's API Endpoint Catalogue does not yet list any of the three sellers' controllers (`SellerProductController`/`SellerInventoryController`/`SellerOrderController`) — this gap was already surfaced and filed as its own follow-up (#576) during #556's closure; not duplicated here | Pending |
 
@@ -578,11 +579,11 @@ Seller (User) ──[1:N]──── SellerReview  (FR-SEL-07, #558 — seller_
 Planned (Ph-3, SRS FG-11/FG-12 — not yet implemented, design sketch only):
 Seller ──[1:1]──── User (extension table, mirrors the existing Address pattern)
    │
-   ├──[N:1]──── District
+   ├──[N:M]──── District  (via seller_districts join table — seller declares delivery districts, see §4.5.6)
    └──[1:N]──── Product  (reactivates product.supplier_id, see §4.5.2 note above)
 
-District  (admin-maintained reference table — see §4.5.6 for the open sourcing/matching questions)
-   └──[1:N]──── User  (buyer's district, likely derived from Address rather than a direct FK — TBD)
+District  (fixed, admin-maintained reference table — see §4.5.6)
+   └──[1:N]──── User  (buyer's district, derived from Address)
 ```
 
 #### 4.5.2 Core Entity Details
@@ -609,9 +610,10 @@ District  (admin-maintained reference table — see §4.5.6 for the open sourcin
 | `Address` | `addresses` | `id BIGINT AUTO_INCREMENT` | FK → `user_id` |
 | `WebhookSubscription` | `webhook_subscription` | `id BIGINT AUTO_INCREMENT` | `event_type`, `target_url` |
 | `InventoryThresholdBreachEvent` | `inventory_threshold_breach_events` | `id BIGINT AUTO_INCREMENT` | FK → `inventory_id` |
-| `Seller` *(#553 registration, #554 admin verification workflow — both implemented)* | `sellers` | `id BIGINT AUTO_INCREMENT` | FK → `user_id` (one-to-one, mirrors `Address`'s extension-table pattern), `district_id` implemented as a plain nullable column with no FK constraint yet (deferred pending ADR #561/OQ-01/OQ-02), `verification_status` column (FR-SEL-02) transitioned via `AdminSellerController`/`SellerServiceImpl.updateVerificationStatus` (PENDING→VERIFIED/REJECTED) |
+| `Seller` *(#553 registration, #554 admin verification workflow — both implemented; district matching per ADR 0001, #561, not yet implemented)* | `sellers` | `id BIGINT AUTO_INCREMENT` | FK → `user_id` (one-to-one, mirrors `Address`'s extension-table pattern), `verification_status` column (FR-SEL-02) transitioned via `AdminSellerController`/`SellerServiceImpl.updateVerificationStatus` (PENDING→VERIFIED/REJECTED). The existing nullable `district_id` column (added #553) is superseded by the `seller_districts` N:M join table per ADR 0001 — migration: `dropColumn(district_id)` + `createTable(seller_districts)`, no backfill needed (no seller row has ever populated it) |
 | `SellerReview` *(FR-SEL-07, #558 — implemented)* | `seller_review` | `id BIGINT AUTO_INCREMENT` | FK → `users` via `seller_id` (the rated seller's `User.id`, not `sellers.id` — mirrors `Product.seller`'s convention), FK → `users` via `user_id` (the reviewing buyer), `UNIQUE(seller_id, user_id)` — one review per buyer per seller |
-| `District` *(Ph-3, Planned)* | `districts` | `id BIGINT AUTO_INCREMENT` | `name` UNIQUE (assumes an admin-maintained reference table — see §4.5.6 OQ-02) |
+| `District` *(Ph-3, Planned)* | `districts` | `id BIGINT AUTO_INCREMENT` | `name` UNIQUE — fixed, admin-maintained reference table (ADR 0001, #561) |
+| `SellerDistrict` *(Ph-3, Planned, ADR 0001)* | `seller_districts` | `id BIGINT AUTO_INCREMENT` | FK → `sellers.id`, FK → `districts.id`, `UNIQUE(seller_id, district_id)` — a seller's declared set of delivery districts |
 
 #### 4.5.3 Data Flow — Order Placement with Payment
 
@@ -662,19 +664,19 @@ guidance ("Context for cross-cutting state... not for high-frequency updates").
 
 ---
 
-#### 4.5.6 Location-Based Matching — Design Sketch (Ph-3, Planned)
+#### 4.5.6 Location-Based Matching — Design (Ph-3, Planned)
 
-**Status**: Design sketch only, deliberately incomplete pending two open decisions carried over from SRS §3.2.12 (OQ-01, OQ-02). Nothing below is implemented; no entity, migration, or query described here exists in the codebase.
+**Status**: Design finalized via [ADR 0001](adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) (#561), resolving OQ-01/OQ-02 carried over from SRS §3.2.12. Nothing below is implemented yet; no entity, migration, or query described here exists in the codebase — #562/#563/#564 implement this design.
 
-**Candidate query strategy** (assuming OQ-01 resolves to strict same-district matching, the simpler of the two options): filter the existing Elasticsearch-backed product search (FG-02) by an added `districtId` field on `ProductDocument`, populated from the owning `Seller.district` at index time via the existing event-driven sync flow (`ProductIndexEventListener`, per `spring/elasticsearch.md`) — the buyer's own `districtId` (resolved from their `Address`) becomes a mandatory filter clause alongside the existing `isActive: true` filter, following the same pattern already used for soft-delete exclusion.
+**District source (OQ-02 resolved)**: `District` is a fixed, admin-maintained reference table (`districts(id, name UNIQUE)`, §4.5.2) — no geocoding, no free-text address parsing. Sellers and buyers select from this table; buyers' district is derived from their `Address`.
 
-**If OQ-01 instead resolves to radius/seller-declared delivery districts** (a seller serves N districts, not just their home one), this becomes a `Seller ──[N:M]──► District` join table instead of a single FK, and the ES filter becomes a `terms` query against the seller's declared district list rather than an exact match — a materially different design, which is why this decision needs to be made (`solution-options-adr`) before either the entity model above or this query strategy is finalised.
+**Matching mechanism (OQ-01 resolved)**: radius/seller-declared. A seller declares the set of districts they deliver to via a new `seller_districts` join table (`Seller ──[N:M]──► District`, §4.5.2), not a single home-district FK. This supersedes the nullable `Seller.district_id` column added in #553 — that column is dropped in favor of the join table (no backfill needed; no seller row has ever populated it).
+
+**Query strategy**: filter the existing Elasticsearch-backed product search (FG-02) by an added `districtIds` (array) field on `ProductDocument`, populated from the owning `Seller`'s declared `seller_districts` rows at index time via the existing event-driven sync flow (`ProductIndexEventListener`, per `spring/elasticsearch.md`). The buyer's own `districtId` (resolved from their `Address`) becomes a `terms` filter clause — "does the buyer's district appear in this product's seller's declared district list" — alongside the existing `isActive: true` filter, following the same pattern already used for soft-delete exclusion. This replaces a single-value `term` filter with a `terms` filter against an array field; no other part of the existing query DSL changes.
 
 **Why Elasticsearch, not a JPA query**: product search already goes through `ProductElasticsearchRepository` (§ `spring/elasticsearch.md`), and district filtering is naturally a search-time filter alongside existing relevance/fuzziness scoring — re-deriving this in JPQL would create a second, divergent search path for the same data.
 
-**Explicitly deferred design questions** (do not implement against this sketch until resolved):
-- OQ-01 (strict-district vs. radius) — changes the entity relationship (`N:1` vs. `N:M`) and the ES query shape
-- OQ-02 (district reference data: fixed admin-maintained table vs. geocoded) — changes whether `District` is a simple lookup table (as sketched in §4.5.1/§4.5.2) or something more involved (geocoding integration, lat/long-based radius math instead of a discrete district match)
+**Checkout-time enforcement (FR-LOC-04)**: `CheckoutServiceImpl` (or the multi-step equivalent) must re-verify district membership server-side at checkout — the ES filter governs catalogue visibility, but a buyer could otherwise reach a product URL directly and attempt checkout outside their permitted districts. This check queries `seller_districts` directly (a JPA/JPQL `EXISTS` check, not Elasticsearch — checkout is a write path with correctness requirements the search index's eventual consistency doesn't guarantee).
 
 ---
 

@@ -37,6 +37,7 @@ itself), following MADR's own convention.
 | ADR | Title | Status | Issue |
 | :--- | :--- | :--- | :--- |
 | [0000](0000-use-markdown-any-decision-records.md) | Use Markdown Any Decision Records | accepted | — |
+| [0001](0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) | District-matching strategy for location-based seller-buyer matching | accepted | #561 |
 
 New entries are added here in the same edit that adds the ADR file — this
 index is not backfilled from git history retroactively; it starts tracking
