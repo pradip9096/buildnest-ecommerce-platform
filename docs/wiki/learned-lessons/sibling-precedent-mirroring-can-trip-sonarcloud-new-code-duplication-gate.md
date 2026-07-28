@@ -46,13 +46,37 @@ with no warning until the PR is already open.
 
 ## The fix
 
-Extract the genuinely duplicated logic into a small shared utility
-(`ReviewRatingUtils.buildDistribution(List<Object[]>)`), used by both `ProductReviewServiceImpl`
-and `SellerReviewServiceImpl`. This is not "working around" the gate — the two services really did
-contain the exact same 8-line map-building block, so extracting it is a legitimate DRY fix, not a
-threshold-dodge. Refactoring the *existing* sibling file (`ProductReviewServiceImpl`, not just the
-new one) was necessary: only rewriting the new file would still leave the old block intact for CPD
-to match against.
+This took two rounds, not one — the first fix was necessary but not sufficient:
+
+1. Extract the genuinely duplicated *logic* into a small shared utility
+   (`ReviewRatingUtils.buildDistribution(List<Object[]>)`), used by both
+   `ProductReviewServiceImpl` and `SellerReviewServiceImpl`. This dropped
+   `new_duplicated_lines_density` from 6.1% to 5.3% — real progress, but still above the 3% gate.
+2. The remaining duplication was in the *entities themselves* — `ProductReview` and `SellerReview`
+   had byte-for-byte identical `rating`/`comment`/`createdAt`/`updatedAt`/`verifiedPurchase`/
+   `isVisible` fields and identical `@PrePersist`/`@PreUpdate` bodies (53 duplicated lines total,
+   confirmed via `curl .../api/duplications/show?key=...`). Fixed by extracting a
+   `@MappedSuperclass AbstractReview` that both entities extend — JPA's purpose-built mechanism
+   for exactly this pattern (shared columns across sibling entity hierarchies with no shared
+   table). This dropped duplication to a passing level.
+
+Both refactors touched the *existing* sibling file (`ProductReviewServiceImpl`/`ProductReview`),
+not just the new one — rewriting only the new file would leave the old block intact for CPD to
+match against.
+
+**Gotcha inside the `@MappedSuperclass` fix**: Lombok's plain `@Builder` does **not** include
+inherited fields — a subclass keeping `@Builder` after extending a `@MappedSuperclass` parent
+silently drops the parent's fields from `.builder()...build()` calls (compiles fine, then the
+built object silently has null rating/comment/etc. at runtime). Use `@SuperBuilder` on both the
+parent and every subclass consistently instead — it's built for exactly this inheritance case
+and both entities' existing `.builder()...build()` call sites in the service layer kept working
+unchanged with no code changes required there.
+
+**Don't assume one round of "extract the duplicated logic" clears a SonarCloud duplication gate**
+— check the metric again after the first fix. A 6.1%→5.3% improvement is real progress, but
+"progress" and "under the threshold" are different questions; re-query
+`new_duplicated_lines_density` (or re-run CI) after any partial fix rather than assuming the
+first extraction was sufficient.
 
 ## What to do next time
 
@@ -63,3 +87,6 @@ to match against.
 - If a mirrored file's control-flow blocks (loops, conditionals) are byte-for-byte identical to
   the precedent's equivalent blocks (only variable names differ), that's the specific signal to
   extract rather than copy — don't wait for the gate to flag it.
+- The same applies to entity *fields*, not just method bodies — two sibling JPA entities sharing
+  an identical field/lifecycle-callback set are a `@MappedSuperclass` candidate from the start.
+- Always re-check the actual duplication metric after a partial fix before declaring it resolved.
