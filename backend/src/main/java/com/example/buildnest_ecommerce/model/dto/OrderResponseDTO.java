@@ -20,6 +20,14 @@ public class OrderResponseDTO {
 
     private Long orderGroupId;
 
+    /**
+     * Owning seller's User.id (FR-SEL-07, #558) — every item in one Order
+     * belongs to a single seller (#579's checkout-split invariant), so
+     * this is derived from the first order item's product.seller, not a
+     * direct Order column. Null only for orders with no items.
+     */
+    private Long sellerId;
+
     private String status;
 
     private BigDecimal totalAmount;

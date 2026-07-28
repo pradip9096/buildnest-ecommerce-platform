@@ -349,6 +349,11 @@ public class SecurityConfig {
                                 "/api/products/*/reviews/top-helpful")
                                 .permitAll()
                         .requestMatchers(HttpMethod.GET,
+                                "/api/sellers/*/reviews").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/sellers/*/reviews/summary")
+                                .permitAll()
+                        .requestMatchers(HttpMethod.GET,
                                 "/api/inventory/*/status").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/inventory/*/details").permitAll()

@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 4.6 |
-| **Date** | 2026-07-26 10:30 IST |
+| **Version** | 4.7 |
+| **Date** | 2026-07-28 17:00 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
@@ -43,6 +43,7 @@
 | 3.8 | 2026-07-22 IST | Software Architect | §5.2.1's Exception-to-HTTP Mapping table was missing `ConstraintViolationException` (400/`VALIDATION_ERROR`) — added as part of #487's fix (`AdminInventoryController`'s `add-stock`/`update-stock` `@RequestParam Integer quantity` gained `@Min(0)` + `@Validated`, which throws this exception type; `GlobalExceptionHandler` needed its own new handler for it, not previously required since no `@RequestParam`/`@PathVariable` constraint existed anywhere in the codebase before this fix) | Pending |
 | 4.4 | 2026-07-25 20:00 IST | Software Architect | §4.5.2 updated for #578 (sub-issue of #557, FR-SEL-06): added new `OrderGroup` entity row (`order_groups` table, FK → `user_id`) and extended `Order`'s row with the new nullable `order_group_id` FK — parent linkage for splitting a multi-seller cart into per-seller orders. Design decision (no repo precedent — confirmed via `gh search`): split into per-seller sub-orders rather than a single shared Order with a read-only per-seller filter, since the latter leaves order-status/fulfillment ownership ambiguous once sellers ship independently. Additive-only schema change, no backfill (existing orders keep `order_group_id = NULL`). #579 (checkout split) and #580 (seller-scoped order API) remain unimplemented | Pending |
 | 4.6 | 2026-07-26 10:30 IST | Software Architect | FR-SEL-06's linked frontend follow-up (#581): new seller-facing route/page (`/seller`, `SellerDashboardPage`) and `components/seller/OrdersTab.tsx`, consuming #580's existing `SellerOrderController` API. Buyer-facing `account/OrdersTab.tsx` extended to group sibling orders sharing an `orderGroupId` under a "1 purchase, N shipments" label. Required extending `OrderResponseDTO` with a new `orderGroupId` field (populated in `OrderServiceImpl.mapToResponseDTO` and `CheckoutServiceImpl.toOrderDTO`) — a small additive backend change discovered mid-implementation, since `Order.orderGroup` existed since #578 but was never exposed via any DTO. §4.7.3's API Endpoint Catalogue gap (seller controllers not yet listed, #576) remains open, not addressed here | Pending |
+| 4.7 | 2026-07-28 17:00 IST | Software Architect | FR-SEL-07 (#558): new `SellerReview` entity/table (`seller_review`), mirroring `ProductReview` but scoped by the seller's `User.id`. Added to §4.5.1's ER diagram and §4.5.2's entity table. Same DTO-exposure gap recurred as #581's `orderGroupId` fix — `OrderResponseDTO` needed a new `sellerId` field so the frontend's `SellerReviewPanel` (surfaced from a delivered order's detail view) could link an order to the seller being rated; populated in the same two mapping methods (`OrderServiceImpl.mapToResponseDTO`, `CheckoutServiceImpl`'s equivalent) | Pending |
 | 4.5 | 2026-07-26 09:00 IST | Software Architect | Final sub-issue of #557/FR-SEL-06: added `SellerOrderController`/`OrderServiceImpl`'s new seller-scoped list/detail/status methods, using a new `OrderRepository.findBySellerId`/`findByIdAndSellerId` `EXISTS`-subquery (`Order` has no direct seller reference; ownership derived transitively via `OrderItem.product.seller`) — mirrors #555's `SellerProductController`/#556's `SellerInventoryController` ownership-scoping pattern. All three FR-SEL-06 sub-issues (#578/#579/#580) now closed. **Not addressed in this revision**: §4.7.3's API Endpoint Catalogue does not yet list any of the three sellers' controllers (`SellerProductController`/`SellerInventoryController`/`SellerOrderController`) — this gap was already surfaced and filed as its own follow-up (#576) during #556's closure; not duplicated here | Pending |
 
 ### Document Approval
@@ -569,6 +570,11 @@ User ──[1:1]──── Cart
 
 WebhookSubscription  (standalone — no User FK)
 
+Seller (User) ──[1:N]──── SellerReview  (FR-SEL-07, #558 — seller_id/user_id both FK
+                                          to users, mirrors ProductReview's shape,
+                                          scoped by the seller's User.id rather than
+                                          the separate Seller extension-table id)
+
 Planned (Ph-3, SRS FG-11/FG-12 — not yet implemented, design sketch only):
 Seller ──[1:1]──── User (extension table, mirrors the existing Address pattern)
    │
@@ -604,6 +610,7 @@ District  (admin-maintained reference table — see §4.5.6 for the open sourcin
 | `WebhookSubscription` | `webhook_subscription` | `id BIGINT AUTO_INCREMENT` | `event_type`, `target_url` |
 | `InventoryThresholdBreachEvent` | `inventory_threshold_breach_events` | `id BIGINT AUTO_INCREMENT` | FK → `inventory_id` |
 | `Seller` *(#553 registration, #554 admin verification workflow — both implemented)* | `sellers` | `id BIGINT AUTO_INCREMENT` | FK → `user_id` (one-to-one, mirrors `Address`'s extension-table pattern), `district_id` implemented as a plain nullable column with no FK constraint yet (deferred pending ADR #561/OQ-01/OQ-02), `verification_status` column (FR-SEL-02) transitioned via `AdminSellerController`/`SellerServiceImpl.updateVerificationStatus` (PENDING→VERIFIED/REJECTED) |
+| `SellerReview` *(FR-SEL-07, #558 — implemented)* | `seller_review` | `id BIGINT AUTO_INCREMENT` | FK → `users` via `seller_id` (the rated seller's `User.id`, not `sellers.id` — mirrors `Product.seller`'s convention), FK → `users` via `user_id` (the reviewing buyer), `UNIQUE(seller_id, user_id)` — one review per buyer per seller |
 | `District` *(Ph-3, Planned)* | `districts` | `id BIGINT AUTO_INCREMENT` | `name` UNIQUE (assumes an admin-maintained reference table — see §4.5.6 OQ-02) |
 
 #### 4.5.3 Data Flow — Order Placement with Payment

@@ -292,12 +292,21 @@ public class CheckoutServiceImpl implements CheckoutService {
     }
 
     private OrderResponseDTO toOrderDTO(Order order) {
+        Long sellerId = null;
+        if (order.getOrderItems() != null
+                && !order.getOrderItems().isEmpty()) {
+            User seller = order.getOrderItems().iterator().next()
+                    .getProduct().getSeller();
+            sellerId = seller != null ? seller.getId() : null;
+        }
+
         return new OrderResponseDTO(
                 order.getId(),
                 order.getUser().getId(),
                 order.getOrderNumber(),
                 order.getOrderGroup() != null
                         ? order.getOrderGroup().getId() : null,
+                sellerId,
                 order.getStatus().toString(),
                 order.getTotalAmount(),
                 order.getTaxAmount(),
