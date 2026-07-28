@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 5.1 |
-| **Date** | 2026-07-22 15:00 IST |
+| **Version** | 5.2 |
+| **Date** | 2026-07-28 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -40,6 +40,7 @@
 | 4.9 | 2026-07-19 10:40 IST | Technical Lead | Added FR-CHK-09 (users apply a coupon/discount code during checkout) to §3.2.4 — the backend endpoint (`MultiStepCheckoutController.applyCoupon`, `/api/v1/checkout/coupon`) already existed and was already documented in Appendix A.10, but no requirement row was ever added for it despite FR-ADM-11's sibling admin-side requirement existing since #435; the customer-facing frontend wiring (coupon input on the checkout Shipping step, discount reflected in order-summary/payment totals) was built in the same change (#436). Recomputed §4.2's Checkout aggregate row (8→9 requirements, 2→3 Medium) | Pending |
 | 5.0 | 2026-07-22 15:00 IST | Technical Lead | **Marketplace pivot addendum.** Promoted FUT-02 ("Multi-vendor marketplace support") from a one-line deferred placeholder into a scoped requirements addendum, following a business-model discussion establishing the platform's actual direction: a district/location-scoped multi-seller marketplace connecting existing offline construction-material and décor shops to nearby buyers, phased B2C-first with a B2B (bulk/RFQ) extension to follow. Added: new Ph-3 delivery phase (§2.8) for this expansion, distinct from Ph-1/Ph-2's stabilisation-and-production-readiness scope; new SELLER user characteristic (§2.3); new SN-08 stakeholder need (§2.7); two new Feature Groups, FG-11 Seller & Marketplace Management and FG-12 Location-Based Matching, with placeholder FR-SEL-* / FR-LOC-* requirement rows (§3.2.11, §3.2.12) — all rows explicitly Phase=Ph-3 and unverified (nothing in this addendum is implemented yet; no backend/frontend code changed in this revision). Updated §1.2 Scope and §1.3.2/§2.2 Product Functions Summary to list the two new groups. This is additive only — no existing FR row was removed, renumbered, or reinterpreted; existing Ph-1/Ph-2 requirements and their RTM traceability are unaffected. SDD/RTM/Test Plan updates to follow as separate revisions once this addendum is reviewed | Pending |
 | 5.1 | 2026-07-22 17:30 IST | Technical Lead | FR-SEL-01 (seller registration) implemented (#553) — first requirement delivered from the Ph-3 marketplace-pivot addendum. Updated §4.2's Seller & Marketplace aggregate status row (0→1 Implemented, 8→7 Not started); Grand Total unaffected (category stays explicitly excluded per v5.0) | Pending |
+| 5.2 | 2026-07-28 IST | Technical Lead | Resolved OQ-01/OQ-02 (§3.2.12) via [ADR 0001](../design/adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) (#561): district matching is radius/seller-declared (`Seller ──[N:M]──► District`), and district is sourced from a fixed, admin-maintained reference table. Updated FR-LOC-03's requirement text to state the resolved mechanism instead of "TBD, see OQ-01"; removed the Open Questions table and its blocking status note, replaced with a resolved-decision note citing the ADR | Pending |
 
 ### Document Change Procedure
 
@@ -661,21 +662,14 @@ This system has no direct hardware interfaces. It runs as a containerised applic
 
 #### 3.2.12 Location-Based Matching (FG-12) — *Ph-3, Planned*
 
-> **Status note**: Every requirement in this subsection is planned, not implemented. The current product search/catalogue (FG-02, Elasticsearch-backed) has no geographic dimension. This subsection intentionally leaves the district-matching mechanism (strict same-district vs. seller-selected delivery radius) undecided — see Open Questions below; requirement wording will be finalised once that design decision is made (`solution-options-adr`).
+> **Status note**: Every requirement in this subsection is planned, not implemented. The current product search/catalogue (FG-02, Elasticsearch-backed) has no geographic dimension. The district-matching mechanism was previously undecided (OQ-01/OQ-02); both questions are now resolved via [ADR 0001](../design/adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) (#561): matching is radius/seller-declared (`Seller ──[N:M]──► District`), and district is sourced from a fixed, admin-maintained reference table.
 
 | ID | Requirement | Priority | Phase | Verification |
 | :--- | :--- | :--- | :--- | :--- |
 | FR-LOC-01 | The system shall record a district (or equivalent administrative area) for each seller | High | Ph-3 | Test |
 | FR-LOC-02 | The system shall record a district (or equivalent) for each buyer, derived from their registered/delivery address | High | Ph-3 | Test |
-| FR-LOC-03 | The system shall restrict the product catalogue a buyer browses/searches to sellers matching the buyer's district-matching rule (exact match or seller-declared delivery radius — mechanism TBD, see Open Question OQ-01) | High | Ph-3 | Test |
-| FR-LOC-04 | The system shall prevent checkout of a product from a seller outside the buyer's permitted matching radius | High | Ph-3 | Test |
-
-**Open Questions (to resolve before implementation):**
-
-| ID | Question | Status |
-| :--- | :--- | :--- |
-| OQ-01 | Is district matching strict (buyer sees only same-district sellers) or radius-based (seller declares which nearby districts they'll deliver to)? | Open |
-| OQ-02 | Is district determined from a fixed, admin-maintained reference table, or free-text/geocoded from address? | Open |
+| FR-LOC-03 | The system shall restrict the product catalogue a buyer browses/searches to sellers whose declared delivery districts include the buyer's district (radius/seller-declared matching, per ADR 0001) | High | Ph-3 | Test |
+| FR-LOC-04 | The system shall prevent checkout of a product from a seller whose declared delivery districts do not include the buyer's district | High | Ph-3 | Test |
 
 ---
 

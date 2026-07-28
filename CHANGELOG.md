@@ -13,6 +13,14 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- District-matching design decision for Location-Based Matching (FG-12, #561) — resolved the two
+  open questions (OQ-01, OQ-02) left unspecified by the marketplace-pivot addendum, via
+  [ADR 0001](docs/SDLC-docs/design/adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md):
+  district matching is radius/seller-declared (`Seller ──[N:M]──► District` join table, not a
+  strict same-district FK), and district is sourced from a fixed, admin-maintained reference
+  table (not geocoded). Updated SRS (§3.2.12), SDD (§4.5.1/§4.5.2/§4.5.6), and RTM (§6.12)
+  accordingly. Pure design/documentation change — no code, no migration, no implementation;
+  unblocks #562/#563/#564.
 - `epic-auto-close.yml` GitHub Action (#600) — auto-closes a parent epic with a summary comment
   once every native sub-issue under it is closed. GitHub's own Sub-issues feature only updates the
   parent's progress indicator on child-close, never closes it — 4 epics (#424/#430/#434/#437) and
