@@ -63,6 +63,11 @@ export interface ReviewSummary {
   ratingDistribution: Record<string, number>;
 }
 
+// Buyer-to-seller rating (FR-SEL-07, #558) — same shape as Review/ReviewSummary,
+// scoped by sellerId instead of productId.
+export type SellerReview = Review;
+export type SellerReviewSummary = ReviewSummary;
+
 export interface PagedResponse<T> {
   content: T[];
   totalPages: number;
@@ -124,6 +129,7 @@ export interface Order {
   id: number;
   userId: number;
   orderGroupId?: number;
+  sellerId?: number;
   status: string;
   totalAmount: number;
   orderItems?: OrderItem[];

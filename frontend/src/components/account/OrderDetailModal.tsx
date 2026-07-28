@@ -1,4 +1,5 @@
 import type { Order } from '../../types';
+import { SellerReviewPanel } from './SellerReviewPanel';
 
 const STATUS_COLOR: Record<string, string> = {
   PENDING: 'bg-yellow-100 text-yellow-800',
@@ -61,7 +62,13 @@ export function OrderDetailModal({ order, onClose }: Props) {
           </div>
         )}
 
-        <div className="px-6 pb-5">
+        {order.status === 'DELIVERED' && order.sellerId != null && (
+          <div className="px-6">
+            <SellerReviewPanel sellerId={order.sellerId} />
+          </div>
+        )}
+
+        <div className="px-6 pb-5 pt-4">
           <button type="button" onClick={onClose}
             className="w-full border border-gray-200 text-gray-600 font-medium py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm">
             Close

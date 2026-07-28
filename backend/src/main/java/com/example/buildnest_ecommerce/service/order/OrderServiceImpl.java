@@ -450,6 +450,20 @@ public class OrderServiceImpl implements OrderService {
                 order.getUpdatedAt());
     }
 
+    /**
+     * Every item in one Order belongs to a single seller (#579's
+     * checkout-split invariant), so the first item's owning seller
+     * represents the whole order (FR-SEL-07, #558).
+     */
+    private Long deriveSellerId(Order order) {
+        if (order.getOrderItems() == null
+                || order.getOrderItems().isEmpty()) {
+            return null;
+        }
+        return order.getOrderItems().iterator().next()
+                .getProduct().getSeller().getId();
+    }
+
     private OrderResponseDTO mapToResponseDTO(Order order) {
         return new OrderResponseDTO(
                 order.getId(),
@@ -457,6 +471,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getOrderNumber(),
                 order.getOrderGroup() != null
                         ? order.getOrderGroup().getId() : null,
+                deriveSellerId(order),
                 order.getStatus().toString(),
                 order.getTotalAmount(),
                 order.getTaxAmount(),

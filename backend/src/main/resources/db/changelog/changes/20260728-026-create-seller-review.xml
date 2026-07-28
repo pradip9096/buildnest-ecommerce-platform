@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #558 (FR-SEL-07): Buyer-to-seller ratings/reviews. seller_id
+         references users(id), not sellers(id) — mirrors Product.seller
+         (also a User FK) and SellerOrderController/#580's sellerId=User.id
+         convention, since a seller's storefront identity for review
+         purposes is the User account, not the separate business-profile
+         Seller extension table. -->
+    <changeSet id="20260728-026-create-seller-review" author="buildnest-team">
+        <comment>Create seller_review table (FR-SEL-07, #558) — buyer-to-seller ratings, mirrors product_review's shape</comment>
+
+        <createTable tableName="seller_review">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="seller_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rating" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comment" type="VARCHAR(2000)"/>
+            <column name="verified_purchase" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_visible" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            constraintName="fk_seller_review_seller"
+            baseTableName="seller_review" baseColumnNames="seller_id"
+            referencedTableName="users" referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+            constraintName="fk_seller_review_user"
+            baseTableName="seller_review" baseColumnNames="user_id"
+            referencedTableName="users" referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <addUniqueConstraint
+            constraintName="uk_seller_review_seller_user"
+            tableName="seller_review" columnNames="seller_id, user_id"/>
+
+        <createIndex indexName="idx_seller_review_seller_id" tableName="seller_review">
+            <column name="seller_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_seller_review_user_id" tableName="seller_review">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_seller_review_rating" tableName="seller_review">
+            <column name="rating"/>
+        </createIndex>
+
+        <rollback>
+            <dropUniqueConstraint tableName="seller_review" constraintName="uk_seller_review_seller_user"/>
+            <dropForeignKeyConstraint baseTableName="seller_review" constraintName="fk_seller_review_user"/>
+            <dropForeignKeyConstraint baseTableName="seller_review" constraintName="fk_seller_review_seller"/>
+            <dropTable tableName="seller_review"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

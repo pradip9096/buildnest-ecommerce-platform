@@ -34,5 +34,6 @@
     <include file="db/changelog/changes/20260721-023-drop-product-stock-quantity.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260722-024-create-sellers.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260725-025-create-order-groups.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260728-026-create-seller-review.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

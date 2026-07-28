@@ -13,6 +13,19 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Buyer-to-seller ratings/reviews (FR-SEL-07, #558) — `SellerReview` entity/table (`seller_review`,
+  Liquibase changeset `20260728-026-create-seller-review.xml`), `SellerReviewController`
+  (`/api/sellers/{sellerId}/reviews`, GET public), `SellerReviewServiceImpl` (create/update/delete
+  with an average-rating and rating-distribution summary), mirroring the existing `ProductReview`
+  pattern but scoped by the seller's `User.id` (per `Product.seller`/`SellerOrderController`'s
+  established convention, not the separate `Seller` business-profile entity). Unlike its precedent,
+  `updateReview` enforces ownership — `ProductReview.updateReview` lacks that check, a latent IDOR
+  filed separately as a follow-up rather than fixed inline here. Frontend `SellerReviewPanel`
+  surfaces from a delivered order's detail view; required adding a new `sellerId` field to
+  `OrderResponseDTO` (a live instance of the backend-only-sub-issue-chain DTO-exposure gap
+  documented from #581) so the frontend could link a buyer's order to the seller being rated.
+  Verified via 20 backend unit tests, 4 frontend RTL tests, and a real H2-backed Spring context
+  load (`CivilEcommerceApplicationTests`) confirming the new entity/changeset's schema mapping.
 - Order-group schema for seller-scoped order splitting (FR-SEL-06, #578, first of three
   sub-issues under parent #557) — a cart spanning multiple sellers currently produces one
   shared `Order`; a real design decision (no repo precedent, confirmed via `gh search`) resolved
