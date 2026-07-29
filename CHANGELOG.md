@@ -92,6 +92,17 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   load (`CivilEcommerceApplicationTests`) confirming the new entity/changeset's schema mapping.
 
 ### Fixed
+- Frontend `apiRefresh()`/`apiLogout()` infinite recursive refresh loop via `unauthorizedHandler`
+  (#516, discovered as a separate concern while verifying #444): `client.ts`'s `request()` called
+  the registered 401 handler (which calls `apiRefresh()`) on any 401 response, including the
+  refresh request's own 401 (no valid refresh cookie — the common case for any unauthenticated
+  visitor, since `AuthContext`'s `restoreSession()` calls `fetchProfile()` on mount for everyone).
+  A fresh top-level refresh call isn't marked `isRetry`, so its own 401 re-triggered the handler,
+  recursing indefinitely — confirmed live at 2,984 `POST /api/auth/refresh` requests in a few
+  seconds. Fixed by adding `RequestOptions.skipAuthInterceptor`, set on `apiRefresh()`/`apiLogout()`
+  calls specifically, bypassing the interceptor for exactly the two calls that are themselves part
+  of the auth-refresh machinery. Verified live via a stub backend + chrome-devtools MCP: stable at
+  2 refresh attempts (React StrictMode double-mount) instead of an unbounded loop.
 - (#558 follow-up) Null-checked `Product.seller` when deriving `Order.sellerId` in
   `OrderServiceImpl`/`CheckoutServiceImpl` — `Product.seller` is nullable (admin-created products
   have no owning seller), and the initial derivation dereferenced it unconditionally, caught by
