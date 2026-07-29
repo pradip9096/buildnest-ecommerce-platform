@@ -18,14 +18,22 @@ export async function apiRegister(payload: {
   await requestData<null>('/api/auth/register', { method: 'POST', body: payload }, 'Registration failed');
 }
 
-/** Refresh travels via the refresh_token cookie automatically — no body needed. */
+/**
+ * Refresh travels via the refresh_token cookie automatically — no body needed.
+ * `skipAuthInterceptor` is required: this call IS the 401 interceptor's own refresh attempt,
+ * so a 401 here (no valid refresh cookie) must not re-trigger the interceptor recursively.
+ */
 export async function apiRefresh(): Promise<AuthUserResponse> {
-  return requestData<AuthUserResponse>('/api/auth/refresh', { method: 'POST' }, 'Token refresh failed');
+  return requestData<AuthUserResponse>(
+    '/api/auth/refresh',
+    { method: 'POST', skipAuthInterceptor: true },
+    'Token refresh failed'
+  );
 }
 
 /** Logout travels via the refresh_token cookie automatically — no body needed. */
 export async function apiLogout(): Promise<void> {
-  await request('/api/auth/logout', { method: 'POST' }, 'Logout failed');
+  await request('/api/auth/logout', { method: 'POST', skipAuthInterceptor: true }, 'Logout failed');
 }
 
 /** Bootstraps the XSRF-TOKEN cookie — call once at app startup before any mutating request. */

@@ -195,6 +195,48 @@ describe('api/client', () => {
       await expect(request('/api/thing')).rejects.toThrow(ApiError);
       expect(fetch).toHaveBeenCalledTimes(1);
     });
+
+    it('does not call the unauthorized handler when skipAuthInterceptor is set, even on a 401', async () => {
+      vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
+      const handler = vi.fn().mockResolvedValue(true);
+      setUnauthorizedHandler(handler);
+
+      await expect(request('/api/thing', { skipAuthInterceptor: true })).rejects.toThrow(ApiError);
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('never recurses when apiRefresh-style calls (skipAuthInterceptor) themselves return 401', async () => {
+      // Regression test for #516: apiRefresh() -> request(..., { skipAuthInterceptor: true })
+      // getting a 401 (no valid refresh cookie) must not re-invoke the unauthorized handler,
+      // which previously called apiRefresh() again, recursing indefinitely.
+      vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 401));
+      const handler = vi.fn(async () => {
+        try {
+          await request('/api/auth/refresh', { method: 'POST', skipAuthInterceptor: true });
+          return true;
+        } catch {
+          return false;
+        }
+      });
+      setUnauthorizedHandler(handler);
+
+      await expect(request('/api/protected')).rejects.toThrow(ApiError);
+
+      // The outer 401 triggers the handler exactly once; the handler's own internal
+      // refresh call must not trigger the handler a second time.
+      expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not include skipAuthInterceptor in the fetch() call options', async () => {
+      vi.mocked(fetch).mockResolvedValue(jsonResponse({ ok: true }, true));
+
+      await request('/api/thing', { method: 'POST', skipAuthInterceptor: true });
+
+      const [, init] = vi.mocked(fetch).mock.calls[0];
+      expect(init).not.toHaveProperty('skipAuthInterceptor');
+    });
   });
 
   describe('requestData', () => {

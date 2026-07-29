@@ -12,6 +12,12 @@ export class ApiError extends Error {
 
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
+  /**
+   * Bypasses the 401 refresh-and-retry interceptor for this call. Required for the refresh
+   * and logout requests themselves — without it, a 401 from `/api/auth/refresh` (e.g. no valid
+   * refresh cookie) re-triggers the same interceptor that called it, recursing indefinitely.
+   */
+  skipAuthInterceptor?: boolean;
 }
 
 type FallbackMessage = string | ((status: number) => string);
@@ -74,7 +80,7 @@ export async function request<T>(
   fallbackMessage?: FallbackMessage,
   isRetry = false
 ): Promise<T> {
-  const { body, headers, method, ...rest } = options;
+  const { body, headers, method, skipAuthInterceptor, ...rest } = options;
   const hasBody = body !== undefined;
   const isFormData = body instanceof FormData;
 
@@ -86,7 +92,7 @@ export async function request<T>(
     body: hasBody ? (isFormData ? body : JSON.stringify(body)) : undefined,
   });
 
-  if (res.status === 401 && !isRetry && unauthorizedHandler) {
+  if (res.status === 401 && !isRetry && !skipAuthInterceptor && unauthorizedHandler) {
     const refreshed = await unauthorizedHandler();
     if (refreshed) {
       return request<T>(path, options, fallbackMessage, true);
