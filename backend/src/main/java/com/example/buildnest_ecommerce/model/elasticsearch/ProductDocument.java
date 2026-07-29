@@ -13,10 +13,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Elasticsearch document representing a product in the search index (SRCH-01, #74).
+ * Elasticsearch document representing a product in the search index
+ * (SRCH-01, #74).
  *
- * Index name is static ("products") unlike the daily-partitioned audit-logs index,
- * because the product catalog is a live mutable dataset rather than an append-only log.
+ * Index name is static ("products") unlike the daily-partitioned
+ * audit-logs index, because the product catalog is a live mutable
+ * dataset rather than an append-only log.
  */
 @Data
 @NoArgsConstructor
@@ -66,4 +68,12 @@ public class ProductDocument {
 
     @Field(type = FieldType.Keyword)
     private List<String> tags;
+
+    /**
+     * Districts the owning seller declared for delivery (FR-LOC-03, #563)
+     * — mirrors {@code Seller.sellerDistricts} via {@code SellerDistrict}.
+     * Empty/null for products with no seller (admin-created catalog).
+     */
+    @Field(type = FieldType.Long)
+    private List<Long> districtIds;
 }

@@ -82,15 +82,33 @@ class ProductControllerV2Test {
         ProductService productService = mock(ProductService.class);
         ProductSearchService searchService = mock(ProductSearchService.class);
         Page<ProductDocument> esPage = new PageImpl<>(Collections.emptyList());
-        when(searchService.search(any(), any(), any(), any(), any(), any(), any())).thenReturn(esPage);
+        when(searchService.search(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(esPage);
 
         ProductControllerV2 controller = new ProductControllerV2(productService, Optional.of(searchService),
                 Optional.empty());
         ResponseEntity<ApiResponse> response = controller.searchProducts(
-                "cement", null, null, null, null, null, 0, 10, "id", Sort.Direction.ASC);
+                "cement", null, null, null, null, null, null, 0, 10, "id", Sort.Direction.ASC);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(searchService).search(eq("cement"), isNull(), isNull(), isNull(), isNull(), isNull(), any());
+        verify(searchService).search(eq("cement"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any());
+        verify(productService, never()).advancedSearch(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("searchProducts — districtId param is passed through to the search service (FR-LOC-03, #563)")
+    void searchProducts_withDistrictId_passesDistrictIdToSearchService() {
+        ProductService productService = mock(ProductService.class);
+        ProductSearchService searchService = mock(ProductSearchService.class);
+        Page<ProductDocument> esPage = new PageImpl<>(Collections.emptyList());
+        when(searchService.search(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(esPage);
+
+        ProductControllerV2 controller = new ProductControllerV2(productService, Optional.of(searchService),
+                Optional.empty());
+        ResponseEntity<ApiResponse> response = controller.searchProducts(
+                null, null, null, null, null, null, 7L, 0, 10, "id", Sort.Direction.ASC);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(searchService).search(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(7L), any());
         verify(productService, never()).advancedSearch(any(), any(), any(), any(), any(), any(), any());
     }
 
@@ -100,15 +118,15 @@ class ProductControllerV2Test {
         ProductService productService = mock(ProductService.class);
         ProductSearchService searchService = mock(ProductSearchService.class);
         Page<ProductDocument> esPage = new PageImpl<>(Collections.emptyList());
-        when(searchService.search(any(), any(), any(), any(), any(), any(), any())).thenReturn(esPage);
+        when(searchService.search(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(esPage);
 
         ProductControllerV2 controller = new ProductControllerV2(productService, Optional.of(searchService),
                 Optional.empty());
         ResponseEntity<ApiResponse> response = controller.searchProducts(
-                null, null, null, null, null, "eco-friendly", 0, 10, "id", Sort.Direction.ASC);
+                null, null, null, null, null, "eco-friendly", null, 0, 10, "id", Sort.Direction.ASC);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(searchService).search(isNull(), isNull(), isNull(), isNull(), isNull(), eq("eco-friendly"), any());
+        verify(searchService).search(isNull(), isNull(), isNull(), isNull(), isNull(), eq("eco-friendly"), isNull(), any());
     }
 
     @Test
@@ -121,7 +139,7 @@ class ProductControllerV2Test {
         ProductControllerV2 controller = new ProductControllerV2(productService, Optional.empty(), Optional.empty());
         assertEquals(HttpStatus.OK,
                 controller
-                        .searchProducts("q", 1L, BigDecimal.ONE, BigDecimal.TEN, true, null, 0, 10, "id", Sort.Direction.DESC)
+                        .searchProducts("q", 1L, BigDecimal.ONE, BigDecimal.TEN, true, null, null, 0, 10, "id", Sort.Direction.DESC)
                         .getStatusCode());
 
         ResponseEntity<ApiResponse> response = controller.getProductsByCategory(1L, 0, 200);
