@@ -13,6 +13,17 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Full OWASP Top 10 (2021) security assessment (SEC-15, #111) — assessed all A01–A10
+  categories via code/live-endpoint review plus an OWASP ZAP full active scan (141 automated
+  checks, 0 Fail/Warn) against the local dev stack (no staging environment exists yet).
+  Zero Critical/High findings. Fixed one Medium-severity SSRF gap (A10): admin-only webhook
+  `targetUrl` had no private-IP/loopback blocklist — added `SsrfUrlValidator`, wired into
+  `WebhookServiceImpl.createSubscription()`, with dedicated unit tests. Two Low-severity,
+  non-blocking findings (A05 dev-profile actuator `show-details=always`; A08 Docker base
+  images tag- not digest-pinned) documented as follow-ups. Full report at
+  `docs/SDLC-docs/reports/security-assessment.md`. Added SRS SEC-15 (v5.7) and RTM SEC-15
+  (v1.42), correcting a filing-time traceability mismatch (#111 was titled "(SEC-02)", an
+  unrelated already-satisfied requirement).
 - District-scoped checkout restriction for Location-Based Matching (FR-LOC-04, #564) — completes
   FG-12. `CheckoutServiceImpl.validateCheckout` now enforces, per cart item, that a seller who has
   declared delivery districts (`SellerDistrict`) only sells to buyers whose own derived district

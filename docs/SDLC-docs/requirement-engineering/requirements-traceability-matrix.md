@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.41 |
+| **Version** | 1.42 |
 | **Date** | 2026-07-29 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -70,6 +70,7 @@
 | 1.39 | 2026-07-29 IST | QA Manager | FR-LOC-04 implemented (#564), completing FG-12 (Location-Based Matching): checkout-time district enforcement in `CheckoutServiceImpl.validateCheckout` — a seller with declared `SellerDistrict` rows requires the buyer's `User.district` to be among them, fail-closed when the buyer's district can't be determined, unrestricted when the seller has no declared districts. `validateCheckout` gained `@Transactional(readOnly = true)` since the new check lazily loads `Product.seller`, and the pre-existing controller-direct call path (`CheckoutController.validateCheckout`) had no transaction of its own — confirmed via a real, non-ambient-transaction `@SpringBootTest` (`CheckoutValidateNoAmbientTransactionIT`) that this would otherwise throw `LazyInitializationException`. Row moved ⬜ Not Started → ✅ Implemented with real Implementation/Test-Class citations. Recomputed the Location-Based Matching (FR-LOC) Coverage Summary row (3→4 Implemented, 1→0 Not Started); Totals row unaffected (FR-LOC stays explicitly excluded per 1.25). Updated §6.12's own header/status note from "Ph-3, Planned" to "all sub-requirements implemented". Updated `Related SRS` (5.4→5.5) and `Related SDD` (4.10→4.11) | Pending |
 | 1.40 | 2026-07-29 IST | QA Manager | FR-FE-10's Implementation/Test citation extended for #516: `client.ts`'s 401-interceptor recursed indefinitely when the refresh request itself returned 401 (no valid refresh cookie — the common case for any unauthenticated visitor), confirmed live at 2,984 `POST /api/auth/refresh` requests in a few seconds. Fixed via a new `RequestOptions.skipAuthInterceptor` flag set on the `apiRefresh()`/`apiLogout()` calls themselves, bypassing the interceptor for exactly the two calls that are part of the refresh machinery. Row stays ✅ Implemented (no status change — a correctness fix to already-implemented behavior, not new coverage) | Pending |
 | 1.41 | 2026-07-29 IST | QA Manager | SEC-14 (`#110`, "final verification" of the M3 CSP `unsafe-inline` removal): backend `SecurityConfig`/`SecurityHeaderPolicies.MAIN_CSP` was already `unsafe-inline`-free since #237, but `frontend/security-headers.conf` (the nginx-served CSP for the SPA's own document, a separate origin/response from the backend API's CSP) still carried `style-src 'self' 'unsafe-inline'`. Live-browser CSP verification (a static-HTML CSP probe plus a strict-header production `dist/` serve) confirmed React's `style={{}}` prop sets styles via `node.style[prop] = value` (a JS property assignment, per `react-dom-client.development.js`'s `setValueForStyles`), not via the HTML `style=` attribute — so it is not subject to `style-src`'s inline restriction, and the frontend's 7 `style={{}}` usages across 4 components required no code change. Removed `'unsafe-inline'` from `style-src` in `security-headers.conf`; rebuilt frontend `dist/` and re-verified zero CSP console violations. SEC-14 corrected from 🟡 Partial to ✅ Implemented; recomputed the Security Coverage Summary row (9→10 Implemented, 2→1 Partial) and the Coverage Summary Totals row (122→123 Implemented, 16→15 Partial) accordingly, plus the §12 Phase 2 Security Started/Not-Started counts (1→2 Started, 4→3 Not Started) | Pending |
+| 1.42 | 2026-07-29 IST | QA Manager | Added SEC-15 (#111): full OWASP Top 10 (2021) assessment (A01-A10), performed against the local dev stack (no staging environment exists yet — `development-workflow.md` step 31, confirmed via user decision) using OWASP ZAP full active scan (141 automated checks, 0 Fail/Warn, 1 Informational) plus direct code/live-endpoint review. One Medium finding (A10 SSRF: `WebhookServiceImpl`'s admin-supplied `targetUrl` had no private-IP/loopback blocklist) fixed in the same PR via a new `SsrfUrlValidator` component, with dedicated unit tests. Zero Critical/High findings — see `docs/SDLC-docs/reports/security-assessment.md` for the full per-category writeup. Corrected a filing-time traceability mismatch: issue #111 was titled "(SEC-02)", but SEC-02 is an unrelated, already-Implemented requirement (JWT secret length) — SEC-15 is the correct, newly-added FR this issue satisfies. Recomputed the Security Coverage Summary row (14→15 total, 10→11 Implemented) and the Coverage Summary Totals row (183→184 total, 123→124 Implemented) | Pending |
 
 ### Document Approval
 
@@ -138,14 +139,14 @@ The RTM serves to:
 | Performance (PR) | 8 | 3 | 0 | 5 | 0 | 0 |
 | Reliability (REL) | 5 | 2 | 0 | 3 | 0 | 0 |
 | Availability (AVL) | 4 | 1 | 0 | 3 | 0 | 0 |
-| Security (SEC) | 14 | 10 | 1 | 3 | 0 | 0 |
+| Security (SEC) | 15 | 11 | 1 | 3 | 0 | 0 |
 | Maintainability (MNT) | 6 | 6 | 0 | 0 | 0 | 0 |
 | Portability (PRT) | 4 | 1 | 0 | 3 | 0 | 0 |
 | Scalability (SCL) | 4 | 2 | 0 | 2 | 0 | 0 |
 | Safety (SAF) | 3 | 1 | 0 | 2 | 0 | 0 |
 | Design Constraints (DC) | 8 | 7 | 1 | 0 | 0 | 0 |
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
-| **Totals** | **183** | **123** | **15** | **45** | **0** | **0** |
+| **Totals** | **184** | **124** | **15** | **45** | **0** | **0** |
 | Seller & Marketplace (FR-SEL) *(Ph-3, Planned — excluded from Totals above)* | 8 | 5 | 0 | 0 | 0 | 3 |
 | Location-Based Matching (FR-LOC) *(Ph-3, complete — excluded from Totals above)* | 4 | 4 | 0 | 0 | 0 | 0 |
 
@@ -459,6 +460,7 @@ The RTM serves to:
 | SEC-12 | JWT secret rotation every 90 days | Medium | Ph-2 | §5.1.2 | `JwtTokenProvider` — dual-key (`jwt.secret.previous`) | Operational runbook | Inspection | 🟡 Partial (dual-key mechanism implemented; rotation schedule and runbook deferred to Ph-2) |
 | SEC-13 | Database password rotation every 180 days | Medium | Ph-2 | Appendix A | HikariCP env var `${SPRING_DATASOURCE_PASSWORD}` | Operational runbook | Inspection | 🔵 Pending Ph-2 |
 | SEC-14 | CSP must not contain `unsafe-inline` | Medium | Ph-2 | §5.1.4 | `SecurityConfig`/`SecurityHeaderPolicies.MAIN_CSP` (backend API, #237); `frontend/security-headers.conf` (frontend document CSP, #110 — removed `unsafe-inline` from `style-src`; React's `style={{}}` prop sets styles via JS property assignment, not the HTML `style` attribute, so it is not subject to the `style-src` inline restriction) | `SecurityTest`, live-browser CSP verification (#110) | Inspection + Test | ✅ Implemented |
+| SEC-15 | Full OWASP Top 10 (2021) assessment (A01–A10) performed and documented before M5 gate; zero open Critical, High findings have a remediation timeline | High | Ph-2 | §5.1 (new) | `docs/SDLC-docs/reports/security-assessment.md`; `WebhookServiceImpl`/`SsrfUrlValidator` (A10 SSRF remediation) | `SsrfUrlValidatorTest`, `WebhookServiceImplTest`, OWASP ZAP full active scan (local, #111) | Inspection + Test | ✅ Implemented |
 
 ### 7.6 Maintainability Requirements
 
