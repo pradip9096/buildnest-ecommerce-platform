@@ -10,12 +10,12 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 4.10 |
+| **Version** | 4.11 |
 | **Date** | 2026-07-29 12:40 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
-| **Related SRS** | SRS-BUILDNEST-001 v5.4 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
+| **Related SRS** | SRS-BUILDNEST-001 v5.5 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
 | **Supersedes** | SDD v2.0 (archive/docs/ISO-IEC-IEEE/SDD_IEEE_1016_2017.md, 2026-02-11) |
 
 ---
@@ -46,6 +46,7 @@
 | 4.8 | 2026-07-28 18:00 IST | Software Architect | Resolved OQ-01/OQ-02 in §4.5.6 via [ADR 0001](adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) (#561): district matching is radius/seller-declared (`Seller ──[N:M]──► District` join table), district sourced from a fixed, admin-maintained reference table. Updated §4.5.1's entity diagram (`Seller ──[N:1]──► District` → `Seller ──[N:M]──► District`), §4.5.2's `Seller`/`District` rows to drop the "deferred pending ADR" language, and rewrote §4.5.6 from a two-branch conditional sketch into a single finalized design (join table `seller_districts`, ES `terms` query). `Related SRS` updated 5.1 → 5.2 | Pending |
 | 4.9 | 2026-07-29 12:40 IST | Software Architect | FR-LOC-01/02 implemented (#562): `District`/`SellerDistrict` entities, `seller_districts` join table (dropping the superseded `sellers.district_id` from #553), and a nullable `users.district_id` FK for the buyer's own district (derived from `Address` at address create/update/set-default time, via a new `DistrictService`). New `PUT /api/user/seller/districts` (seller declares delivery districts) and `GET /api/public/districts` (reference-data listing) endpoints. **Also corrected a stale inconsistency found while making this edit**: §4.5.1's top ASCII diagram (line ~435) still read `Seller ──[N:1]──► District` after Revision 4.8 claimed to have updated it — 4.8 only updated the second, lower diagram (§4.5.1's ER-diagram-style block); both are now consistent at N:M. §4.5.2's `Seller`/`District`/`SellerDistrict` rows and the §7 traceability table's two Ph-3 rows updated from Planned to implemented. FR-LOC-03/04 (catalogue filtering, checkout restriction) remain Ph-3, Planned — tracked by #563/#564 | Pending |
 | 4.10 | 2026-07-29 IST | Software Architect | FR-LOC-03 implemented (#563), per §4.5.6's own design sketch: `ProductDocument.districtIds` field populated from the owning seller's `seller_districts` rows, and a buyer-facing `districtId` filter added to `ProductElasticsearchRepository`/`ProductSearchServiceImpl`/`ProductControllerV2`'s `/search` endpoint (Elasticsearch path only — the JPA fallback is unaffected, per the issue's own stated scope). Updated §4.5.6's Status line and the §7 traceability table's Location-Based Matching row. FR-LOC-04 (checkout-time enforcement) remains Ph-3, Planned — tracked by #564 | Pending |
+| 4.11 | 2026-07-29 IST | Software Architect | FR-LOC-04 implemented (#564), completing §4.5.6's design: `CheckoutServiceImpl.validateCheckout` enforces district membership server-side at checkout via `SellerDistrictRepository.findAllBySeller_User_Id` (JPA, not the raw JPQL `EXISTS` originally sketched — functionally equivalent, expressed as a derived-query call to match this service's existing validation-loop style), fail-closed when the buyer's district can't be determined. Updated §4.5.6's header/Status line from "Ph-3, Planned" to "Ph-3, complete" and the §7 traceability table's Location-Based Matching row. `Related SRS` updated 5.4 → 5.5 | Pending |
 | 4.7 | 2026-07-28 17:00 IST | Software Architect | FR-SEL-07 (#558): new `SellerReview` entity/table (`seller_review`), mirroring `ProductReview` but scoped by the seller's `User.id`. Added to §4.5.1's ER diagram and §4.5.2's entity table. Same DTO-exposure gap recurred as #581's `orderGroupId` fix — `OrderResponseDTO` needed a new `sellerId` field so the frontend's `SellerReviewPanel` (surfaced from a delivered order's detail view) could link an order to the seller being rated; populated in the same two mapping methods (`OrderServiceImpl.mapToResponseDTO`, `CheckoutServiceImpl`'s equivalent) | Pending |
 | 4.5 | 2026-07-26 09:00 IST | Software Architect | Final sub-issue of #557/FR-SEL-06: added `SellerOrderController`/`OrderServiceImpl`'s new seller-scoped list/detail/status methods, using a new `OrderRepository.findBySellerId`/`findByIdAndSellerId` `EXISTS`-subquery (`Order` has no direct seller reference; ownership derived transitively via `OrderItem.product.seller`) — mirrors #555's `SellerProductController`/#556's `SellerInventoryController` ownership-scoping pattern. All three FR-SEL-06 sub-issues (#578/#579/#580) now closed. **Not addressed in this revision**: §4.7.3's API Endpoint Catalogue does not yet list any of the three sellers' controllers (`SellerProductController`/`SellerInventoryController`/`SellerOrderController`) — this gap was already surfaced and filed as its own follow-up (#576) during #556's closure; not duplicated here | Pending |
 
@@ -667,9 +668,9 @@ guidance ("Context for cross-cutting state... not for high-frequency updates").
 
 ---
 
-#### 4.5.6 Location-Based Matching — Design (Ph-3, Planned)
+#### 4.5.6 Location-Based Matching — Design (Ph-3, complete)
 
-**Status**: Design finalized via [ADR 0001](adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) (#561), resolving OQ-01/OQ-02 carried over from SRS §3.2.12. #562 implemented the reference-data model; #563 implemented the catalogue/search filter described below (the `districtIds` field and the buyer-facing `districtId` filter). #564 (checkout-time enforcement) remains not implemented.
+**Status**: Design finalized via [ADR 0001](adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) (#561), resolving OQ-01/OQ-02 carried over from SRS §3.2.12. #562 implemented the reference-data model; #563 implemented the catalogue/search filter described below (the `districtIds` field and the buyer-facing `districtId` filter); #564 implemented checkout-time enforcement, described below.
 
 **District source (OQ-02 resolved)**: `District` is a fixed, admin-maintained reference table (`districts(id, name UNIQUE)`, §4.5.2) — no geocoding, no free-text address parsing. Sellers and buyers select from this table; buyers' district is derived from their `Address`.
 
@@ -679,7 +680,7 @@ guidance ("Context for cross-cutting state... not for high-frequency updates").
 
 **Why Elasticsearch, not a JPA query**: product search already goes through `ProductElasticsearchRepository` (§ `spring/elasticsearch.md`), and district filtering is naturally a search-time filter alongside existing relevance/fuzziness scoring — re-deriving this in JPQL would create a second, divergent search path for the same data.
 
-**Checkout-time enforcement (FR-LOC-04)**: `CheckoutServiceImpl` (or the multi-step equivalent) must re-verify district membership server-side at checkout — the ES filter governs catalogue visibility, but a buyer could otherwise reach a product URL directly and attempt checkout outside their permitted districts. This check queries `seller_districts` directly (a JPA/JPQL `EXISTS` check, not Elasticsearch — checkout is a write path with correctness requirements the search index's eventual consistency doesn't guarantee).
+**Checkout-time enforcement (FR-LOC-04, implemented #564)**: `CheckoutServiceImpl.validateCheckout` re-verifies district membership server-side at checkout — the ES filter governs catalogue visibility, but a buyer could otherwise reach a product URL directly and attempt checkout outside their permitted districts. Implemented as a per-cart-item repository query (`SellerDistrictRepository.findAllBySeller_User_Id`) against `seller_districts` directly (JPA, not Elasticsearch — checkout is a write path with correctness requirements the search index's eventual consistency doesn't guarantee), not a raw JPQL `EXISTS` as originally sketched — functionally equivalent (a seller with no declared districts is unrestricted; a seller with declared districts requires the buyer's own district among them), but expressed as a derived-query call plus an in-memory match rather than a custom `EXISTS` clause, matching this service's existing per-item validation-loop style (`hasStock`). Fail-closed when the buyer's district can't be determined at all (`User.district` null) — a deliberate design decision made with the user, since neither the SRS nor this section previously specified the null-district behavior. The method gained `@Transactional(readOnly = true)`, since the new check lazily loads `Product.seller`, and the method is called directly from `CheckoutController` with no ambient transaction of its own.
 
 ---
 
@@ -1709,7 +1710,7 @@ Bucket4j token-bucket strategy backed by Redis:
 | React SPA design (§4.3.6, §4.7.4, §4.10.5) | FR-FE-01–31 | Composition, Interface |
 | Domain events (`DomainEventPublisher`) | FR-INV-06, FR-PAY-04 | Logical, Interaction |
 | `Seller`, `District` entities *(#553/#554/#562 implemented; remaining FR-SEL-* Ph-3 rows tracked separately)* | FR-SEL-01–08 | Information (§4.3.3, §4.5.1, §4.5.2) |
-| Location-Based Matching design sketch *(#562 implements FR-LOC-01/02, #563 implements FR-LOC-03; FR-LOC-04 remains Ph-3, Planned)* | FR-LOC-01–04 | Information (§4.5.6) |
+| Location-Based Matching design sketch *(#562 implements FR-LOC-01/02, #563 implements FR-LOC-03, #564 implements FR-LOC-04 — all implemented)* | FR-LOC-01–04 | Information (§4.5.6) |
 
 ---
 

@@ -13,6 +13,20 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- District-scoped checkout restriction for Location-Based Matching (FR-LOC-04, #564) — completes
+  FG-12. `CheckoutServiceImpl.validateCheckout` now enforces, per cart item, that a seller who has
+  declared delivery districts (`SellerDistrict`) only sells to buyers whose own derived district
+  (`User.district`) is among them; a seller with no declared districts is unrestricted, and a
+  buyer whose district can't be determined (address city not yet matched to a reference district)
+  is fail-closed — blocked, not silently allowed. `validateCheckout` gained
+  `@Transactional(readOnly = true)`: the new check lazily loads `Product.seller`, and
+  `CheckoutController.validateCheckout()` calls this method directly with no transaction of its
+  own, which would otherwise throw `LazyInitializationException` on that call path. Verified via
+  6 new `CheckoutServiceImplTest` unit tests and a new `CheckoutValidateNoAmbientTransactionIT`
+  (`@SpringBootTest`, deliberately no ambient transaction, setup committed via
+  `TransactionTemplate`) proving the fix against the real controller call shape. Updated RTM
+  (§6.12, v1.39), SRS (§3.2.12/§4.2, v5.5), and SDD (§4.5.6/§7, v4.11) — FR-LOC-04 moves to
+  Implemented, completing Location-Based Matching (FG-12).
 - District-scoped catalogue/search filtering for Location-Based Matching (FR-LOC-03, #563) —
   filters the existing Elasticsearch-backed product search (FG-02) by seller-declared delivery
   district, following the same pattern already used for the existing `isActive:true` soft-delete
