@@ -2,6 +2,7 @@ package com.example.buildnest_ecommerce.service.seller;
 
 import com.example.buildnest_ecommerce.exception.DuplicateResourceException;
 import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
+import com.example.buildnest_ecommerce.model.dto.DistrictResponseDTO;
 import com.example.buildnest_ecommerce.model.dto.SellerResponseDTO;
 import com.example.buildnest_ecommerce.model.entity.Role;
 import com.example.buildnest_ecommerce.model.entity.Seller;
@@ -199,6 +200,35 @@ class SellerServiceImplTest {
 
         assertThat(result.verificationStatus())
                 .isEqualTo(Seller.VerificationStatus.VERIFIED);
+    }
+
+    @Test
+    void updateSellerDistricts_ownedSeller_delegatesAndReturnsUpdatedDto() {
+        Seller seller = new Seller();
+        seller.setId(10L);
+        seller.setUser(user);
+        seller.setBusinessName("Acme Décor");
+        when(sellerRepository.findByUser_Id(3L))
+                .thenReturn(Optional.of(seller));
+        List<DistrictResponseDTO> updated =
+                List.of(new DistrictResponseDTO(1L, "Pune"));
+        when(districtService.updateSellerDistricts(10L, Set.of(1L)))
+                .thenReturn(updated);
+
+        SellerResponseDTO result = sellerService
+                .updateSellerDistricts(3L, Set.of(1L));
+
+        assertThat(result.districts()).isEqualTo(updated);
+        verify(districtService).updateSellerDistricts(10L, Set.of(1L));
+    }
+
+    @Test
+    void updateSellerDistricts_noSeller_throwsResourceNotFoundException() {
+        when(sellerRepository.findByUser_Id(3L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> sellerService
+                .updateSellerDistricts(3L, Set.of(1L)))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

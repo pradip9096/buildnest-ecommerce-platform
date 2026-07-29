@@ -75,6 +75,9 @@ class DistrictServiceImplTest {
         assertThat(captor.getValue()).hasSize(2);
         assertThat(captor.getValue()).allMatch(
                 link -> link.getSeller() == seller);
+        assertThat(captor.getValue())
+                .extracting(link -> link.getDistrict().getName())
+                .containsExactlyInAnyOrder("Pune", "Mumbai City");
     }
 
     @Test
