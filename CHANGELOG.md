@@ -105,6 +105,14 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 - (#558 follow-up) Extracted `AbstractReview` (`@MappedSuperclass`) for the remaining duplicated
   entity fields/`@PrePersist`/`@PreUpdate` callbacks between `ProductReview` and `SellerReview`,
   resolving the residual SonarCloud duplication (5.3% after the first fix, still above the 3% max).
+- (#611) Overrode `org.webjars:swagger-ui` to 5.32.11 via `dependencyManagement` — CVE-2026-65898
+  (CVSS 7.2, vendored DOMPurify) affected the 5.32.2 version bundled by
+  `springdoc-openapi-starter-webmvc-ui` 2.8.17 (the current latest springdoc release; no newer
+  springdoc version bundles a patched swagger-ui yet). Same override pattern already established
+  for other transitively-bundled CVEs in this `dependencyManagement` block (#332/PR #335). Local
+  `dependency-check:check -Powasp` could not fully verify (NVD sync crashes on a pre-existing tool
+  bug without an API key, same constraint documented in #341) — real verification is via this PR's
+  own CI `OWASP Dependency-Check` job.
 
 - Order-group schema for seller-scoped order splitting (FR-SEL-06, #578, first of three
   sub-issues under parent #557) — a cart spanning multiple sellers currently produces one
