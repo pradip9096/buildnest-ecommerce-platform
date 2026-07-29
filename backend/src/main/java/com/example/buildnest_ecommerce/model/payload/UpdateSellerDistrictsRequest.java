@@ -11,6 +11,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class UpdateSellerDistrictsRequest {
 
+    /** The full set of district IDs the seller declares delivery to. */
     @NotEmpty(message = "At least one district must be declared")
     private Set<Long> districtIds;
 }

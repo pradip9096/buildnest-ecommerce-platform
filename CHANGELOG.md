@@ -22,7 +22,10 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   endpoints; a buyer's own district (nullable `users.district_id`) is now derived automatically
   from their `Address` on address create/update/set-default. Seeded with 3 starter districts.
   Updated SRS (§3.2.12), SDD (§4.5.1/§4.5.2), and RTM (§6.12) — FR-LOC-01/02 move to Implemented;
-  FR-LOC-03/04 (catalogue filtering, checkout restriction) remain tracked by #563/#564.
+  FR-LOC-03/04 (catalogue filtering, checkout restriction) remain tracked by #563/#564. Added unit
+  tests for `DistrictServiceImpl.getAllDistricts`/`getSellerDistricts` to satisfy the JaCoCo 0.85
+  package-coverage gate, and Javadoc/final-parameter cleanup across the new files to keep
+  CheckStyle's whole-tree violation count under its ratchet ceiling (#354).
 - District-matching design decision for Location-Based Matching (FG-12, #561) — resolved the two
   open questions (OQ-01, OQ-02) left unspecified by the marketplace-pivot addendum, via
   [ADR 0001](docs/SDLC-docs/design/adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md):

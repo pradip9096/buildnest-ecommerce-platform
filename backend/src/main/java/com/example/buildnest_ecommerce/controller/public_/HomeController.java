@@ -107,6 +107,11 @@ public class HomeController {
         }
     }
 
+    /**
+     * Lists every district in the fixed reference table.
+     *
+     * @return all districts
+     */
     @GetMapping("/districts")
     public ResponseEntity<ApiResponse> getAllDistricts() {
         try {

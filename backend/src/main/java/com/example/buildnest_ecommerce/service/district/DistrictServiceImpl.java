@@ -26,10 +26,14 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class DistrictServiceImpl implements DistrictService {
 
+    /** District reference-data repository. */
     private final DistrictRepository districtRepository;
+    /** Seller-to-district join-table repository. */
     private final SellerDistrictRepository sellerDistrictRepository;
+    /** Seller repository, used to resolve a seller by its own ID. */
     private final SellerRepository sellerRepository;
 
+    /** {@inheritDoc} */
     @Override
     public List<DistrictResponseDTO> getAllDistricts() {
         return districtRepository.findAll().stream()
@@ -37,10 +41,11 @@ public class DistrictServiceImpl implements DistrictService {
                 .toList();
     }
 
+    /** {@inheritDoc} */
     @Override
     @Transactional
     public List<DistrictResponseDTO> updateSellerDistricts(
-            Long sellerId, Set<Long> districtIds) {
+            final Long sellerId, final Set<Long> districtIds) {
         log.info("Updating declared districts for seller: {}", sellerId);
 
         Seller seller = sellerRepository.findById(sellerId)
@@ -66,16 +71,18 @@ public class DistrictServiceImpl implements DistrictService {
         return districts.stream().map(DistrictResponseDTO::from).toList();
     }
 
+    /** {@inheritDoc} */
     @Override
-    public List<DistrictResponseDTO> getSellerDistricts(Long sellerId) {
+    public List<DistrictResponseDTO> getSellerDistricts(final Long sellerId) {
         return sellerDistrictRepository.findAllBySeller_Id(sellerId).stream()
                 .map(link -> DistrictResponseDTO.from(link.getDistrict()))
                 .toList();
     }
 
+    /** {@inheritDoc} */
     @Override
     @Transactional
-    public void deriveBuyerDistrict(User user, String city) {
+    public void deriveBuyerDistrict(final User user, final String city) {
         if (city == null || city.isBlank()) {
             return;
         }

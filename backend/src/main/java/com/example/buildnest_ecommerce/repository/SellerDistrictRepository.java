@@ -9,7 +9,18 @@ import java.util.List;
 public interface SellerDistrictRepository
         extends JpaRepository<SellerDistrict, Long> {
 
+    /**
+     * Lists a seller's declared delivery districts.
+     *
+     * @param sellerId the seller's own ID (not the user ID)
+     * @return the seller's declared district links
+     */
     List<SellerDistrict> findAllBySeller_Id(Long sellerId);
 
+    /**
+     * Deletes every declared district link for a seller.
+     *
+     * @param sellerId the seller's own ID (not the user ID)
+     */
     void deleteAllBySeller_Id(Long sellerId);
 }

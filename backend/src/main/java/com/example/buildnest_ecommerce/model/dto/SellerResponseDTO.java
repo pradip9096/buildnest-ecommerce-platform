@@ -14,7 +14,7 @@ public record SellerResponseDTO(
         LocalDateTime createdAt) {
 
     public static SellerResponseDTO from(
-            Seller seller, List<DistrictResponseDTO> districts) {
+            final Seller seller, final List<DistrictResponseDTO> districts) {
         return new SellerResponseDTO(
                 seller.getId(),
                 seller.getUser().getId(),

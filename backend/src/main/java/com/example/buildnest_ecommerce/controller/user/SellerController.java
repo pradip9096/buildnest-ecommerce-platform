@@ -54,6 +54,13 @@ public class SellerController {
                 new ApiResponse(true, "Seller profile retrieved", seller));
     }
 
+    /**
+     * Replaces the current seller's declared delivery districts.
+     *
+     * @param currentUser the authenticated seller's user account
+     * @param request the full replacement set of district IDs
+     * @return the seller's updated profile
+     */
     @PutMapping("/districts")
     @Auditable(action = "SELLER_UPDATE_DISTRICTS", entityType = "SELLER")
     public ResponseEntity<ApiResponse> updateSellerDistricts(

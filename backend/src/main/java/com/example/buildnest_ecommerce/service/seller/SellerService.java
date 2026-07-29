@@ -13,7 +13,13 @@ public interface SellerService {
 
     SellerResponseDTO getSellerProfile(Long userId);
 
-    /** Replaces the seller's declared delivery districts (FR-LOC-01). */
+    /**
+     * Replaces the seller's declared delivery districts (FR-LOC-01).
+     *
+     * @param userId the requesting user's ID (the seller's owning user)
+     * @param districtIds the full replacement set of district IDs
+     * @return the seller's updated profile
+     */
     SellerResponseDTO updateSellerDistricts(
             Long userId, Set<Long> districtIds);
 

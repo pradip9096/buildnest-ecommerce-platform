@@ -92,10 +92,11 @@ public class SellerServiceImpl implements SellerService {
                 districtService.getSellerDistricts(seller.getId()));
     }
 
+    /** {@inheritDoc} */
     @Override
     @Transactional
     public SellerResponseDTO updateSellerDistricts(
-            Long userId, Set<Long> districtIds) {
+            final Long userId, final Set<Long> districtIds) {
         Seller seller = sellerRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Seller profile not found for user: " + userId));

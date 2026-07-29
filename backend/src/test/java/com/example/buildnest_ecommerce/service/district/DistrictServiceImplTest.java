@@ -78,6 +78,42 @@ class DistrictServiceImplTest {
     }
 
     @Test
+    void getAllDistricts_returnsAllAsDto() {
+        District pune = new District();
+        pune.setId(1L);
+        pune.setName("Pune");
+        District mumbai = new District();
+        mumbai.setId(2L);
+        mumbai.setName("Mumbai City");
+        when(districtRepository.findAll()).thenReturn(List.of(pune, mumbai));
+
+        List<DistrictResponseDTO> result = districtService.getAllDistricts();
+
+        assertThat(result).extracting(DistrictResponseDTO::name)
+                .containsExactlyInAnyOrder("Pune", "Mumbai City");
+    }
+
+    @Test
+    void getSellerDistricts_returnsDeclaredDistrictsAsDto() {
+        Seller seller = new Seller();
+        seller.setId(5L);
+        District pune = new District();
+        pune.setId(1L);
+        pune.setName("Pune");
+        SellerDistrict link = new SellerDistrict();
+        link.setSeller(seller);
+        link.setDistrict(pune);
+        when(sellerDistrictRepository.findAllBySeller_Id(5L))
+                .thenReturn(List.of(link));
+
+        List<DistrictResponseDTO> result =
+                districtService.getSellerDistricts(5L);
+
+        assertThat(result).extracting(DistrictResponseDTO::name)
+                .containsExactly("Pune");
+    }
+
+    @Test
     void updateSellerDistricts_unknownSeller_throwsResourceNotFoundException() {
         when(sellerRepository.findById(99L)).thenReturn(Optional.empty());
 
