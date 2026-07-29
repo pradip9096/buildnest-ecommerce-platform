@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 5.5 |
+| **Version** | 5.6 |
 | **Date** | 2026-07-29 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -44,6 +44,7 @@
 | 5.3 | 2026-07-29 IST | Technical Lead | FR-LOC-01/02 implemented (#562) — district reference-data model: `District`/`SellerDistrict` entities, `seller_districts` join table, buyer's own `users.district_id` derived from `Address`. Updated §3.2.12's status note and the §4.2 Location-Based Matching aggregate row (0→2 Implemented, 4→2 Not started). FR-LOC-03/04 remain Ph-3, Planned — tracked by #563/#564 | Pending |
 | 5.4 | 2026-07-29 IST | Technical Lead | FR-LOC-03 implemented (#563) — district-scoped catalogue/search filtering added to the existing Elasticsearch-backed product search (FG-02). Updated §3.2.12's status note and the §4.2 Location-Based Matching aggregate row (2→3 Implemented, 2→1 Not started). FR-LOC-04 remains Ph-3, Planned — tracked by #564 | Pending |
 | 5.5 | 2026-07-29 IST | Technical Lead | FR-LOC-04 implemented (#564), completing FG-12 (Location-Based Matching) — `CheckoutServiceImpl.validateCheckout` enforces district membership server-side at checkout, fail-closed when the buyer's district can't be determined, unrestricted when the seller has no declared districts. Updated §3.2.12's header/status note from "Ph-3, Planned" to "Ph-3, complete", and the §4.2 Location-Based Matching aggregate row (3→4 Implemented, 1→0 Not started) | Pending |
+| 5.6 | 2026-07-29 IST | Technical Lead | SEC-14 (#110): backend CSP was already `unsafe-inline`-free since #237, but the frontend's own document CSP (`frontend/security-headers.conf`) still carried `unsafe-inline` on `style-src`; removed after confirming React's `style={{}}` prop doesn't trigger the inline-style CSP restriction (JS property assignment, not the `style=` HTML attribute). Updated the SEC-14 Note in §7 (or equivalent security-requirements section) from "known gap for Ph-1" to resolved | Pending |
 
 ### Document Change Procedure
 
@@ -836,7 +837,7 @@ All of the following indexes shall be present in the production schema:
 | SEC-13 | Database password rotation shall be performed every 180 days following documented procedures | Ph-2 | Medium | Inspection |
 | SEC-14 | The Content-Security-Policy response header shall not include `unsafe-inline`; inline script execution shall be prevented via nonce or hash strategy | Ph-2 | Medium | Inspection |
 
-> **Note on SEC-14**: The current implementation includes `unsafe-inline` in the CSP directive (identified in Baseline Assessment SEC-01). This is accepted as a known gap for Ph-1 and shall be resolved before Ph-2 sign-off.
+> **Note on SEC-14**: Resolved. Backend `SecurityConfig`/`SecurityHeaderPolicies.MAIN_CSP` removed `unsafe-inline` from the API CSP in #237 (SEC-14); the frontend's own document CSP (`frontend/security-headers.conf`) retained `unsafe-inline` on `style-src` until #110, which removed it after confirming (live-browser verification) that React's `style={{}}` prop does not trigger the `style-src` inline restriction, since it sets styles via JS property assignment rather than the HTML `style` attribute.
 
 #### 3.8.4 Maintainability
 

@@ -103,6 +103,17 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   calls specifically, bypassing the interceptor for exactly the two calls that are themselves part
   of the auth-refresh machinery. Verified live via a stub backend + chrome-devtools MCP: stable at
   2 refresh attempts (React StrictMode double-mount) instead of an unbounded loop.
+- SEC-14 CSP hardening final verification (#110): backend `SecurityConfig`/`MAIN_CSP` was already
+  `unsafe-inline`-free since #237, but the frontend's own document CSP (`frontend/security-headers.conf`,
+  served by nginx, a separate origin/response from the backend API's CSP) still carried
+  `style-src 'self' 'unsafe-inline'`. Live-browser CSP verification (a static-HTML CSP probe plus a
+  strict-header production `dist/` serve) confirmed React's `style={{}}` prop sets styles via
+  `node.style[prop] = value` (a JS property assignment), not the HTML `style=` attribute, so it is
+  not subject to `style-src`'s inline restriction — the frontend's 7 `style={{}}` usages across 4
+  components required no code change. Removed `unsafe-inline` from `style-src`; added
+  `securityHeaders.test.ts` as regression coverage (Vitest reads and asserts against the real conf
+  file, since there's no runtime code path to unit-test for a static nginx config). RTM SEC-14
+  corrected from 🟡 Partial to ✅ Implemented; SRS/SDD's stale "known gap" notes corrected.
 - (#558 follow-up) Null-checked `Product.seller` when deriving `Order.sellerId` in
   `OrderServiceImpl`/`CheckoutServiceImpl` — `Product.seller` is nullable (admin-created products
   have no owning seller), and the initial derivation dereferenced it unconditionally, caught by

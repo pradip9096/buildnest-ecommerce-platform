@@ -10,13 +10,13 @@
 | :--- | :--- |
 | **Document Title** | Test Plan |
 | **Document ID** | TP-BUILDNEST-001 |
-| **Version** | 4.3 |
+| **Version** | 4.4 |
 | **Date** | 2026-07-19 22:30 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29119-3:2021 |
-| **Related SRS** | SRS-BUILDNEST-001 v4.5 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
-| **Related SDD** | SDD-BUILDNEST-001 v3.4 (docs/SDLC-docs/design/software-design-description.md) |
+| **Related SRS** | SRS-BUILDNEST-001 v5.6 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
+| **Related SDD** | SDD-BUILDNEST-001 v4.12 (docs/SDLC-docs/design/software-design-description.md) |
 | **Supersedes** | TP v3.0 (archive/docs/ISO-IEC-IEEE/Test_Plan_IEEE_29119.md, 2026-02-11) |
 
 ---
@@ -34,6 +34,7 @@
 | 4.1 | 2026-07-17 14:05 IST | Test Manager | Corrected §15 TIR-01–05 status (all 5 were stale "Open"/"Not yet measured" — TIR-01–04 confirmed already resolved in source, TIR-05's PIT gate confirmed configured at 77%); corrected §17.1's JaCoCo gate (actual 85%, not 40%) and frontend-coverage baseline (17 test files/121 tests, not the 3-file 2026-07-04 snapshot); corrected Elasticsearch 8.10→8.17 references; re-ran the full suite (`all-tests` profile, isolated shell) for §17.2's baseline table — 1,735 tests, 0 failures, 0 errors, superseding the stale 2026-06-19 figures (1,538 executions, 11 failed, 3 errors) (#461) | Pending |
 | 4.2 | 2026-07-17 21:15 IST | Test Manager | Found during a fresh RTM/SRS/SDD/Test-Plan verification sweep: §17's 4.1 fix (actual JaCoCo 85%/PIT 77%) never propagated to §8.3/§8.4/§9.1/§9.2, which still stated the pre-fix 0.40/0.70/75% values — a direct self-contradiction within this same document. Corrected all four to the real gate values, and corrected §8.3's Counter column from LINE to INSTRUCTION (verified directly against `pom.xml`'s `<counter>INSTRUCTION</counter>`, not assumed). Also updated the `Related SRS`/`Related SDD` header fields from a long-stale v4.0/v3.0 to the current v4.5/v3.4, which had drifted through several intervening version bumps on both documents without ever being updated here | Pending |
 | 4.3 | 2026-07-19 22:30 IST | Test Manager | Added `WishlistServiceImplLazyLoadingTest` to §8/#311's `service.wishlist` test-class listing — new `@DataJpaTest` regression test added for #442's fix (`WishlistServiceImpl.getWishlistProducts` was returning raw `Product` entities with uninitialized lazy fields, 6th occurrence of the raw-entity-lazy-collection bug family) | Pending |
+| 4.4 | 2026-07-29 IST | Test Manager | SEC-14 (#110): §13.2's "Remove CSP `unsafe-inline`; update `SecurityTest` assertions" task struck through as done (#237 backend, #110 frontend). `Related SRS`/`Related SDD` header fields were long-stale (v4.5/v3.4, real current v5.6/v4.12 — several intervening version bumps on both documents never propagated here); corrected while already touching this document's content, though a full cross-reference-mesh sweep is the periodic 15-issue sync's job, not a per-issue one | Pending |
 
 ### Document Approval
 
@@ -833,7 +834,7 @@ Test execution resumes when:
 | Configure PIT plugin in `pom.xml` | 2 h | Phase 1 exit |
 | Identify and close coverage gaps (additional unit tests) | 20 h | JaCoCo gap analysis |
 | Achieve PIT mutation score ≥ 75% | 10 h | Coverage gate ≥ 70% |
-| Remove CSP `unsafe-inline`; update `SecurityTest` assertions | 2 h | Phase 1 exit |
+| ~~Remove CSP `unsafe-inline`; update `SecurityTest` assertions~~ — ✅ done (#237 backend, #110 frontend) | 2 h | Phase 1 exit |
 | Frontend: Vitest setup + component tests | 15 h | Frontend implementation |
 | Frontend: Playwright E2E setup + critical path tests | 10 h | Frontend + staging |
 | Accessibility audit (axe-core) + remediation | 5 h | Frontend implementation |
