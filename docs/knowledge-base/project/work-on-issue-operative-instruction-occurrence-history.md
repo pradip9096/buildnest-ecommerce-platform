@@ -263,6 +263,22 @@ independently-scoped follow-up).
   own side effect) with nothing distinguishing that relationship from an ordinary
   Mid-Implementation-Scope-Discovery follow-up in the record. → Required labeling a nested
   self-correction PR explicitly as such, distinct from a new-scope follow-up.
+- **#559** — `CHANGELOG.md` was silently never mentioned or updated that session (confirmed via
+  `git log --oneline -- CHANGELOG.md` and a grep for the issue number, both zero hits) while RTM
+  and README were both correctly updated — a partial, self-selected subset of the 6 docs was
+  treated as satisfying this step, with no stated N/A for the doc that was actually skipped. →
+  Added the literal per-doc checklist format (`README: <updated|checked, still accurate|N/A —
+  reason>`, one line per doc), mirroring step 7's own literal-line forcing pattern.
+- **#561** — two gaps in the same session (a pure docs/ADR issue, no code): (1) the requirement-
+  traceability backfill sub-clause (does the issue body cite an SRS FR ID, or state "no formal FR
+  — because...") was silently skipped — the issue cited an SRS section but no FR ID, and the gap
+  was never checked or backfilled, the first real exercise of this sub-clause since it was mirrored
+  in from `development-workflow.md`. `[defect-class: requirement-traceability-backfill-not-seeded]`
+  (1st occurrence, opened directly at tier 2 per the artifact-shaped-requirements principle). (2)
+  the 6-doc checklist never states an "ADR index" line even though `development-workflow.md` step
+  23 conditionally requires it whenever step 8 produces a new ADR — #561 did produce one, and the
+  ADR index was only updated by judgment call, not instruction. → Added the `TaskCreate`-seeding
+  requirement for the backfill check, and a 7th checklist line (`ADR index: <updated|N/A>`).
 
 ## Follow-ups closure step
 
