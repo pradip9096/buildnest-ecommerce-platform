@@ -9,6 +9,7 @@ import com.example.buildnest_ecommerce.model.payload.CreateAddressRequest;
 import com.example.buildnest_ecommerce.model.payload.UpdateAddressRequest;
 import com.example.buildnest_ecommerce.repository.AddressRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import com.example.buildnest_ecommerce.service.district.DistrictService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +35,9 @@ class AddressServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private DistrictService districtService;
 
     @InjectMocks
     private AddressServiceImpl addressService;

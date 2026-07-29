@@ -13,6 +13,16 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- District reference-data model for Location-Based Matching (FR-LOC-01/02, #562) — new
+  `District`/`SellerDistrict` entities and `districts`/`seller_districts` Liquibase tables
+  implementing ADR 0001's chosen design: a fixed, admin-maintained reference table and a
+  seller-declared `Seller ──[N:M]──► District` join, superseding the deferred nullable
+  `sellers.district_id` column from #553. New `PUT /api/user/seller/districts` (a seller
+  declares delivery districts) and `GET /api/public/districts` (reference-data listing)
+  endpoints; a buyer's own district (nullable `users.district_id`) is now derived automatically
+  from their `Address` on address create/update/set-default. Seeded with 3 starter districts.
+  Updated SRS (§3.2.12), SDD (§4.5.1/§4.5.2), and RTM (§6.12) — FR-LOC-01/02 move to Implemented;
+  FR-LOC-03/04 (catalogue filtering, checkout restriction) remain tracked by #563/#564.
 - District-matching design decision for Location-Based Matching (FG-12, #561) — resolved the two
   open questions (OQ-01, OQ-02) left unspecified by the marketplace-pivot addendum, via
   [ADR 0001](docs/SDLC-docs/design/adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md):

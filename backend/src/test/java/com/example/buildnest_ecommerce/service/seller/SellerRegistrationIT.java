@@ -7,6 +7,7 @@ import com.example.buildnest_ecommerce.model.dto.SellerResponseDTO;
 import com.example.buildnest_ecommerce.model.entity.Seller;
 import com.example.buildnest_ecommerce.model.entity.User;
 import com.example.buildnest_ecommerce.model.payload.RegisterSellerRequest;
+import com.example.buildnest_ecommerce.repository.SellerDistrictRepository;
 import com.example.buildnest_ecommerce.repository.SellerRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +45,9 @@ class SellerRegistrationIT {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private SellerDistrictRepository sellerDistrictRepository;
+
     private User user;
 
     @BeforeEach
@@ -72,7 +76,8 @@ class SellerRegistrationIT {
         assertThat(persisted.getBusinessName()).isEqualTo("Acme Décor");
         assertThat(persisted.getVerificationStatus())
                 .isEqualTo(Seller.VerificationStatus.PENDING);
-        assertThat(persisted.getDistrictId()).isNull();
+        assertThat(sellerDistrictRepository
+                .findAllBySeller_Id(persisted.getId())).isEmpty();
 
         User reloaded = userRepository.findById(user.getId()).orElseThrow();
         assertThat(reloaded.getRoles())

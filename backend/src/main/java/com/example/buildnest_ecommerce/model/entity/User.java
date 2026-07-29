@@ -24,9 +24,9 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = { "roles", "addresses", "createdAt",
+@EqualsAndHashCode(exclude = { "roles", "addresses", "district", "createdAt",
         "updatedAt", "deletedAt", "lastLogin" })
-@ToString(exclude = { "roles", "addresses" })
+@ToString(exclude = { "roles", "addresses", "district" })
 public class User implements AggregateRoot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -88,4 +88,12 @@ public class User implements AggregateRoot {
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Address> addresses;
+
+    // Buyer's own district (FR-LOC-02, ADR 0001, #561/#562), derived from
+    // this user's default/most-recent Address by name match against the
+    // fixed districts reference table — never set directly by the caller.
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "district_id")
+    private District district;
 }

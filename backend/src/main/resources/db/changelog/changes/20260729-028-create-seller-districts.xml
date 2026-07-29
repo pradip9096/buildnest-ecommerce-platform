@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #562 (FR-LOC-01): seller_districts join table — a seller's
+         declared delivery districts (Seller [N:M] District), per ADR 0001
+         (#561) OQ-01: radius/seller-declared matching, not a single
+         home-district FK. Superseds the nullable sellers.district_id
+         column added in #553 (dropped in the next changeset). -->
+    <changeSet id="20260729-028-create-seller-districts" author="buildnest-team">
+        <comment>Create seller_districts join table (FR-LOC-01, ADR 0001, #562)</comment>
+
+        <createTable tableName="seller_districts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="seller_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="district_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="seller_districts"
+                columnNames="seller_id, district_id"
+                constraintName="uk_seller_districts_seller_district"/>
+
+        <addForeignKeyConstraint
+                constraintName="fk_seller_districts_seller"
+                baseTableName="seller_districts" baseColumnNames="seller_id"
+                referencedTableName="sellers" referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <!-- No onDelete=CASCADE here — districts is shared reference data
+             (mirrors Product/Category: never cascade on shared reference
+             data per jpa.md), so deleting a district must not silently
+             wipe every seller's declaration of it. -->
+        <addForeignKeyConstraint
+                constraintName="fk_seller_districts_district"
+                baseTableName="seller_districts" baseColumnNames="district_id"
+                referencedTableName="districts" referencedColumnNames="id"/>
+
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="seller_districts"
+                    constraintName="fk_seller_districts_district"/>
+            <dropForeignKeyConstraint baseTableName="seller_districts"
+                    constraintName="fk_seller_districts_seller"/>
+            <dropTable tableName="seller_districts"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #562: starter seed so the fixed reference table is usable
+         immediately — a small bootstrap set, not a claim of complete
+         geographic coverage. The admin-maintained table (ADR 0001, OQ-02)
+         is expected to grow via future admin tooling, out of this issue's
+         scope. -->
+    <changeSet id="20260729-031-seed-starter-districts" author="buildnest-team">
+        <comment>Seed starter districts (FR-LOC-01/02, ADR 0001, #562)</comment>
+
+        <insert tableName="districts">
+            <column name="name" value="Bengaluru Urban"/>
+        </insert>
+        <insert tableName="districts">
+            <column name="name" value="Mumbai City"/>
+        </insert>
+        <insert tableName="districts">
+            <column name="name" value="Pune"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="districts">
+                <where>name IN ('Bengaluru Urban', 'Mumbai City', 'Pune')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

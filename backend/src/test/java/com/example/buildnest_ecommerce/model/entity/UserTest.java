@@ -34,7 +34,8 @@ class UserTest {
                 now,
                 now,
                 roles,
-                addresses);
+                addresses,
+                null);
 
         assertEquals(1L, user.getId());
         assertEquals("john_doe", user.getUsername());

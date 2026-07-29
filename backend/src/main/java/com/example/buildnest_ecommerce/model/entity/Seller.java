@@ -11,10 +11,11 @@ import java.time.LocalDateTime;
 
 /**
  * Seller — 1:1 extension of {@link User}, mirroring the existing
- * {@link Address} extension-table pattern (SDD v4.0 §4.3.3/§4.5.1/§4.5.2).
- * {@code districtId} is deliberately a plain nullable column, not a mapped
- * FK/association — the District entity itself is blocked on ADR #561
- * (OQ-01/OQ-02); assigning it happens once that resolves.
+ * {@link Address} extension-table pattern (SDD v4.0/4.8 §4.3.3/§4.5.1/§4.5.2).
+ * Delivery districts are declared via {@link SellerDistrict}
+ * ({@code Seller ──[N:M]──► District}, ADR 0001, #561/#562) — the earlier
+ * plain nullable {@code district_id} column (#553) is dropped in favor of
+ * this join table.
  */
 @Entity
 @Table(name = "sellers")
@@ -43,9 +44,6 @@ public class Seller implements AggregateRoot {
 
     @Column(name = "business_registration_number")
     private String businessRegistrationNumber;
-
-    @Column(name = "district_id")
-    private Long districtId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "verification_status", nullable = false)

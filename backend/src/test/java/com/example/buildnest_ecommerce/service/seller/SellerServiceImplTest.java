@@ -10,6 +10,7 @@ import com.example.buildnest_ecommerce.model.payload.RegisterSellerRequest;
 import com.example.buildnest_ecommerce.repository.RoleRepository;
 import com.example.buildnest_ecommerce.repository.SellerRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import com.example.buildnest_ecommerce.service.district.DistrictService;
 import com.example.buildnest_ecommerce.service.notification
         .INotificationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +49,8 @@ class SellerServiceImplTest {
     private RoleRepository roleRepository;
     @Mock
     private INotificationService notificationService;
+    @Mock
+    private DistrictService districtService;
 
     private SellerServiceImpl sellerService;
     private User user;
@@ -55,7 +58,8 @@ class SellerServiceImplTest {
     @BeforeEach
     void setUp() {
         sellerService = new SellerServiceImpl(sellerRepository,
-                userRepository, roleRepository, notificationService);
+                userRepository, roleRepository, notificationService,
+                districtService);
         user = new User();
         user.setId(3L);
         user.setUsername("shopowner");

@@ -10,12 +10,12 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 4.8 |
-| **Date** | 2026-07-28 18:00 IST |
+| **Version** | 4.9 |
+| **Date** | 2026-07-29 12:40 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
-| **Related SRS** | SRS-BUILDNEST-001 v5.2 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
+| **Related SRS** | SRS-BUILDNEST-001 v5.3 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
 | **Supersedes** | SDD v2.0 (archive/docs/ISO-IEC-IEEE/SDD_IEEE_1016_2017.md, 2026-02-11) |
 
 ---
@@ -44,6 +44,7 @@
 | 4.4 | 2026-07-25 20:00 IST | Software Architect | §4.5.2 updated for #578 (sub-issue of #557, FR-SEL-06): added new `OrderGroup` entity row (`order_groups` table, FK → `user_id`) and extended `Order`'s row with the new nullable `order_group_id` FK — parent linkage for splitting a multi-seller cart into per-seller orders. Design decision (no repo precedent — confirmed via `gh search`): split into per-seller sub-orders rather than a single shared Order with a read-only per-seller filter, since the latter leaves order-status/fulfillment ownership ambiguous once sellers ship independently. Additive-only schema change, no backfill (existing orders keep `order_group_id = NULL`). #579 (checkout split) and #580 (seller-scoped order API) remain unimplemented | Pending |
 | 4.6 | 2026-07-26 10:30 IST | Software Architect | FR-SEL-06's linked frontend follow-up (#581): new seller-facing route/page (`/seller`, `SellerDashboardPage`) and `components/seller/OrdersTab.tsx`, consuming #580's existing `SellerOrderController` API. Buyer-facing `account/OrdersTab.tsx` extended to group sibling orders sharing an `orderGroupId` under a "1 purchase, N shipments" label. Required extending `OrderResponseDTO` with a new `orderGroupId` field (populated in `OrderServiceImpl.mapToResponseDTO` and `CheckoutServiceImpl.toOrderDTO`) — a small additive backend change discovered mid-implementation, since `Order.orderGroup` existed since #578 but was never exposed via any DTO. §4.7.3's API Endpoint Catalogue gap (seller controllers not yet listed, #576) remains open, not addressed here | Pending |
 | 4.8 | 2026-07-28 18:00 IST | Software Architect | Resolved OQ-01/OQ-02 in §4.5.6 via [ADR 0001](adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) (#561): district matching is radius/seller-declared (`Seller ──[N:M]──► District` join table), district sourced from a fixed, admin-maintained reference table. Updated §4.5.1's entity diagram (`Seller ──[N:1]──► District` → `Seller ──[N:M]──► District`), §4.5.2's `Seller`/`District` rows to drop the "deferred pending ADR" language, and rewrote §4.5.6 from a two-branch conditional sketch into a single finalized design (join table `seller_districts`, ES `terms` query). `Related SRS` updated 5.1 → 5.2 | Pending |
+| 4.9 | 2026-07-29 12:40 IST | Software Architect | FR-LOC-01/02 implemented (#562): `District`/`SellerDistrict` entities, `seller_districts` join table (dropping the superseded `sellers.district_id` from #553), and a nullable `users.district_id` FK for the buyer's own district (derived from `Address` at address create/update/set-default time, via a new `DistrictService`). New `PUT /api/user/seller/districts` (seller declares delivery districts) and `GET /api/public/districts` (reference-data listing) endpoints. **Also corrected a stale inconsistency found while making this edit**: §4.5.1's top ASCII diagram (line ~435) still read `Seller ──[N:1]──► District` after Revision 4.8 claimed to have updated it — 4.8 only updated the second, lower diagram (§4.5.1's ER-diagram-style block); both are now consistent at N:M. §4.5.2's `Seller`/`District`/`SellerDistrict` rows and the §7 traceability table's two Ph-3 rows updated from Planned to implemented. FR-LOC-03/04 (catalogue filtering, checkout restriction) remain Ph-3, Planned — tracked by #563/#564 | Pending |
 | 4.7 | 2026-07-28 17:00 IST | Software Architect | FR-SEL-07 (#558): new `SellerReview` entity/table (`seller_review`), mirroring `ProductReview` but scoped by the seller's `User.id`. Added to §4.5.1's ER diagram and §4.5.2's entity table. Same DTO-exposure gap recurred as #581's `orderGroupId` fix — `OrderResponseDTO` needed a new `sellerId` field so the frontend's `SellerReviewPanel` (surfaced from a delivered order's detail view) could link an order to the seller being rated; populated in the same two mapping methods (`OrderServiceImpl.mapToResponseDTO`, `CheckoutServiceImpl`'s equivalent) | Pending |
 | 4.5 | 2026-07-26 09:00 IST | Software Architect | Final sub-issue of #557/FR-SEL-06: added `SellerOrderController`/`OrderServiceImpl`'s new seller-scoped list/detail/status methods, using a new `OrderRepository.findBySellerId`/`findByIdAndSellerId` `EXISTS`-subquery (`Order` has no direct seller reference; ownership derived transitively via `OrderItem.product.seller`) — mirrors #555's `SellerProductController`/#556's `SellerInventoryController` ownership-scoping pattern. All three FR-SEL-06 sub-issues (#578/#579/#580) now closed. **Not addressed in this revision**: §4.7.3's API Endpoint Catalogue does not yet list any of the three sellers' controllers (`SellerProductController`/`SellerInventoryController`/`SellerOrderController`) — this gap was already surfaced and filed as its own follow-up (#576) during #556's closure; not duplicated here | Pending |
 
@@ -431,10 +432,11 @@ JPA Entity Hierarchy:
   User ──[1:N]──► Wishlist
   Inventory ──[1:N]──► InventoryThresholdBreachEvent
 
-Planned (Ph-3, SRS FG-11/FG-12 — not yet implemented):
-  User ──[0..1:1]──► Seller ──[N:1]──► District
+Planned (Ph-3, SRS FG-11/FG-12):
+  User ──[0..1:1]──► Seller ──[N:M]──► District   (via seller_districts join
+                                                    table, ADR 0001, #562)
   Seller ──[1:N]──► Product   (reactivates legacy product.supplier_id FK, see §4.5.2)
-  User ──[N:1]──► District   (buyer's own district, derived from Address)
+  User ──[N:1]──► District   (buyer's own district, derived from Address, #562)
 ```
 
 **Fetch Type Decisions**:
@@ -590,7 +592,7 @@ District  (fixed, admin-maintained reference table — see §4.5.6)
 
 | Entity | Table | Primary Key | Key Constraints |
 | :--- | :--- | :--- | :--- |
-| `User` | `users` | `id BIGINT AUTO_INCREMENT` | `email` UNIQUE, `username` UNIQUE |
+| `User` | `users` | `id BIGINT AUTO_INCREMENT` | `email` UNIQUE, `username` UNIQUE. Nullable FK → `districts.id` (#562, FR-LOC-02) — the buyer's own district, derived from their `Address` on address create/update/set-default, not user-editable directly |
 | `Role` | `roles` | `id BIGINT AUTO_INCREMENT` | `name` UNIQUE (`USER`, `ADMIN`) |
 | `Permission` | `permissions` | `id BIGINT AUTO_INCREMENT` | `name` UNIQUE |
 | `Product` | `product` | `id BIGINT AUTO_INCREMENT` | FK → `category`. Also FK → `users` via `supplier_id`/`fk_product_supplier` (mapped as `Product.seller`, nullable) — the legacy bootstrap-schema FK reactivated as the seller-ownership association (FR-SEL-03/04, #555; see Revision History v4.0/v4.3). No new Liquibase changeset was needed since the physical column/FK already existed |
@@ -610,10 +612,10 @@ District  (fixed, admin-maintained reference table — see §4.5.6)
 | `Address` | `addresses` | `id BIGINT AUTO_INCREMENT` | FK → `user_id` |
 | `WebhookSubscription` | `webhook_subscription` | `id BIGINT AUTO_INCREMENT` | `event_type`, `target_url` |
 | `InventoryThresholdBreachEvent` | `inventory_threshold_breach_events` | `id BIGINT AUTO_INCREMENT` | FK → `inventory_id` |
-| `Seller` *(#553 registration, #554 admin verification workflow — both implemented; district matching per ADR 0001, #561, not yet implemented)* | `sellers` | `id BIGINT AUTO_INCREMENT` | FK → `user_id` (one-to-one, mirrors `Address`'s extension-table pattern), `verification_status` column (FR-SEL-02) transitioned via `AdminSellerController`/`SellerServiceImpl.updateVerificationStatus` (PENDING→VERIFIED/REJECTED). The existing nullable `district_id` column (added #553) is superseded by the `seller_districts` N:M join table per ADR 0001 — migration: `dropColumn(district_id)` + `createTable(seller_districts)`, no backfill needed (no seller row has ever populated it) |
+| `Seller` *(#553 registration, #554 admin verification workflow, #562 district declaration — all implemented)* | `sellers` | `id BIGINT AUTO_INCREMENT` | FK → `user_id` (one-to-one, mirrors `Address`'s extension-table pattern), `verification_status` column (FR-SEL-02) transitioned via `AdminSellerController`/`SellerServiceImpl.updateVerificationStatus` (PENDING→VERIFIED/REJECTED). The nullable `district_id` column (added #553) was dropped in #562 — `dropColumn(district_id)` + `createTable(seller_districts)`, no backfill needed (no seller row had ever populated it) — superseded by the `seller_districts` N:M join table per ADR 0001 |
 | `SellerReview` *(FR-SEL-07, #558 — implemented)* | `seller_review` | `id BIGINT AUTO_INCREMENT` | FK → `users` via `seller_id` (the rated seller's `User.id`, not `sellers.id` — mirrors `Product.seller`'s convention), FK → `users` via `user_id` (the reviewing buyer), `UNIQUE(seller_id, user_id)` — one review per buyer per seller |
-| `District` *(Ph-3, Planned)* | `districts` | `id BIGINT AUTO_INCREMENT` | `name` UNIQUE — fixed, admin-maintained reference table (ADR 0001, #561) |
-| `SellerDistrict` *(Ph-3, Planned, ADR 0001)* | `seller_districts` | `id BIGINT AUTO_INCREMENT` | FK → `sellers.id`, FK → `districts.id`, `UNIQUE(seller_id, district_id)` — a seller's declared set of delivery districts |
+| `District` *(#562, implemented)* | `districts` | `id BIGINT AUTO_INCREMENT` | `name` UNIQUE — fixed, admin-maintained reference table (ADR 0001, #561). Seeded with 3 starter rows; further rows are an admin-tooling concern out of #562's scope |
+| `SellerDistrict` *(#562, implemented, ADR 0001)* | `seller_districts` | `id BIGINT AUTO_INCREMENT` | FK → `sellers.id`, FK → `districts.id`, `UNIQUE(seller_id, district_id)` — a seller's declared set of delivery districts, managed via `PUT /api/user/seller/districts` |
 
 #### 4.5.3 Data Flow — Order Placement with Payment
 
@@ -1705,8 +1707,8 @@ Bucket4j token-bucket strategy backed by Redis:
 | `HttpsEnforcementFilter`, `@PostConstruct` SSL check | SEC-03, FR-MON-01 | Security Overlay |
 | React SPA design (§4.3.6, §4.7.4, §4.10.5) | FR-FE-01–31 | Composition, Interface |
 | Domain events (`DomainEventPublisher`) | FR-INV-06, FR-PAY-04 | Logical, Interaction |
-| `Seller`, `District` entities *(Ph-3, Planned — not yet implemented)* | FR-SEL-01–08 | Information (§4.3.3, §4.5.1, §4.5.2) |
-| Location-Based Matching design sketch *(Ph-3, Planned — not yet implemented)* | FR-LOC-01–04 | Information (§4.5.6) |
+| `Seller`, `District` entities *(#553/#554/#562 implemented; remaining FR-SEL-* Ph-3 rows tracked separately)* | FR-SEL-01–08 | Information (§4.3.3, §4.5.1, §4.5.2) |
+| Location-Based Matching design sketch *(#562 implements FR-LOC-01/02; FR-LOC-03/04 remain Ph-3, Planned)* | FR-LOC-01–04 | Information (§4.5.6) |
 
 ---
 

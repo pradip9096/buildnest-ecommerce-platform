@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #562 (ADR 0001, #561): sellers.district_id (added #553) is
+         superseded by the seller_districts join table (radius/seller-
+         declared matching, OQ-01). No backfill needed — no seller row has
+         ever populated this column (FG-12 was unimplemented until now). -->
+    <changeSet id="20260729-029-alter-sellers-drop-district-id" author="buildnest-team">
+        <comment>Drop sellers.district_id, superseded by seller_districts (ADR 0001, #562)</comment>
+
+        <dropColumn tableName="sellers" columnName="district_id"/>
+
+        <rollback>
+            <addColumn tableName="sellers">
+                <column name="district_id" type="BIGINT"/>
+            </addColumn>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
