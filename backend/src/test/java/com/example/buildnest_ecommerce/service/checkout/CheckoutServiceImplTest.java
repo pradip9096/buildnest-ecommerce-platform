@@ -8,6 +8,7 @@ import com.example.buildnest_ecommerce.repository.AddressRepository;
 import com.example.buildnest_ecommerce.repository.CartRepository;
 import com.example.buildnest_ecommerce.repository.OrderGroupRepository;
 import com.example.buildnest_ecommerce.repository.OrderRepository;
+import com.example.buildnest_ecommerce.repository.SellerDistrictRepository;
 import com.example.buildnest_ecommerce.repository.ShippingMethodRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import com.example.buildnest_ecommerce.exception.ValidationException;
@@ -46,6 +47,7 @@ class CheckoutServiceImplTest {
     @Mock private CartRepository cartRepository;
     @Mock private OrderRepository orderRepository;
     @Mock private OrderGroupRepository orderGroupRepository;
+    @Mock private SellerDistrictRepository sellerDistrictRepository;
     @Mock private UserRepository userRepository;
     @Mock private AddressRepository addressRepository;
     @Mock private ShippingMethodRepository shippingMethodRepository;
@@ -260,6 +262,118 @@ class CheckoutServiceImplTest {
         when(cartRepository.findById(10L)).thenThrow(new RuntimeException("db error"));
 
         assertFalse(checkoutService.validateCheckout(1L, 10L));
+    }
+
+    // ─── District-scoped checkout restriction (FR-LOC-04, #564) ────────
+
+    private Cart buildCartWithSeller(Long buyerId, Long cartId,
+            Long sellerId, District buyerDistrict) {
+        User buyer = new User();
+        buyer.setId(buyerId);
+        buyer.setDistrict(buyerDistrict);
+
+        User seller = new User();
+        seller.setId(sellerId);
+
+        Product product = new Product();
+        product.setId(5L);
+        product.setSeller(seller);
+
+        CartItem item = new CartItem();
+        item.setProduct(product);
+        item.setQuantity(2);
+        item.setPrice(new BigDecimal("100"));
+
+        Cart cart = new Cart();
+        cart.setId(cartId);
+        cart.setUser(buyer);
+        cart.setItems(java.util.List.of(item));
+        item.setCart(cart);
+        return cart;
+    }
+
+    private SellerDistrict declaredDistrict(Long districtId) {
+        District district = new District();
+        district.setId(districtId);
+        SellerDistrict sellerDistrict = new SellerDistrict();
+        sellerDistrict.setDistrict(district);
+        return sellerDistrict;
+    }
+
+    @Test
+    @DisplayName("Should allow checkout when seller has no declared "
+            + "district restrictions")
+    void testValidateCheckoutSellerUnrestricted() {
+        District buyerDistrict = new District();
+        buyerDistrict.setId(100L);
+        Cart cart = buildCartWithSeller(1L, 10L, 20L, buyerDistrict);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+        when(inventoryService.hasStock(5L, 2)).thenReturn(true);
+        when(sellerDistrictRepository.findAllBySeller_User_Id(20L))
+                .thenReturn(List.of());
+
+        assertTrue(checkoutService.validateCheckout(1L, 10L));
+    }
+
+    @Test
+    @DisplayName("Should allow checkout when buyer's district is among "
+            + "the seller's declared districts")
+    void testValidateCheckoutBuyerWithinSellerDistrict() {
+        District buyerDistrict = new District();
+        buyerDistrict.setId(100L);
+        Cart cart = buildCartWithSeller(1L, 10L, 20L, buyerDistrict);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+        when(inventoryService.hasStock(5L, 2)).thenReturn(true);
+        when(sellerDistrictRepository.findAllBySeller_User_Id(20L))
+                .thenReturn(List.of(
+                        declaredDistrict(99L), declaredDistrict(100L)));
+
+        assertTrue(checkoutService.validateCheckout(1L, 10L));
+    }
+
+    @Test
+    @DisplayName("Should block checkout when buyer's district is not "
+            + "among the seller's declared districts")
+    void testValidateCheckoutBuyerOutsideSellerDistrict() {
+        District buyerDistrict = new District();
+        buyerDistrict.setId(100L);
+        Cart cart = buildCartWithSeller(1L, 10L, 20L, buyerDistrict);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+        // lenient: stubbed so a mutant skipping the district check still
+        // reaches hasStock=true and would otherwise incorrectly return
+        // true, letting assertFalse catch it (mirrors
+        // testValidateCheckoutWrongUser's PIT-survival pattern).
+        lenient().when(inventoryService.hasStock(5L, 2)).thenReturn(true);
+        when(sellerDistrictRepository.findAllBySeller_User_Id(20L))
+                .thenReturn(List.of(declaredDistrict(99L)));
+
+        assertFalse(checkoutService.validateCheckout(1L, 10L));
+    }
+
+    @Test
+    @DisplayName("Should fail-closed and block checkout when buyer's "
+            + "district cannot be determined and seller is restricted")
+    void testValidateCheckoutBuyerDistrictUnknownFailsClosed() {
+        Cart cart = buildCartWithSeller(1L, 10L, 20L, null);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+        lenient().when(inventoryService.hasStock(5L, 2)).thenReturn(true);
+        when(sellerDistrictRepository.findAllBySeller_User_Id(20L))
+                .thenReturn(List.of(declaredDistrict(99L)));
+
+        assertFalse(checkoutService.validateCheckout(1L, 10L));
+    }
+
+    @Test
+    @DisplayName("Should not query district repository for platform "
+            + "items with no owning seller")
+    void testValidateCheckoutPlatformItemSkipsDistrictCheck() {
+        Cart cart = buildCart(1L, 10L);
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(cart));
+        when(inventoryService.hasStock(5L, 2)).thenReturn(true);
+
+        assertTrue(checkoutService.validateCheckout(1L, 10L));
+        verify(sellerDistrictRepository, never())
+                .findAllBySeller_User_Id(any());
     }
 
     @Test

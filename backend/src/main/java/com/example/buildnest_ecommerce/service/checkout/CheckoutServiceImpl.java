@@ -9,6 +9,7 @@ import com.example.buildnest_ecommerce.repository.AddressRepository;
 import com.example.buildnest_ecommerce.repository.CartRepository;
 import com.example.buildnest_ecommerce.repository.OrderGroupRepository;
 import com.example.buildnest_ecommerce.repository.OrderRepository;
+import com.example.buildnest_ecommerce.repository.SellerDistrictRepository;
 import com.example.buildnest_ecommerce.repository.ShippingMethodRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
 import com.example.buildnest_ecommerce.service.analytics.UserEventService;
@@ -45,6 +46,7 @@ public class CheckoutServiceImpl implements CheckoutService {
     private final InventoryService inventoryService;
     private final CartRepository cartRepository;
     private final OrderRepository orderRepository;
+    private final SellerDistrictRepository sellerDistrictRepository;
     private final OrderGroupRepository orderGroupRepository;
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
@@ -554,6 +556,7 @@ public class CheckoutServiceImpl implements CheckoutService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean validateCheckout(Long userId, Long cartId) {
         log.debug("Validating checkout for user: {}, cart: {}",
                 userId, cartId);
@@ -586,12 +589,57 @@ public class CheckoutServiceImpl implements CheckoutService {
                 }
             }
 
+            // District-scoped checkout restriction (FR-LOC-04, #564):
+            // a seller who has declared delivery districts (SellerDistrict,
+            // FR-LOC-01) may only sell to buyers whose own derived district
+            // (User.district, FR-LOC-02) is among them. A seller with no
+            // declared districts is unrestricted (skip). Fail-closed when
+            // the buyer's district can't be determined at all — a buyer
+            // whose address city doesn't yet match the reference table is
+            // treated as "no verified match", not "unrestricted".
+            if (!allItemsWithinBuyerDistrict(cart)) {
+                return false;
+            }
+
             log.debug("Cart validation successful for user: {}", userId);
             return true;
         } catch (Exception e) {
             log.error("Error validating checkout", e);
             return false;
         }
+    }
+
+    private boolean allItemsWithinBuyerDistrict(Cart cart) {
+        for (CartItem item : cart.getItems()) {
+            User seller = item.getProduct().getSeller();
+            if (seller == null) {
+                // Platform-owned catalog items (no seller, FR-SEL-03) carry
+                // no district restriction.
+                continue;
+            }
+            List<SellerDistrict> declared = sellerDistrictRepository
+                    .findAllBySeller_User_Id(seller.getId());
+            if (declared.isEmpty()) {
+                // Seller hasn't opted into district-scoped delivery.
+                continue;
+            }
+            District buyerDistrict = cart.getUser().getDistrict();
+            if (buyerDistrict == null) {
+                log.warn("Buyer district could not be determined; "
+                        + "blocking checkout for restricted seller: {}",
+                        seller.getId());
+                return false;
+            }
+            boolean matches = declared.stream()
+                    .anyMatch(sd -> sd.getDistrict().getId()
+                            .equals(buyerDistrict.getId()));
+            if (!matches) {
+                log.warn("Buyer district {} not served by seller {}",
+                        buyerDistrict.getId(), seller.getId());
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
