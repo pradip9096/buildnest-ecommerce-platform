@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 5.3 |
+| **Version** | 5.4 |
 | **Date** | 2026-07-29 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -42,6 +42,7 @@
 | 5.1 | 2026-07-22 17:30 IST | Technical Lead | FR-SEL-01 (seller registration) implemented (#553) — first requirement delivered from the Ph-3 marketplace-pivot addendum. Updated §4.2's Seller & Marketplace aggregate status row (0→1 Implemented, 8→7 Not started); Grand Total unaffected (category stays explicitly excluded per v5.0) | Pending |
 | 5.2 | 2026-07-28 IST | Technical Lead | Resolved OQ-01/OQ-02 (§3.2.12) via [ADR 0001](../design/adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) (#561): district matching is radius/seller-declared (`Seller ──[N:M]──► District`), and district is sourced from a fixed, admin-maintained reference table. Updated FR-LOC-03's requirement text to state the resolved mechanism instead of "TBD, see OQ-01"; removed the Open Questions table and its blocking status note, replaced with a resolved-decision note citing the ADR | Pending |
 | 5.3 | 2026-07-29 IST | Technical Lead | FR-LOC-01/02 implemented (#562) — district reference-data model: `District`/`SellerDistrict` entities, `seller_districts` join table, buyer's own `users.district_id` derived from `Address`. Updated §3.2.12's status note and the §4.2 Location-Based Matching aggregate row (0→2 Implemented, 4→2 Not started). FR-LOC-03/04 remain Ph-3, Planned — tracked by #563/#564 | Pending |
+| 5.4 | 2026-07-29 IST | Technical Lead | FR-LOC-03 implemented (#563) — district-scoped catalogue/search filtering added to the existing Elasticsearch-backed product search (FG-02). Updated §3.2.12's status note and the §4.2 Location-Based Matching aggregate row (2→3 Implemented, 2→1 Not started). FR-LOC-04 remains Ph-3, Planned — tracked by #564 | Pending |
 
 ### Document Change Procedure
 
@@ -663,7 +664,7 @@ This system has no direct hardware interfaces. It runs as a containerised applic
 
 #### 3.2.12 Location-Based Matching (FG-12) — *Ph-3, Planned*
 
-> **Status note**: FR-LOC-01/02 (the district reference-data model) are implemented (#562). FR-LOC-03/04 (catalogue filtering, checkout restriction) remain planned — the current product search/catalogue (FG-02, Elasticsearch-backed) has no geographic dimension yet. The district-matching mechanism was previously undecided (OQ-01/OQ-02); both questions are now resolved via [ADR 0001](../design/adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) (#561): matching is radius/seller-declared (`Seller ──[N:M]──► District`), and district is sourced from a fixed, admin-maintained reference table.
+> **Status note**: FR-LOC-01/02 (the district reference-data model) are implemented (#562). FR-LOC-03 (catalogue/search district filtering) is implemented (#563) — the existing product search/catalogue (FG-02, Elasticsearch-backed) now carries a `districtId` filter dimension. FR-LOC-04 (checkout restriction) remains planned. The district-matching mechanism was previously undecided (OQ-01/OQ-02); both questions are now resolved via [ADR 0001](../design/adr/0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) (#561): matching is radius/seller-declared (`Seller ──[N:M]──► District`), and district is sourced from a fixed, admin-maintained reference table.
 
 | ID | Requirement | Priority | Phase | Verification |
 | :--- | :--- | :--- | :--- | :--- |
@@ -954,7 +955,7 @@ Test integrity requirements define the properties that the test suite itself mus
 | **Total Non-Functional** | **61** | | | |
 | **Grand Total** | **156** | | | |
 | Seller & Marketplace (FR-SEL-01–08) *(Ph-3, Planned — excluded from Grand Total above)* | 8 | Ph-3 | 6 High, 2 Medium | 1 Implemented (#553), 7 Not started |
-| Location-Based Matching (FR-LOC-01–04) *(Ph-3, Planned — excluded from Grand Total above)* | 4 | Ph-3 | 4 High | 2 Implemented (#562), 2 Not started |
+| Location-Based Matching (FR-LOC-01–04) *(Ph-3, Planned — excluded from Grand Total above)* | 4 | Ph-3 | 4 High | 3 Implemented (#562, #563), 1 Not started |
 
 ### 4.3 Phase 1 Acceptance Criteria
 

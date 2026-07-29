@@ -13,6 +13,20 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- District-scoped catalogue/search filtering for Location-Based Matching (FR-LOC-03, #563) —
+  filters the existing Elasticsearch-backed product search (FG-02) by seller-declared delivery
+  district, following the same pattern already used for the existing `isActive:true` soft-delete
+  filter. `ProductDocument.districtIds` is now populated at index time from the owning seller's
+  `SellerDistrict` links (via new `SellerDistrictRepository.findAllBySeller_User_Id`, empty for
+  admin-created products with no seller). Added a `districtId` term-filter/derived-query variant
+  alongside each existing query shape (`fullTextSearchByDistrict`,
+  `findByCategoryIdAndDistrictIdsAndIsActiveTrue`, `findByTagsAndDistrictIdsAndIsActiveTrue`,
+  `findByDistrictIdsAndIsActiveTrue`) in `ProductElasticsearchRepository`, threaded through
+  `ProductSearchService.search()`/`ProductSearchServiceImpl.doSearch()` and exposed as a new
+  `districtId` query param on `GET /api/v2/products/search`. Elasticsearch path only — the JPA
+  fallback used when `elasticsearch.enabled=false` is unaffected, per the issue's own stated scope.
+  Updated RTM (§6.12, v1.38), SRS (§3.2.12/§4.2, v5.4), and SDD (§4.5.6/§7, v4.10) — FR-LOC-03
+  moves to Implemented; FR-LOC-04 (checkout-time restriction) remains tracked by #564.
 - District reference-data model for Location-Based Matching (FR-LOC-01/02, #562) — new
   `District`/`SellerDistrict` entities and `districts`/`seller_districts` Liquibase tables
   implementing ADR 0001's chosen design: a fixed, admin-maintained reference table and a

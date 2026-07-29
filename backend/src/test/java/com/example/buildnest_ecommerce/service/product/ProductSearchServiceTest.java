@@ -4,7 +4,11 @@ import com.example.buildnest_ecommerce.model.elasticsearch.ProductDocument;
 import com.example.buildnest_ecommerce.model.entity.Category;
 import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.model.entity.User;
+import com.example.buildnest_ecommerce.model.entity.District;
+import com.example.buildnest_ecommerce.model.entity.SellerDistrict;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
+import com.example.buildnest_ecommerce.repository.SellerDistrictRepository;
 import com.example.buildnest_ecommerce.repository.elasticsearch.ProductElasticsearchRepository;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -37,13 +41,14 @@ class ProductSearchServiceTest {
 
     @Mock private ProductElasticsearchRepository esRepository;
     @Mock private ProductRepository productRepository;
+    @Mock private SellerDistrictRepository sellerDistrictRepository;
 
     private ProductSearchServiceImpl service;
 
     @BeforeEach
     void setUp() {
         CircuitBreaker cb = CircuitBreaker.of("test", CircuitBreakerConfig.ofDefaults());
-        service = new ProductSearchServiceImpl(esRepository, productRepository, cb);
+        service = new ProductSearchServiceImpl(esRepository, productRepository, sellerDistrictRepository, cb);
     }
 
     private ProductDocument doc(String id, String name) {
@@ -76,7 +81,7 @@ class ProductSearchServiceTest {
         Page<ProductDocument> expected = new PageImpl<>(List.of(doc("1", "cement")));
         when(esRepository.fullTextSearch("cement", pr)).thenReturn(expected);
 
-        Page<ProductDocument> result = service.search("cement", null, null, null, null, null, pr);
+        Page<ProductDocument> result = service.search("cement", null, null, null, null, null, null, pr);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         verify(esRepository).fullTextSearch("cement", pr);
@@ -89,7 +94,7 @@ class ProductSearchServiceTest {
         Page<ProductDocument> expected = new PageImpl<>(List.of(doc("1", "tiles"), doc("2", "paint")));
         when(esRepository.findByIsActiveTrue(pr)).thenReturn(expected);
 
-        Page<ProductDocument> result = service.search(null, null, null, null, null, null, pr);
+        Page<ProductDocument> result = service.search(null, null, null, null, null, null, null, pr);
 
         assertThat(result.getTotalElements()).isEqualTo(2);
     }
@@ -101,7 +106,7 @@ class ProductSearchServiceTest {
         when(esRepository.findByCategoryIdAndIsActiveTrue(5L, pr))
                 .thenReturn(new PageImpl<>(List.of(doc("3", "tile"))));
 
-        Page<ProductDocument> result = service.search(null, 5L, null, null, null, null, pr);
+        Page<ProductDocument> result = service.search(null, 5L, null, null, null, null, null, pr);
 
         assertThat(result.getContent()).hasSize(1);
         verify(esRepository).findByCategoryIdAndIsActiveTrue(5L, pr);
@@ -116,7 +121,7 @@ class ProductSearchServiceTest {
         when(esRepository.findByTagsAndIsActiveTrue("eco-friendly", pr))
                 .thenReturn(new PageImpl<>(List.of(tagged)));
 
-        Page<ProductDocument> result = service.search(null, null, null, null, null, "eco-friendly", pr);
+        Page<ProductDocument> result = service.search(null, null, null, null, null, "eco-friendly", null, pr);
 
         assertThat(result.getContent()).hasSize(1);
         verify(esRepository).findByTagsAndIsActiveTrue("eco-friendly", pr);
@@ -129,7 +134,7 @@ class ProductSearchServiceTest {
         when(esRepository.findByIsActiveTrue(pr))
                 .thenReturn(new PageImpl<>(List.of(doc("1", "cement"))));
 
-        Page<ProductDocument> result = service.search(null, null, null, null, null, "   ", pr);
+        Page<ProductDocument> result = service.search(null, null, null, null, null, "   ", null, pr);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         verify(esRepository).findByIsActiveTrue(pr);
@@ -147,7 +152,7 @@ class ProductSearchServiceTest {
         when(esRepository.fullTextSearch("cement", pr))
                 .thenReturn(new PageImpl<>(List.of(tagged, untagged)));
 
-        Page<ProductDocument> result = service.search("cement", null, null, null, null, "eco-friendly", pr);
+        Page<ProductDocument> result = service.search("cement", null, null, null, null, "eco-friendly", null, pr);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getId()).isEqualTo("1");
@@ -163,7 +168,7 @@ class ProductSearchServiceTest {
                 .thenReturn(new PageImpl<>(List.of(cheap, expensive)));
 
         Page<ProductDocument> result = service.search("paint", null,
-                new BigDecimal("100"), new BigDecimal("1000"), null, null, pr);
+                new BigDecimal("100"), new BigDecimal("1000"), null, null, null, pr);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getId()).isEqualTo("2");
@@ -212,9 +217,9 @@ class ProductSearchServiceTest {
         CircuitBreaker openBreaker = CircuitBreaker.of("test",
                 CircuitBreakerConfig.custom().minimumNumberOfCalls(1).failureRateThreshold(1).build());
         openBreaker.transitionToOpenState();
-        ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, openBreaker);
+        ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, sellerDistrictRepository, openBreaker);
 
-        Page<ProductDocument> result = svc.search("cement", null, null, null, null, null, PageRequest.of(0, 10));
+        Page<ProductDocument> result = svc.search("cement", null, null, null, null, null, null, PageRequest.of(0, 10));
 
         assertThat(result.getContent()).isEmpty();
         assertThat(result.getTotalElements()).isZero();
@@ -227,7 +232,7 @@ class ProductSearchServiceTest {
         when(esRepository.fullTextSearch(any(), any()))
                 .thenThrow(new RuntimeException("ES cluster unreachable"));
 
-        Page<ProductDocument> result = service.search("tile", null, null, null, null, null, PageRequest.of(0, 10));
+        Page<ProductDocument> result = service.search("tile", null, null, null, null, null, null, PageRequest.of(0, 10));
 
         assertThat(result.getContent()).isEmpty();
     }
@@ -241,7 +246,7 @@ class ProductSearchServiceTest {
         when(esRepository.findByIsActiveTrue(pr))
                 .thenReturn(new PageImpl<>(List.of(doc("1", "cement"))));
 
-        Page<ProductDocument> result = service.search("   ", null, null, null, null, null, pr);
+        Page<ProductDocument> result = service.search("   ", null, null, null, null, null, null, pr);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         verify(esRepository).findByIsActiveTrue(pr);
@@ -255,7 +260,7 @@ class ProductSearchServiceTest {
         when(esRepository.findByCategoryIdAndIsActiveTrue(3L, pr))
                 .thenReturn(new PageImpl<>(List.of(doc("2", "tile"))));
 
-        service.search("  ", 3L, null, null, null, null, pr);
+        service.search("  ", 3L, null, null, null, null, null, pr);
 
         verify(esRepository).findByCategoryIdAndIsActiveTrue(3L, pr);
         verify(esRepository, never()).fullTextSearch(any(), any());
@@ -272,7 +277,7 @@ class ProductSearchServiceTest {
         when(esRepository.findByIsActiveTrue(pr))
                 .thenReturn(new PageImpl<>(List.of(inStockDoc, outOfStockDoc)));
 
-        Page<ProductDocument> result = service.search(null, null, null, null, true, null, pr);
+        Page<ProductDocument> result = service.search(null, null, null, null, true, null, null, pr);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getId()).isEqualTo("1");
@@ -286,7 +291,7 @@ class ProductSearchServiceTest {
         CircuitBreaker openBreaker = CircuitBreaker.of("test",
                 CircuitBreakerConfig.custom().minimumNumberOfCalls(1).failureRateThreshold(1).build());
         openBreaker.transitionToOpenState();
-        ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, openBreaker);
+        ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, sellerDistrictRepository, openBreaker);
 
         assertThatCode(() -> svc.indexProduct(product(1L, "brick"))).doesNotThrowAnyException();
         verify(esRepository, never()).save(any());
@@ -355,7 +360,7 @@ class ProductSearchServiceTest {
         CircuitBreaker openBreaker = CircuitBreaker.of("test",
                 CircuitBreakerConfig.custom().minimumNumberOfCalls(1).failureRateThreshold(1).build());
         openBreaker.transitionToOpenState();
-        ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, openBreaker);
+        ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, sellerDistrictRepository, openBreaker);
 
         assertThatCode(() -> svc.deleteFromIndex(99L)).doesNotThrowAnyException();
         verify(esRepository, never()).deleteById(any());
@@ -377,7 +382,7 @@ class ProductSearchServiceTest {
         CircuitBreaker openBreaker = CircuitBreaker.of("test",
                 CircuitBreakerConfig.custom().minimumNumberOfCalls(1).failureRateThreshold(1).build());
         openBreaker.transitionToOpenState();
-        ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, openBreaker);
+        ProductSearchServiceImpl svc = new ProductSearchServiceImpl(esRepository, productRepository, sellerDistrictRepository, openBreaker);
 
         assertThatThrownBy(svc::reindexAll)
                 .isInstanceOf(IllegalStateException.class)
@@ -392,5 +397,109 @@ class ProductSearchServiceTest {
         assertThatThrownBy(service::reindexAll)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Re-index failed");
+    }
+
+    // ── districtId filtering (FR-LOC-03, #563) ────────────────────────────
+
+    @Test
+    @DisplayName("search with query + districtId — delegates to fullTextSearchByDistrict")
+    void search_withQueryAndDistrict_delegatesToFullTextByDistrict() {
+        PageRequest pr = PageRequest.of(0, 10);
+        when(esRepository.fullTextSearchByDistrict("cement", 7L, pr))
+                .thenReturn(new PageImpl<>(List.of(doc("1", "cement"))));
+
+        Page<ProductDocument> result =
+                service.search("cement", null, null, null, null, null, 7L, pr);
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(esRepository).fullTextSearchByDistrict("cement", 7L, pr);
+        verify(esRepository, never()).fullTextSearch(any(), any());
+    }
+
+    @Test
+    @DisplayName("search with categoryId + districtId — delegates to combined derived query")
+    void search_withCategoryAndDistrict_delegatesToCombinedQuery() {
+        PageRequest pr = PageRequest.of(0, 10);
+        when(esRepository.findByCategoryIdAndDistrictIdsAndIsActiveTrue(5L, 7L, pr))
+                .thenReturn(new PageImpl<>(List.of(doc("1", "tile"))));
+
+        Page<ProductDocument> result =
+                service.search(null, 5L, null, null, null, null, 7L, pr);
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(esRepository).findByCategoryIdAndDistrictIdsAndIsActiveTrue(5L, 7L, pr);
+        verify(esRepository, never()).findByCategoryIdAndIsActiveTrue(any(), any());
+    }
+
+    @Test
+    @DisplayName("search with tag + districtId — delegates to combined derived query")
+    void search_withTagAndDistrict_delegatesToCombinedQuery() {
+        PageRequest pr = PageRequest.of(0, 10);
+        ProductDocument tagged = ProductDocument.builder().id("1").price(100.0)
+                .isActive(true).inStock(true).tags(List.of("eco-friendly")).build();
+        when(esRepository.findByTagsAndDistrictIdsAndIsActiveTrue("eco-friendly", 7L, pr))
+                .thenReturn(new PageImpl<>(List.of(tagged)));
+
+        Page<ProductDocument> result =
+                service.search(null, null, null, null, null, "eco-friendly", 7L, pr);
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(esRepository)
+                .findByTagsAndDistrictIdsAndIsActiveTrue("eco-friendly", 7L, pr);
+        verify(esRepository, never()).findByTagsAndIsActiveTrue(any(), any());
+    }
+
+    @Test
+    @DisplayName("search with only districtId — delegates to findByDistrictIdsAndIsActiveTrue")
+    void search_withDistrictOnly_delegatesToDistrictOnlyQuery() {
+        PageRequest pr = PageRequest.of(0, 10);
+        when(esRepository.findByDistrictIdsAndIsActiveTrue(7L, pr))
+                .thenReturn(new PageImpl<>(List.of(doc("1", "sand"))));
+
+        Page<ProductDocument> result =
+                service.search(null, null, null, null, null, null, 7L, pr);
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(esRepository).findByDistrictIdsAndIsActiveTrue(7L, pr);
+        verify(esRepository, never()).findByIsActiveTrue(any());
+    }
+
+    @Test
+    @DisplayName("indexProduct — seller with declared districts populates districtIds")
+    void indexProduct_sellerWithDistricts_populatesDistrictIds() {
+        Product p = product(20L, "cement");
+        User sellerUser = new User();
+        sellerUser.setId(3L);
+        p.setSeller(sellerUser);
+
+        District d1 = new District();
+        d1.setId(10L);
+        District d2 = new District();
+        d2.setId(11L);
+        SellerDistrict sd1 = new SellerDistrict();
+        sd1.setDistrict(d1);
+        SellerDistrict sd2 = new SellerDistrict();
+        sd2.setDistrict(d2);
+        when(sellerDistrictRepository.findAllBySeller_User_Id(3L))
+                .thenReturn(List.of(sd1, sd2));
+
+        service.indexProduct(p);
+
+        verify(esRepository).save(argThat(doc ->
+                doc.getDistrictIds() != null
+                        && doc.getDistrictIds().containsAll(List.of(10L, 11L))
+                        && doc.getDistrictIds().size() == 2));
+    }
+
+    @Test
+    @DisplayName("indexProduct — product with no seller maps to empty districtIds")
+    void indexProduct_noSeller_emptyDistrictIds() {
+        Product p = product(21L, "gravel");
+        p.setSeller(null);
+
+        service.indexProduct(p);
+
+        verify(esRepository).save(argThat(doc -> doc.getDistrictIds().isEmpty()));
+        verify(sellerDistrictRepository, never()).findAllBySeller_User_Id(any());
     }
 }
