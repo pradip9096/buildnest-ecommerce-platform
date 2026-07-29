@@ -27,7 +27,7 @@ class AdminSellerControllerTest {
     void getSellers_defaultStatus_returnsOkWithPendingPage() {
         SellerService sellerService = mock(SellerService.class);
         SellerResponseDTO dto = new SellerResponseDTO(10L, 3L, "Acme Décor",
-                "REG-1", Seller.VerificationStatus.PENDING,
+                "REG-1", Seller.VerificationStatus.PENDING, List.of(),
                 LocalDateTime.now());
         when(sellerService.getSellersByVerificationStatus(
                 eq(Seller.VerificationStatus.PENDING), any(Pageable.class)))
@@ -59,7 +59,7 @@ class AdminSellerControllerTest {
         SellerVerificationDecisionRequest request =
                 new SellerVerificationDecisionRequest("VERIFIED", null);
         SellerResponseDTO dto = new SellerResponseDTO(10L, 3L, "Acme Décor",
-                "REG-1", Seller.VerificationStatus.VERIFIED,
+                "REG-1", Seller.VerificationStatus.VERIFIED, List.of(),
                 LocalDateTime.now());
         when(sellerService.updateVerificationStatus(10L, "VERIFIED", null))
                 .thenReturn(dto);

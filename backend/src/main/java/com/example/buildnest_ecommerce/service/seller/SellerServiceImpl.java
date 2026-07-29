@@ -2,6 +2,7 @@ package com.example.buildnest_ecommerce.service.seller;
 
 import com.example.buildnest_ecommerce.exception.DuplicateResourceException;
 import com.example.buildnest_ecommerce.exception.ResourceNotFoundException;
+import com.example.buildnest_ecommerce.model.dto.DistrictResponseDTO;
 import com.example.buildnest_ecommerce.model.dto.SellerResponseDTO;
 import com.example.buildnest_ecommerce.model.entity.Role;
 import com.example.buildnest_ecommerce.model.entity.Seller;
@@ -10,6 +11,7 @@ import com.example.buildnest_ecommerce.model.payload.RegisterSellerRequest;
 import com.example.buildnest_ecommerce.repository.RoleRepository;
 import com.example.buildnest_ecommerce.repository.SellerRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import com.example.buildnest_ecommerce.service.district.DistrictService;
 import com.example.buildnest_ecommerce.service.notification
         .INotificationService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,6 +51,7 @@ public class SellerServiceImpl implements SellerService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final INotificationService notificationService;
+    private final DistrictService districtService;
 
     @Override
     @Transactional
@@ -76,7 +80,7 @@ public class SellerServiceImpl implements SellerService {
 
         grantSellerRole(user);
 
-        return SellerResponseDTO.from(saved);
+        return SellerResponseDTO.from(saved, List.of());
     }
 
     @Override
@@ -84,7 +88,21 @@ public class SellerServiceImpl implements SellerService {
         Seller seller = sellerRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Seller profile not found for user: " + userId));
-        return SellerResponseDTO.from(seller);
+        return SellerResponseDTO.from(seller,
+                districtService.getSellerDistricts(seller.getId()));
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    @Transactional
+    public SellerResponseDTO updateSellerDistricts(
+            final Long userId, final Set<Long> districtIds) {
+        Seller seller = sellerRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Seller profile not found for user: " + userId));
+        List<DistrictResponseDTO> districts = districtService
+                .updateSellerDistricts(seller.getId(), districtIds);
+        return SellerResponseDTO.from(seller, districts);
     }
 
     @Override
@@ -92,7 +110,8 @@ public class SellerServiceImpl implements SellerService {
             Seller.VerificationStatus status, Pageable pageable) {
         return sellerRepository
                 .findByVerificationStatus(status, pageable)
-                .map(SellerResponseDTO::from);
+                .map(seller -> SellerResponseDTO.from(seller,
+                        districtService.getSellerDistricts(seller.getId())));
     }
 
     @Override
@@ -138,7 +157,8 @@ public class SellerServiceImpl implements SellerService {
                 seller.getUser().getEmail(), seller.getBusinessName(),
                 approved, approved ? null : rejectionReason);
 
-        return SellerResponseDTO.from(saved);
+        return SellerResponseDTO.from(saved,
+                districtService.getSellerDistricts(saved.getId()));
     }
 
     private void grantSellerRole(User user) {

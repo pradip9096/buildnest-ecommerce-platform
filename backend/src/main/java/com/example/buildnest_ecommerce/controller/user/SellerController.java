@@ -4,6 +4,8 @@ import com.example.buildnest_ecommerce.aspect.Auditable;
 import com.example.buildnest_ecommerce.model.dto.SellerResponseDTO;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.model.payload.RegisterSellerRequest;
+import com.example.buildnest_ecommerce.model.payload
+        .UpdateSellerDistrictsRequest;
 import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import com.example.buildnest_ecommerce.service.seller.SellerService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -18,8 +20,8 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * Seller registration (FR-SEL-01, #553) — an authenticated user upgrades
- * their existing buyer account to also be a seller. District assignment is
- * deferred (see the sellers changeset comment) pending ADR #561.
+ * their existing buyer account to also be a seller. Declared delivery
+ * districts (FR-LOC-01, ADR 0001, #561/#562) are set separately below.
  */
 @RestController
 @RequestMapping("/api/user/seller")
@@ -50,5 +52,23 @@ public class SellerController {
                 sellerService.getSellerProfile(currentUser.getId());
         return ResponseEntity.ok(
                 new ApiResponse(true, "Seller profile retrieved", seller));
+    }
+
+    /**
+     * Replaces the current seller's declared delivery districts.
+     *
+     * @param currentUser the authenticated seller's user account
+     * @param request the full replacement set of district IDs
+     * @return the seller's updated profile
+     */
+    @PutMapping("/districts")
+    @Auditable(action = "SELLER_UPDATE_DISTRICTS", entityType = "SELLER")
+    public ResponseEntity<ApiResponse> updateSellerDistricts(
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            @Valid @RequestBody UpdateSellerDistrictsRequest request) {
+        SellerResponseDTO seller = sellerService.updateSellerDistricts(
+                currentUser.getId(), request.getDistrictIds());
+        return ResponseEntity.ok(new ApiResponse(
+                true, "Seller districts updated", seller));
     }
 }

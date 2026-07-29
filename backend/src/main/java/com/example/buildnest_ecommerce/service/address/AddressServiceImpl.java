@@ -9,6 +9,7 @@ import com.example.buildnest_ecommerce.model.payload.CreateAddressRequest;
 import com.example.buildnest_ecommerce.model.payload.UpdateAddressRequest;
 import com.example.buildnest_ecommerce.repository.AddressRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import com.example.buildnest_ecommerce.service.district.DistrictService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,16 +26,20 @@ public class AddressServiceImpl implements AddressService {
 
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
+    private final DistrictService districtService;
 
     @Override
     @Transactional
-    public AddressResponseDTO createAddress(Long userId, CreateAddressRequest request) {
+    public AddressResponseDTO createAddress(
+            Long userId, CreateAddressRequest request) {
         log.info("Creating address for user: {}", userId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User", userId));
 
-        boolean isFirstAddress = addressRepository.findAllByUser_Id(userId).isEmpty();
+        boolean isFirstAddress =
+                addressRepository.findAllByUser_Id(userId).isEmpty();
 
         Address address = new Address();
         address.setUser(user);
@@ -47,6 +52,10 @@ public class AddressServiceImpl implements AddressService {
         address.setIsDefault(isFirstAddress);
 
         Address saved = addressRepository.save(address);
+
+        if (isFirstAddress) {
+            districtService.deriveBuyerDistrict(user, saved.getCity());
+        }
 
         return toDTO(saved);
     }
@@ -64,7 +73,8 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional
-    public AddressResponseDTO updateAddress(Long userId, Long addressId, UpdateAddressRequest request) {
+    public AddressResponseDTO updateAddress(
+            Long userId, Long addressId, UpdateAddressRequest request) {
         log.info("Updating address {} for user: {}", addressId, userId);
 
         Address address = findOwnedAddress(userId, addressId);
@@ -76,7 +86,14 @@ public class AddressServiceImpl implements AddressService {
         address.setCountry(request.getCountry());
         address.setAddressType(request.getAddressType());
 
-        return toDTO(addressRepository.save(address));
+        Address saved = addressRepository.save(address);
+
+        if (Boolean.TRUE.equals(saved.getIsDefault())) {
+            districtService.deriveBuyerDistrict(
+                    saved.getUser(), saved.getCity());
+        }
+
+        return toDTO(saved);
     }
 
     @Override
@@ -101,8 +118,10 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional
-    public AddressResponseDTO setDefaultAddress(Long userId, Long addressId) {
-        log.info("Setting address {} as default for user: {}", addressId, userId);
+    public AddressResponseDTO setDefaultAddress(
+            Long userId, Long addressId) {
+        log.info("Setting address {} as default for user: {}",
+                addressId, userId);
 
         Address target = findOwnedAddress(userId, addressId);
 
@@ -110,15 +129,20 @@ public class AddressServiceImpl implements AddressService {
         all.forEach(a -> a.setIsDefault(a.getId().equals(addressId)));
         addressRepository.saveAll(all);
 
+        districtService.deriveBuyerDistrict(
+                target.getUser(), target.getCity());
+
         return toDTO(target);
     }
 
     private Address findOwnedAddress(Long userId, Long addressId) {
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address", addressId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Address", addressId));
 
         if (!address.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("Address does not belong to the requesting user");
+            throw new AccessDeniedException(
+                    "Address does not belong to the requesting user");
         }
 
         return address;

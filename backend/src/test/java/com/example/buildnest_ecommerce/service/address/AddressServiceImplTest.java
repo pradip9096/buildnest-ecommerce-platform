@@ -9,6 +9,7 @@ import com.example.buildnest_ecommerce.model.payload.CreateAddressRequest;
 import com.example.buildnest_ecommerce.model.payload.UpdateAddressRequest;
 import com.example.buildnest_ecommerce.repository.AddressRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import com.example.buildnest_ecommerce.service.district.DistrictService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +35,9 @@ class AddressServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private DistrictService districtService;
 
     @InjectMocks
     private AddressServiceImpl addressService;
@@ -69,6 +73,7 @@ class AddressServiceImplTest {
         assertEquals("Mumbai", result.getCity());
         assertEquals("400001", result.getPostalCode());
         assertTrue(result.getIsDefault(), "first address for a user must be marked default");
+        verify(districtService).deriveBuyerDistrict(testUser, "Mumbai");
     }
 
     @Test
@@ -84,6 +89,8 @@ class AddressServiceImplTest {
         AddressResponseDTO result = addressService.createAddress(1L, request);
 
         assertFalse(result.getIsDefault(), "non-first address must not be marked default");
+        verify(districtService, org.mockito.Mockito.never())
+                .deriveBuyerDistrict(any(), any());
     }
 
     @Test
@@ -156,6 +163,26 @@ class AddressServiceImplTest {
         assertEquals("411001", result.getPostalCode());
         assertEquals("BILLING", result.getAddressType());
         assertTrue(result.getIsDefault(), "updating an address must not clear its default flag");
+        verify(districtService).deriveBuyerDistrict(testUser, "Pune");
+    }
+
+    @Test
+    void updateAddress_notDefaultAddress_doesNotDeriveDistrict() {
+        Address existing = new Address();
+        existing.setId(5L);
+        existing.setUser(testUser);
+        existing.setIsDefault(false);
+
+        UpdateAddressRequest update = new UpdateAddressRequest(
+                "456 New Street", "Pune", "Maharashtra", "411001", "India", "BILLING");
+
+        when(addressRepository.findById(5L)).thenReturn(Optional.of(existing));
+        when(addressRepository.save(any(Address.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        addressService.updateAddress(1L, 5L, update);
+
+        verify(districtService, org.mockito.Mockito.never())
+                .deriveBuyerDistrict(any(), any());
     }
 
     @Test
@@ -269,6 +296,7 @@ class AddressServiceImplTest {
         target.setId(10L);
         target.setUser(testUser);
         target.setIsDefault(false);
+        target.setCity("Pune");
 
         when(addressRepository.findById(10L)).thenReturn(Optional.of(target));
         when(addressRepository.findAllByUser_Id(1L)).thenReturn(List.of(current, target));
@@ -279,6 +307,7 @@ class AddressServiceImplTest {
         assertTrue(result.getIsDefault());
         assertTrue(target.getIsDefault());
         assertFalse(current.getIsDefault(), "the previous default must be cleared");
+        verify(districtService).deriveBuyerDistrict(testUser, "Pune");
     }
 
     @Test

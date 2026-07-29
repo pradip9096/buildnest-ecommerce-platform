@@ -4,6 +4,7 @@ import com.example.buildnest_ecommerce.model.entity.Product;
 import com.example.buildnest_ecommerce.model.payload.ApiResponse;
 import com.example.buildnest_ecommerce.service.product.ProductService;
 import com.example.buildnest_ecommerce.service.category.CategoryService;
+import com.example.buildnest_ecommerce.service.district.DistrictService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ public class HomeController {
 
     private final ProductService productService;
     private final CategoryService categoryService;
+    private final DistrictService districtService;
 
     @GetMapping
     public ResponseEntity<ApiResponse> getHome() {
@@ -102,6 +104,25 @@ public class HomeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false,
                             "Error retrieving categories", null));
+        }
+    }
+
+    /**
+     * Lists every district in the fixed reference table.
+     *
+     * @return all districts
+     */
+    @GetMapping("/districts")
+    public ResponseEntity<ApiResponse> getAllDistricts() {
+        try {
+            var districts = districtService.getAllDistricts();
+            return ResponseEntity.ok(new ApiResponse(true,
+                    "Districts retrieved successfully", districts));
+        } catch (Exception e) {
+            log.error("Error retrieving districts", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false,
+                            "Error retrieving districts", null));
         }
     }
 }

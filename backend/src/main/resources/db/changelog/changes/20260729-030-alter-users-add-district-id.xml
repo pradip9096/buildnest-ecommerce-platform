@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #562 (FR-LOC-02): buyer's own district, derived from their
+         Address (name match against the districts reference table) and
+         stored here — nullable, since not every user has an address yet. -->
+    <changeSet id="20260729-030-alter-users-add-district-id" author="buildnest-team">
+        <comment>Add users.district_id (FR-LOC-02, ADR 0001, #562)</comment>
+
+        <addColumn tableName="users">
+            <column name="district_id" type="BIGINT"/>
+        </addColumn>
+
+        <!-- No onDelete=CASCADE — districts is shared reference data,
+             deleting one must not silently delete buyer accounts. -->
+        <addForeignKeyConstraint
+                constraintName="fk_users_district"
+                baseTableName="users" baseColumnNames="district_id"
+                referencedTableName="districts" referencedColumnNames="id"/>
+
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="users"
+                    constraintName="fk_users_district"/>
+            <dropColumn tableName="users" columnName="district_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #562 (FR-LOC-01/02): District reference-data model. Fixed,
+         admin-maintained reference table per ADR 0001 (#561) OQ-02 —
+         no geocoding, no free-text address parsing. -->
+    <changeSet id="20260729-027-create-districts" author="buildnest-team">
+        <comment>Create districts table (FR-LOC-01/02, ADR 0001, #562)</comment>
+
+        <createTable tableName="districts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false" unique="true"
+                        uniqueConstraintName="uk_districts_name"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <rollback>
+            <dropTable tableName="districts"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
