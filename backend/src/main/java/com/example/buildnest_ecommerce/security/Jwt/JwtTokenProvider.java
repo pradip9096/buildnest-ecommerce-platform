@@ -1,8 +1,12 @@
 package com.example.buildnest_ecommerce.security.Jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SecurityException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -14,7 +18,10 @@ import java.util.Date;
 @Slf4j
 @Component
 public class JwtTokenProvider {
-    @Value("${jwt.secret:mySecretKeyForJwtTokenGenerationAndValidation}")
+    // #114: no default — jwt.secret comes from JWT_SECRET (enforced by
+    // application.properties + JwtKeyValidator); a redundant weak default
+    // here would resurface if evaluated outside that properties file.
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     // Previous JWT secret for rotation support (optional)
@@ -84,7 +91,7 @@ public class JwtTokenProvider {
                     .build()
                     .parseSignedClaims(authToken);
             return true;
-        } catch (io.jsonwebtoken.security.SecurityException e) {
+        } catch (SecurityException e) {
             // If current secret fails, try previous secret (for rotation support)
             SecretKey previousKey = getPreviousSigningKey();
             if (previousKey != null) {
@@ -102,11 +109,11 @@ public class JwtTokenProvider {
             } else {
                 log.error("Invalid JWT signature: {}", e.getMessage());
             }
-        } catch (io.jsonwebtoken.MalformedJwtException e) {
+        } catch (MalformedJwtException e) {
             log.error("Invalid JWT token: {}", e.getMessage());
-        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+        } catch (ExpiredJwtException e) {
             log.error("Expired JWT token: {}", e.getMessage());
-        } catch (io.jsonwebtoken.UnsupportedJwtException e) {
+        } catch (UnsupportedJwtException e) {
             log.error("Unsupported JWT token: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             log.error("JWT claims string is empty: {}", e.getMessage());

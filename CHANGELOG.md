@@ -12,6 +12,23 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Security
+- Hardcoded-secrets audit (FR-PAY-05, #114): `application.properties`'
+  `razorpay.key.secret`/`razorpay.webhook.secret` previously defaulted to
+  known values (`test_key_secret`/`test_webhook_secret`) that also applied
+  in production (no override existed in `application-production.properties`)
+  — removed both defaults so a missing env var now fails startup instead of
+  silently using a guessable payment-signing secret. Removed two redundant
+  weak Java-level `@Value` defaults (`JwtTokenProvider.jwtSecret`,
+  `ElasticsearchConfig.password`) that were only masked by properties-level
+  indirection. Fixed `backend/kubernetes/buildnest-deployment.yaml`'s Secret
+  manifest, which committed real-looking base64 "example" values
+  indistinguishable from actual leaked secrets — converted to `stringData`
+  with explicit `REPLACE_WITH_REAL_*` placeholders. Added a `gitleaks` CI
+  step (`.github/workflows/security.yml`) with `.gitleaks.toml` allowlisting
+  confirmed documentation/test-fixture false positives. RTM FR-PAY-05 moves
+  to Implemented (v1.44).
+
 ### Added
 - Full OWASP Top 10 (2021) security assessment (SEC-15, #111) — assessed all A01–A10
   categories via code/live-endpoint review plus an OWASP ZAP full active scan (141 automated

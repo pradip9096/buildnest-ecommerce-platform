@@ -1,13 +1,13 @@
 ---
 title: "Recurrence Escalation: Cross-Field Terminology and an Occurrence-Count Ladder for When the Same Process Gap Reappears After Being 'Fixed'"
 category: documentation
-tags: [amendment-mechanism, recurrence, escalation, capa, stateless-agent, audit-terminology, configuration-drift]
-keywords: [repeat finding, operating effectiveness deficiency, configuration drift, reconciliation loop, organizational forgetting, latent condition, swiss cheese model, whack-a-mole, mandelbug, bohrbug, heisenbug, defect-class id, escalation ladder, sibling-precedent-scope]
-objective: "When a process/amendment fix regresses (the same gap recurs after being fixed once), what's the established cross-field vocabulary for this, and what concrete mechanism closes the gap for a stateless AI agent governed by prose rule files rather than mechanically-enforced code?"
-audience: "Maintainers of AI-agent process/rule files (or any prose-governed checklist, runbook, or amendment log) who've had a fix regress and want to know both what to call it and what to do differently the second time."
+tags: [amendment-mechanism, recurrence, escalation, capa, stateless-agent, audit-terminology, configuration-drift, retirement]
+keywords: [repeat finding, operating effectiveness deficiency, configuration drift, reconciliation loop, organizational forgetting, latent condition, swiss cheese model, whack-a-mole, mandelbug, bohrbug, heisenbug, defect-class id, escalation ladder, sibling-precedent-scope, tag retirement]
+objective: "When a process/amendment fix regresses (the same gap recurs after being fixed once), what's the established cross-field vocabulary for this, and what concrete mechanism closes the gap for a stateless AI agent governed by prose rule files rather than mechanically-enforced code? And once a tag's fix has genuinely held, how does it come back off the active-scan surface?"
+audience: "Maintainers of AI-agent process/rule files (or any prose-governed checklist, runbook, or amendment log) who've had a fix regress and want to know both what to call it and what to do differently the second time — or whose active-tag list has grown large enough that some tags need a defined way to retire."
 scope: both
-source_conversations: ["Session 2026-07-14, follow-up to the #358 sibling-precedent-check fix (development-workflow.md Amendment #37 → #38) and the resulting recurrence-tracking mechanism"]
-last_updated: 2026-07-14
+source_conversations: ["Session 2026-07-14, follow-up to the #358 sibling-precedent-check fix (development-workflow.md Amendment #37 → #38) and the resulting recurrence-tracking mechanism", "Session 2026-07-19, post-#439 brainstorming — the ladder only ever adds tags, never retires one, added the retirement criteria/procedure (development-workflow.md Amendment #67)"]
+last_updated: 2026-07-19
 confidence: high
 evidence_strength: strong
 related_articles: [closed-loop-feedback-and-amendment-mechanisms-for-process-documents.md, ../learning/capa-corrective-and-preventive-action.md, ../learning/process-improvement-frameworks.md]
@@ -96,6 +96,31 @@ Recurrence only becomes checkable at all if occurrences of the same underlying g
 a shared, stable identifier — otherwise "has this happened before" depends on someone manually
 noticing, the same problem this whole mechanism exists to remove.
 
+### Retiring a tag off the ladder
+
+The ladder above only ever climbs — nothing in it says when a tag stops needing its full prose
+warning re-surfaced on every future scan. Left unaddressed, the set of active tags a recurrence
+scan has to reason about can only grow, even for a slug that's genuinely stopped being a live risk
+— the same cost-vs-catch imbalance this whole mechanism exists to avoid, just shifted from "does
+the fix hold" to "does the fix still need re-announcing."
+
+**Retire a tag when either holds:**
+- **Mechanically enforced** — a tier-4 hook exists **and** it actually blocks the non-compliant
+  action (a `PreToolUse` deny), not just reminds (a `PostToolUse`/`systemMessage` nudge). A
+  reminder-only hook is still prose-strength enforcement wearing a hook's shape; the underlying
+  warning stays live until something actually prevents the miss.
+- **Recurrence-free** — no occurrence at any tier across the most recent 10 closed issues **and**
+  60+ days since the last one. Both conditions, not either — a slug tied to a rare trigger
+  condition could clear 10 issues on trigger-scarcity alone, not because the fix held.
+
+**Procedure:** keep the tag's history in the amendment log (that's the record of why current
+wording exists) — only replace the *live* enforcement instruction with a short "RETIRED `<date>`,
+`<criterion>`" marker. A recurrence scan still greps for a retired tag; on a match, the mechanical
+case confirms the hook is still wired (a hook can silently stop firing the same way a CI job can)
+rather than re-applying retired prose, and the recurrence-free case **un-retires**: revert the
+marker, log why "recurrence-free" turned out wrong, and resume escalation from the slug's actual
+occurrence count — not tier 1, since the history didn't disappear.
+
 ## When to Use It
 
 Reach for this specifically when a process/rule-file fix **regresses** — not merely when a new gap
@@ -142,6 +167,7 @@ instead of its source code.
 | Does Mandelbug/Bohrbug/Heisenbug apply here? | No — those describe reproducibility/complexity of a bug, not whether a fix recurs over time; included only to mark the boundary |
 | How is this different from CAPA's own recurrence handling? | CAPA escalates fix *scope* (instance → class → system); this escalates enforcement *mechanism strength*, keyed to occurrence count of the same tagged gap |
 | What triggers the next rung of the ladder? | The same defect-class ID appearing a second (or further) time — not any new, unrelated gap |
+| When does a tag come *off* the ladder? | Either a genuinely blocking (not reminder-only) tier-4 hook exists, or it's gone 10 closed issues **and** 60+ days with zero recurrence — both conditions for the latter |
 
 ## References
 

@@ -233,18 +233,24 @@ data:
   zipkin.url: "http://zipkin-service:9411"
 
 ---
-# Secrets (Base64 encoded - replace with actual values)
+# Secrets — template only (#114). Use `stringData` with obviously-fake
+# placeholders, not `data` + real-looking base64 values: a base64 string
+# that decodes to a real word ("buildnest_pass", etc.) is indistinguishable
+# from an actual leaked secret to both scanners and human reviewers. Replace
+# every placeholder via your cluster's real secret-injection mechanism
+# (Sealed Secrets, External Secrets Operator, `kubectl create secret`, CI/CD
+# variable substitution) before applying — never commit real values here.
 apiVersion: v1
 kind: Secret
 metadata:
   name: buildnest-secrets
   namespace: buildnest
 type: Opaque
-data:
-  database.username: YnVpbGRuZXN0X3VzZXI=  # buildnest_user
-  database.password: YnVpbGRuZXN0X3Bhc3M=  # buildnest_pass
-  redis.password: cmVkaXNfcGFzc3dvcmQ=      # redis_password
-  jwt.secret: bXktc2VjcmV0LWtleS1mb3ItcHJvZHVjdGlvbg==  # Change this!
+stringData:
+  database.username: REPLACE_WITH_REAL_DATABASE_USERNAME
+  database.password: REPLACE_WITH_REAL_DATABASE_PASSWORD
+  redis.password: REPLACE_WITH_REAL_REDIS_PASSWORD
+  jwt.secret: REPLACE_WITH_REAL_JWT_SECRET
 
 ---
 # Namespace

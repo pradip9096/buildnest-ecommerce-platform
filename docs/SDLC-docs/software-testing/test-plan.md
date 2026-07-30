@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Test Plan |
 | **Document ID** | TP-BUILDNEST-001 |
-| **Version** | 4.5 |
+| **Version** | 4.6 |
 | **Date** | 2026-07-30 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -36,6 +36,7 @@
 | 4.3 | 2026-07-19 22:30 IST | Test Manager | Added `WishlistServiceImplLazyLoadingTest` to §8/#311's `service.wishlist` test-class listing — new `@DataJpaTest` regression test added for #442's fix (`WishlistServiceImpl.getWishlistProducts` was returning raw `Product` entities with uninitialized lazy fields, 6th occurrence of the raw-entity-lazy-collection bug family) | Pending |
 | 4.4 | 2026-07-29 IST | Test Manager | SEC-14 (#110): §13.2's "Remove CSP `unsafe-inline`; update `SecurityTest` assertions" task struck through as done (#237 backend, #110 frontend). `Related SRS`/`Related SDD` header fields were long-stale (v4.5/v3.4, real current v5.6/v4.12 — several intervening version bumps on both documents never propagated here); corrected while already touching this document's content, though a full cross-reference-mesh sweep is the periodic 15-issue sync's job, not a per-issue one | Pending |
 | 4.5 | 2026-07-30 IST | Test Manager | Periodic 15-issue SDLC documentation sync (overdue — last full sync at #452/#461, 2026-07-17; 53 issues closed since). §17.2's frontend-coverage baseline (17 test files/121 tests) corrected to the real current state via a fresh `npx vitest run`: 45 test files, 281 tests, all passing — the frontend grew substantially (Ph-3 marketplace-pivot seller/district UI, plus several M4 feature issues) with no single issue's own scope covering a re-verification of this aggregate row. Backend baseline (§17.2's own table) also drifted: re-ran a clean `./mvnw test` in an `env -i` isolated shell — 195→216 test files, 1,735→1,893 test executions, 0 failures/0 errors (matches PR #622's own test-plan citation for #111). §17.1's JaCoCo (85%)/PIT (77%) gate values re-checked directly against `pom.xml` — still accurate, no change. `Related SRS`/`Related SDD` updated (5.6→5.8, 4.12→4.13) | Pending |
+| 4.6 | 2026-07-30 IST | Test Manager | Added a "Secret hardcoding" row to §5.2 Security Testing (FR-PAY-05, SDP Appendix B) for #114's hardcoded-secrets audit — no `@Value` secret defaults, `gitleaks` CI step on every push/PR, verified via `RazorpayClientAdapterTest` plus empirical CI-run verification (the CI step itself has no unit-test equivalent) | Pending |
 
 ### Document Approval
 
@@ -479,6 +480,7 @@ Verifies that the system meets SRS v4.0 Security Requirements (SEC-*) and OWASP 
 | BCrypt hashing | Password stored as BCrypt hash; rounds ≥ 12 | SEC-02 | `AuthServiceImplTest` |
 | Token rotation | Refresh token invalidated on use | FR-AUTH-06 | `RefreshTokenServiceTest` |
 | Audit trail | Every `@Auditable` action produces an `AuditLog` entry | MNT-05 | `AuditAspectTest`, `AuditLogServiceTest` |
+| Secret hardcoding | No `@Value` secret defaults; `gitleaks` CI step (`security.yml`) on every push/PR | FR-PAY-05, SDP Appendix B | `RazorpayClientAdapterTest` (env check); empirical CI verification (#114) |
 
 ### 5.3 Performance Testing
 
