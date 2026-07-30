@@ -4,6 +4,8 @@ import com.example.buildnest_ecommerce.model.entity.WebhookSubscription;
 import com.example.buildnest_ecommerce.model.payload.WebhookSubscriptionRequest;
 import com.example.buildnest_ecommerce.model.payload.WebhookSubscriptionResponse;
 import com.example.buildnest_ecommerce.repository.WebhookSubscriptionRepository;
+import com.example.buildnest_ecommerce.exception.ValidationException;
+import com.example.buildnest_ecommerce.util.SsrfUrlValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +44,9 @@ class WebhookServiceImplTest {
 
     @Mock
     private ObjectMapper objectMapper;
+
+    @Mock
+    private SsrfUrlValidator ssrfUrlValidator;
 
     @InjectMocks
     private WebhookServiceImpl webhookService;
@@ -482,5 +487,34 @@ class WebhookServiceImplTest {
         assertEquals(testSubscription.getActive(), response.isActive());
         assertEquals(testSubscription.getFailureCount(), response.getFailureCount());
         assertEquals(testSubscription.getLastDeliveryStatus(), response.getLastDeliveryStatus());
+    }
+
+    @Test
+    @DisplayName("Should invoke SSRF validator before saving a new subscription")
+    void testCreateSubscription_validatesTargetUrlBeforeSave() {
+        // Arrange
+        when(repository.save(any(WebhookSubscription.class))).thenReturn(testSubscription);
+
+        // Act
+        webhookService.createSubscription(testRequest);
+
+        // Assert
+        verify(ssrfUrlValidator).validate(testRequest.getTargetUrl());
+        verify(repository).save(any(WebhookSubscription.class));
+    }
+
+    @Test
+    @DisplayName("Should reject subscription creation when SSRF validator rejects the URL")
+    void testCreateSubscription_ssrfValidatorRejectsUrl_doesNotSave() {
+        // Arrange
+        testRequest.setTargetUrl("http://169.254.169.254/latest/meta-data/");
+        doThrow(new ValidationException(
+                "Target URL must not resolve to a private, loopback, or link-local address"))
+                .when(ssrfUrlValidator).validate(testRequest.getTargetUrl());
+
+        // Act & Assert
+        assertThrows(ValidationException.class,
+                () -> webhookService.createSubscription(testRequest));
+        verify(repository, never()).save(any(WebhookSubscription.class));
     }
 }

@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 5.6 |
+| **Version** | 5.7 |
 | **Date** | 2026-07-29 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -45,6 +45,7 @@
 | 5.4 | 2026-07-29 IST | Technical Lead | FR-LOC-03 implemented (#563) — district-scoped catalogue/search filtering added to the existing Elasticsearch-backed product search (FG-02). Updated §3.2.12's status note and the §4.2 Location-Based Matching aggregate row (2→3 Implemented, 2→1 Not started). FR-LOC-04 remains Ph-3, Planned — tracked by #564 | Pending |
 | 5.5 | 2026-07-29 IST | Technical Lead | FR-LOC-04 implemented (#564), completing FG-12 (Location-Based Matching) — `CheckoutServiceImpl.validateCheckout` enforces district membership server-side at checkout, fail-closed when the buyer's district can't be determined, unrestricted when the seller has no declared districts. Updated §3.2.12's header/status note from "Ph-3, Planned" to "Ph-3, complete", and the §4.2 Location-Based Matching aggregate row (3→4 Implemented, 1→0 Not started) | Pending |
 | 5.6 | 2026-07-29 IST | Technical Lead | SEC-14 (#110): backend CSP was already `unsafe-inline`-free since #237, but the frontend's own document CSP (`frontend/security-headers.conf`) still carried `unsafe-inline` on `style-src`; removed after confirming React's `style={{}}` prop doesn't trigger the inline-style CSP restriction (JS property assignment, not the `style=` HTML attribute). Updated the SEC-14 Note in §7 (or equivalent security-requirements section) from "known gap for Ph-1" to resolved | Pending |
+| 5.7 | 2026-07-29 IST | Technical Lead | Added SEC-15 (#111): OWASP Top 10 2021 assessment requirement, correcting a filing-time traceability mismatch where the issue cited "(SEC-02)" (an unrelated, already-satisfied JWT-length requirement) and a blanket "SEC-01 to SEC-15" range that didn't exist yet. Updated SN-06 and the Coverage Summary Security row from SEC-01–14 to SEC-01–15 (14→15 requirements, 9→10 High). See `docs/SDLC-docs/reports/security-assessment.md` for the full A01–A10 assessment | Pending |
 
 ### Document Change Procedure
 
@@ -415,7 +416,7 @@ Per ISO/IEC/IEEE 29148:2018 Clause 6.3:
 | SN-03 | Administrators | Real-time visibility into sales, inventory, and user activity | FG-06, FG-08, FG-09 |
 | SN-04 | Business Owners | Scalable platform supporting growth to 1,000+ concurrent users | PR-02, SCL-01–04 |
 | SN-05 | DevOps / SRE | Observable, container-ready application with zero-downtime deployments | FG-09, PRT-01–04 |
-| SN-06 | Security Auditors | Compliance with OWASP, PCI-DSS, and GDPR standards | SEC-01–14 |
+| SN-06 | Security Auditors | Compliance with OWASP, PCI-DSS, and GDPR standards | SEC-01–15 |
 | SN-07 | QA Engineers | A test suite whose pass signal is trustworthy and reflects real system behaviour | TIR-01–05 |
 | SN-08 | Sellers *(Ph-3, Planned)* | A way to reach buyers beyond their existing offline shop's foot traffic, within a service area they can realistically fulfil | FG-11, FG-12 |
 
@@ -836,8 +837,11 @@ All of the following indexes shall be present in the production schema:
 | SEC-12 | JWT secret rotation shall be performed every 90 days following documented procedures | Ph-2 | Medium | Inspection |
 | SEC-13 | Database password rotation shall be performed every 180 days following documented procedures | Ph-2 | Medium | Inspection |
 | SEC-14 | The Content-Security-Policy response header shall not include `unsafe-inline`; inline script execution shall be prevented via nonce or hash strategy | Ph-2 | Medium | Inspection |
+| SEC-15 | A full OWASP Top 10 (2021) assessment (A01–A10) shall be performed and documented before the M5 production-readiness gate, with zero open Critical findings and a remediation timeline for any open High findings | Ph-2 | High | Test |
 
 > **Note on SEC-14**: Resolved. Backend `SecurityConfig`/`SecurityHeaderPolicies.MAIN_CSP` removed `unsafe-inline` from the API CSP in #237 (SEC-14); the frontend's own document CSP (`frontend/security-headers.conf`) retained `unsafe-inline` on `style-src` until #110, which removed it after confirming (live-browser verification) that React's `style={{}}` prop does not trigger the `style-src` inline restriction, since it sets styles via JS property assignment rather than the HTML `style` attribute.
+
+> **Note on SEC-15** (#111): This requirement did not previously exist as its own SRS row — issue #111 was originally filed and titled "(SEC-02)", but SEC-02 is a narrower, already-satisfied requirement (JWT secret key length/externalisation) unrelated to a Top 10 assessment, and the issue's blanket "SRS SEC-01 to SEC-15" citation referenced a SEC-15 row that did not exist at filing time (SRS previously ended at SEC-14). Added here as the correct, dedicated FR this issue actually satisfies; see `docs/SDLC-docs/reports/security-assessment.md` for the full A01–A10 assessment this row traces to.
 
 #### 3.8.4 Maintainability
 
@@ -948,7 +952,7 @@ Test integrity requirements define the properties that the test suite itself mus
 | Performance (PR-01–08) | 8 | Ph-1 / Ph-2 | 4 High, 3 Medium, 1 Low | Analysis, Inspection |
 | Reliability (REL-01–05) | 5 | Ph-1 / Ph-2 | Mixed | Analysis, Inspection |
 | Availability (AVL-01–04) | 4 | Ph-2 | High | Test |
-| Security (SEC-01–14) | 14 | Ph-1 / Ph-2 | 9 High, 5 Medium | Inspection, Test |
+| Security (SEC-01–15) | 15 | Ph-1 / Ph-2 | 10 High, 5 Medium | Inspection, Test |
 | Maintainability (MNT-01–06) | 6 | Ph-1 / Ph-2 | Mixed | Build, Inspection |
 | Portability (PRT-01–04) | 4 | Ph-1 / Ph-2 | Mixed | Inspection |
 | Scalability (SCL-01–04) | 4 | Ph-1 / Ph-2 | Mixed | Analysis, Inspection |
