@@ -19,14 +19,69 @@ split exists.
 Files are named `topic-<N>.md`, numbered sequentially in creation order — not by subject. Use
 the Index table below to find a file by subject; don't infer topic from the number.
 
-### Answer / Topic Structure
+### Inner Structure (Answer or Topic)
 
-Two structural conventions used across these files, inherited from this repo's broader KB
-authoring conventions:
+Two structural conventions used for the *body* of a `topic-N.md` file (the Outer Shell Structure
+below wraps it in a Header and Footer), inherited from this repo's broader KB authoring
+conventions:
 
 - **Answer structure**: Short Answer → Detailed Answer → Bottom Line
 - **Topic structure**: Introduction (establish context and direction) → Main Body (develop and
   support ideas) → Conclusion (synthesize and close)
+
+### Outer (Shell) Structure
+
+Every `topic-N.md` file wraps its actual content in the same shell, regardless of which inner
+structure (Answer or Topic, above) that content uses. Markdown has no native header/footer
+syntax (unlike HTML's `<header>`/`<footer>`), but the convention below plays the same role —
+everything before the body is the **Header**, everything after it is the **Footer**:
+
+**Header** (everything before the body):
+
+1. `# Title` — one H1, the file's subject
+2. One intro paragraph summarizing what the file covers (key terms bolded)
+3. `## Table of Contents` — numbered links to the file's own internal sections, followed by any
+   unnumbered trailing sections (e.g. a closing command sequence, "See Also") as plain bullet links
+4. `---` divider
+
+**Body** — this is where the **inner structure** (Answer or Topic, above) applies.
+
+**Footer** (everything after the body):
+
+1. A closing "reusable mental model" line or blockquote — one condensed takeaway, near the end
+2. `---` divider
+3. `## See Also` — bullet list linking to related `topic-N.md` files (or, occasionally, a real
+   repo file this topic generalizes from), each with a one-line description of the relationship
+
+**"See Also" — deliberate term choice, not the only one in this KB.** Sibling folders use
+different footer headings for the same role: `docs/knowledge-base/project/` uses `## References`
+(for citations to real, verified external/internal sources) or `## Related Articles` (for links
+to other KB articles). This folder standardizes on `See Also` for both cases — every entry links
+to either a sibling `topic-N.md` or a real repo file, never a placeholder for content that
+doesn't exist yet. If a related topic hasn't been written, don't list it under "See Also" until
+it has a real file to link to.
+
+By the stricter distinction some style guides draw (e.g. Wikipedia's Manual of Style): "See Also"
+is for tangentially related material a reader might explore next, while "References" is
+specifically for sources an article's own content was actually derived from. This folder
+deliberately merges the References role into "See Also" rather than adding a second heading —
+e.g. `topic-4.md` and `topic-20.md` each cite a real repo rule file (`.claude/rules/common/...`)
+their content generalizes from, which is a References-shaped citation filed under See Also. This
+is a proportionate simplification for a small, informal topic series (2 such citations across 20
+files as of 2026-07-30), not an oversight — stated explicitly here so it reads as a decision, not
+an unacknowledged blending of two distinct concepts.
+
+Applied retroactively to `topic-1.md` through `topic-20.md` (2026-07-30) so every file in this
+folder shares the same shell — new topics should follow this shape from creation, not just be
+retrofitted later.
+
+**Frontmatter — considered, not used.** A YAML frontmatter block (or the `**Category:**` /
+`**Tags:**` / `**Audience:**` header this KB's parent `learning/` folder uses elsewhere) was
+weighed as part of this shell and deliberately left out: these files are a numbered FAQ/topic
+series read via the Index table above, not standalone articles that need their own discoverable
+metadata — the Index already carries the one-line description a frontmatter block would
+otherwise duplicate. State this explicitly rather than leaving the omission unexplained if the
+question comes up again.
 
 ### Housekeeping
 
