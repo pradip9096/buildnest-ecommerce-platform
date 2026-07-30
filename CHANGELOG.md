@@ -12,6 +12,17 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Fixed
+- Full regression / M5 gate audit (REG-01, #130): found the `E2E Tests` and
+  `Load Tests` CI jobs (`ci-cd-pipeline.yml`) both carried
+  `continue-on-error: true`, masking real failures — E2E's Selenium suite
+  times out because it targets the backend's own port for pages the separate
+  frontend SPA actually serves (root cause tracked in #630); Gatling load-test
+  assertions genuinely fail (#631). Removed both masks so the jobs report
+  true state. Also found #130's own acceptance criteria cite Playwright/k6,
+  neither of which exist in this pipeline (Selenium/Gatling are the real
+  tools) — tracked in #632. #130 remains open pending #630/#631.
+
 ### Security
 - Hardcoded-secrets audit (FR-PAY-05, #114): `application.properties`'
   `razorpay.key.secret`/`razorpay.webhook.secret` previously defaulted to

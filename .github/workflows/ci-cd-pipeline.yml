@@ -331,8 +331,7 @@ jobs:
       
       - name: Run E2E tests
         run: ./mvnw test -P e2e-tests
-        continue-on-error: true
-      
+
       - name: Upload E2E test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -403,8 +402,7 @@ jobs:
       
       - name: Run Gatling load tests
         run: ./mvnw gatling:test
-        continue-on-error: true
-      
+
       - name: Upload Gatling reports
         if: always()
         uses: actions/upload-artifact@v4
