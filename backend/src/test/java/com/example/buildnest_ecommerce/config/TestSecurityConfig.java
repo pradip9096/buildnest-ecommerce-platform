@@ -133,7 +133,13 @@ public class TestSecurityConfig {
                                 .maxAgeInSeconds(SecurityHeaderPolicies.HSTS_MAX_AGE_SECONDS)))
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration corsConfig = new CorsConfiguration();
-                    corsConfig.setAllowedOrigins(Arrays.asList("*"));
+                    // #630: setAllowedOrigins("*") + allowCredentials(true) throws
+                    // IllegalArgumentException the moment a real browser sends an Origin
+                    // header (Spring validates this combination at request time, not
+                    // startup) -- invisible to MockMvc, which never sends Origin. Only a
+                    // live-browser E2E run surfaced it. allowedOriginPatterns supports the
+                    // wildcard+credentials combination validly.
+                    corsConfig.setAllowedOriginPatterns(Arrays.asList("*"));
                     corsConfig.setAllowedMethods(Arrays.asList("*"));
                     corsConfig.setAllowedHeaders(Arrays.asList("*"));
                     corsConfig.setAllowCredentials(true);

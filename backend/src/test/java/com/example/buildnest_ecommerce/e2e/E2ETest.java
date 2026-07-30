@@ -2,6 +2,13 @@ package com.example.buildnest_ecommerce.e2e;
 
 import com.example.buildnest_ecommerce.config.TestElasticsearchConfig;
 import com.example.buildnest_ecommerce.config.TestSecurityConfig;
+import com.example.buildnest_ecommerce.model.entity.Category;
+import com.example.buildnest_ecommerce.model.entity.Inventory;
+import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
+import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.repository.CategoryRepository;
+import com.example.buildnest_ecommerce.repository.InventoryRepository;
+import com.example.buildnest_ecommerce.repository.ProductRepository;
 import com.example.buildnest_ecommerce.service.admin.AdminAnalyticsService;
 import com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchAlertingService;
 import com.example.buildnest_ecommerce.service.elasticsearch.ElasticsearchIngestionService;
@@ -15,12 +22,17 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -46,6 +58,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import({ TestElasticsearchConfig.class, TestSecurityConfig.class })
 @Tag("e2e")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SuppressWarnings("removal")
 class E2ETest {
 
@@ -62,18 +75,27 @@ class E2ETest {
     @MockitoBean
     private NotificationService notificationService;
 
-    private static WebDriver driver;
-    private static WebDriverWait wait;
-    private static String baseUrl;
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private InventoryRepository inventoryRepository;
+
+    private WebDriver driver;
+    private WebDriverWait wait;
+    private String baseUrl;
 
     // Shared across ordered tests so login (TC-E2E-002) can authenticate as the user
     // registration (TC-E2E-001) just created, and later flows (add-to-cart, checkout)
     // rely on that same authenticated session.
-    private static String registeredUsername;
+    private String registeredUsername;
     private static final String TEST_PASSWORD = "SecurePass123!";
 
     @BeforeAll
-    static void setupClass() {
+    void setupClass() {
         WebDriverManager.chromedriver().setup();
 
         baseUrl = System.getProperty("e2e.frontend.baseUrl", "http://localhost:4173");
@@ -90,13 +112,51 @@ class E2ETest {
         // recreated per-test) so the authenticated session's cookies survive from
         // TC-E2E-002 (login) into TC-E2E-004/005 (add-to-cart, checkout).
         wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+
+        seedActiveProductWithStock();
     }
 
     @AfterAll
-    static void teardownClass() {
+    void teardownClass() {
         if (driver != null) {
             driver.quit();
         }
+    }
+
+    /**
+     * The H2 test database carries no product data by default (no data.sql runs
+     * against it) — TC-E2E-003/004/005 all need at least one active, in-stock
+     * product to browse/add-to-cart/checkout. Mirrors BaseApiTest#seedProduct,
+     * inlined since this class doesn't extend BaseApiTest (different
+     * @SpringBootTest webEnvironment).
+     */
+    @Transactional
+    void seedActiveProductWithStock() {
+        Category category = categoryRepository.findByName("Test Category")
+                .orElseGet(() -> {
+                    Category cat = new Category();
+                    cat.setName("Test Category");
+                    cat.setDescription("Category for testing");
+                    return categoryRepository.save(cat);
+                });
+
+        Product product = new Product();
+        product.setName("E2E Test Product " + UUID.randomUUID().toString().substring(0, 8));
+        product.setDescription("Product seeded for Selenium E2E testing only");
+        product.setPrice(new BigDecimal("499.00"));
+        product.setSku("E2E-SKU-" + UUID.randomUUID().toString().substring(0, 8));
+        product.setCategory(category);
+        product.setIsActive(true);
+        product.setCreatedAt(LocalDateTime.now());
+        Product saved = productRepository.save(product);
+
+        Inventory inventory = new Inventory();
+        inventory.setProduct(saved);
+        inventory.setQuantityInStock(50);
+        inventory.setMinimumStockLevel(5);
+        inventory.setStatus(InventoryStatus.IN_STOCK);
+        inventory.setUpdatedAt(LocalDateTime.now());
+        inventoryRepository.save(inventory);
     }
 
     /**
@@ -151,7 +211,7 @@ class E2ETest {
 
         WebElement usernameInput = driver.findElement(By.id("username"));
         WebElement passwordInput = driver.findElement(By.id("password"));
-        WebElement loginButton = driver.findElement(By.cssSelector("button[type='submit']"));
+        WebElement loginButton = driver.findElement(By.cssSelector("[data-testid='login-submit']"));
 
         usernameInput.sendKeys(registeredUsername);
         passwordInput.sendKeys(TEST_PASSWORD);
