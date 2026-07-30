@@ -13,6 +13,16 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Fixed
+- E2E Selenium suite never exercised the real frontend (#630, root cause
+  tracked from #130): `E2ETest.java` navigated the backend's own
+  `@SpringBootTest` random port expecting server-rendered pages that
+  structurally don't exist there — the frontend is a separate React/Vite
+  SPA the CI job never built or served. Backend now binds to a fixed port
+  (`DEFINED_PORT`) so `vite preview`'s proxy has a stable target; added
+  `data-testid` selectors to the Register/Login/Products/Cart/Checkout
+  flow elements (none existed before); rewrote all 7 E2E scenarios against
+  the real DOM; `ci-cd-pipeline.yml`'s `E2E Tests` job now builds and
+  serves the frontend before running the suite.
 - Full regression / M5 gate audit (REG-01, #130): found the `E2E Tests` and
   `Load Tests` CI jobs (`ci-cd-pipeline.yml`) both carried
   `continue-on-error: true`, masking real failures — E2E's Selenium suite

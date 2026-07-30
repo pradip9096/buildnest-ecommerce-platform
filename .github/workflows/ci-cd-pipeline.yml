@@ -309,28 +309,64 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: integration-tests
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           cache: 'maven'
-      
+
       - name: Install Chrome
         uses: browser-actions/setup-chrome@latest
         with:
           chrome-version: stable
-      
+
       - name: Grant execute permissions to mvnw
         run: chmod +x ./mvnw
-      
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        # #630: E2ETest.java binds the backend to a fixed port (server.port=8080) so this
+        # build-time proxy target is stable regardless of test run order — see vite.config.ts.
+        run: npm run build
+
+      - name: Start frontend preview server
+        working-directory: frontend
+        # Backgrounded: `vite preview` blocks. The E2E job's own timeout-minutes: 30 bounds
+        # this process's lifetime; GitHub Actions tears down the whole runner (and this
+        # process with it) once the job ends, so no explicit stop step is needed.
+        run: |
+          nohup npm run preview -- --port 4173 --strictPort > frontend-preview.log 2>&1 &
+          echo "Waiting for frontend preview server to become ready..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:4173 > /dev/null; then
+              echo "Frontend preview server is up."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Frontend preview server did not become ready in time:"
+          cat frontend-preview.log
+          exit 1
+
       - name: Run E2E tests
-        run: ./mvnw test -P e2e-tests
+        run: ./mvnw test -P e2e-tests -De2e.frontend.baseUrl=http://localhost:4173
 
       - name: Upload E2E test results
         if: always()
@@ -338,13 +374,20 @@ jobs:
         with:
           name: e2e-test-results
           path: backend/target/surefire-reports/
-      
+
       - name: Upload E2E screenshots (if any)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-screenshots
           path: backend/target/screenshots/
+
+      - name: Upload frontend preview server log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-frontend-preview-log
+          path: frontend/frontend-preview.log
 
   # Job 5: Security Scan
   security-scan:

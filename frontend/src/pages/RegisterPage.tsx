@@ -51,6 +51,7 @@ export function RegisterPage() {
         onBlur={blur(name)}
         placeholder={placeholder}
         autoComplete={name === 'confirmPassword' ? 'new-password' : name}
+        data-testid={`register-${name}`}
         className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 ${
           touched[name] && errors[name] ? 'border-red-400' : 'border-gray-300'
         }`}
@@ -111,6 +112,7 @@ export function RegisterPage() {
                   onBlur={blur('password')}
                   placeholder="Min. 12 characters"
                   autoComplete="new-password"
+                  data-testid="register-password"
                   className={`w-full border rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 ${
                     touched.password && errors.password ? 'border-red-400' : 'border-gray-300'
                   }`}
@@ -136,6 +138,7 @@ export function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
+              data-testid="register-submit"
               className="w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors mt-2"
             >
               {loading ? 'Creating account…' : 'Create account'}

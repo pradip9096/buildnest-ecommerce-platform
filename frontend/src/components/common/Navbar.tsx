@@ -72,6 +72,7 @@ export function Navbar() {
             onChange={e => setSearchInput(e.target.value)}
             placeholder="Search products…"
             aria-label="Search products"
+            data-testid="navbar-search-input"
             className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <button
@@ -93,7 +94,7 @@ export function Navbar() {
               )}
             </Link>
           )}
-          <Link to="/cart" className="relative text-gray-600 hover:text-gray-900" aria-label="Cart">
+          <Link to="/cart" className="relative text-gray-600 hover:text-gray-900" aria-label="Cart" data-testid="navbar-cart-link">
             <span className="text-xl">🛒</span>
             {cartCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">

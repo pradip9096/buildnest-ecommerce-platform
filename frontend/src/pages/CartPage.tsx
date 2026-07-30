@@ -133,7 +133,7 @@ export function CartPage() {
             </div>
 
             <div className="lg:w-80">
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sticky top-6">
+              <div data-testid="order-summary" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sticky top-6">
                 <h2 className="font-semibold text-gray-900 mb-4">Order Summary</h2>
                 <div className="space-y-2 text-sm">
                   {cart.items.map(item => (
@@ -152,6 +152,7 @@ export function CartPage() {
                 <button
                   type="button"
                   onClick={() => navigate('/checkout')}
+                  data-testid="checkout-button"
                   className="mt-5 w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 rounded-xl transition-colors"
                 >
                   Proceed to Checkout
