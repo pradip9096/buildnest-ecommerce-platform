@@ -10,13 +10,13 @@
 | :--- | :--- |
 | **Document Title** | Test Plan |
 | **Document ID** | TP-BUILDNEST-001 |
-| **Version** | 4.4 |
-| **Date** | 2026-07-19 22:30 IST |
+| **Version** | 4.5 |
+| **Date** | 2026-07-30 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29119-3:2021 |
-| **Related SRS** | SRS-BUILDNEST-001 v5.6 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
-| **Related SDD** | SDD-BUILDNEST-001 v4.12 (docs/SDLC-docs/design/software-design-description.md) |
+| **Related SRS** | SRS-BUILDNEST-001 v5.8 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
+| **Related SDD** | SDD-BUILDNEST-001 v4.13 (docs/SDLC-docs/design/software-design-description.md) |
 | **Supersedes** | TP v3.0 (archive/docs/ISO-IEC-IEEE/Test_Plan_IEEE_29119.md, 2026-02-11) |
 
 ---
@@ -35,6 +35,7 @@
 | 4.2 | 2026-07-17 21:15 IST | Test Manager | Found during a fresh RTM/SRS/SDD/Test-Plan verification sweep: §17's 4.1 fix (actual JaCoCo 85%/PIT 77%) never propagated to §8.3/§8.4/§9.1/§9.2, which still stated the pre-fix 0.40/0.70/75% values — a direct self-contradiction within this same document. Corrected all four to the real gate values, and corrected §8.3's Counter column from LINE to INSTRUCTION (verified directly against `pom.xml`'s `<counter>INSTRUCTION</counter>`, not assumed). Also updated the `Related SRS`/`Related SDD` header fields from a long-stale v4.0/v3.0 to the current v4.5/v3.4, which had drifted through several intervening version bumps on both documents without ever being updated here | Pending |
 | 4.3 | 2026-07-19 22:30 IST | Test Manager | Added `WishlistServiceImplLazyLoadingTest` to §8/#311's `service.wishlist` test-class listing — new `@DataJpaTest` regression test added for #442's fix (`WishlistServiceImpl.getWishlistProducts` was returning raw `Product` entities with uninitialized lazy fields, 6th occurrence of the raw-entity-lazy-collection bug family) | Pending |
 | 4.4 | 2026-07-29 IST | Test Manager | SEC-14 (#110): §13.2's "Remove CSP `unsafe-inline`; update `SecurityTest` assertions" task struck through as done (#237 backend, #110 frontend). `Related SRS`/`Related SDD` header fields were long-stale (v4.5/v3.4, real current v5.6/v4.12 — several intervening version bumps on both documents never propagated here); corrected while already touching this document's content, though a full cross-reference-mesh sweep is the periodic 15-issue sync's job, not a per-issue one | Pending |
+| 4.5 | 2026-07-30 IST | Test Manager | Periodic 15-issue SDLC documentation sync (overdue — last full sync at #452/#461, 2026-07-17; 53 issues closed since). §17.2's frontend-coverage baseline (17 test files/121 tests) corrected to the real current state via a fresh `npx vitest run`: 45 test files, 281 tests, all passing — the frontend grew substantially (Ph-3 marketplace-pivot seller/district UI, plus several M4 feature issues) with no single issue's own scope covering a re-verification of this aggregate row. Backend baseline (§17.2's own table) also drifted: re-ran a clean `./mvnw test` in an `env -i` isolated shell — 195→216 test files, 1,735→1,893 test executions, 0 failures/0 errors (matches PR #622's own test-plan citation for #111). §17.1's JaCoCo (85%)/PIT (77%) gate values re-checked directly against `pom.xml` — still accurate, no change. `Related SRS`/`Related SDD` updated (5.6→5.8, 4.12→4.13) | Pending |
 
 ### Document Approval
 
@@ -921,18 +922,18 @@ The table below maps SRS v4.0 requirement groups to the test classes that verify
 | Branch coverage (backend) | JaCoCo | Reported only | ≥ 60% | MNT-02 |
 | Mutation score (backend service + security) | PIT | Active at 77% `mutationThreshold` (verified 2026-07-17 13:55 IST, #461), ratcheting to 79% per M4 milestone | **≥ 75%** | TIR-05 |
 | E2E critical path coverage | Manual | Key flows identified | 100% critical paths pass | FR-* |
-| Frontend component coverage | Vitest | 17 test files, 121 tests, across components/hooks/API modules (verified 2026-07-17 13:55 IST, #461 via `npx vitest run`) | ≥ 80% statements | FR-FE-* |
+| Frontend component coverage | Vitest | 45 test files, 281 tests, across components/hooks/API modules (verified 2026-07-30, periodic 15-issue sync via `npx vitest run`, all passing) | ≥ 80% statements | FR-FE-* |
 | WCAG 2.1 AA violations | axe-core | Not yet active | 0 violations | ACC-01 |
 
-### 17.2 Current Baseline (Re-verified 2026-07-17 14:05 IST, #461)
+### 17.2 Current Baseline (Re-verified 2026-07-30, periodic 15-issue sync)
 
 Superseding the original 2026-06-19 Baseline Assessment Report figures below, re-measured directly via a clean `./mvnw test -P all-tests` run (`env -i` isolated shell, to avoid the environment-contamination false alarm documented in the `exported-env-vars-can-leak-across-separate-bash-tool-calls-contaminating-later-test-runs.md` wiki lesson) and `./mvnw dependency:tree`/`pom.xml` inspection:
 
 | Metric | Current State | Gap to Phase 2 Target |
 | :--- | :--- | :--- |
-| Total test files | 195 | — |
-| Total test executions (last full run) | 1,735 | — |
-| Passed | 1,735 (100%) | — |
+| Total test files | 216 | — |
+| Total test executions (last full run) | 1,893 | — |
+| Passed | 1,893 (100%) | — |
 | Failed | 0 | None |
 | Errors | 0 | None |
 | JaCoCo LINE coverage | 85% PACKAGE/INSTRUCTION (`jacoco-check` rule) | Already exceeds 70% target |
