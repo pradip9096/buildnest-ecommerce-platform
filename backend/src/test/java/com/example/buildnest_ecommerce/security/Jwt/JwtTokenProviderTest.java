@@ -151,6 +151,22 @@ class JwtTokenProviderTest {
     }
 
     @Test
+    void testValidateTokenWithUnsignedToken() {
+        // Arrange — an unsecured JWT ("alg": "none", no signature) is
+        // structurally valid but unsupported by parseSignedClaims(), which
+        // requires a JWS. Exercises the UnsupportedJwtException branch.
+        String unsignedToken = Jwts.builder()
+                .subject("testuser")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + testExpiration))
+                .compact();
+
+        boolean isValid = jwtTokenProvider.validateToken(unsignedToken);
+
+        assertFalse(isValid);
+    }
+
+    @Test
     void testValidateTokenWithInvalidSignature() {
         String otherSecret = "d".repeat(64);
         String tokenWithDifferentSecret = Jwts.builder()
