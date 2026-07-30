@@ -1,0 +1,30 @@
+title = "BuildNest gitleaks config"
+
+# #114: extend gitleaks' default ruleset (do not replace it) and allowlist
+# only confirmed false positives, each with a stated reason — never a blanket
+# path/rule exemption. Every entry here was verified by hand against a real
+# `gitleaks detect` run before being added; adding a new entry requires the
+# same verification, not a reflexive "make CI green" addition.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Confirmed false positives — documentation examples, test fixtures, shell-variable interpolation, no real secret material"
+regexTarget = "match"
+paths = [
+  # Test fixtures: fixed dummy tokens/passwords used to assert rejection
+  # behavior (expired/invalid JWT, wrong-password flow) — not real secrets.
+  '''backend/src/test/.*\.java$''',
+  '''frontend/src/.*\.test\.tsx$''',
+  # Educational/documentation examples of API key and JWT shapes — not
+  # material issued by any real system.
+  '''docs/knowledge-base/learning/.*\.md$''',
+  '''docs/reports/.*\.md$''',
+  '''\.claude/skills/.*\.md$''',
+]
+regexes = [
+  # docker-compose.yml's curl-auth-user match is shell variable
+  # interpolation ($$ELASTICSEARCH_USERNAME:$$ELASTICSEARCH_PASSWORD),
+  # not a literal credential.
+  '''\$\$ELASTICSEARCH_USERNAME:\$\$ELASTICSEARCH_PASSWORD''',
+]

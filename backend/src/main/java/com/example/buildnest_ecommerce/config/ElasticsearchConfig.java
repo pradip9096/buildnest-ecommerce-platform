@@ -27,7 +27,10 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
     @Value("${elasticsearch.username:elastic}")
     private String username;
 
-    @Value("${elasticsearch.password:changeme}")
+    // #114: no fixed-word default — application.properties already
+    // supplies an empty default (no-auth local dev), so a "changeme"
+    // fallback here is a redundant, guessable-secret pattern.
+    @Value("${elasticsearch.password:}")
     private String password;
 
     @Value("${elasticsearch.ssl.enabled:false}")
