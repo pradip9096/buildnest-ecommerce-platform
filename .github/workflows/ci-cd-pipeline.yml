@@ -338,7 +338,11 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm ci
+        # --legacy-peer-deps: eslint-plugin-react@7.37.5 (its latest published version) caps
+        # its eslint peer range at ^9.7 — it has no release supporting eslint@^10 yet, a
+        # devDependency-only lint-tooling gap with no runtime effect. Tracked separately
+        # (not fixable here — no compatible eslint-plugin-react version exists upstream).
+        run: npm ci --legacy-peer-deps
 
       - name: Build frontend
         working-directory: frontend
