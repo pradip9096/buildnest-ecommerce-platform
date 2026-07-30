@@ -10,15 +10,15 @@
 | :--- | :--- |
 | **Document Title** | Software Development Plan (SDP) |
 | **Document ID** | SDP-BUILDNEST-001 |
-| **Version** | 1.2 |
-| **Date** | 2026-07-17 21:15 IST |
+| **Version** | 1.3 |
+| **Date** | 2026-07-30 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 12207:2017 — Software Life Cycle Processes; ISO/IEC/IEEE 15288:2023 — System Life Cycle Processes; IEEE Std 1058:2016 — Software Project Management Plans |
-| **Related SRS** | SRS-BUILDNEST-001 v4.5 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
-| **Related SDD** | SDD-BUILDNEST-001 v3.5 — `docs/SDLC-docs/design/software-design-description.md` |
-| **Related TP** | TP-BUILDNEST-001 v4.2 — `docs/SDLC-docs/software-testing/test-plan.md` |
-| **Related RTM** | RTM-BUILDNEST-001 v1.7 — `docs/SDLC-docs/requirement-engineering/requirements-traceability-matrix.md` |
+| **Related SRS** | SRS-BUILDNEST-001 v5.8 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
+| **Related SDD** | SDD-BUILDNEST-001 v4.13 — `docs/SDLC-docs/design/software-design-description.md` |
+| **Related TP** | TP-BUILDNEST-001 v4.5 — `docs/SDLC-docs/software-testing/test-plan.md` |
+| **Related RTM** | RTM-BUILDNEST-001 v1.43 — `docs/SDLC-docs/requirement-engineering/requirements-traceability-matrix.md` |
 | **Baseline Assessment** | `docs/reports/baseline-assessment-2026-06-19.md` |
 
 ---
@@ -32,6 +32,7 @@
 | 1.0 | 2026-06-19 | Project Manager | Initial controlled release — evidence-based brownfield SDP derived from Baseline Assessment, SRS v4.0, SDD v3.0, TP v4.0, RTM v1.0, and live CI/CD workflow analysis; covers two-phase delivery (Ph-1 Stabilization → Ph-2 Production Readiness) with five milestones | Pending |
 | 1.1 | 2026-07-17 14:41 IST | Project Manager | Corrected stale test/source-file counts (256→352 source files, 173→195 test files, 1,538→1,735 executions, 14 failures→0), the false "frontend stub only" claim (71 real source files, substantial working SPA), Jedis→Lettuce client, and Elasticsearch 8.10→8.17 throughout. Resolved the "Elasticsearch EOL" risk entry — the required 8.17+ upgrade already happened (`docker-compose.yml`'s active service runs 8.17.6) — and corrected the JaCoCo/PIT gate targets to reflect the actual enforced values (85% JaCoCo, 77% PIT, both already exceeding Ph-1/Ph-2 targets) (#461) | Pending |
 | 1.2 | 2026-07-17 21:15 IST | Project Manager | Found during a fresh RTM/SRS/SDD/Test-Plan verification sweep: both the header `Related SRS/SDD/TP/RTM` fields and Appendix D's "Document Suite Summary" table still cited every sibling document at its original 2026-06-19 baseline version (SRS v4.0, SDD v3.0, TP v4.0, RTM v1.0) despite each having since moved through several real content-driven version bumps — this document's own cross-references had never been updated even once since the initial release. Updated all to current (SRS v4.5, SDD v3.5, TP v4.2, RTM v1.7, SDP itself v1.2) | Pending |
+| 1.3 | 2026-07-30 IST | Project Manager | Periodic 15-issue SDLC documentation sync (overdue — last full sync at #452, 2026-07-17; 53 issues closed since). Same drift class as 1.2, recurred: header `Related SRS/SDD/TP/RTM` fields and Appendix D's Document Suite Summary table had again gone stale since the last sync (SRS v4.5→v5.8, SDD v3.5→v4.13, TP v4.2→v4.5, RTM v1.7→v1.43) — this document's cross-references are a pure mirror of the other four documents' own version numbers and drift every time any of them bumps without a dedicated sync pass. Updated both the header and Appendix D to current | Pending |
 
 ### Document Approval
 
@@ -1251,11 +1252,11 @@ For use at each milestone gate review:
 | Document | ID | Version | Status | Location |
 | :--- | :--- | :--- | :--- | :--- |
 | Baseline Assessment Report | — | 2026-06-19 | Approved | `docs/reports/baseline-assessment-2026-06-19.md` |
-| Software Requirements Specification | SRS-BUILDNEST-001 | 4.5 | Under Review | `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
-| Software Design Description | SDD-BUILDNEST-001 | 3.5 | Under Review | `docs/SDLC-docs/design/software-design-description.md` |
-| Test Plan | TP-BUILDNEST-001 | 4.2 | Under Review | `docs/SDLC-docs/software-testing/test-plan.md` |
-| Requirements Traceability Matrix | RTM-BUILDNEST-001 | 1.7 | Under Review | `docs/SDLC-docs/requirement-engineering/requirements-traceability-matrix.md` |
-| **Software Development Plan** | **SDP-BUILDNEST-001** | **1.2** | **Under Review** | **`docs/SDLC-docs/project-planning/software-development-plan.md`** |
+| Software Requirements Specification | SRS-BUILDNEST-001 | 5.8 | Under Review | `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
+| Software Design Description | SDD-BUILDNEST-001 | 4.13 | Under Review | `docs/SDLC-docs/design/software-design-description.md` |
+| Test Plan | TP-BUILDNEST-001 | 4.5 | Under Review | `docs/SDLC-docs/software-testing/test-plan.md` |
+| Requirements Traceability Matrix | RTM-BUILDNEST-001 | 1.43 | Under Review | `docs/SDLC-docs/requirement-engineering/requirements-traceability-matrix.md` |
+| **Software Development Plan** | **SDP-BUILDNEST-001** | **1.3** | **Under Review** | **`docs/SDLC-docs/project-planning/software-development-plan.md`** |
 
 ---
 

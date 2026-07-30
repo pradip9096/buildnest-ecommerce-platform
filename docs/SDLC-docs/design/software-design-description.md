@@ -10,12 +10,12 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 4.12 |
-| **Date** | 2026-07-29 12:40 IST |
+| **Version** | 4.13 |
+| **Date** | 2026-07-30 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
-| **Related SRS** | SRS-BUILDNEST-001 v5.6 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
+| **Related SRS** | SRS-BUILDNEST-001 v5.8 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
 | **Supersedes** | SDD v2.0 (archive/docs/ISO-IEC-IEEE/SDD_IEEE_1016_2017.md, 2026-02-11) |
 
 ---
@@ -48,6 +48,7 @@
 | 4.10 | 2026-07-29 IST | Software Architect | FR-LOC-03 implemented (#563), per §4.5.6's own design sketch: `ProductDocument.districtIds` field populated from the owning seller's `seller_districts` rows, and a buyer-facing `districtId` filter added to `ProductElasticsearchRepository`/`ProductSearchServiceImpl`/`ProductControllerV2`'s `/search` endpoint (Elasticsearch path only — the JPA fallback is unaffected, per the issue's own stated scope). Updated §4.5.6's Status line and the §7 traceability table's Location-Based Matching row. FR-LOC-04 (checkout-time enforcement) remains Ph-3, Planned — tracked by #564 | Pending |
 | 4.11 | 2026-07-29 IST | Software Architect | FR-LOC-04 implemented (#564), completing §4.5.6's design: `CheckoutServiceImpl.validateCheckout` enforces district membership server-side at checkout via `SellerDistrictRepository.findAllBySeller_User_Id` (JPA, not the raw JPQL `EXISTS` originally sketched — functionally equivalent, expressed as a derived-query call to match this service's existing validation-loop style), fail-closed when the buyer's district can't be determined. Updated §4.5.6's header/Status line from "Ph-3, Planned" to "Ph-3, complete" and the §7 traceability table's Location-Based Matching row. `Related SRS` updated 5.4 → 5.5 | Pending |
 | 4.12 | 2026-07-29 IST | Software Architect | SEC-14 (#110): updated the Security Headers Design table's CSP row to reflect `unsafe-inline` removed from `style-src` in `frontend/security-headers.conf` (backend `MAIN_CSP` already clean since #237); removed the now-resolved "CSP header contains `unsafe-inline`" row from Appendix C's Outstanding Design Constraints table. `Related SRS` updated 5.5 → 5.6 | Pending |
+| 4.13 | 2026-07-30 IST | Software Architect | Periodic 15-issue SDLC documentation sync (overdue — last performed at #452/#458, 2026-07-17; 53 issues closed since). Recomputed all 13 rows of §4.2.3's Component Statistics table directly via the `find`/`grep` commands the table itself cites — every metric had drifted upward since the 2026-07-17 baseline (e.g. 352→383 source files, 38→44 controllers, 28→33 repositories, 218→245 endpoint mappings) as the Ph-3 marketplace-pivot (seller/district features, #553-#564) shipped real code with no single issue's own scope covering a re-verification. MySQL 8.2/Redis 7/Elasticsearch 8.17 stack claims re-checked against `docker-compose.yml`'s active service definitions — still accurate. `Related SRS` updated 5.6 → 5.8 (2 intervening bumps, #110/#111, never propagated here) | Pending |
 | 4.7 | 2026-07-28 17:00 IST | Software Architect | FR-SEL-07 (#558): new `SellerReview` entity/table (`seller_review`), mirroring `ProductReview` but scoped by the seller's `User.id`. Added to §4.5.1's ER diagram and §4.5.2's entity table. Same DTO-exposure gap recurred as #581's `orderGroupId` fix — `OrderResponseDTO` needed a new `sellerId` field so the frontend's `SellerReviewPanel` (surfaced from a delivered order's detail view) could link an order to the seller being rated; populated in the same two mapping methods (`OrderServiceImpl.mapToResponseDTO`, `CheckoutServiceImpl`'s equivalent) | Pending |
 | 4.5 | 2026-07-26 09:00 IST | Software Architect | Final sub-issue of #557/FR-SEL-06: added `SellerOrderController`/`OrderServiceImpl`'s new seller-scoped list/detail/status methods, using a new `OrderRepository.findBySellerId`/`findByIdAndSellerId` `EXISTS`-subquery (`Order` has no direct seller reference; ownership derived transitively via `OrderItem.product.seller`) — mirrors #555's `SellerProductController`/#556's `SellerInventoryController` ownership-scoping pattern. All three FR-SEL-06 sub-issues (#578/#579/#580) now closed. **Not addressed in this revision**: §4.7.3's API Endpoint Catalogue does not yet list any of the three sellers' controllers (`SellerProductController`/`SellerInventoryController`/`SellerOrderController`) — this gap was already surfaced and filed as its own follow-up (#576) during #556's closure; not duplicated here | Pending |
 
@@ -352,23 +353,23 @@ There is no `config/`, `router/`, `services/`, or `utils/` top-level package, an
 subdivision under `pages/` — the structure above is the actual, current layout, verified directly
 against `frontend/src/` rather than the SPA's original planning assumptions.
 
-#### 4.2.3 Component Statistics (Verified — 2026-07-17, #458)
+#### 4.2.3 Component Statistics (Verified — 2026-07-30, periodic 15-issue sync)
 
 | Layer | Count | Verification Source |
 | :--- | :--- | :--- |
-| Total Java source files | **352** | `find src/main/java -name "*.java" \| wc -l` |
-| Total test files | **195** | `find src/test/java -name "*.java" \| wc -l` |
-| Controller classes (`@RestController`) | **38** | `find` + `grep @RestController` |
-| Service classes (`@Service`) | **46** | `find` + `grep @Service` |
-| Entity classes (`@Entity`) | **32** | `find` + `grep @Entity` |
-| Repository interfaces | **28** | `extends JpaRepository / ElasticsearchRepository` |
+| Total Java source files | **383** | `find src/main/java -name "*.java" \| wc -l` |
+| Total test files | **216** | `find src/test/java -name "*.java" \| wc -l` |
+| Controller classes (`@RestController`) | **44** | `find` + `grep @RestController` |
+| Service classes (`@Service`) | **49** | `find` + `grep @Service` |
+| Entity classes (`@Entity`) | **37** | `find` + `grep @Entity` |
+| Repository interfaces | **33** | `extends JpaRepository / ElasticsearchRepository` |
 | Configuration classes (`@Configuration`) | **39** | `find` + `grep @Configuration` |
-| API endpoint mappings | **218** | `grep @*Mapping` across controllers |
-| Classes using `@Transactional` | **24** | `grep @Transactional` |
-| Classes using `@Cacheable` / `@CacheEvict` | **5** | `grep @Cacheable` |
-| Classes with method-level security | **29** | `grep @PreAuthorize\|@Secured` |
+| API endpoint mappings | **245** | `grep @*Mapping` across controllers |
+| Classes using `@Transactional` | **27** | `grep @Transactional` |
+| Classes using `@Cacheable` / `@CacheEvict` | **6** | `grep @Cacheable` |
+| Classes with method-level security | **35** | `grep @PreAuthorize\|@Secured` |
 | Classes using Resilience4j | **6** | `grep CircuitBreaker\|@Retry` |
-| Classes using SLF4J / Logback | **102** | `grep @Slf4j\|LoggerFactory` |
+| Classes using SLF4J / Logback | **107** | `grep @Slf4j\|LoggerFactory` |
 
 ---
 

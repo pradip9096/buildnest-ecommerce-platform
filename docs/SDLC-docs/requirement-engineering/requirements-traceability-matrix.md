@@ -10,14 +10,14 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.42 |
-| **Date** | 2026-07-29 IST |
+| **Version** | 1.43 |
+| **Date** | 2026-07-30 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
-| **Related SRS** | SRS-BUILDNEST-001 v5.6 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
-| **Related SDD** | SDD-BUILDNEST-001 v4.12 — `docs/SDLC-docs/design/software-design-description.md` |
-| **Related TP** | TP-BUILDNEST-001 v4.3 — `docs/SDLC-docs/software-testing/test-plan.md` |
+| **Related SRS** | SRS-BUILDNEST-001 v5.8 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
+| **Related SDD** | SDD-BUILDNEST-001 v4.13 — `docs/SDLC-docs/design/software-design-description.md` |
+| **Related TP** | TP-BUILDNEST-001 v4.5 — `docs/SDLC-docs/software-testing/test-plan.md` |
 | **Baseline Assessment** | `docs/reports/baseline-assessment-2026-06-19.md` |
 
 ---
@@ -71,6 +71,7 @@
 | 1.40 | 2026-07-29 IST | QA Manager | FR-FE-10's Implementation/Test citation extended for #516: `client.ts`'s 401-interceptor recursed indefinitely when the refresh request itself returned 401 (no valid refresh cookie — the common case for any unauthenticated visitor), confirmed live at 2,984 `POST /api/auth/refresh` requests in a few seconds. Fixed via a new `RequestOptions.skipAuthInterceptor` flag set on the `apiRefresh()`/`apiLogout()` calls themselves, bypassing the interceptor for exactly the two calls that are part of the refresh machinery. Row stays ✅ Implemented (no status change — a correctness fix to already-implemented behavior, not new coverage) | Pending |
 | 1.41 | 2026-07-29 IST | QA Manager | SEC-14 (`#110`, "final verification" of the M3 CSP `unsafe-inline` removal): backend `SecurityConfig`/`SecurityHeaderPolicies.MAIN_CSP` was already `unsafe-inline`-free since #237, but `frontend/security-headers.conf` (the nginx-served CSP for the SPA's own document, a separate origin/response from the backend API's CSP) still carried `style-src 'self' 'unsafe-inline'`. Live-browser CSP verification (a static-HTML CSP probe plus a strict-header production `dist/` serve) confirmed React's `style={{}}` prop sets styles via `node.style[prop] = value` (a JS property assignment, per `react-dom-client.development.js`'s `setValueForStyles`), not via the HTML `style=` attribute — so it is not subject to `style-src`'s inline restriction, and the frontend's 7 `style={{}}` usages across 4 components required no code change. Removed `'unsafe-inline'` from `style-src` in `security-headers.conf`; rebuilt frontend `dist/` and re-verified zero CSP console violations. SEC-14 corrected from 🟡 Partial to ✅ Implemented; recomputed the Security Coverage Summary row (9→10 Implemented, 2→1 Partial) and the Coverage Summary Totals row (122→123 Implemented, 16→15 Partial) accordingly, plus the §12 Phase 2 Security Started/Not-Started counts (1→2 Started, 4→3 Not Started) | Pending |
 | 1.42 | 2026-07-29 IST | QA Manager | Added SEC-15 (#111): full OWASP Top 10 (2021) assessment (A01-A10), performed against the local dev stack (no staging environment exists yet — `development-workflow.md` step 31, confirmed via user decision) using OWASP ZAP full active scan (141 automated checks, 0 Fail/Warn, 1 Informational) plus direct code/live-endpoint review. One Medium finding (A10 SSRF: `WebhookServiceImpl`'s admin-supplied `targetUrl` had no private-IP/loopback blocklist) fixed in the same PR via a new `SsrfUrlValidator` component, with dedicated unit tests. Zero Critical/High findings — see `docs/SDLC-docs/reports/security-assessment.md` for the full per-category writeup. Corrected a filing-time traceability mismatch: issue #111 was titled "(SEC-02)", but SEC-02 is an unrelated, already-Implemented requirement (JWT secret length) — SEC-15 is the correct, newly-added FR this issue satisfies. Recomputed the Security Coverage Summary row (14→15 total, 10→11 Implemented) and the Coverage Summary Totals row (183→184 total, 123→124 Implemented) | Pending |
+| 1.43 | 2026-07-30 IST | QA Manager | Periodic 15-issue SDLC documentation sync (overdue — last performed at #452, 2026-07-17; 53 issues closed since, well past the 15-issue trigger). Recomputed the Seller & Marketplace (FR-SEL) Coverage Summary row directly from its 8 individual rows (376-383): all 8 are ✅ Implemented, correcting the stale "5 Implemented / 3 Not Started (Ph-3, Planned)" that no single issue's own scope had covered recomputing. Folded FR-SEL (8/8) and FR-LOC (4/4) into the Totals row per this document's own previously-stated fold-in criterion (implementation begun, OQ-01/OQ-02 resolved) — Totals 184→196 total, 124→136 Implemented. Cross-reference mesh sweep: corrected `Related SRS` (5.6→5.8, since SRS's own version is also bumped in this same sync pass) and `Related TP` (4.3→4.5, same reason); `Related SDD` was already current (4.12) before this pass, bumped to 4.13 alongside SDD's own sync edit | Pending |
 
 ### Document Approval
 
@@ -146,13 +147,13 @@ The RTM serves to:
 | Safety (SAF) | 3 | 1 | 0 | 2 | 0 | 0 |
 | Design Constraints (DC) | 8 | 7 | 1 | 0 | 0 | 0 |
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
-| **Totals** | **184** | **124** | **15** | **45** | **0** | **0** |
-| Seller & Marketplace (FR-SEL) *(Ph-3, Planned — excluded from Totals above)* | 8 | 5 | 0 | 0 | 0 | 3 |
-| Location-Based Matching (FR-LOC) *(Ph-3, complete — excluded from Totals above)* | 4 | 4 | 0 | 0 | 0 | 0 |
+| Seller & Marketplace (FR-SEL) | 8 | 8 | 0 | 0 | 0 | 0 |
+| Location-Based Matching (FR-LOC) | 4 | 4 | 0 | 0 | 0 | 0 |
+| **Totals** | **196** | **136** | **15** | **45** | **0** | **0** |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 >
-> **Ph-3 (Marketplace Expansion) posture**: 12 requirements added by the SRS v5.0/SDD v4.0 marketplace-pivot addendum, all ⬜ Not Started — deliberately excluded from the Totals row above, which represents existing Ph-1/Ph-2 tracked scope. These will be folded into Totals once implementation begins and the OQ-01/OQ-02 design questions (§6.12) are resolved.
+> **Ph-3 (Marketplace Expansion) posture**: all 12 requirements added by the SRS v5.0/SDD v4.0 marketplace-pivot addendum (8 FR-SEL, 4 FR-LOC) are now ✅ Implemented as of #564 (2026-07-29) — folded into the Totals row above per this section's own previously-stated criterion ("once implementation begins and the OQ-01/OQ-02 design questions are resolved"), both conditions now satisfied. Corrected during the periodic 15-issue sync (this revision): the FR-SEL row had drifted to "5 Implemented / 3 Not Started (Ph-3, Planned)" despite all 8 individual FR-SEL-01–08 rows already showing ✅ Implemented since #559 (2026-07-28) — no single issue's own scope covered recomputing this aggregate row, the exact drift class this periodic sync exists to catch.
 
 ---
 

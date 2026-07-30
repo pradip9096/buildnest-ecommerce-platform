@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 5.7 |
-| **Date** | 2026-07-29 IST |
+| **Version** | 5.8 |
+| **Date** | 2026-07-30 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -46,6 +46,7 @@
 | 5.5 | 2026-07-29 IST | Technical Lead | FR-LOC-04 implemented (#564), completing FG-12 (Location-Based Matching) — `CheckoutServiceImpl.validateCheckout` enforces district membership server-side at checkout, fail-closed when the buyer's district can't be determined, unrestricted when the seller has no declared districts. Updated §3.2.12's header/status note from "Ph-3, Planned" to "Ph-3, complete", and the §4.2 Location-Based Matching aggregate row (3→4 Implemented, 1→0 Not started) | Pending |
 | 5.6 | 2026-07-29 IST | Technical Lead | SEC-14 (#110): backend CSP was already `unsafe-inline`-free since #237, but the frontend's own document CSP (`frontend/security-headers.conf`) still carried `unsafe-inline` on `style-src`; removed after confirming React's `style={{}}` prop doesn't trigger the inline-style CSP restriction (JS property assignment, not the `style=` HTML attribute). Updated the SEC-14 Note in §7 (or equivalent security-requirements section) from "known gap for Ph-1" to resolved | Pending |
 | 5.7 | 2026-07-29 IST | Technical Lead | Added SEC-15 (#111): OWASP Top 10 2021 assessment requirement, correcting a filing-time traceability mismatch where the issue cited "(SEC-02)" (an unrelated, already-satisfied JWT-length requirement) and a blanket "SEC-01 to SEC-15" range that didn't exist yet. Updated SN-06 and the Coverage Summary Security row from SEC-01–14 to SEC-01–15 (14→15 requirements, 9→10 High). See `docs/SDLC-docs/reports/security-assessment.md` for the full A01–A10 assessment | Pending |
+| 5.8 | 2026-07-30 IST | Technical Lead | Periodic 15-issue SDLC documentation sync (overdue — last performed at #452, 2026-07-17; 53 issues closed since). Corrected a stale Spring Boot version claim (3.5.10 → 3.5.16, verified directly against `backend/pom.xml`'s `spring-boot-starter-parent`) in 3 places (REF-08, §4.2's Backend Framework row, CON-02) — this had drifted through several patch releases with no single issue's own scope covering a re-verification. MySQL 8.2 / Redis 7 / Elasticsearch 8.17 claims re-checked against `docker-compose.yml`'s active (non-commented) service definitions — still accurate, no change needed | Pending |
 
 ### Document Change Procedure
 
@@ -268,7 +269,7 @@ The system is designed for deployment on **Kubernetes** (manifests provided) or 
 | REF-05 | OWASP ASVS — Application Security Verification Standard | 4.0 |
 | REF-06 | PCI-DSS — Payment Card Industry Data Security Standard | v4.0 |
 | REF-07 | GDPR — General Data Protection Regulation | 2018 |
-| REF-08 | Spring Boot Reference Documentation | 3.5.10 |
+| REF-08 | Spring Boot Reference Documentation | 3.5.16 |
 | REF-09 | Razorpay API Documentation | Latest |
 | REF-10 | BuildNest Baseline Assessment Report | 2026-06-19 |
 | REF-11 | BuildNest Business Rules Document (BRD-BUILDNEST-001) | 2.0 |
@@ -317,7 +318,7 @@ BuildNest is a new, self-contained product. It is not a replacement for or enhan
 | :--- | :--- |
 | Server OS | Linux (Alpine / Debian in Docker containers) |
 | Backend Runtime | JDK 21 LTS (Eclipse Temurin) |
-| Backend Framework | Spring Boot 3.5.10 |
+| Backend Framework | Spring Boot 3.5.16 |
 | Frontend Runtime | Node.js 18+ (build-time); Chrome 90+, Firefox 90+, Edge 90+, Safari 15+ |
 | Container Engine | Docker 24+ with multi-stage builds |
 | Orchestration | Kubernetes 1.28+ |
@@ -355,7 +356,7 @@ BuildNest is a new, self-contained product. It is not a replacement for or enhan
 | ID | Constraint | Description |
 | :--- | :--- | :--- |
 | CON-01 | Language & Runtime | Java 21 (LTS) is required |
-| CON-02 | Backend Framework | Spring Boot **3.5.10** with Spring Security, Spring Data JPA |
+| CON-02 | Backend Framework | Spring Boot **3.5.16** with Spring Security, Spring Data JPA |
 | CON-03 | Database | MySQL **8.2** is the primary relational data store |
 | CON-04 | Cache | Redis 7 with Lettuce client is required for caching and rate limiting |
 | CON-05 | Payment Gateway | Razorpay is the sole supported payment provider |
