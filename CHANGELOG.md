@@ -32,7 +32,10 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   database had no seeded products, so `E2ETest` now seeds one before
   the suite runs. All 7 scenarios verified passing locally against the
   real stack. Filed #635 for `CartApiTest`/`OrderApiTest`/`ProductApiTest`,
-  which still fail with 403 (CSRF) — a separate, pre-existing gap.
+  which still fail with 403 (CSRF) — a separate, pre-existing gap. Also
+  surfaced (unrelated to this diff — zero `pom.xml` changes on this
+  branch) a newly-published `netty-transport` `CVE-2026-56816` (CVSS 7.5)
+  `OWASP Dependency-Check` finding; filed as #636.
 - Full regression / M5 gate audit (REG-01, #130): found the `E2E Tests` and
   `Load Tests` CI jobs (`ci-cd-pipeline.yml`) both carried
   `continue-on-error: true`, masking real failures — E2E's Selenium suite
