@@ -58,6 +58,7 @@ export function AddressStep({ onNext, loading, error }: Props) {
         onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
         onBlur={() => setTouched(t => ({ ...t, [name]: true }))}
         placeholder={placeholder}
+        data-testid={`address-${name}`}
         className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 ${
           touched[name] && errors[name] ? 'border-red-400' : 'border-gray-300'
         }`}

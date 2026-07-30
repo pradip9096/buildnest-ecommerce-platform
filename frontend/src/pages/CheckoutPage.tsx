@@ -155,7 +155,7 @@ export function CheckoutPage() {
 
           {cart && (
             <div className="lg:w-72">
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-6">
+              <div data-testid="order-summary" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-6">
                 <h2 className="font-semibold text-gray-900 mb-3 text-sm">Order Summary</h2>
                 <div className="space-y-1.5 text-sm">
                   {cart.items.map(item => (
