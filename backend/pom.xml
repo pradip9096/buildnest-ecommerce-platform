@@ -732,10 +732,18 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 			<!-- Gatling Maven Plugin for load testing -->
+			<!-- simulationClass pinned to LoadTestSimulation: it's the only simulation with real
+			     global assertions (response time + success rate); the 3 sibling Scala simulations
+			     under src/test/scala/simulations have no assertions of their own. Without this,
+			     gatling:test with multiple simulation classes on the classpath is non-deterministic
+			     in non-interactive CI (#631). -->
 			<plugin>
 				<groupId>io.gatling</groupId>
 				<artifactId>gatling-maven-plugin</artifactId>
 				<version>4.7.0</version>
+				<configuration>
+					<simulationClass>com.example.buildnest_ecommerce.loadtest.LoadTestSimulation</simulationClass>
+				</configuration>
 			</plugin>
 			<!-- OWASP Dependency-Check Plugin (Mitigation #6: Security scanning) -->
 			<plugin>

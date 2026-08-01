@@ -382,25 +382,70 @@ jobs:
   load-tests:
     name: Load Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs: integration-tests
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           cache: 'maven'
-      
+
       - name: Grant execute permissions to mvnw
         run: chmod +x ./mvnw
-      
+
+      - name: Start application (in-memory H2, real security config)
+        # #631: gatling:test only fires HTTP requests at an already-running server — it never
+        # starts one itself. Previously nothing here started the app, so every request failed
+        # with connection-refused and the Gatling assertions failed on every run (masked by
+        # continue-on-error until #130 removed that). Mirrors the e2e-tests job's own nohup +
+        # curl-readiness pattern below for the frontend preview server.
+        #
+        # Deliberately does NOT activate the `test` Spring profile: SecurityConfig is
+        # `@Profile("!test")` (it assumes a manually-`@Import`ed TestSecurityConfig in a real
+        # JUnit context), so `-Dspring-boot.run.profiles=test` here would boot with no
+        # AuthenticationManager bean at all and fail startup — verified locally. Instead,
+        # `useTestClasspath=true` puts the H2 driver (test-scoped dependency) on the run
+        # classpath, and the individual properties below are set explicitly via
+        # `spring-boot.run.arguments` so the app boots against H2 with the REAL security chain
+        # (JWT auth, CORS, rate limiting) and no external MySQL/Redis/ES dependency — closer to
+        # production behavior than the test-profile permissive config, which matters for a load
+        # test meant to exercise real auth-gated endpoints. `ddl-auto=create-drop` (not the
+        # default `validate`) because Hibernate's own generated H2 types don't always match
+        # Liquibase's MySQL-targeted changeset types (confirmed locally: `is_default` boolean
+        # column mismatch) — create-drop lets Hibernate regenerate the schema from the entity
+        # mappings after Liquibase runs, avoiding the mismatch.
+        run: |
+          ARGS="--spring.datasource.url=jdbc:h2:mem:testdb --spring.datasource.username=sa --spring.datasource.password= --spring.datasource.driver-class-name=org.h2.Driver --spring.jpa.hibernate.ddl-auto=create-drop --spring.sql.init.mode=never --spring.liquibase.default-schema=PUBLIC --spring.jpa.properties.hibernate.default_schema=PUBLIC --jwt.secret=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA== --razorpay.key.id=test_key_id --razorpay.key.secret=test_key_secret --razorpay.webhook.secret=test_webhook_secret"
+          nohup ./mvnw spring-boot:run \
+            -Dspring-boot.run.useTestClasspath=true \
+            -Dspring-boot.run.arguments="$ARGS" \
+            > app.log 2>&1 &
+          echo "Waiting for application to become ready..."
+          # /actuator/health/readiness (not /actuator/health) — overall health aggregates
+          # Redis/Elasticsearch/mail indicators, which are deliberately unreachable in this
+          # stripped-down environment and would keep the aggregate status DOWN forever even
+          # though the app itself is fully serving requests (verified locally).
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8080/actuator/health/readiness > /dev/null; then
+              echo "Application is up."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Application did not become ready in time:"
+          cat app.log
+          exit 1
+
       - name: Run Gatling load tests
+        # simulationClass pinned in pom.xml's gatling-maven-plugin config (#631) — LoadTestSimulation
+        # is the only simulation with real global assertions (response time + success rate).
         run: ./mvnw gatling:test
 
       - name: Upload Gatling reports
@@ -409,6 +454,13 @@ jobs:
         with:
           name: gatling-reports
           path: backend/target/gatling/
+
+      - name: Upload application log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-app-log
+          path: backend/app.log
 
   # Job 7: Stress Tests (Scheduled only)
   stress-tests:
