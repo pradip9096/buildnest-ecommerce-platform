@@ -54,6 +54,15 @@ public abstract class BaseApiTest {
         // spring-security.md). A real browser fetches XSRF-TOKEN and echoes it as
         // X-XSRF-TOKEN automatically; RestAssured does not, so every mutating request in
         // this suite was receiving 403 until this bootstrap was added (#635).
+        //
+        // RestAssured.given() merges the static RestAssured.requestSpecification set
+        // below, so on the 2nd+ test class in the same JVM this bootstrap call would
+        // otherwise carry the *previous* class's already-valid XSRF-TOKEN cookie.
+        // NonClearingCsrfTokenRepository (and CookieCsrfTokenRepository generally) skips
+        // re-emitting Set-Cookie when the incoming cookie already matches the resolved
+        // token, so .cookie("XSRF-TOKEN") on that response finds nothing new. Clearing
+        // the static spec first forces a clean request and a genuinely fresh cookie.
+        RestAssured.requestSpecification = null;
         String csrfToken = RestAssured.given()
                 .when()
                 .get("/api/auth/csrf")
