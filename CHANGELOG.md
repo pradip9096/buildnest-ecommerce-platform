@@ -13,6 +13,18 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Fixed
+- `ProductApiTest`'s `GET /api/v2/products` genuine `500` (#639, discovered
+  via #635's own CSRF fix uncovering it): `Product.seller` (`@ManyToOne`,
+  lazy) and `Product.tags` (`@ManyToMany`, lazy) were never included in any
+  of `ProductRepository`'s `@EntityGraph` fetch plans, so Jackson threw a
+  `LazyInitializationException` (wrapped as `HttpMessageNotWritableException`,
+  surfacing as a raw `500 "Failed to write request"` — no application-level
+  exception logged, since it bypasses `GlobalExceptionHandler` entirely)
+  once it tried to serialize them post-transaction under
+  `open-in-view=false`. Added `"seller"`/`"tags"` to the 5 `@EntityGraph`
+  fetch plans reachable from `ProductControllerV2` (`findById`,
+  `advancedSearch`, `findByCategory`, `findAll(Pageable)`,
+  `findRelatedProducts`). `ProductApiTest` now 5/5 pass.
 - `OrderApiTest.testCheckoutProcess` `StackOverflowError` (#638, discovered
   via #635's own CSRF fix uncovering it): `CheckoutController.processCheckout()`/
   `processCheckoutWithPayment()` returned the raw `Order` JPA entity directly,
