@@ -8,6 +8,7 @@ import com.example.buildnest_ecommerce.repository.CategoryRepository;
 import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
  * production code carries zero awareness of this test-only concern. Mirrors BaseApiTest#seedProduct
  * (repository-based, not raw SQL, to avoid guessing Hibernate's generated column names).
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "e2e.seed.enabled", havingValue = "true", matchIfMissing = false)
@@ -37,6 +39,7 @@ public class E2ESeedDataRunner implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        log.info("E2ESeedDataRunner: starting seed (e2e.seed.enabled=true)");
         Category category = categoryRepository.findByName("E2E Test Category")
                 .orElseGet(() -> {
                     Category cat = new Category();
@@ -62,5 +65,6 @@ public class E2ESeedDataRunner implements ApplicationRunner {
         inventory.setStatus(InventoryStatus.IN_STOCK);
         inventory.setUpdatedAt(LocalDateTime.now());
         inventoryRepository.save(inventory);
+        log.info("E2ESeedDataRunner: seeded product id={} sku={}", saved.getId(), saved.getSku());
     }
 }
