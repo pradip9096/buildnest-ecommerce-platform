@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 4.14 |
+| **Version** | 4.15 |
 | **Date** | 2026-08-02 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -51,6 +51,7 @@
 | 4.13 | 2026-07-30 IST | Software Architect | Periodic 15-issue SDLC documentation sync (overdue — last performed at #452/#458, 2026-07-17; 53 issues closed since). Recomputed all 13 rows of §4.2.3's Component Statistics table directly via the `find`/`grep` commands the table itself cites — every metric had drifted upward since the 2026-07-17 baseline (e.g. 352→383 source files, 38→44 controllers, 28→33 repositories, 218→245 endpoint mappings) as the Ph-3 marketplace-pivot (seller/district features, #553-#564) shipped real code with no single issue's own scope covering a re-verification. MySQL 8.2/Redis 7/Elasticsearch 8.17 stack claims re-checked against `docker-compose.yml`'s active service definitions — still accurate. `Related SRS` updated 5.6 → 5.8 (2 intervening bumps, #110/#111, never propagated here) | Pending |
 | 4.14 | 2026-08-02 IST | Software Architect | #647: retired only the browser-driven Selenium E2E class (`E2ETest.java`) now that `playwright-e2e` demonstrated 3/3 real green runs on `master`. Mid-implementation correction: an initial pass wrongly deleted the whole `e2e/` package, including the separate RestAssured API E2E suite (`ProductApiTest`/`OrderApiTest`/`CartApiTest`, still real, still `@Tag("e2e")`-tagged) that TIR-01 actually governs — caught before commit, restored, and this table's row corrected to describe the current (not assumed-retired) state | Pending |
 | 4.7 | 2026-07-28 17:00 IST | Software Architect | FR-SEL-07 (#558): new `SellerReview` entity/table (`seller_review`), mirroring `ProductReview` but scoped by the seller's `User.id`. Added to §4.5.1's ER diagram and §4.5.2's entity table. Same DTO-exposure gap recurred as #581's `orderGroupId` fix — `OrderResponseDTO` needed a new `sellerId` field so the frontend's `SellerReviewPanel` (surfaced from a delivered order's detail view) could link an order to the seller being rated; populated in the same two mapping methods (`OrderServiceImpl.mapToResponseDTO`, `CheckoutServiceImpl`'s equivalent) | Pending |
+| 4.15 | 2026-08-02 IST | Software Architect | #650: corrected §5.3.1's `redis-circuit-breaker` row — it never actually protected declarative `@Cacheable`/`@CacheEvict` calls, only manually-wrapped `RedisTemplate` usage (rate limiting); the `@Cacheable` proxy path had zero resilience coverage until this issue added a `GracefulCacheErrorHandler` (registered via `CacheConfig implements CachingConfigurer#errorHandler()`, since `@EnableCaching` does not auto-detect a plain `CacheErrorHandler` bean by type). Added a clarifying paragraph documenting the fix and the scope correction | Pending |
 | 4.5 | 2026-07-26 09:00 IST | Software Architect | Final sub-issue of #557/FR-SEL-06: added `SellerOrderController`/`OrderServiceImpl`'s new seller-scoped list/detail/status methods, using a new `OrderRepository.findBySellerId`/`findByIdAndSellerId` `EXISTS`-subquery (`Order` has no direct seller reference; ownership derived transitively via `OrderItem.product.seller`) — mirrors #555's `SellerProductController`/#556's `SellerInventoryController` ownership-scoping pattern. All three FR-SEL-06 sub-issues (#578/#579/#580) now closed. **Not addressed in this revision**: §4.7.3's API Endpoint Catalogue does not yet list any of the three sellers' controllers (`SellerProductController`/`SellerInventoryController`/`SellerOrderController`) — this gap was already surfaced and filed as its own follow-up (#576) during #556's closure; not duplicated here | Pending |
 
 ### Document Approval
@@ -1626,8 +1627,17 @@ Bucket4j token-bucket strategy backed by Redis:
 
 | Instance | Protects | Failure Threshold | Slow Call Threshold | Wait Duration |
 | :--- | :--- | :--- | :--- | :--- |
-| `redis-circuit-breaker` | Redis cache and rate limit calls | **70%** | — | 30 seconds |
+| `redis-circuit-breaker` | Manually-wrapped Redis calls (rate limiting, `RateLimiterService`) | **70%** | — | 30 seconds |
 | `database-circuit-breaker` | All JPA / JDBC calls | **50%** | 50% > 8 s | 60 seconds |
+
+Declarative `@Cacheable`/`@CacheEvict` calls (`CacheConfig`, `ProductServiceImpl`
+and siblings) are **not** covered by `redis-circuit-breaker` — that instance
+only wraps manual `RedisTemplate` usage. The cache-annotation proxy path is
+instead protected by `GracefulCacheErrorHandler`, registered via
+`CacheConfig implements CachingConfigurer#errorHandler()` (#650): it falls
+through to the underlying method on a `RedisConnectionFailureException`
+without throwing, while still rethrowing genuine serialization/corruption
+errors (see #651).
 
 #### 5.3.2 Time Limiter Configuration
 
