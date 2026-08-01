@@ -36,14 +36,16 @@ public class LoadTestSimulation extends Simulation {
                         .userAgentHeader("Gatling Load Test");
 
         // Scenario: Browse Products (TC-LOAD-001)
+        // #631: /api/products and /api/products/{id} don't exist in this codebase — the real
+        // unauthenticated product-browsing routes are under /api/public/products (HomeController).
         ChainBuilder browseProductsChain = exec(
                         http("Get Products List")
-                                        .get("/api/products")
+                                        .get("/api/public/products")
                                         .check(status().is(200)))
                         .pause(Duration.ofSeconds(2))
                         .exec(
                                         http("Get Product Details")
-                                                        .get("/api/products/1")
+                                                        .get("/api/public/products/1")
                                                         .check(status().in(200, 404)))
                         .pause(Duration.ofSeconds(1));
 
@@ -51,9 +53,10 @@ public class LoadTestSimulation extends Simulation {
                         .exec(browseProductsChain);
 
         // Scenario: Search Products (TC-LOAD-002)
+        // #631: query param is `keyword`, not `q` (see HomeController#searchProducts).
         ChainBuilder searchProductsChain = exec(
                         http("Search Products")
-                                        .get("/api/products/search?q=cement")
+                                        .get("/api/public/products/search?keyword=cement")
                                         .check(status().is(200)))
                         .pause(Duration.ofSeconds(2));
 
@@ -61,31 +64,37 @@ public class LoadTestSimulation extends Simulation {
                         .exec(searchProductsChain);
 
         // Scenario: Authentication Flow (TC-LOAD-003)
+        // #631: LoginRequest's field is `username` (see LoginRequest.java), not `email`; an
+        // invalid-credentials login returns 400 (AuthController), not 401 — verified locally.
         ChainBuilder authenticationChain = exec(
                         http("Login Request")
                                         .post("/api/auth/login")
                                         .header("Content-Type", "application/json")
                                         .body(StringBody("""
                                                         {
-                                                            "email": "test@example.com",
+                                                            "username": "test@example.com",
                                                             "password": "password123"
                                                         }
                                                         """))
-                                        .check(status().in(200, 401)))
+                                        .check(status().in(200, 400)))
                         .pause(Duration.ofSeconds(3));
 
         ScenarioBuilder authenticationScenario = scenario("User Authentication")
                         .exec(authenticationChain);
 
         // Scenario: Add to Cart (TC-LOAD-004)
+        // #631: real route is /api/user/cart/add (see CartController); /api/cart/items doesn't
+        // exist. An unauthenticated request here is rejected by @PreAuthorize (anonymous
+        // principal fails the role/ownership check) as 403, not the 401 an AuthenticationEntryPoint
+        // would return — verified locally against the real filter chain.
         ChainBuilder addToCartChain = exec(
                         http("View Products")
-                                        .get("/api/products")
+                                        .get("/api/public/products")
                                         .check(status().is(200)))
                         .pause(Duration.ofSeconds(1))
                         .exec(
                                         http("Add to Cart")
-                                                        .post("/api/cart/items")
+                                                        .post("/api/user/cart/add")
                                                         .header("Content-Type", "application/json")
                                                         .body(StringBody("""
                                                                         {
@@ -93,7 +102,7 @@ public class LoadTestSimulation extends Simulation {
                                                                             "quantity": 2
                                                                         }
                                                                         """))
-                                                        .check(status().in(200, 201, 401)))
+                                                        .check(status().in(200, 201, 403)))
                         .pause(Duration.ofSeconds(2));
 
         ScenarioBuilder addToCartScenario = scenario("Add to Cart")

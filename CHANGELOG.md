@@ -13,6 +13,26 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Fixed
+- Gatling load-test CI job genuinely failing (#631, found via #130's regression
+  audit): the `load-tests` job (`ci-cd-pipeline.yml`) ran `./mvnw gatling:test`
+  with nothing ever starting the Spring Boot app first — every HTTP call hit
+  connection-refused against `localhost:8080`. Added an app-startup step
+  (in-memory H2, real `SecurityConfig` rather than the permissive `test`
+  profile, since `SecurityConfig` is `@Profile("!test")`) with a
+  `/actuator/health/readiness` readiness check, mirroring the `e2e-tests`
+  job's own nohup + curl-readiness pattern. Also fixed `LoadTestSimulation.java`,
+  which independently targeted nonexistent/wrong endpoints regardless of
+  whether the server was reachable — `/api/products` and `/api/products/{id}`
+  don't exist (real public routes are under `/api/public/products`); the
+  search query param is `keyword`, not `q`; `LoginRequest`'s field is
+  `username`, not `email`; `/api/cart/items` doesn't exist (real route is
+  `/api/user/cart/add`); an unauthenticated cart-add returns 403 via
+  `@PreAuthorize`, not 401. Pinned `gatling-maven-plugin`'s `simulationClass`
+  to `LoadTestSimulation` (the only one of 4 simulation classes with real
+  global assertions) to avoid non-deterministic selection in non-interactive
+  CI. Verified locally: all 4 scenarios pass against a real running instance
+  (100% success, max response time 472ms < 5000ms threshold).
+
 - E2E Selenium suite never exercised the real frontend (#630, root cause
   tracked from #130): `E2ETest.java` navigated the backend's own
   `@SpringBootTest` random port expecting server-rendered pages that
