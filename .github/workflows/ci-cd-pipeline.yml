@@ -406,6 +406,22 @@ jobs:
     defaults:
       run:
         working-directory: frontend
+    # Required: @Cacheable (e.g. ProductServiceImpl#getProductById) does not gracefully degrade
+    # when Redis is unreachable, unlike the app's own RateLimiterService circuit-breaker pattern
+    # -- RedisConnectionFailureException propagates and gets misreported as a 404 "Product not
+    # found". Confirmed locally: product detail returned 404 without Redis, 200 with it. Tracked
+    # as its own follow-up (the caching-resilience gap itself is out of #117's scope) -- this
+    # service container is the pragmatic fix for this job specifically.
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
 
     steps:
       - name: Checkout code
