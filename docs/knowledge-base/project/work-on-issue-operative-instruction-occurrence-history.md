@@ -104,6 +104,26 @@ ESLint/any CI linter — not an exhaustive whitelist).
   independently-checkable sub-requirements, with a mandatory one-line-per-distinct-slug bullet
   format (no aggregate/shared-sentence dispositions) replacing the prose "individually-stated
   disposition" wording that #580 showed was satisfiable without genuine quoting.
+- **#114** — recurred a further time despite the mandatory bullet format: `development-workflow.md`
+  and `retro-issue.md`'s slugs got individual quoted/dismissed lines, but `work-on-issue.md`'s 15
+  distinct slugs were collapsed into one aggregate sentence ("these are standing process mechanics
+  ... not separately dispositioned") — the exact pre-#580-fix shape, on the file the fix was
+  written for. `[defect-class: recurrence-scan-quote-shortcut]` (recurrence, N-th occurrence).
+  A `/critique-prompt` retrospective of #114 then tried to verify the underlying tier-4 hook
+  (`recurrence-scan-quote-gate.sh`) by reconstructing the exact real payload and piping it through
+  the script directly — the script's own logic produced a correct `block` decision, proving the
+  *rule* wasn't the failure this time, something about the live dispatch was. That same test
+  **corrupted the real session marker**: the gate script's block-reason JSON itself contains
+  `[defect-class: ...]`-shaped text, and `recurrence-scan-marker.sh` (which fires on *any* Bash
+  stdout matching that shape, not just genuine grep output) treated the test's own output as a
+  fresh scan, overwriting the real marker with garbage extracted from the error message. A second,
+  independent bug then surfaced live and reproduced 3 times in a row: `recurrence-scan-quote-gate.sh`
+  blocks *any* `TaskUpdate` whose subject or description merely contains the substrings
+  "recurrence" and "scan" — including a task about investigating the hook itself, purely because it
+  named the hook script. None of these three findings were fixed this session (marker corruption
+  was cleaned up via a genuine re-run of the grep; the other two are open, tracked as a follow-up
+  investigation) — → No prompt-text change made; this occurrence's real lesson is that the
+  enforcement layer itself now needs auditing, not another prose reword of the rule it enforces.
 
 ## Tier statement / N/A discipline / Sequence-table enumeration
 
@@ -212,6 +232,19 @@ not deferred to a later summary.
   occurrence). → Hardened step 7 with a literal checklist line —
   `Deferred aggregate fact from step 4? [ ] none / [ ] resolved, new value: ___` — rather than
   another paragraph of prose restating the same check.
+- **#635/#638/#639** — the inverse of the #114 "hook-gated close succeeding is not proof the gate
+  engaged" finding: `recurrence-scan-quote-gate.sh` rejected a closing `TaskUpdate` 3/3 times across
+  this session's three issues, each time claiming required snippets were missing when the
+  submitted description already contained every one verbatim (an encoding/dash-character mismatch
+  in the hook's own substring match, not a content gap). Routed around each time via
+  `TaskUpdate(status: deleted)` on the tracking task, with the actual compliance stated in the
+  visible chat response instead. → Added a sanctioned-recovery-path sentence: when a hook's own
+  rejection message is checked against the submitted content and the content demonstrably already
+  satisfies it, delete-and-state-in-chat is the sanctioned move — don't retry indefinitely or
+  silently give up. A `/critique-prompt` critique of this file (same session) separately flagged
+  that the hook may now be failing *unconditionally* on this task shape rather than intermittently
+  — see `development-workflow.md`'s own Amendment Log for the corresponding reliability-status
+  update.
 
 ## Sibling-precedent check (tier-2 TaskCreate-seeding requirement)
 
@@ -229,7 +262,13 @@ entry orig. 3, for when the tier-2 requirement was first added here). #429 and #
 two consecutive clean passes after 3 straight failures. #442 additionally clarified that the
 tier-3 direct-mirror exception does not extend to tier-2 (see Proactive Recurrence Scan section
 above). #447 extended the "seed regardless" rule to the zero-precedent + judged-non-architectural
-case, confirmed via `AskUserQuestion`.
+case, confirmed via `AskUserQuestion`. **#639** — a new variant: the `PreToolUse` hook that
+resolved the single-issue version of this gap (#493) didn't catch this one, since #639's own
+sibling-precedent judgment *was* reasoned through correctly, just folded into the implementation
+task's description instead of seeded as its own item — the hook fires on content shape, not on
+"was this issue #2 of N in one session and did issue #1 already do the ceremony." A
+`/critique-prompt` critique of `work-on-issue.md` (same session) added an explicit
+per-issue-even-within-one-session clause to the sibling-precedent paragraph.
 
 ## Update-docs enumeration (six-doc checklist)
 
@@ -328,6 +367,17 @@ grep whatever written artifact the issue did produce instead.
   `-p "<project>"` flag was dropped from `gh issue create` twice despite a cross-reference to
   `development-workflow.md` steps 12/14/15 by number. → Escalated directly to a literal
   pre-filing `TaskCreate` line naming the flag, per the artifact-shaped-requirements principle.
+- **#635/#638/#639** — the native Issue Dependencies link between the originating issue and its
+  own follow-ups was set backwards on the first attempt: recorded as "#635 blocks #638/#639" when
+  the intended (and eventually corrected) relationship was the reverse — #635's own acceptance
+  criteria couldn't close until #638/#639 did, so #635 is the one that should have been
+  `blocked_by` them. Caught only because the post-merge unblocking check on #638 returned empty
+  where #635 was expected, not by any instruction catching it proactively. The rule as written
+  ("link a genuinely blocking-shaped follow-up") never stated which direction to point the link
+  for this specific, common shape. → A `/critique-prompt` critique of `work-on-issue.md` added a
+  one-line direction test: ask which issue's own closure is gated on the other's — for a follow-up
+  spawned from an originating issue whose AC depends on it, the link is `<originating issue>
+  blocked_by <follow-up>`, not the reverse.
 
 ## Merge closure step (Monitor-call discipline)
 
