@@ -13,6 +13,17 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Fixed
+- `CartApiTest`/`OrderApiTest`/`ProductApiTest` receiving `403` on every
+  mutating request (#635, discovered via #630's own audit but a separate,
+  unrelated root cause): these RestAssured-based tests never fetched the
+  `XSRF-TOKEN` cookie or echoed it as `X-XSRF-TOKEN`, required for every
+  non-exempt mutating endpoint since CSRF protection was enabled (SEC-15).
+  `BaseApiTest.setup()` now bootstraps via `GET /api/auth/csrf` and applies
+  the cookie/header as RestAssured request-spec defaults. `CartApiTest` now
+  passes fully; fixing this uncovered two separate, pre-existing defects only
+  reachable once tests get past the CSRF wall — `OrderApiTest.testCheckoutProcess`
+  StackOverflowError (#638) and `ProductApiTest`'s `GET /api/v2/products` 500
+  (#639) — tracked as independent follow-ups, not fixed in this change.
 - Gatling load-test CI job genuinely failing (#631, found via #130's regression
   audit): the `load-tests` job (`ci-cd-pipeline.yml`) ran `./mvnw gatling:test`
   with nothing ever starting the Spring Boot app first — every HTTP call hit

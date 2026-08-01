@@ -49,6 +49,23 @@ public abstract class BaseApiTest {
     public void setup() {
         RestAssured.port = port;
         RestAssured.baseURI = "http://localhost";
+
+        // SEC-15: CSRF protection is enabled for every non-exempt mutating endpoint (see
+        // spring-security.md). A real browser fetches XSRF-TOKEN and echoes it as
+        // X-XSRF-TOKEN automatically; RestAssured does not, so every mutating request in
+        // this suite was receiving 403 until this bootstrap was added (#635).
+        String csrfToken = RestAssured.given()
+                .when()
+                .get("/api/auth/csrf")
+                .then()
+                .statusCode(204)
+                .extract()
+                .cookie("XSRF-TOKEN");
+
+        RestAssured.requestSpecification = new io.restassured.builder.RequestSpecBuilder()
+                .addCookie("XSRF-TOKEN", csrfToken)
+                .addHeader("X-XSRF-TOKEN", csrfToken)
+                .build();
     }
 
     protected String getAuthToken() {
