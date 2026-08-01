@@ -437,6 +437,14 @@ jobs:
         # overridden). See lesson_spring_boot_run_cli_test_profile_gotchas.md (found via #631)
         # for the full reasoning behind all 3 flags below.
         run: |
+          # test-compile explicitly first: `spring-boot:run` invoked as a standalone goal does
+          # NOT trigger the test-compile phase on its own -- useTestClasspath=true only adds
+          # target/test-classes to the runtime classpath, it doesn't populate it. This job's own
+          # E2ESeedDataRunner (new .java file under src/test/) silently never existed as a .class
+          # file without this step, even though the load-test job's identical useTestClasspath
+          # pattern never needed it (it only ever needed test-scope *dependency jars*, like the
+          # H2 driver, never a new test-scope *class*).
+          ./mvnw test-compile -q
           JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n')
           # app.cors.allowed-origins must include the vite-preview port (4173) this job's
           # frontend is served on -- SecurityConfig's real CorsFilter (not TestSecurityConfig's
