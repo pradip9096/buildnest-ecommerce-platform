@@ -10,12 +10,12 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.44 |
-| **Date** | 2026-07-30 IST |
+| **Version** | 1.45 |
+| **Date** | 2026-08-01 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
-| **Related SRS** | SRS-BUILDNEST-001 v5.8 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
+| **Related SRS** | SRS-BUILDNEST-001 v5.9 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
 | **Related SDD** | SDD-BUILDNEST-001 v4.13 — `docs/SDLC-docs/design/software-design-description.md` |
 | **Related TP** | TP-BUILDNEST-001 v4.5 — `docs/SDLC-docs/software-testing/test-plan.md` |
 | **Baseline Assessment** | `docs/reports/baseline-assessment-2026-06-19.md` |
@@ -73,6 +73,7 @@
 | 1.42 | 2026-07-29 IST | QA Manager | Added SEC-15 (#111): full OWASP Top 10 (2021) assessment (A01-A10), performed against the local dev stack (no staging environment exists yet — `development-workflow.md` step 31, confirmed via user decision) using OWASP ZAP full active scan (141 automated checks, 0 Fail/Warn, 1 Informational) plus direct code/live-endpoint review. One Medium finding (A10 SSRF: `WebhookServiceImpl`'s admin-supplied `targetUrl` had no private-IP/loopback blocklist) fixed in the same PR via a new `SsrfUrlValidator` component, with dedicated unit tests. Zero Critical/High findings — see `docs/SDLC-docs/reports/security-assessment.md` for the full per-category writeup. Corrected a filing-time traceability mismatch: issue #111 was titled "(SEC-02)", but SEC-02 is an unrelated, already-Implemented requirement (JWT secret length) — SEC-15 is the correct, newly-added FR this issue satisfies. Recomputed the Security Coverage Summary row (14→15 total, 10→11 Implemented) and the Coverage Summary Totals row (183→184 total, 123→124 Implemented) | Pending |
 | 1.43 | 2026-07-30 IST | QA Manager | Periodic 15-issue SDLC documentation sync (overdue — last performed at #452, 2026-07-17; 53 issues closed since, well past the 15-issue trigger). Recomputed the Seller & Marketplace (FR-SEL) Coverage Summary row directly from its 8 individual rows (376-383): all 8 are ✅ Implemented, correcting the stale "5 Implemented / 3 Not Started (Ph-3, Planned)" that no single issue's own scope had covered recomputing. Folded FR-SEL (8/8) and FR-LOC (4/4) into the Totals row per this document's own previously-stated fold-in criterion (implementation begun, OQ-01/OQ-02 resolved) — Totals 184→196 total, 124→136 Implemented. Cross-reference mesh sweep: corrected `Related SRS` (5.6→5.8, since SRS's own version is also bumped in this same sync pass) and `Related TP` (4.3→4.5, same reason); `Related SDD` was already current (4.12) before this pass, bumped to 4.13 alongside SDD's own sync edit | Pending |
 | 1.44 | 2026-07-30 IST | QA Manager | FR-PAY-05 (Razorpay credentials externalised via env vars) corrected from 🔵 Pending Ph-2 to ✅ Implemented: `application.properties`' `razorpay.key.secret`/`razorpay.webhook.secret` previously carried literal string defaults (`test_key_secret`/`test_webhook_secret`) that applied in production too, since `application-production.properties` never overrode them — a hardcoded-secret-with-default violation, not genuine env-var externalisation (#114, secrets audit against SDP Appendix B / RGAR §11). Removed both defaults so a missing env var now fails startup instead of silently falling back to a known secret; also removed two redundant weak Java-level `@Value` defaults (`JwtTokenProvider.jwtSecret`, `ElasticsearchConfig.password`) masked by properties-level indirection. Added a `gitleaks` CI step (`security.yml`) and `.gitleaks.toml` allowlisting confirmed documentation/test-fixture false positives; fixed a real finding in `backend/kubernetes/buildnest-deployment.yaml` (a Secret manifest with real-looking base64 "example" values, now `stringData` placeholders). Recomputed the Payment (FR-PAY) Coverage Summary row (0→1 Implemented, 2→1 Pending) and the Coverage Summary Totals row (136→137 Implemented, 45→44 Pending) | Pending |
+| 1.45 | 2026-08-01 IST | QA Manager | Added SEC-16 (HTTP security headers: HSTS/X-Frame-Options/X-Content-Type-Options/Referrer-Policy/Permissions-Policy, #112) — correcting the issue's own stale "SRS SEC-11, SEC-12" citation (unrelated: search rate limiting, JWT rotation). HSTS/X-Frame-Options/X-Content-Type-Options were already Spring Security defaults (verified via context7 against the 6.5 reference docs); Referrer-Policy and Permissions-Policy were genuinely missing, added to `SecurityHeaderPolicies`/`SecurityConfig`/`TestSecurityConfig`, and covered by 3 new `SecurityHeadersTest` assertions (5/5 pass). Recomputed the Security (SEC) Coverage Summary row (15→16 total, 11→12 Implemented) and the Coverage Summary Totals row (196→197 total, 137→138 Implemented). Updated `Related SRS` from v5.8 to v5.9 | Pending |
 
 ### Document Approval
 
@@ -141,7 +142,7 @@ The RTM serves to:
 | Performance (PR) | 8 | 3 | 0 | 5 | 0 | 0 |
 | Reliability (REL) | 5 | 2 | 0 | 3 | 0 | 0 |
 | Availability (AVL) | 4 | 1 | 0 | 3 | 0 | 0 |
-| Security (SEC) | 15 | 11 | 1 | 3 | 0 | 0 |
+| Security (SEC) | 16 | 12 | 1 | 3 | 0 | 0 |
 | Maintainability (MNT) | 6 | 6 | 0 | 0 | 0 | 0 |
 | Portability (PRT) | 4 | 1 | 0 | 3 | 0 | 0 |
 | Scalability (SCL) | 4 | 2 | 0 | 2 | 0 | 0 |
@@ -150,7 +151,7 @@ The RTM serves to:
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
 | Seller & Marketplace (FR-SEL) | 8 | 8 | 0 | 0 | 0 | 0 |
 | Location-Based Matching (FR-LOC) | 4 | 4 | 0 | 0 | 0 | 0 |
-| **Totals** | **196** | **137** | **15** | **44** | **0** | **0** |
+| **Totals** | **197** | **138** | **15** | **44** | **0** | **0** |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 >
@@ -463,6 +464,7 @@ The RTM serves to:
 | SEC-13 | Database password rotation every 180 days | Medium | Ph-2 | Appendix A | HikariCP env var `${SPRING_DATASOURCE_PASSWORD}` | Operational runbook | Inspection | 🔵 Pending Ph-2 |
 | SEC-14 | CSP must not contain `unsafe-inline` | Medium | Ph-2 | §5.1.4 | `SecurityConfig`/`SecurityHeaderPolicies.MAIN_CSP` (backend API, #237); `frontend/security-headers.conf` (frontend document CSP, #110 — removed `unsafe-inline` from `style-src`; React's `style={{}}` prop sets styles via JS property assignment, not the HTML `style` attribute, so it is not subject to the `style-src` inline restriction) | `SecurityTest`, live-browser CSP verification (#110) | Inspection + Test | ✅ Implemented |
 | SEC-15 | Full OWASP Top 10 (2021) assessment (A01–A10) performed and documented before M5 gate; zero open Critical, High findings have a remediation timeline | High | Ph-2 | §5.1 (new) | `docs/SDLC-docs/reports/security-assessment.md`; `WebhookServiceImpl`/`SsrfUrlValidator` (A10 SSRF remediation) | `SsrfUrlValidatorTest`, `WebhookServiceImplTest`, OWASP ZAP full active scan (local, #111) | Inspection + Test | ✅ Implemented |
+| SEC-16 | HSTS (max-age ≥31536000, includeSubDomains), X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy, Permissions-Policy on all API responses | High | Ph-2 | §5.1 (new) | `SecurityConfig`/`SecurityHeaderPolicies` (`REFERRER_POLICY`, `PERMISSIONS_POLICY` — #112; HSTS/X-Frame-Options/X-Content-Type-Options already Spring Security defaults) | `SecurityHeadersTest` (5/5) | Inspection + Test | ✅ Implemented |
 
 ### 7.6 Maintainability Requirements
 
