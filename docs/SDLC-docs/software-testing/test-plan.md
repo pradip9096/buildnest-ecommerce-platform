@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Test Plan |
 | **Document ID** | TP-BUILDNEST-001 |
-| **Version** | 4.9 |
+| **Version** | 4.10 |
 | **Date** | 2026-08-02 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -40,6 +40,7 @@
 | 4.7 | 2026-08-01 IST | Test Manager | Added SEC-16 (#112) to the "Security Headers" rows (§4/§5.2): Referrer-Policy and Permissions-Policy, previously untested since they didn't exist in the config, now covered by 3 new `SecurityHeadersTest` assertions (5/5 pass) alongside the pre-existing HSTS/X-Frame-Options coverage. Updated the §17-equivalent Security requirement-coverage row from SEC-01–14 to SEC-01–16 | Pending |
 | 4.8 | 2026-08-01 IST | Test Manager | §9.1 entry criteria row corrected: Playwright is now installed and configured (`frontend/e2e/`, `npm run test:e2e`, #117), no longer "still pending". §4.5 E2E section unchanged in structure — Playwright coexists with the pre-existing Selenium suite pending its retirement (#647) | Pending |
 | 4.9 | 2026-08-02 IST | Test Manager | #647: retired only the browser-driven Selenium E2E class (`E2ETest.java`) now that `playwright-e2e` demonstrated 3/3 real green runs on `master`. Mid-implementation correction: an initial pass wrongly deleted the entire `e2e/` package — including the separate, still-valid RestAssured API E2E suite (`BaseApiTest`, `AuthApiTest`/`CartApiTest`/`OrderApiTest`/`ProductApiTest`/`UserApiTest`) and `E2ESeedDataRunnerTest.java` (unit test for the Playwright job's own seed runner) — based on a false assumption that the whole directory was the Selenium suite; caught before commit, files restored, and the `e2e-tests` Maven profile/`e2e,` exclusion (needed by the RestAssured suite) restored in `pom.xml`. §4.5 rewritten to document both E2E suites separately (4.5.1 Playwright, 4.5.2 RestAssured) rather than treating them as one. TIR-01 (§15), §3.2 pipeline diagram, §8.2 Maven profile table, and Appendix C's pom.xml excerpt all corrected to reflect that the `e2e`/`@Tag("e2e")` mechanism still exists for the RestAssured suite | Pending |
+| 4.10 | 2026-08-02 IST | Test Manager | #649: §3.4's CI Pipeline Integration diagram never mentioned frontend lint/unit tests — `npm run test`/`npm run lint` had zero CI enforcement until this issue wired them into a new `frontend-quality` job (`ci.yml`). Added Stage 6 to the diagram documenting the new job, its Codecov `frontend` flag (uploaded, not yet threshold-gated), and its deliberately non-required branch-protection status | Pending |
 
 ### Document Approval
 
@@ -276,11 +277,19 @@ git push → CI triggered
 │     PIT gate: mutation score ≥ 75%
 │     Gate: both thresholds met
 │
-└── Stage 5: E2E Tests
-      Browser (Playwright, playwright-e2e CI job): npm run test:e2e (frontend/) — real
-      backend (H2, e2e.seed.enabled=true) + vite preview frontend, both self-started
-      API (RestAssured, e2e-tests CI job, runs in parallel): ./mvnw test -P e2e-tests
-      Gate: 0 failures (both jobs)
+├── Stage 5: E2E Tests
+│     Browser (Playwright, playwright-e2e CI job): npm run test:e2e (frontend/) — real
+│     backend (H2, e2e.seed.enabled=true) + vite preview frontend, both self-started
+│     API (RestAssured, e2e-tests CI job, runs in parallel): ./mvnw test -P e2e-tests
+│     Gate: 0 failures (both jobs)
+│
+└── Stage 6: Frontend Lint + Unit Tests (frontend-quality CI job, ci.yml, #649)
+      npm run lint (ESLint) + npm run test:coverage (Vitest, coverage-v8)
+      Coverage uploaded to Codecov under a `frontend` flag — not yet gated on a
+      threshold (deliberate, non-blocking start; see CHANGELOG #649)
+      Gate: 0 lint errors, 0 test failures — NOT yet a required branch-protection
+      check (started non-blocking; #657 tracks promoting it to required once
+      observed stable across several runs)
 ```
 
 ---

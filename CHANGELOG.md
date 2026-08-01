@@ -13,6 +13,26 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Wired frontend unit tests and lint into CI (#649, M5): new `frontend-quality`
+  job in `.github/workflows/ci.yml` runs `npm run lint` and
+  `npm run test:coverage` on every PR/push, gated at step level (per #412/
+  #414's required-check-in-`paths-ignore` lesson) so its status always
+  reports even on docs-only changes. Vitest coverage-v8 output uploads to
+  Codecov under a new `frontend` flag (no threshold gate yet — decision
+  recorded via `AskUserQuestion`: start ungated/non-blocking, matching the
+  job's own non-required status, so both can prove themselves stable before
+  being tightened). Not yet added to branch protection's
+  `required_status_checks` (6 existing required contexts, none frontend-
+  related) — deliberately starts non-blocking; filed #657 to promote it
+  once a few green runs are observed. Fixed two pre-existing gaps this
+  surfaced: `eslint.config.js`'s `globalIgnores` didn't exclude the
+  generated `coverage/` directory, and `AuthContext.tsx` had a real
+  `react-refresh/only-export-components` violation (a context file
+  exporting both its provider and consumer hook, a legitimate pattern —
+  disabled the rule for that one line with a comment explaining why).
+  Filed #655 for a flaky `ProductsTab.test.tsx` timeout discovered while
+  verifying the new job (intermittent under full-suite load, not
+  reproducible in isolation — separate concern, not blocking this issue).
 - Playwright E2E test suite (#117, M5): `frontend/e2e/` covers the full
   user journey (register → browse → search → add-to-cart → checkout →
   order confirmation → order history) plus two critical error paths

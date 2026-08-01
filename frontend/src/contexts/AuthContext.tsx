@@ -109,6 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Context files conventionally export both the provider and its consumer hook together.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
