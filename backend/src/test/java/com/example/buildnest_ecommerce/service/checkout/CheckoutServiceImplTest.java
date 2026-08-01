@@ -128,7 +128,7 @@ class CheckoutServiceImplTest {
             return orders;
         });
 
-        Order order = checkoutService.checkoutCart(1L, 10L);
+        OrderResponseDTO order = checkoutService.checkoutCart(1L, 10L);
         assertNotNull(order.getId());
 
         ArgumentCaptor<List<Order>> orderCaptor = ArgumentCaptor.forClass(List.class);
@@ -173,7 +173,8 @@ class CheckoutServiceImplTest {
             return orders;
         });
 
-        Order order = checkoutService.checkoutWithPayment(1L, 10L, new CheckoutRequestDTO());
+        OrderResponseDTO order = checkoutService.checkoutWithPayment(
+                1L, 10L, new CheckoutRequestDTO());
         assertNotNull(order.getId());
 
         ArgumentCaptor<List<Order>> orderCaptor = ArgumentCaptor.forClass(List.class);
@@ -906,7 +907,7 @@ class CheckoutServiceImplTest {
             return orders;
         });
 
-        Order primary = checkoutService.checkoutCart(1L, 10L);
+        OrderResponseDTO primary = checkoutService.checkoutCart(1L, 10L);
 
         verify(orderGroupRepository).save(any(OrderGroup.class));
         ArgumentCaptor<List<Order>> orderCaptor = ArgumentCaptor.forClass(List.class);
@@ -914,7 +915,7 @@ class CheckoutServiceImplTest {
         List<Order> saved = orderCaptor.getValue();
 
         assertEquals(2, saved.size(), "one order per seller");
-        assertEquals(saved.get(0), primary,
+        assertEquals(saved.get(0).getId(), primary.getId(),
                 "primary order returned is the first seller-group order");
         for (Order order : saved) {
             assertEquals(savedGroup, order.getOrderGroup(),

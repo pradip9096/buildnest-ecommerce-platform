@@ -479,7 +479,7 @@ public class CheckoutServiceImpl implements CheckoutService {
 
     @Override
     @Transactional
-    public Order checkoutCart(Long userId, Long cartId) {
+    public OrderResponseDTO checkoutCart(Long userId, Long cartId) {
         log.info("Starting checkout for user: {} with cart: {}",
                 userId, cartId);
 
@@ -515,12 +515,12 @@ public class CheckoutServiceImpl implements CheckoutService {
         log.info("Checkout completed for user: {}, Order ID: {}, "
                         + "sellerOrderCount={}",
                 userId, primary.getId(), orders.size());
-        return primary;
+        return toOrderDTO(primary);
     }
 
     @Override
     @Transactional
-    public Order checkoutWithPayment(
+    public OrderResponseDTO checkoutWithPayment(
             Long userId, Long cartId, CheckoutRequestDTO request) {
         log.info("Starting checkout with payment for user: {} with "
                 + "cart: {}", userId, cartId);
@@ -552,7 +552,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         log.info("Checkout with payment completed. Order ID: {}, "
                         + "sellerOrderCount={}",
                 primary.getId(), savedOrders.size());
-        return primary;
+        return toOrderDTO(primary);
     }
 
     @Override

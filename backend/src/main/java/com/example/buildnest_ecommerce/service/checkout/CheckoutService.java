@@ -3,7 +3,6 @@ package com.example.buildnest_ecommerce.service.checkout;
 import com.example.buildnest_ecommerce.model.dto.CheckoutRequestDTO;
 import com.example.buildnest_ecommerce.model.dto.CheckoutSessionDTO;
 import com.example.buildnest_ecommerce.model.dto.OrderResponseDTO;
-import com.example.buildnest_ecommerce.model.entity.Order;
 
 public interface CheckoutService {
 
@@ -29,18 +28,21 @@ public interface CheckoutService {
      * Process checkout and create order from cart
      * @param userId User performing checkout
      * @param cartId Cart to checkout
-     * @return Created Order
+     * @return Created order, mapped to a DTO — never return the raw JPA
+     *         entity here (Order.orderItems / OrderItem.order form a
+     *         bidirectional cycle Jackson can't safely serialize, #638)
      */
-    Order checkoutCart(Long userId, Long cartId);
-    
+    OrderResponseDTO checkoutCart(Long userId, Long cartId);
+
     /**
      * Process checkout with payment method
      * @param userId User performing checkout
      * @param cartId Cart to checkout
      * @param request Checkout details including payment method
-     * @return Created Order
+     * @return Created order, mapped to a DTO — see {@link #checkoutCart}
      */
-    Order checkoutWithPayment(Long userId, Long cartId, CheckoutRequestDTO request);
+    OrderResponseDTO checkoutWithPayment(
+            Long userId, Long cartId, CheckoutRequestDTO request);
     
     /**
      * Validate if cart is ready for checkout
