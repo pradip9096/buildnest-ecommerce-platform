@@ -9,9 +9,9 @@ import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,21 +25,33 @@ import java.time.LocalDateTime;
  * same mechanism that already puts the H2 driver on the run classpath) rather than main, so
  * production code carries zero awareness of this test-only concern. Mirrors BaseApiTest#seedProduct
  * (repository-based, not raw SQL, to avoid guessing Hibernate's generated column names).
+ *
+ * Deliberately unconditional (@Component with a manual @Value-guarded run(), not
+ * @ConditionalOnProperty) as a diagnostic step: 3 prior CI runs with the property-conditional
+ * bean produced zero log output and zero seeded data with no exception anywhere, giving no
+ * signal on whether the bean was ever created at all. Logging the resolved property value
+ * unconditionally on every startup disambiguates "bean never created" from "property never
+ * resolved" in one shot.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "e2e.seed.enabled", havingValue = "true", matchIfMissing = false)
 public class E2ESeedDataRunner implements ApplicationRunner {
 
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
 
+    @Value("${e2e.seed.enabled:false}")
+    private boolean seedEnabled;
+
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        log.info("E2ESeedDataRunner: starting seed (e2e.seed.enabled=true)");
+        log.info("E2ESeedDataRunner: bean created and run() invoked, e2e.seed.enabled resolved to {}", seedEnabled);
+        if (!seedEnabled) {
+            return;
+        }
         Category category = categoryRepository.findByName("E2E Test Category")
                 .orElseGet(() -> {
                     Category cat = new Category();
