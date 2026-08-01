@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Test Plan |
 | **Document ID** | TP-BUILDNEST-001 |
-| **Version** | 4.8 |
-| **Date** | 2026-08-01 IST |
+| **Version** | 4.9 |
+| **Date** | 2026-08-02 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29119-3:2021 |
@@ -39,6 +39,7 @@
 | 4.6 | 2026-07-30 IST | Test Manager | Added a "Secret hardcoding" row to §5.2 Security Testing (FR-PAY-05, SDP Appendix B) for #114's hardcoded-secrets audit — no `@Value` secret defaults, `gitleaks` CI step on every push/PR, verified via `RazorpayClientAdapterTest` plus empirical CI-run verification (the CI step itself has no unit-test equivalent) | Pending |
 | 4.7 | 2026-08-01 IST | Test Manager | Added SEC-16 (#112) to the "Security Headers" rows (§4/§5.2): Referrer-Policy and Permissions-Policy, previously untested since they didn't exist in the config, now covered by 3 new `SecurityHeadersTest` assertions (5/5 pass) alongside the pre-existing HSTS/X-Frame-Options coverage. Updated the §17-equivalent Security requirement-coverage row from SEC-01–14 to SEC-01–16 | Pending |
 | 4.8 | 2026-08-01 IST | Test Manager | §9.1 entry criteria row corrected: Playwright is now installed and configured (`frontend/e2e/`, `npm run test:e2e`, #117), no longer "still pending". §4.5 E2E section unchanged in structure — Playwright coexists with the pre-existing Selenium suite pending its retirement (#647) | Pending |
+| 4.9 | 2026-08-02 IST | Test Manager | #647: retired only the browser-driven Selenium E2E class (`E2ETest.java`) now that `playwright-e2e` demonstrated 3/3 real green runs on `master`. Mid-implementation correction: an initial pass wrongly deleted the entire `e2e/` package — including the separate, still-valid RestAssured API E2E suite (`BaseApiTest`, `AuthApiTest`/`CartApiTest`/`OrderApiTest`/`ProductApiTest`/`UserApiTest`) and `E2ESeedDataRunnerTest.java` (unit test for the Playwright job's own seed runner) — based on a false assumption that the whole directory was the Selenium suite; caught before commit, files restored, and the `e2e-tests` Maven profile/`e2e,` exclusion (needed by the RestAssured suite) restored in `pom.xml`. §4.5 rewritten to document both E2E suites separately (4.5.1 Playwright, 4.5.2 RestAssured) rather than treating them as one. TIR-01 (§15), §3.2 pipeline diagram, §8.2 Maven profile table, and Appendix C's pom.xml excerpt all corrected to reflect that the `e2e`/`@Tag("e2e")` mechanism still exists for the RestAssured suite | Pending |
 
 ### Document Approval
 
@@ -131,7 +132,7 @@ This document covers testing of:
 | **PIT** | PIT Mutation Testing tool — injects code mutations to assess test suite effectiveness |
 | **SUT** | System Under Test |
 | **CI** | Continuous Integration pipeline |
-| **E2E** | End-to-End test — requires a running server and real database; tagged `@Tag("e2e")` |
+| **E2E** | End-to-End test — see §4.5: browser-driven via Playwright (`frontend/e2e/`), or API-only via the RestAssured suite (`@Tag("e2e")`, `-P e2e-tests`) |
 | **H2** | In-memory relational database used by integration tests under the test Spring profile |
 | **RestAssured** | HTTP client library used for E2E and integration API tests |
 | **MockMvc** | Spring test framework for controller-layer unit tests without a running server |
@@ -222,8 +223,8 @@ Testing at BuildNest follows four guiding principles:
 ```
                      ┌─────────────────┐
                      │   E2E Tests     │  (5%)
-                     │  ~5–10 classes  │  Requires running server
-                     │  Tagged: e2e    │
+                     │   Playwright    │  Requires running server
+                     │  frontend/e2e/  │
                      └────────┬────────┘
                     ┌─────────┴──────────┐
                     │  Integration Tests │  (20%)
@@ -275,10 +276,11 @@ git push → CI triggered
 │     PIT gate: mutation score ≥ 75%
 │     Gate: both thresholds met
 │
-└── Stage 5: E2E Tests (on staging)
-      ./mvnw test -P e2e-tests
-      Requires running server + database
-      Gate: 0 failures
+└── Stage 5: E2E Tests
+      Browser (Playwright, playwright-e2e CI job): npm run test:e2e (frontend/) — real
+      backend (H2, e2e.seed.enabled=true) + vite preview frontend, both self-started
+      API (RestAssured, e2e-tests CI job, runs in parallel): ./mvnw test -P e2e-tests
+      Gate: 0 failures (both jobs)
 ```
 
 ---
@@ -414,25 +416,27 @@ git push → CI triggered
 
 ### 4.5 End-to-End (E2E) Testing
 
-**Definition**: Tests that call a running HTTP server over the network using RestAssured. They test the full system including security, database, and JSON contract. They are tagged `@Tag("e2e")` and excluded from the unit-test and all-tests profiles.
+There are two independent E2E suites, testing at different levels — one browser-driven, one API-only. Don't conflate them; each has its own framework, CI job, and Maven/npm invocation.
 
-**Framework**: RestAssured + JUnit 5 + `@Tag("e2e")` + `BaseApiTest`
+#### 4.5.1 Browser E2E (Playwright)
 
-**Scope**: Critical happy-path and negative flows across the full HTTP stack
+**Definition**: Tests that drive the real frontend in a real browser against a real running backend, exercising the full stack (UI, HTTP, security, database) exactly as a user would.
 
-**Existing test classes**:
+**Framework**: Playwright (`frontend/e2e/`) — replaced the prior JVM-hosted Selenium suite (`E2ETest.java`, tagged `@Tag("e2e")`) per ADR [0002](../design/adr/0002-playwright-as-the-e2e-testing-tool-migrating-off-selenium.md). #647 removed the Selenium browser suite and its dedicated Chrome/frontend-preview CI steps after the Playwright suite (`playwright-e2e` CI job) demonstrated 3/3 real green runs on `master`.
 
-| Test Class | Scenarios |
-| :--- | :--- |
-| `AuthApiTest` | Register, Login, Refresh, Logout flows |
-| `CartApiTest` | Add, Remove, Clear, Total flows |
-| `OrderApiTest` | Checkout, Order retrieval flows |
-| `ProductApiTest` | Product listing V1 (deprecated) and V2, search, category filter |
-| `UserApiTest` | Profile view and update flows |
+**Scope**: Critical happy-path flows across the full stack (see `frontend/e2e/` for the current scenario list)
 
-**Maven command**: `./mvnw test -P e2e-tests` (requires running server at configured `BASE_URL`)
+**Maven command**: N/A — the suite is run via `npm run test:e2e` in `frontend/`, orchestrated by the `playwright-e2e` CI job, which starts a real backend (H2, `e2e.seed.enabled=true` via `E2ESeedDataRunner`) and a `vite preview` frontend server itself.
 
-**Prerequisite**: A deployed or locally running `./mvnw spring-boot:run` instance with a real MySQL database and the required environment variables (see §6.2).
+#### 4.5.2 API E2E (RestAssured)
+
+**Definition**: Tests that call a running HTTP server over the network using RestAssured, without a browser. Each test class self-hosts its own server via `@SpringBootTest(webEnvironment = RANDOM_PORT)` (`BaseApiTest`) — no external server or frontend needed, unlike the Playwright suite above.
+
+**Framework**: RestAssured + JUnit 5 + `BaseApiTest` (`backend/src/test/.../e2e/`). `CartApiTest`/`OrderApiTest`/`ProductApiTest` are tagged `@Tag("e2e")` and excluded from the `unit-tests`/`all-tests` profiles; `AuthApiTest`/`UserApiTest` (also in this package) currently carry no `@Tag` and run under every profile — a pre-existing inconsistency, not introduced or corrected by #647, out of that issue's scope.
+
+**Existing test classes**: `AuthApiTest` (Register/Login/Refresh/Logout), `CartApiTest` (Add/Remove/Clear/Total), `OrderApiTest` (Checkout, Order retrieval), `ProductApiTest` (listing V1/V2, search, category filter), `UserApiTest` (Profile view/update)
+
+**Maven command**: `./mvnw test -P e2e-tests` (no running server or `BASE_URL` needed — self-hosted per test class). Run in CI by the `e2e-tests` job (restored during #647 after this suite was briefly, incorrectly deleted alongside the unrelated Selenium suite — see #647's own PR discussion).
 
 ### 4.6 Performance Testing
 
@@ -665,9 +669,11 @@ See §7 (Test Data Strategy) for full details.
 | :--- | :--- | :--- | :--- | :--- |
 | `unit-tests` | **Default** (active by default) | `e2e`, `stress`, `integration` | All others | Fast CI gate — unit and slice tests only |
 | `all-tests` | `-P all-tests` | `e2e`, `stress` | All others (incl. `integration`) | Full test suite without live server requirement |
-| `e2e-tests` | `-P e2e-tests` | none | `e2e` only | E2E tests against running staging server |
+| `e2e-tests` | `-P e2e-tests` | none | `e2e` only | RestAssured API E2E tests (`CartApiTest`/`OrderApiTest`/`ProductApiTest`), self-hosted server, no live infra needed |
 | `stress-tests` | `-P stress-tests` | none | `stress` only | Load and stress tests in performance environment |
 | `coverage` | `-P coverage` (verify goal) | `e2e`, `stress` | All others | Runs `all-tests` + JaCoCo check + PIT mutation |
+
+The **browser-driven** Playwright suite (`frontend/e2e/`) is separate from this table entirely — it's an npm suite (`npm run test:e2e`), not a Maven profile. §4.5 covers both suites in detail.
 
 ### 8.3 JaCoCo Configuration
 
@@ -744,7 +750,7 @@ All Phase 1 exit criteria maintained, plus:
 | :--- | :--- | :--- |
 | JaCoCo INSTRUCTION coverage | **≥ 70%** (already exceeded — real gate is 85%, verified 2026-07-17, #461) | `./mvnw verify -P coverage` |
 | PIT mutation score | **≥ 75%** (already exceeded — real gate is 77%, verified 2026-07-17, #461) | `./mvnw pitest:mutationCoverage -P coverage` |
-| E2E test failures (staging) | **0** | `./mvnw test -P e2e-tests` |
+| E2E test failures | **0** | `npm run test:e2e` (`frontend/`, Playwright) + `./mvnw test -P e2e-tests` (RestAssured) |
 | Security test OWASP ASVS Level 2 | All items verified | Security test report |
 | Performance SLOs | All NFR PR-* met | Gatling report |
 | Reliability tests | All circuit breaker scenarios pass | `ReliabilityTest` results |
@@ -875,7 +881,7 @@ The Baseline Assessment identified systemic defects in the test suite itself —
 
 | Requirement ID | Description | Current State | Remediation |
 | :--- | :--- | :--- | :--- |
-| **TIR-01** | E2E tests must be excluded from the `unit-tests` Maven profile. Classes `ProductApiTest` and `OrderApiTest` (and any future E2E tests) must be annotated `@Tag("e2e")`. The `unit-tests` profile `pom.xml` must specify `<excludedGroups>e2e,stress,integration</excludedGroups>`. | **Resolved** (verified 2026-07-17 13:55 IST, #461) — both classes confirmed `@Tag("e2e")`-annotated, now in a dedicated `e2e/` test package | — |
+| **TIR-01** | E2E tests must be excluded from the `unit-tests` Maven profile. Classes `ProductApiTest`, `OrderApiTest`, `CartApiTest` (and any future E2E tests) must be annotated `@Tag("e2e")`. The `unit-tests` profile `pom.xml` must specify `<excludedGroups>e2e,stress,integration</excludedGroups>`. | **Resolved** (verified 2026-07-17, #461; re-confirmed 2026-08-02, #647 — the `e2e-tests` Maven profile and `e2e,` exclusion are still in place for this RestAssured suite; only the unrelated Selenium `E2ETest.java` was removed) — `ProductApiTest`/`OrderApiTest`/`CartApiTest` confirmed `@Tag("e2e")`-annotated. Note: `AuthApiTest`/`UserApiTest` in the same `e2e/` package carry no `@Tag` and run under every profile — a pre-existing inconsistency this requirement doesn't currently cover, tracked as a candidate follow-up | — |
 | **TIR-02** | All `@Mock`-annotated fields in unit test classes must be declared and the annotated field must be populated by `@ExtendWith(MockitoExtension.class)` or `MockitoAnnotations.openMocks(this)`. Tests must not pass a null dependency into the SUT. | **Resolved** (verified 2026-07-17 13:55 IST, #461) — `@Mock RoleRepository roleRepository` confirmed present in `AuthServiceImplTest` | — |
 | **TIR-03** | Tests that verify authorisation enforcement must assert HTTP **403 Forbidden** when an authenticated user lacks the required role. HTTP 401 Unauthorized is the correct response only for *unauthenticated* requests. | **Resolved** (verified 2026-07-17 13:55 IST, #461) — `testRoleHierarchyEnforcement` confirmed asserting `status().isForbidden()` | — |
 | **TIR-04** | Tests that exercise input validation must accept HTTP **400 Bad Request** (invalid request body) or **415 Unsupported Media Type** (wrong Content-Type) as valid outcomes. Input validation is enforced before authentication in the filter chain. | **Resolved** (verified 2026-07-17 13:55 IST, #461) — `testXSSPrevention`/`testFileUploadValidation` confirmed asserting `isBadRequest()`/`isUnsupportedMediaType()` respectively | — |
@@ -968,8 +974,11 @@ The following packages are excluded from JaCoCo coverage enforcement:
 # Full non-E2E test suite (unit + integration; excludes e2e, stress)
 ./mvnw test -P all-tests
 
-# E2E tests only (requires running server)
+# API E2E tests only (RestAssured, self-hosted server — no live infra needed)
 ./mvnw test -P e2e-tests
+
+# Browser E2E tests (Playwright — not Maven, run from frontend/)
+# npm run test:e2e
 
 # Stress / load tests only
 ./mvnw test -P stress-tests
@@ -1043,7 +1052,7 @@ The following defects are confirmed by the Baseline Assessment and must be resol
   </build>
 </profile>
 
-<!-- Profile: e2e-tests — requires running server -->
+<!-- Profile: e2e-tests — RestAssured API E2E suite, self-hosted server, no live infra needed -->
 <profile>
   <id>e2e-tests</id>
   <build>
@@ -1057,6 +1066,10 @@ The following defects are confirmed by the Baseline Assessment and must be resol
     </plugins>
   </build>
 </profile>
+
+<!-- The browser-driven Playwright suite (frontend/e2e/) is separate and not a Maven profile
+     -- it runs via npm run test:e2e, not surefire. #647 removed only the Selenium browser
+     suite (E2ETest.java), which previously also used this e2e-tests profile/@Tag("e2e"). -->
 
 <!-- Profile: stress-tests — performance environment only -->
 <profile>

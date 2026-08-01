@@ -303,11 +303,16 @@ jobs:
           name: reliability-test-results
           path: backend/target/surefire-reports/
 
-  # Job 4: E2E Tests
+  # Job 4: E2E Tests (RestAssured API suite, backend/src/test/.../e2e/)
+  # NOT the browser-driven Selenium suite (E2ETest.java) that #647 retired -- this is a
+  # separate, self-contained @SpringBootTest(webEnvironment=RANDOM_PORT) API-level suite
+  # (CartApiTest/OrderApiTest/ProductApiTest, @Tag("e2e")) that needs no Chrome/frontend and
+  # was mistakenly deleted-then-restored during #647's own implementation once that scope
+  # error was caught.
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     needs: integration-tests
 
     steps:
@@ -321,56 +326,11 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           cache: 'maven'
 
-      - name: Install Chrome
-        uses: browser-actions/setup-chrome@latest
-        with:
-          chrome-version: stable
-
       - name: Grant execute permissions to mvnw
         run: chmod +x ./mvnw
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        # --legacy-peer-deps: eslint-plugin-react@7.37.5 (its latest published version) caps
-        # its eslint peer range at ^9.7 — it has no release supporting eslint@^10 yet, a
-        # devDependency-only lint-tooling gap with no runtime effect. Tracked separately
-        # (not fixable here — no compatible eslint-plugin-react version exists upstream).
-        run: npm ci --legacy-peer-deps
-
-      - name: Build frontend
-        working-directory: frontend
-        # #630: E2ETest.java binds the backend to a fixed port (server.port=8080) so this
-        # build-time proxy target is stable regardless of test run order — see vite.config.ts.
-        run: npm run build
-
-      - name: Start frontend preview server
-        working-directory: frontend
-        # Backgrounded: `vite preview` blocks. The E2E job's own timeout-minutes: 30 bounds
-        # this process's lifetime; GitHub Actions tears down the whole runner (and this
-        # process with it) once the job ends, so no explicit stop step is needed.
-        run: |
-          nohup npm run preview -- --port 4173 --strictPort > frontend-preview.log 2>&1 &
-          echo "Waiting for frontend preview server to become ready..."
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:4173 > /dev/null; then
-              echo "Frontend preview server is up."
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Frontend preview server did not become ready in time:"
-          cat frontend-preview.log
-          exit 1
-
       - name: Run E2E tests
-        run: ./mvnw test -P e2e-tests -De2e.frontend.baseUrl=http://localhost:4173
+        run: ./mvnw test -P e2e-tests
 
       - name: Upload E2E test results
         if: always()
@@ -379,25 +339,9 @@ jobs:
           name: e2e-test-results
           path: backend/target/surefire-reports/
 
-      - name: Upload E2E screenshots (if any)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-screenshots
-          path: backend/target/screenshots/
-
-      - name: Upload frontend preview server log
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-frontend-preview-log
-          path: frontend/frontend-preview.log
-
-  # Job 4b: Playwright E2E Tests (#117)
-  # Frontend-owned E2E suite, migrating off the JVM-hosted Selenium suite above per #117's
-  # industry-standard-direction decision (Playwright now leads E2E adoption — see PR #117's
-  # description). Kept alongside (not replacing) e2e-tests in this PR; a follow-up issue tracks
-  # retiring the Selenium suite once this suite's coverage is confirmed stable in CI.
+  # Job 4b: Playwright E2E Tests (#117, #647)
+  # Frontend-owned E2E suite. Replaced the JVM-hosted Selenium suite (E2ETest.java) per ADR 0002
+  # — #647 removed that suite once this job demonstrated 3/3 real green runs on master.
   playwright-e2e:
     name: Playwright E2E Tests
     runs-on: ubuntu-latest
@@ -781,7 +725,7 @@ jobs:
           echo "- ✅ Unit Tests: Completed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Integration Tests: Completed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Reliability Tests: Completed" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ E2E Tests (Selenium): Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ E2E Tests (RestAssured API suite): Completed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Playwright E2E Tests: Completed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Artifacts" >> $GITHUB_STEP_SUMMARY
