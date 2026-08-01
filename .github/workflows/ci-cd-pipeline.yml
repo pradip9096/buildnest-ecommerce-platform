@@ -429,24 +429,19 @@ jobs:
         # inside an actual @SpringBootTest context — a CLI-launched `spring-boot:run` under the
         # "test" profile has no such substitution and fails to start (zero AuthenticationManager
         # bean). Overriding datasource/secret properties directly instead keeps the real
-        # SecurityConfig active against a disposable H2 database. See
-        # lesson_spring_boot_run_cli_test_profile_gotchas.md (found via #631) for the full
-        # reasoning and the 3 gotchas this step's flags exist to avoid.
+        # SecurityConfig active against a disposable H2 database. Mirrors the load-test job's own
+        # already-proven pattern below (fixed in #631) rather than a fresh guess — this step's
+        # first version omitted `useTestClasspath=true` and failed with "Cannot load driver
+        # class: org.h2.Driver" (H2 is a test-scoped dependency in pom.xml, so plain
+        # `spring-boot:run` never puts it on the classpath even with the datasource URL
+        # overridden). See lesson_spring_boot_run_cli_test_profile_gotchas.md (found via #631)
+        # for the full reasoning behind all 3 flags below.
         run: |
           JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n')
+          ARGS="--server.port=8080 --spring.datasource.url=jdbc:h2:mem:e2edb --spring.datasource.username=sa --spring.datasource.password= --spring.datasource.driver-class-name=org.h2.Driver --spring.jpa.hibernate.ddl-auto=create-drop --spring.sql.init.mode=never --spring.liquibase.default-schema=PUBLIC --spring.jpa.properties.hibernate.default_schema=PUBLIC --elasticsearch.enabled=false --jwt.secret=${JWT_SECRET} --razorpay.key.id=test_key_id --razorpay.key.secret=test_key_secret --razorpay.webhook.secret=test_webhook_secret"
           nohup ./mvnw spring-boot:run \
-            -Dspring-boot.run.arguments="\
-              --server.port=8080 \
-              --spring.datasource.url=jdbc:h2:mem:e2edb;DB_CLOSE_DELAY=-1;MODE=MySQL \
-              --spring.datasource.driver-class-name=org.h2.Driver \
-              --spring.datasource.username=sa \
-              --spring.datasource.password= \
-              --spring.jpa.hibernate.ddl-auto=create-drop \
-              --spring.liquibase.enabled=false \
-              --elasticsearch.enabled=false \
-              --jwt.secret=${JWT_SECRET} \
-              --razorpay.key.secret=test_key_secret \
-              --razorpay.webhook.secret=test_webhook_secret" \
+            -Dspring-boot.run.useTestClasspath=true \
+            -Dspring-boot.run.arguments="$ARGS" \
             > backend-e2e.log 2>&1 &
           echo "Waiting for backend to become ready..."
           for i in $(seq 1 60); do
