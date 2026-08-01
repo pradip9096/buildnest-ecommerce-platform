@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 5.9 |
+| **Version** | 5.10 |
 | **Date** | 2026-08-01 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -48,6 +48,7 @@
 | 5.7 | 2026-07-29 IST | Technical Lead | Added SEC-15 (#111): OWASP Top 10 2021 assessment requirement, correcting a filing-time traceability mismatch where the issue cited "(SEC-02)" (an unrelated, already-satisfied JWT-length requirement) and a blanket "SEC-01 to SEC-15" range that didn't exist yet. Updated SN-06 and the Coverage Summary Security row from SEC-01–14 to SEC-01–15 (14→15 requirements, 9→10 High). See `docs/SDLC-docs/reports/security-assessment.md` for the full A01–A10 assessment | Pending |
 | 5.8 | 2026-07-30 IST | Technical Lead | Periodic 15-issue SDLC documentation sync (overdue — last performed at #452, 2026-07-17; 53 issues closed since). Corrected a stale Spring Boot version claim (3.5.10 → 3.5.16, verified directly against `backend/pom.xml`'s `spring-boot-starter-parent`) in 3 places (REF-08, §4.2's Backend Framework row, CON-02) — this had drifted through several patch releases with no single issue's own scope covering a re-verification. MySQL 8.2 / Redis 7 / Elasticsearch 8.17 claims re-checked against `docker-compose.yml`'s active (non-commented) service definitions — still accurate, no change needed | Pending |
 | 5.9 | 2026-08-01 IST | Technical Lead | Added SEC-16 (#112): HTTP security headers (HSTS/X-Frame-Options/X-Content-Type-Options/Referrer-Policy/Permissions-Policy), correcting a filing-time traceability mismatch where the issue cited "SRS SEC-11, SEC-12" (unrelated: search rate limiting, JWT rotation). Verified against the Spring Security 6.5 reference docs (context7) that HSTS/X-Frame-Options/X-Content-Type-Options are already framework defaults; Referrer-Policy and Permissions-Policy were genuinely missing and implemented. Updated the Coverage Summary Security row from SEC-01–15 to SEC-01–16 (15→16 requirements, 10→11 High) | Pending |
+| 5.10 | 2026-08-01 IST | Technical Lead | Updated the Testing Frameworks table's E2E Testing row: added Playwright 1.62 (#117, `frontend/e2e/`) as the frontend-owned E2E tool per ADR 0002; the pre-existing Selenium WebDriver 4.16 row marked "being retired" pending #647 | Pending |
 
 ### Document Change Procedure
 
@@ -1005,7 +1006,7 @@ Phase 2 (Production Ready) is complete when Phase 1 criteria are met and all of 
 | :--- | :--- | :--- |
 | Unit Testing | JUnit 5, Mockito | Service, repository, and controller unit tests |
 | Integration Testing | Spring Boot Test, `@DataJpaTest` | Database and security integration |
-| E2E Testing | Rest Assured, Selenium WebDriver 4.16 | End-to-end API and browser testing |
+| E2E Testing | Rest Assured, Selenium WebDriver 4.16 (backend, being retired — see #647), Playwright 1.62 (frontend, `frontend/e2e/`, #117) | End-to-end API and browser testing |
 | Load Testing | Gatling 3.10.3, JMeter | Performance and concurrency validation |
 | Mutation Testing | PIT (pitest) 1.16.1 | Test quality validation (≥ 75% threshold) |
 | Coverage | JaCoCo 0.8.11 | Code coverage enforcement |

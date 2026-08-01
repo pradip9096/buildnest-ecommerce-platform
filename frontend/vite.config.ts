@@ -25,5 +25,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // #117: Vitest's default include glob (**/*.{test,spec}.ts) picks up frontend/e2e/*.spec.ts
+    // (Playwright test files) by default, and Playwright's own test.describe() throws when
+    // invoked outside Playwright's runner ("did not expect test.describe() to be called here")
+    // -- exclude the e2e directory explicitly, on top of Vitest's own default excludes.
+    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
   },
 })

@@ -38,6 +38,7 @@ itself), following MADR's own convention.
 | :--- | :--- | :--- | :--- |
 | [0000](0000-use-markdown-any-decision-records.md) | Use Markdown Any Decision Records | accepted | — |
 | [0001](0001-district-matching-strategy-for-location-based-seller-buyer-matching.md) | District-matching strategy for location-based seller-buyer matching | accepted | #561 |
+| [0002](0002-playwright-as-the-e2e-testing-tool-migrating-off-selenium.md) | Playwright as the E2E testing tool, migrating off Selenium | accepted | #117 |
 
 New entries are added here in the same edit that adds the ADR file — this
 index is not backfilled from git history retroactively; it starts tracking

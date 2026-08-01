@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Test Plan |
 | **Document ID** | TP-BUILDNEST-001 |
-| **Version** | 4.7 |
+| **Version** | 4.8 |
 | **Date** | 2026-08-01 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -38,6 +38,7 @@
 | 4.5 | 2026-07-30 IST | Test Manager | Periodic 15-issue SDLC documentation sync (overdue — last full sync at #452/#461, 2026-07-17; 53 issues closed since). §17.2's frontend-coverage baseline (17 test files/121 tests) corrected to the real current state via a fresh `npx vitest run`: 45 test files, 281 tests, all passing — the frontend grew substantially (Ph-3 marketplace-pivot seller/district UI, plus several M4 feature issues) with no single issue's own scope covering a re-verification of this aggregate row. Backend baseline (§17.2's own table) also drifted: re-ran a clean `./mvnw test` in an `env -i` isolated shell — 195→216 test files, 1,735→1,893 test executions, 0 failures/0 errors (matches PR #622's own test-plan citation for #111). §17.1's JaCoCo (85%)/PIT (77%) gate values re-checked directly against `pom.xml` — still accurate, no change. `Related SRS`/`Related SDD` updated (5.6→5.8, 4.12→4.13) | Pending |
 | 4.6 | 2026-07-30 IST | Test Manager | Added a "Secret hardcoding" row to §5.2 Security Testing (FR-PAY-05, SDP Appendix B) for #114's hardcoded-secrets audit — no `@Value` secret defaults, `gitleaks` CI step on every push/PR, verified via `RazorpayClientAdapterTest` plus empirical CI-run verification (the CI step itself has no unit-test equivalent) | Pending |
 | 4.7 | 2026-08-01 IST | Test Manager | Added SEC-16 (#112) to the "Security Headers" rows (§4/§5.2): Referrer-Policy and Permissions-Policy, previously untested since they didn't exist in the config, now covered by 3 new `SecurityHeadersTest` assertions (5/5 pass) alongside the pre-existing HSTS/X-Frame-Options coverage. Updated the §17-equivalent Security requirement-coverage row from SEC-01–14 to SEC-01–16 | Pending |
+| 4.8 | 2026-08-01 IST | Test Manager | §9.1 entry criteria row corrected: Playwright is now installed and configured (`frontend/e2e/`, `npm run test:e2e`, #117), no longer "still pending". §4.5 E2E section unchanged in structure — Playwright coexists with the pre-existing Selenium suite pending its retirement (#647) | Pending |
 
 ### Document Approval
 
@@ -716,7 +717,7 @@ All Phase 1 exit criteria met, plus:
 | JaCoCo gate at 0.85 in `pom.xml` (already exceeds the original 0.70 Phase 2 target — verified 2026-07-17, #461) | Config review |
 | PIT plugin configured in `pom.xml` | Config review |
 | Staging environment provisioned and validated | Environment checklist |
-| Frontend test tooling (Vitest, Playwright) installed | Vitest installed and `npm test` succeeds (2026-07-04, `#293`); Playwright E2E still pending |
+| Frontend test tooling (Vitest, Playwright) installed | Vitest installed and `npm test` succeeds (2026-07-04, `#293`); Playwright installed and `npm run test:e2e` configured (#117) |
 | Performance environment provisioned | DevOps sign-off |
 
 ### 9.2 Exit Criteria
