@@ -10,14 +10,14 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.45 |
+| **Version** | 1.46 |
 | **Date** | 2026-08-01 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
-| **Related SRS** | SRS-BUILDNEST-001 v5.9 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
+| **Related SRS** | SRS-BUILDNEST-001 v5.10 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
 | **Related SDD** | SDD-BUILDNEST-001 v4.13 — `docs/SDLC-docs/design/software-design-description.md` |
-| **Related TP** | TP-BUILDNEST-001 v4.5 — `docs/SDLC-docs/software-testing/test-plan.md` |
+| **Related TP** | TP-BUILDNEST-001 v4.8 — `docs/SDLC-docs/software-testing/test-plan.md` |
 | **Baseline Assessment** | `docs/reports/baseline-assessment-2026-06-19.md` |
 
 ---
@@ -74,6 +74,7 @@
 | 1.43 | 2026-07-30 IST | QA Manager | Periodic 15-issue SDLC documentation sync (overdue — last performed at #452, 2026-07-17; 53 issues closed since, well past the 15-issue trigger). Recomputed the Seller & Marketplace (FR-SEL) Coverage Summary row directly from its 8 individual rows (376-383): all 8 are ✅ Implemented, correcting the stale "5 Implemented / 3 Not Started (Ph-3, Planned)" that no single issue's own scope had covered recomputing. Folded FR-SEL (8/8) and FR-LOC (4/4) into the Totals row per this document's own previously-stated fold-in criterion (implementation begun, OQ-01/OQ-02 resolved) — Totals 184→196 total, 124→136 Implemented. Cross-reference mesh sweep: corrected `Related SRS` (5.6→5.8, since SRS's own version is also bumped in this same sync pass) and `Related TP` (4.3→4.5, same reason); `Related SDD` was already current (4.12) before this pass, bumped to 4.13 alongside SDD's own sync edit | Pending |
 | 1.44 | 2026-07-30 IST | QA Manager | FR-PAY-05 (Razorpay credentials externalised via env vars) corrected from 🔵 Pending Ph-2 to ✅ Implemented: `application.properties`' `razorpay.key.secret`/`razorpay.webhook.secret` previously carried literal string defaults (`test_key_secret`/`test_webhook_secret`) that applied in production too, since `application-production.properties` never overrode them — a hardcoded-secret-with-default violation, not genuine env-var externalisation (#114, secrets audit against SDP Appendix B / RGAR §11). Removed both defaults so a missing env var now fails startup instead of silently falling back to a known secret; also removed two redundant weak Java-level `@Value` defaults (`JwtTokenProvider.jwtSecret`, `ElasticsearchConfig.password`) masked by properties-level indirection. Added a `gitleaks` CI step (`security.yml`) and `.gitleaks.toml` allowlisting confirmed documentation/test-fixture false positives; fixed a real finding in `backend/kubernetes/buildnest-deployment.yaml` (a Secret manifest with real-looking base64 "example" values, now `stringData` placeholders). Recomputed the Payment (FR-PAY) Coverage Summary row (0→1 Implemented, 2→1 Pending) and the Coverage Summary Totals row (136→137 Implemented, 45→44 Pending) | Pending |
 | 1.45 | 2026-08-01 IST | QA Manager | Added SEC-16 (HTTP security headers: HSTS/X-Frame-Options/X-Content-Type-Options/Referrer-Policy/Permissions-Policy, #112) — correcting the issue's own stale "SRS SEC-11, SEC-12" citation (unrelated: search rate limiting, JWT rotation). HSTS/X-Frame-Options/X-Content-Type-Options were already Spring Security defaults (verified via context7 against the 6.5 reference docs); Referrer-Policy and Permissions-Policy were genuinely missing, added to `SecurityHeaderPolicies`/`SecurityConfig`/`TestSecurityConfig`, and covered by 3 new `SecurityHeadersTest` assertions (5/5 pass). Recomputed the Security (SEC) Coverage Summary row (15→16 total, 11→12 Implemented) and the Coverage Summary Totals row (196→197 total, 137→138 Implemented). Updated `Related SRS` from v5.8 to v5.9 | Pending |
+| 1.46 | 2026-08-01 IST | QA Manager | UI-01 status corrected from 🔵 Pending Ph-2 to ✅ Implemented — #117 added a real Playwright E2E suite (`frontend/e2e/`) per ADR 0002 (migrating off the pre-existing Selenium suite, which the row's own prior "Vitest / Playwright (Phase 2)" citation had never actually pointed to since Playwright didn't exist in the repo until this change; see #632 for the original tooling-mismatch finding). Coverage Summary Totals not recomputed this row — UI-01 was already counted, only its status/Implementation/Test-Class cells changed | Pending |
 
 ### Document Approval
 
@@ -181,7 +182,7 @@ The RTM serves to:
 
 | Req ID | Description | Priority | Phase | SDD Reference | Implementation | Test Class(es) | Verification | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| UI-01 | React 19 SPA frontend | High | Ph-2 | §4.2.2, §4.7.4 | `frontend/src/` (Phase 2) | Vitest / Playwright (Phase 2) | Inspection | 🔵 Pending Ph-2 |
+| UI-01 | React 19 SPA frontend | High | Ph-2 | §4.2.2, §4.7.4 | `frontend/src/` | Vitest (unit/component) / `frontend/e2e/` (Playwright E2E, #117) | Test | ✅ Implemented |
 | UI-02 | Swagger UI at `/swagger-ui.html` | Medium | Ph-1 | §4.7.1 | `pom.xml` (SpringDoc dependency) | `HomeControllerTest`, manual | Inspection | ✅ Implemented |
 | UI-03 | OpenAPI spec at `/v3/api-docs` | Medium | Ph-1 | §4.7.1 | SpringDoc AutoConfig | Manual / `HomeControllerTest` | Test | ✅ Implemented |
 | UI-04 | Consistent JSON error response structure | High | Ph-1 | §4.7.1, §5.2 | `GlobalExceptionHandler` | `GlobalExceptionHandlerTest`, `ExceptionClassesTest` | Test | ✅ Implemented |

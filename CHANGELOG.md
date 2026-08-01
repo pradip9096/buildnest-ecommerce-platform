@@ -12,6 +12,21 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Added
+- Playwright E2E test suite (#117, M5): `frontend/e2e/` covers the full
+  user journey (register → browse → search → add-to-cart → checkout →
+  order confirmation → order history) plus two critical error paths
+  (out-of-stock product, failed payment confirmation). Added a new
+  `playwright-e2e` CI job (`.github/workflows/ci-cd-pipeline.yml`)
+  alongside (not replacing) the pre-existing Selenium `e2e-tests` job.
+  ADR [0002](docs/SDLC-docs/design/adr/0002-playwright-as-the-e2e-testing-tool-migrating-off-selenium.md)
+  records the decision to migrate off Selenium — industry data (2026
+  TestGuild survey, State of JS 2025) plus frontend-ownership
+  considerations favored Playwright over the existing JVM-hosted
+  Selenium suite. #647 tracks retiring the Selenium suite once this
+  suite is confirmed stable in CI; also resolves the tooling-mismatch
+  half of #632.
+
 ### Fixed
 - `ProductApiTest`'s `GET /api/v2/products` genuine `500` (#639, discovered
   via #635's own CSRF fix uncovering it): `Product.seller` (`@ManyToOne`,

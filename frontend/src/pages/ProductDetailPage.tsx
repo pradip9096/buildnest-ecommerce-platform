@@ -204,6 +204,7 @@ export function ProductDetailPage() {
                   type="button"
                   onClick={handleAddToCart}
                   disabled={cartAdding}
+                  data-testid="product-detail-add-to-cart"
                   className="w-full bg-primary-600 hover:bg-primary-700 active:bg-primary-800 disabled:opacity-60 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
                 >
                   {cartAdding ? 'Adding…' : 'Add to Cart'}
