@@ -16,37 +16,50 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+public interface ProductRepository extends JpaRepository<Product, Long>,
+                JpaSpecificationExecutor<Product> {
 
         /**
-         * Count products belonging to a category, used to block category deletion
-         * while products still reference it (ADM-02, #68).
+         * Count products belonging to a category, used to block category
+         * deletion while products still reference it (ADM-02, #68).
          */
         long countByCategoryId(Long categoryId);
 
         /**
-         * Find products with stock below threshold for inventory monitoring
+         * Find products with stock below threshold for inventory
+         * monitoring.
          */
-        @Query("SELECT p FROM Product p WHERE " +
-                        "(COALESCE(p.inventory.quantityInStock, 0) - COALESCE(p.inventory.quantityReserved, 0)) < :threshold "
-                        +
-                        "AND p.isActive = true")
-        List<Product> findLowStockProducts(@Param("threshold") Integer threshold);
+        @Query("SELECT p FROM Product p WHERE "
+                        + "(COALESCE(p.inventory.quantityInStock, 0) "
+                        + "- COALESCE(p.inventory.quantityReserved, 0)) "
+                        + "< :threshold AND p.isActive = true")
+        List<Product> findLowStockProducts(
+                        @Param("threshold") Integer threshold);
 
         /**
-         * Find products by name (case-insensitive search) with eager loading.
-         * Uses EntityGraph to prevent N+1 queries when accessing category and
-         * inventory.
+         * Find products by name (case-insensitive search) with eager
+         * loading. Uses EntityGraph to prevent N+1 queries when accessing
+         * category and inventory.
          */
-        @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))")
-        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
-        List<Product> findByNameContainingIgnoreCase(@Param("name") String name);
+        @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE "
+                        + "LOWER(CONCAT('%', :name, '%'))")
+        @EntityGraph(attributePaths = { "category", "inventory",
+                        "variants" })
+        List<Product> findByNameContainingIgnoreCase(
+                        @Param("name") String name);
 
         /**
-         * Find product by ID with eager loading of category and inventory.
-         * Prevents N+1 queries when accessing product relationships.
+         * Find product by ID with eager loading of every association
+         * a public-facing controller response may serialize (category,
+         * inventory, variants, seller, tags) — seller/tags are lazy and
+         * were previously omitted here, causing a
+         * LazyInitializationException (wrapped as
+         * HttpMessageNotWritableException, HTTP 500) once Jackson tried
+         * to serialize them post-transaction under open-in-view=false
+         * (#639).
          */
-        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
+        @EntityGraph(attributePaths = { "category", "inventory", "variants",
+                        "seller", "tags" })
         Optional<Product> findById(Long id);
 
         /**
@@ -55,7 +68,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
          * listings; empty if the product doesn't exist or belongs to a
          * different seller.
          */
-        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
+        @EntityGraph(attributePaths = { "category", "inventory",
+                        "variants" })
         Optional<Product> findByIdAndSeller_Id(Long id, Long sellerId);
 
         /**
@@ -69,13 +83,16 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
          * Find all active products with eager loading of related entities.
          * Prevents N+1 queries for bulk product retrieval.
          */
-        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
+        @EntityGraph(attributePaths = { "category", "inventory",
+                        "variants" })
         List<Product> findByIsActiveTrue();
 
         /**
-         * Find active, admin-curated featured products for home page merchandising.
+         * Find active, admin-curated featured products for home page
+         * merchandising.
          */
-        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
+        @EntityGraph(attributePaths = { "category", "inventory",
+                        "variants" })
         List<Product> findByIsFeaturedTrueAndIsActiveTrue();
 
         /**
@@ -98,16 +115,22 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
          */
         @Query("""
                         SELECT p FROM Product p
-                        WHERE (:query IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%')))
-                        AND (:categoryId IS NULL OR p.category.id = :categoryId)
+                        WHERE (:query IS NULL OR LOWER(p.name) LIKE
+                                LOWER(CONCAT('%', :query, '%')))
+                        AND (:categoryId IS NULL
+                                OR p.category.id = :categoryId)
                         AND (:minPrice IS NULL OR p.price >= :minPrice)
                         AND (:maxPrice IS NULL OR p.price <= :maxPrice)
-                                    AND (:inStock IS NULL OR (:inStock = false OR
-                                            (COALESCE(p.inventory.quantityInStock, 0) - COALESCE(p.inventory.quantityReserved, 0)) > 0))
+                        AND (:inStock IS NULL OR (:inStock = false OR
+                                (COALESCE(p.inventory.quantityInStock, 0)
+                                - COALESCE(p.inventory.quantityReserved, 0))
+                                > 0))
                         AND (:isActive IS NULL OR p.isActive = :isActive)
-                        AND (:tag IS NULL OR EXISTS (SELECT 1 FROM p.tags t WHERE t.name = :tag))
+                        AND (:tag IS NULL OR EXISTS
+                                (SELECT 1 FROM p.tags t WHERE t.name = :tag))
                         """)
-        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
+        @EntityGraph(attributePaths = { "category", "inventory",
+                        "variants", "seller", "tags" })
         Page<Product> advancedSearch(
                         @Param("query") String query,
                         @Param("categoryId") Long categoryId,
@@ -123,45 +146,55 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
          * Used for inventory management and reorder alerts
          * Section 2.3: Performance optimization - database queries
          */
-        @Query("SELECT p FROM Product p WHERE " +
-                        "(COALESCE(p.inventory.quantityInStock, 0) - COALESCE(p.inventory.quantityReserved, 0)) <= :threshold "
-                        +
-                        "AND p.isActive = true")
+        @Query("SELECT p FROM Product p WHERE "
+                        + "(COALESCE(p.inventory.quantityInStock, 0) "
+                        + "- COALESCE(p.inventory.quantityReserved, 0)) "
+                        + "<= :threshold AND p.isActive = true")
         @EntityGraph(attributePaths = { "inventory" })
-        List<Product> findLowStockByInventory(@Param("threshold") Integer threshold);
+        List<Product> findLowStockByInventory(
+                        @Param("threshold") Integer threshold);
 
         /**
          * Find products by category with pagination
          */
-        @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.isActive = true")
-        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
-        Page<Product> findByCategory(@Param("categoryId") Long categoryId, Pageable pageable);
+        @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId "
+                        + "AND p.isActive = true")
+        @EntityGraph(attributePaths = { "category", "inventory",
+                        "variants", "seller", "tags" })
+        Page<Product> findByCategory(
+                        @Param("categoryId") Long categoryId,
+                        Pageable pageable);
 
         /**
          * Find products expiring soon (for perishable goods)
          */
-        @Query("SELECT p FROM Product p WHERE p.expiryDate IS NOT NULL " +
-                        "AND p.expiryDate <= :cutoff " +
-                        "AND p.isActive = true")
-        List<Product> findExpiringSoonByDate(@Param("cutoff") LocalDate cutoff);
+        @Query("SELECT p FROM Product p WHERE p.expiryDate IS NOT NULL "
+                        + "AND p.expiryDate <= :cutoff "
+                        + "AND p.isActive = true")
+        List<Product> findExpiringSoonByDate(
+                        @Param("cutoff") LocalDate cutoff);
 
         default List<Product> findExpiringSoon(Integer days) {
                 int safeDays = days == null ? 0 : Math.max(0, days);
-                return findExpiringSoonByDate(LocalDate.now().plusDays(safeDays));
+                return findExpiringSoonByDate(
+                                LocalDate.now().plusDays(safeDays));
         }
 
-        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
+        @EntityGraph(attributePaths = { "category", "inventory",
+                        "variants", "seller", "tags" })
         Page<Product> findAll(Pageable pageable);
 
-        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
+        @EntityGraph(attributePaths = { "category", "inventory",
+                        "variants" })
         List<Product> findAll();
 
         /**
          * Calculate total revenue by product (sales optimization)
          */
-        @Query("SELECT SUM(oi.quantity * oi.price) FROM OrderItem oi " +
-                        "WHERE oi.product.id = :productId")
-        BigDecimal calculateProductRevenue(@Param("productId") Long productId);
+        @Query("SELECT SUM(oi.quantity * oi.price) FROM OrderItem oi "
+                        + "WHERE oi.product.id = :productId")
+        BigDecimal calculateProductRevenue(
+                        @Param("productId") Long productId);
 
         /**
          * Find products related to {@code productId}: same category ranked
@@ -189,7 +222,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                         ORDER BY CASE WHEN p.category.id = :categoryId
                                 THEN 0 ELSE 1 END, p.id
                         """)
-        @EntityGraph(attributePaths = { "category", "inventory", "variants" })
+        @EntityGraph(attributePaths = { "category", "inventory",
+                        "variants", "seller", "tags" })
         List<Product> findRelatedProducts(
                         @Param("productId") Long productId,
                         @Param("categoryId") Long categoryId,
