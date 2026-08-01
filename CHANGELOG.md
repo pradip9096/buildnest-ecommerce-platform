@@ -13,6 +13,17 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Fixed
+- `OrderApiTest.testCheckoutProcess` `StackOverflowError` (#638, discovered
+  via #635's own CSRF fix uncovering it): `CheckoutController.processCheckout()`/
+  `processCheckoutWithPayment()` returned the raw `Order` JPA entity directly,
+  violating `spring/jpa.md`'s "never return a JPA entity from a controller"
+  rule — `Order.orderItems`/`OrderItem.order` form a bidirectional cycle with
+  no `@JsonIgnore`, so Jackson serialization never terminated cleanly and
+  RestAssured's client-side JSON parser overflowed trying to parse the
+  malformed response. `CheckoutService.checkoutCart()`/`checkoutWithPayment()`
+  now return `OrderResponseDTO`, mapped via the same class's own existing
+  `toOrderDTO()` helper (already used by `confirmCheckout()`). `OrderApiTest`
+  now 3/3 pass.
 - `CartApiTest`/`OrderApiTest`/`ProductApiTest` receiving `403` on every
   mutating request (#635, discovered via #630's own audit but a separate,
   unrelated root cause): these RestAssured-based tests never fetched the

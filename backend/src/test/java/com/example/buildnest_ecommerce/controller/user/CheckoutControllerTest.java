@@ -3,7 +3,7 @@ package com.example.buildnest_ecommerce.controller.user;
 import com.example.buildnest_ecommerce.config.TestElasticsearchConfig;
 import com.example.buildnest_ecommerce.config.TestSecurityConfig;
 import com.example.buildnest_ecommerce.model.dto.CheckoutRequestDTO;
-import com.example.buildnest_ecommerce.model.entity.Order;
+import com.example.buildnest_ecommerce.model.dto.OrderResponseDTO;
 import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import com.example.buildnest_ecommerce.service.checkout.CheckoutService;
 import com.example.buildnest_ecommerce.service.ratelimit.RateLimiterService;
@@ -94,7 +94,7 @@ class CheckoutControllerTest {
                 request.setPhoneNumber("+14155552671");
                 request.setQuantity(2);
 
-                Order order = new Order();
+                OrderResponseDTO order = new OrderResponseDTO();
                 order.setId(10L);
                 order.setTotalAmount(new BigDecimal("5000.00"));
 
@@ -109,7 +109,7 @@ class CheckoutControllerTest {
 
         @Test
         void testProcessCheckoutValid() throws Exception {
-                Order order = new Order();
+                OrderResponseDTO order = new OrderResponseDTO();
                 order.setId(20L);
                 order.setTotalAmount(new BigDecimal("1500.00"));
 
@@ -182,7 +182,7 @@ class CheckoutControllerTest {
                 request.setPhoneNumber("+14155552671");
                 request.setQuantity(5);
 
-                Order order = new Order();
+                OrderResponseDTO order = new OrderResponseDTO();
                 order.setId(11L);
                 order.setTotalAmount(new BigDecimal("99999999.00"));
 
