@@ -288,8 +288,8 @@ git push → CI triggered
       Coverage uploaded to Codecov under a `frontend` flag — not yet gated on a
       threshold (deliberate, non-blocking start; see CHANGELOG #649)
       Gate: 0 lint errors, 0 test failures — NOT yet a required branch-protection
-      check (started non-blocking; promoting it to required is a tracked follow-up
-      once observed stable across several runs)
+      check (started non-blocking; #657 tracks promoting it to required once
+      observed stable across several runs)
 ```
 
 ---

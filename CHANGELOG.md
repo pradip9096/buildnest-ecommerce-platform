@@ -23,7 +23,7 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   job's own non-required status, so both can prove themselves stable before
   being tightened). Not yet added to branch protection's
   `required_status_checks` (6 existing required contexts, none frontend-
-  related) — deliberately starts non-blocking; promoting it is a follow-up
+  related) — deliberately starts non-blocking; filed #657 to promote it
   once a few green runs are observed. Fixed two pre-existing gaps this
   surfaced: `eslint.config.js`'s `globalIgnores` didn't exclude the
   generated `coverage/` directory, and `AuthContext.tsx` had a real
