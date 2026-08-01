@@ -97,6 +97,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={loading || !username.trim() || !password}
+              data-testid="login-submit"
               className="w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
             >
               {loading ? 'Signing in…' : 'Sign in'}

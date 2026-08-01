@@ -57,7 +57,10 @@ export function ProductCard({ product, linkable = true }: Props) {
   };
 
   const card = (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
+    <div
+      data-testid="product-card"
+      className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
+    >
       <div className="relative aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
         {product.imageUrl ? (
           <img
@@ -104,6 +107,7 @@ export function ProductCard({ product, linkable = true }: Props) {
             type="button"
             onClick={handleAddToCart}
             disabled={addState === 'loading'}
+            data-testid="add-to-cart-button"
             className={`w-full text-xs font-semibold py-2 rounded-lg transition-colors disabled:opacity-70 ${BUTTON_STYLE[addState]}`}
           >
             {BUTTON_LABEL[addState]}
