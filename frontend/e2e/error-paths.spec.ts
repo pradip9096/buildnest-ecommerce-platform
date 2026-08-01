@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { uniqueUser, registerAndLogin, fillAddressStep } from './fixtures';
+import { fillAddressStep } from './fixtures';
 
 // #117: critical error-path coverage — out-of-stock products cannot be added to cart, and a
 // payment/order-confirmation failure surfaces an error instead of silently succeeding. Both
@@ -7,11 +7,15 @@ import { uniqueUser, registerAndLogin, fillAddressStep } from './fixtures';
 // an out-of-stock product nor a forced Razorpay failure can be reliably reproduced against a
 // shared, already-seeded backend without a dedicated test fixture — request interception
 // keeps the scenario deterministic and isolated from other tests' data.
+//
+// Reuses the session global-setup.ts registered once, rather than each test independently
+// calling registerAndLogin — RateLimitHeaderInterceptor's hardcoded AUTH_LIMIT (5 requests per
+// window on any /api/auth/** path, not property-configurable) is exhausted by 3 independent
+// register+login pairs (6 requests) once Redis makes rate limiting actually enforceable (#117).
+test.use({ storageState: 'e2e/.auth/shared-user.json' });
+
 test.describe('Critical error paths', () => {
   test('out-of-stock product cannot be added to cart', async ({ page }) => {
-    const user = uniqueUser();
-    await registerAndLogin(page, user);
-
     await page.goto('/products');
     await expect(page.getByTestId('product-grid').locator('a').first()).toBeVisible({ timeout: 15_000 });
     const firstProductHref = await page.getByTestId('product-grid').locator('a').first().getAttribute('href');
@@ -33,9 +37,6 @@ test.describe('Critical error paths', () => {
   });
 
   test('a failed order confirmation surfaces an error instead of navigating away', async ({ page }) => {
-    const user = uniqueUser();
-    await registerAndLogin(page, user);
-
     await page.goto('/products');
     await expect(page.getByTestId('product-grid').locator('a').first()).toBeVisible({ timeout: 15_000 });
     await page.getByTestId('product-grid').locator('a').first().click();
