@@ -25,7 +25,12 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   considerations favored Playwright over the existing JVM-hosted
   Selenium suite. #647 tracks retiring the Selenium suite once this
   suite is confirmed stable in CI; also resolves the tooling-mismatch
-  half of #632.
+  half of #632. `E2ESeedDataRunner` (`backend/src/main/.../e2e/`,
+  `@ConditionalOnProperty` gated, inert everywhere else) seeds one
+  product for the `playwright-e2e` job's fresh H2 database — lives in
+  `src/main` rather than `src/test` due to a confirmed upstream
+  spring-boot-maven-plugin limitation
+  ([spring-boot#36115](https://github.com/spring-projects/spring-boot/issues/36115)).
 
 ### Fixed
 - `ProductApiTest`'s `GET /api/v2/products` genuine `500` (#639, discovered

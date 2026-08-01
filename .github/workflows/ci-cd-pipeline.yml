@@ -435,18 +435,12 @@ jobs:
         # class: org.h2.Driver" (H2 is a test-scoped dependency in pom.xml, so plain
         # `spring-boot:run` never puts it on the classpath even with the datasource URL
         # overridden). See lesson_spring_boot_run_cli_test_profile_gotchas.md (found via #631)
-        # for the full reasoning behind all 3 flags below.
+        # for the full reasoning behind all 3 flags below. Note: useTestClasspath reliably adds
+        # test-scope *dependency jars* (like the H2 driver) but does NOT reliably make classes
+        # compiled to target/test-classes discoverable by component scan under the `run` goal
+        # (a known upstream limitation, spring-projects/spring-boot#36115) -- E2ESeedDataRunner
+        # below therefore lives in src/main/java, not src/test/java, despite being test-only.
         run: |
-          # test-compile explicitly first: `spring-boot:run` invoked as a standalone goal does
-          # NOT trigger the test-compile phase on its own -- useTestClasspath=true only adds
-          # target/test-classes to the runtime classpath, it doesn't populate it. This job's own
-          # E2ESeedDataRunner (new .java file under src/test/) silently never existed as a .class
-          # file without this step, even though the load-test job's identical useTestClasspath
-          # pattern never needed it (it only ever needed test-scope *dependency jars*, like the
-          # H2 driver, never a new test-scope *class*).
-          ./mvnw test-compile -q
-          echo "--- verifying E2ESeedDataRunner.class was actually compiled ---"
-          ls -la target/test-classes/com/example/buildnest_ecommerce/e2e/E2ESeedDataRunner.class || echo "MISSING: E2ESeedDataRunner.class not found after test-compile"
           JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n')
           # app.cors.allowed-origins must include the vite-preview port (4173) this job's
           # frontend is served on -- SecurityConfig's real CorsFilter (not TestSecurityConfig's
@@ -462,11 +456,6 @@ jobs:
           for i in $(seq 1 60); do
             if curl -sf http://localhost:8080/actuator/health/readiness > /dev/null 2>&1 || curl -sf http://localhost:8080/api/public/products > /dev/null 2>&1; then
               echo "Backend is up."
-              echo "--- /api/public/products live response ---"
-              curl -sf http://localhost:8080/api/public/products | head -c 1000
-              echo
-              echo "--- seed runner log lines ---"
-              grep -i "E2ESeedDataRunner" backend-e2e.log || echo "MISSING: no E2ESeedDataRunner log lines found"
               exit 0
             fi
             sleep 3
