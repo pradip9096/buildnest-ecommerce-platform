@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Test Plan |
 | **Document ID** | TP-BUILDNEST-001 |
-| **Version** | 4.6 |
-| **Date** | 2026-07-30 IST |
+| **Version** | 4.7 |
+| **Date** | 2026-08-01 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29119-3:2021 |
@@ -37,6 +37,7 @@
 | 4.4 | 2026-07-29 IST | Test Manager | SEC-14 (#110): §13.2's "Remove CSP `unsafe-inline`; update `SecurityTest` assertions" task struck through as done (#237 backend, #110 frontend). `Related SRS`/`Related SDD` header fields were long-stale (v4.5/v3.4, real current v5.6/v4.12 — several intervening version bumps on both documents never propagated here); corrected while already touching this document's content, though a full cross-reference-mesh sweep is the periodic 15-issue sync's job, not a per-issue one | Pending |
 | 4.5 | 2026-07-30 IST | Test Manager | Periodic 15-issue SDLC documentation sync (overdue — last full sync at #452/#461, 2026-07-17; 53 issues closed since). §17.2's frontend-coverage baseline (17 test files/121 tests) corrected to the real current state via a fresh `npx vitest run`: 45 test files, 281 tests, all passing — the frontend grew substantially (Ph-3 marketplace-pivot seller/district UI, plus several M4 feature issues) with no single issue's own scope covering a re-verification of this aggregate row. Backend baseline (§17.2's own table) also drifted: re-ran a clean `./mvnw test` in an `env -i` isolated shell — 195→216 test files, 1,735→1,893 test executions, 0 failures/0 errors (matches PR #622's own test-plan citation for #111). §17.1's JaCoCo (85%)/PIT (77%) gate values re-checked directly against `pom.xml` — still accurate, no change. `Related SRS`/`Related SDD` updated (5.6→5.8, 4.12→4.13) | Pending |
 | 4.6 | 2026-07-30 IST | Test Manager | Added a "Secret hardcoding" row to §5.2 Security Testing (FR-PAY-05, SDP Appendix B) for #114's hardcoded-secrets audit — no `@Value` secret defaults, `gitleaks` CI step on every push/PR, verified via `RazorpayClientAdapterTest` plus empirical CI-run verification (the CI step itself has no unit-test equivalent) | Pending |
+| 4.7 | 2026-08-01 IST | Test Manager | Added SEC-16 (#112) to the "Security Headers" rows (§4/§5.2): Referrer-Policy and Permissions-Policy, previously untested since they didn't exist in the config, now covered by 3 new `SecurityHeadersTest` assertions (5/5 pass) alongside the pre-existing HSTS/X-Frame-Options coverage. Updated the §17-equivalent Security requirement-coverage row from SEC-01–14 to SEC-01–16 | Pending |
 
 ### Document Approval
 
@@ -182,7 +183,7 @@ This document covers testing of:
 | Webhook Management | Register, Trigger, Event delivery | FR-ADM-07 | Ph-1 |
 | Notifications | Event-driven email/notification dispatch | FR-NOT-01 to FR-NOT-03 | Ph-1 |
 | Monitoring & Health | `/actuator/health`, `/actuator/prometheus`, performance metrics | FR-MON-01 to FR-MON-08 | Ph-1 |
-| Security Headers | HSTS, X-Frame-Options, X-Content-Type-Options, CSP | SEC-03, SEC-05, SEC-14 | Ph-1 |
+| Security Headers | HSTS, X-Frame-Options, X-Content-Type-Options, CSP, Referrer-Policy, Permissions-Policy | SEC-03, SEC-05, SEC-14, SEC-16 | Ph-1 |
 | Resilience Patterns | Circuit breaker, time limiter, graceful degradation | REL-02, REL-03, AVL-04 | Ph-1 |
 | Input Validation & Sanitisation | Injection prevention, field constraints, HTTP 400 on invalid input | SEC-06, SEC-06 | Ph-1 |
 | Frontend Components | React components, routing, auth flow, cart, checkout | FR-FE-01 to FR-FE-30 | Ph-2 |
@@ -474,7 +475,7 @@ Verifies that the system meets SRS v4.0 Security Requirements (SEC-*) and OWASP 
 | Authorisation | RBAC enforcement; 401 vs 403 distinction | SEC-01, FR-AUTH-10 | `AuthenticationAuthorizationSecurityTest`, `RBACTest` |
 | Rate limiting | Login lockout; admin throttle; fail-open on Redis down | SEC-07 to SEC-11 | `AdminRateLimitFilterTest`, `RateLimiterServiceTest` |
 | Input validation | SQL injection, XSS, null byte, oversized payload rejection | SEC-06 | `InputValidationSecurityTest`, `InputValidationTest` |
-| HTTP security headers | HSTS, X-Frame-Options, X-Content-Type-Options, CSP | SEC-03, SEC-05, SEC-14 | `SecurityTest`, `AuthenticationAuthorizationSecurityTest` |
+| HTTP security headers | HSTS, X-Frame-Options, X-Content-Type-Options, CSP, Referrer-Policy, Permissions-Policy | SEC-03, SEC-05, SEC-14, SEC-16 | `SecurityTest`, `AuthenticationAuthorizationSecurityTest`, `SecurityHeadersTest` |
 | JWT key strength | Reject keys shorter than 512 bits at startup | SEC-02, FR-AUTH-05 | `JwtKeyValidatorTest` |
 | Sensitive data exposure | Passwords not in logs or responses; PII masked | SEC-04 | `SecureLoggerTest`, `UserTest` |
 | BCrypt hashing | Password stored as BCrypt hash; rounds ≥ 12 | SEC-02 | `AuthServiceImplTest` |
@@ -901,7 +902,7 @@ The table below maps SRS v4.0 requirement groups to the test classes that verify
 | Webhooks | FR-ADM-07 | `WebhookAdminControllerTest`, `WebhookServiceImplTest` |
 | Notifications | FR-NOT-01 to FR-NOT-03 | `NotificationServiceTest`, `DomainEventListenerTest` |
 | Monitoring | FR-MON-01 to FR-MON-08 | `HealthIndicatorTest`, `DatabaseHealthIndicatorTest`, `RedisHealthIndicatorTest`, `PerformanceMetricsControllerTest`, `PoolMetricsControllerTest` |
-| Security | SEC-01 to SEC-14 | `AuthenticationAuthorizationSecurityTest`, `InputValidationSecurityTest`, `SecurityTest`, `AdminRateLimitFilterTest`, `RateLimiterServiceTest`, `JwtKeyValidatorTest`, `CustomUserDetailsTest`, `RolePermissionEvaluatorTest` |
+| Security | SEC-01 to SEC-16 | `AuthenticationAuthorizationSecurityTest`, `InputValidationSecurityTest`, `SecurityTest`, `AdminRateLimitFilterTest`, `RateLimiterServiceTest`, `JwtKeyValidatorTest`, `CustomUserDetailsTest`, `RolePermissionEvaluatorTest`, `SecurityHeadersTest` |
 | Performance | PR-01 to PR-07 | `PerformanceTest`, `PerformanceBaselineTest`, `LoadTestSimulation` (Gatling) |
 | Reliability | REL-01 to REL-04, AVL-01 to AVL-04 | `ReliabilityTest`, `ReliabilityHATest` |
 | Auditability | MNT-05 | `AuditAspectTest`, `AuditLogServiceTest`, `AuditLogControllerTest` |

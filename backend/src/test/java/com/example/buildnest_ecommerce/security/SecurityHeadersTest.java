@@ -56,4 +56,25 @@ class SecurityHeadersTest {
                 .andExpect(header().string("Strict-Transport-Security",
                         "max-age=" + SecurityHeaderPolicies.HSTS_MAX_AGE_SECONDS + " ; includeSubDomains ; preload"));
     }
+
+    @Test
+    @DisplayName("main-chain response includes X-Content-Type-Options: nosniff (SEC-11/SEC-12, #112)")
+    void mainChainIncludesContentTypeOptionsNosniff() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"));
+    }
+
+    @Test
+    @DisplayName("main-chain response includes Referrer-Policy matching the shared policy constant (SEC-11/SEC-12, #112)")
+    void mainChainIncludesReferrerPolicy() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(header().string("Referrer-Policy", SecurityHeaderPolicies.REFERRER_POLICY));
+    }
+
+    @Test
+    @DisplayName("main-chain response includes Permissions-Policy matching the shared policy constant (SEC-11/SEC-12, #112)")
+    void mainChainIncludesPermissionsPolicy() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(header().string("Permissions-Policy", SecurityHeaderPolicies.PERMISSIONS_POLICY));
+    }
 }

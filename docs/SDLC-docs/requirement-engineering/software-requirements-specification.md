@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 5.8 |
-| **Date** | 2026-07-30 IST |
+| **Version** | 5.9 |
+| **Date** | 2026-08-01 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -47,6 +47,7 @@
 | 5.6 | 2026-07-29 IST | Technical Lead | SEC-14 (#110): backend CSP was already `unsafe-inline`-free since #237, but the frontend's own document CSP (`frontend/security-headers.conf`) still carried `unsafe-inline` on `style-src`; removed after confirming React's `style={{}}` prop doesn't trigger the inline-style CSP restriction (JS property assignment, not the `style=` HTML attribute). Updated the SEC-14 Note in §7 (or equivalent security-requirements section) from "known gap for Ph-1" to resolved | Pending |
 | 5.7 | 2026-07-29 IST | Technical Lead | Added SEC-15 (#111): OWASP Top 10 2021 assessment requirement, correcting a filing-time traceability mismatch where the issue cited "(SEC-02)" (an unrelated, already-satisfied JWT-length requirement) and a blanket "SEC-01 to SEC-15" range that didn't exist yet. Updated SN-06 and the Coverage Summary Security row from SEC-01–14 to SEC-01–15 (14→15 requirements, 9→10 High). See `docs/SDLC-docs/reports/security-assessment.md` for the full A01–A10 assessment | Pending |
 | 5.8 | 2026-07-30 IST | Technical Lead | Periodic 15-issue SDLC documentation sync (overdue — last performed at #452, 2026-07-17; 53 issues closed since). Corrected a stale Spring Boot version claim (3.5.10 → 3.5.16, verified directly against `backend/pom.xml`'s `spring-boot-starter-parent`) in 3 places (REF-08, §4.2's Backend Framework row, CON-02) — this had drifted through several patch releases with no single issue's own scope covering a re-verification. MySQL 8.2 / Redis 7 / Elasticsearch 8.17 claims re-checked against `docker-compose.yml`'s active (non-commented) service definitions — still accurate, no change needed | Pending |
+| 5.9 | 2026-08-01 IST | Technical Lead | Added SEC-16 (#112): HTTP security headers (HSTS/X-Frame-Options/X-Content-Type-Options/Referrer-Policy/Permissions-Policy), correcting a filing-time traceability mismatch where the issue cited "SRS SEC-11, SEC-12" (unrelated: search rate limiting, JWT rotation). Verified against the Spring Security 6.5 reference docs (context7) that HSTS/X-Frame-Options/X-Content-Type-Options are already framework defaults; Referrer-Policy and Permissions-Policy were genuinely missing and implemented. Updated the Coverage Summary Security row from SEC-01–15 to SEC-01–16 (15→16 requirements, 10→11 High) | Pending |
 
 ### Document Change Procedure
 
@@ -417,7 +418,7 @@ Per ISO/IEC/IEEE 29148:2018 Clause 6.3:
 | SN-03 | Administrators | Real-time visibility into sales, inventory, and user activity | FG-06, FG-08, FG-09 |
 | SN-04 | Business Owners | Scalable platform supporting growth to 1,000+ concurrent users | PR-02, SCL-01–04 |
 | SN-05 | DevOps / SRE | Observable, container-ready application with zero-downtime deployments | FG-09, PRT-01–04 |
-| SN-06 | Security Auditors | Compliance with OWASP, PCI-DSS, and GDPR standards | SEC-01–15 |
+| SN-06 | Security Auditors | Compliance with OWASP, PCI-DSS, and GDPR standards | SEC-01–16 |
 | SN-07 | QA Engineers | A test suite whose pass signal is trustworthy and reflects real system behaviour | TIR-01–05 |
 | SN-08 | Sellers *(Ph-3, Planned)* | A way to reach buyers beyond their existing offline shop's foot traffic, within a service area they can realistically fulfil | FG-11, FG-12 |
 
@@ -839,6 +840,9 @@ All of the following indexes shall be present in the production schema:
 | SEC-13 | Database password rotation shall be performed every 180 days following documented procedures | Ph-2 | Medium | Inspection |
 | SEC-14 | The Content-Security-Policy response header shall not include `unsafe-inline`; inline script execution shall be prevented via nonce or hash strategy | Ph-2 | Medium | Inspection |
 | SEC-15 | A full OWASP Top 10 (2021) assessment (A01–A10) shall be performed and documented before the M5 production-readiness gate, with zero open Critical findings and a remediation timeline for any open High findings | Ph-2 | High | Test |
+| SEC-16 | API responses shall include HSTS (`max-age` ≥31536000, `includeSubDomains`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, and `Permissions-Policy` headers | Ph-2 | High | Test |
+
+> **Note on SEC-16** (#112): no prior SRS row covered this header bundle — the issue's own References cited SEC-11/SEC-12 (search rate limiting, JWT rotation), a stale/incorrect citation unrelated to HTTP headers. HSTS/X-Frame-Options/X-Content-Type-Options were already correctly enforced by Spring Security defaults; Referrer-Policy and Permissions-Policy were genuinely missing and added.
 
 > **Note on SEC-14**: Resolved. Backend `SecurityConfig`/`SecurityHeaderPolicies.MAIN_CSP` removed `unsafe-inline` from the API CSP in #237 (SEC-14); the frontend's own document CSP (`frontend/security-headers.conf`) retained `unsafe-inline` on `style-src` until #110, which removed it after confirming (live-browser verification) that React's `style={{}}` prop does not trigger the `style-src` inline restriction, since it sets styles via JS property assignment rather than the HTML `style` attribute.
 
@@ -953,7 +957,7 @@ Test integrity requirements define the properties that the test suite itself mus
 | Performance (PR-01–08) | 8 | Ph-1 / Ph-2 | 4 High, 3 Medium, 1 Low | Analysis, Inspection |
 | Reliability (REL-01–05) | 5 | Ph-1 / Ph-2 | Mixed | Analysis, Inspection |
 | Availability (AVL-01–04) | 4 | Ph-2 | High | Test |
-| Security (SEC-01–15) | 15 | Ph-1 / Ph-2 | 10 High, 5 Medium | Inspection, Test |
+| Security (SEC-01–16) | 16 | Ph-1 / Ph-2 | 11 High, 5 Medium | Inspection, Test |
 | Maintainability (MNT-01–06) | 6 | Ph-1 / Ph-2 | Mixed | Build, Inspection |
 | Portability (PRT-01–04) | 4 | Ph-1 / Ph-2 | Mixed | Inspection |
 | Scalability (SCL-01–04) | 4 | Ph-1 / Ph-2 | Mixed | Analysis, Inspection |

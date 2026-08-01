@@ -130,7 +130,13 @@ public class TestSecurityConfig {
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
                                 .preload(true)
-                                .maxAgeInSeconds(SecurityHeaderPolicies.HSTS_MAX_AGE_SECONDS)))
+                                .maxAgeInSeconds(SecurityHeaderPolicies.HSTS_MAX_AGE_SECONDS))
+                        .referrerPolicy(referrer -> referrer
+                                .policy(org.springframework.security.web.header.writers
+                                        .ReferrerPolicyHeaderWriter.ReferrerPolicy
+                                        .STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .permissionsPolicy(permissions -> permissions
+                                .policy(SecurityHeaderPolicies.PERMISSIONS_POLICY)))
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration corsConfig = new CorsConfiguration();
                     // #630: setAllowedOrigins("*") + allowCredentials(true) throws

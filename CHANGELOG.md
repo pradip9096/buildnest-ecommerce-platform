@@ -101,6 +101,23 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   tools) — tracked in #632. #130 remains open pending #630/#631.
 
 ### Security
+- HTTP security headers audit and enforcement (SEC-11/SEC-12, #112): audited
+  the 5 headers named in the issue's acceptance criteria against the Spring
+  Security 6.5 reference docs (verified via context7, not assumed from
+  memory). HSTS (`max-age=31536000; includeSubDomains`), X-Frame-Options
+  (`DENY`), and X-Content-Type-Options (`nosniff`) were already correctly
+  configured/covered by existing tests. Referrer-Policy and Permissions-Policy
+  were genuinely missing — Spring Security does not add either by default
+  (confirmed against the docs, not assumed). Added
+  `SecurityHeaderPolicies.REFERRER_POLICY`
+  (`strict-origin-when-cross-origin`) and `PERMISSIONS_POLICY` (denies
+  geolocation/camera/microphone/payment/usb outright — none of these
+  browser features are used server-side or in the SPA), wired into both
+  `SecurityConfig`'s main chain and `TestSecurityConfig`'s test-profile
+  stand-in via the same shared-constants pattern #312 already established
+  for CSP/HSTS, so the two configs cannot drift apart. `SecurityHeadersTest`
+  extended with 3 new assertions (nosniff, Referrer-Policy,
+  Permissions-Policy) — 5/5 pass.
 - Hardcoded-secrets audit (FR-PAY-05, #114): `application.properties`'
   `razorpay.key.secret`/`razorpay.webhook.secret` previously defaulted to
   known values (`test_key_secret`/`test_webhook_secret`) that also applied
