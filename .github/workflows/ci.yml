@@ -271,6 +271,65 @@ jobs:
               body
             });
 
+  # #649: frontend unit/lint checks had zero CI enforcement (npm run test / npm run lint
+  # were never invoked anywhere in CI — only npm ci/build/preview inside the E2E jobs to
+  # produce a servable build). Deliberately NOT added to branch protection's
+  # required_status_checks yet (this repo currently has 6 required contexts, none
+  # frontend-related) — starts non-blocking so the job can prove itself green across a
+  # few real runs before being promoted to required, avoiding blocking merges on a
+  # brand-new job's first runs. Gated at step level (never job-level) per #412/#414's
+  # required-check-in-paths-ignore lesson, so this job's own status always reports even
+  # on a docs-only change, in case it's promoted to required later.
+  frontend-quality:
+    name: Frontend Lint & Test
+    runs-on: ubuntu-latest
+    needs: detect-changes
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        if: needs.detect-changes.outputs.code-changed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        if: needs.detect-changes.outputs.code-changed == 'true'
+        working-directory: frontend
+        run: npm ci --legacy-peer-deps
+
+      - name: Run ESLint
+        if: needs.detect-changes.outputs.code-changed == 'true'
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Run Vitest with coverage
+        if: needs.detect-changes.outputs.code-changed == 'true'
+        working-directory: frontend
+        run: npm run test:coverage
+
+      - name: Upload frontend coverage to Codecov
+        if: needs.detect-changes.outputs.code-changed == 'true'
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./frontend/coverage
+          flags: frontend
+          name: codecov-frontend
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Upload frontend coverage artifact
+        if: needs.detect-changes.outputs.code-changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 30
+
   quality-gates:
     name: Quality Gates
     runs-on: ubuntu-latest
@@ -379,7 +438,7 @@ jobs:
   notify:
     name: Notify Results
     runs-on: ubuntu-latest
-    needs: [build, quality-gates, dependency-check]
+    needs: [build, quality-gates, dependency-check, frontend-quality]
     if: always()
 
     steps:
@@ -389,6 +448,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Build Status**: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
           echo "**Quality Gates**: ${{ needs.quality-gates.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Frontend Lint & Test**: ${{ needs.frontend-quality.result }}" >> $GITHUB_STEP_SUMMARY
           echo "**OWASP Dependency-Check**: ${{ needs.dependency-check.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Artifacts Available**:" >> $GITHUB_STEP_SUMMARY
