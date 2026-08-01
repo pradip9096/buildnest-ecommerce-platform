@@ -32,6 +32,18 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   spring-boot-maven-plugin limitation
   ([spring-boot#36115](https://github.com/spring-projects/spring-boot/issues/36115)).
 
+### Removed
+- Selenium browser E2E class (#647): retired `backend/.../e2e/E2ETest.java`
+  and the `selenium-java`/`webdrivermanager` dependencies (`backend/pom.xml`)
+  now that the `playwright-e2e` job added by #117 demonstrated 3/3 real
+  green runs on `master` — not just passing once. Also resolves the
+  remaining tooling-mismatch AC line on #632 (Playwright is now the real,
+  adopted E2E tool). The `e2e-tests` Maven profile and CI job were kept
+  (renamed CI job stays `e2e-tests`, Chrome/frontend-preview steps
+  dropped) — they still run a separate, unaffected RestAssured API E2E
+  suite (`CartApiTest`/`OrderApiTest`/`ProductApiTest`) that has nothing
+  to do with Selenium or browsers.
+
 ### Fixed
 - `ProductApiTest`'s `GET /api/v2/products` genuine `500` (#639, discovered
   via #635's own CSRF fix uncovering it): `Product.seller` (`@ManyToOne`,

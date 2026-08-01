@@ -327,22 +327,6 @@
 			<artifactId>spring-cloud-starter-stream-kafka</artifactId>
 		</dependency>
 
-		<!-- Selenium WebDriver for E2E testing -->
-		<dependency>
-			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-java</artifactId>
-			<version>4.16.1</version>
-			<scope>test</scope>
-		</dependency>
-
-		<!-- WebDriverManager for automatic driver management -->
-		<dependency>
-			<groupId>io.github.bonigarcia</groupId>
-			<artifactId>webdrivermanager</artifactId>
-			<version>5.6.3</version>
-			<scope>test</scope>
-		</dependency>
-
 		<!-- Gatling for load testing -->
 		<dependency>
 			<groupId>io.gatling.highcharts</groupId>
@@ -480,7 +464,7 @@
 			</build>
 		</profile>
 
-		<!-- E2E Tests Only -->
+		<!-- E2E Tests Only (RestAssured API E2E suite, e.g. CartApiTest/OrderApiTest/ProductApiTest) -->
 		<profile>
 			<id>e2e-tests</id>
 			<build>
