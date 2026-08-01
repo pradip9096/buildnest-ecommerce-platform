@@ -65,6 +65,41 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   to do with Selenium or browsers.
 
 ### Fixed
+- `@Cacheable` not gracefully degrading when Redis is down (#650,
+  discovered via #117's CI investigation): `RedisConnectionFailureException`
+  propagated through `ProductServiceImpl#getProductById` (and every other
+  `@Cacheable`/`@CacheEvict` call site — `CategoryServiceImpl`,
+  `AuditLogService`, `ProductTagServiceImpl`, `ProductServiceImpl`) all the
+  way to the controller, surfacing as a false 404 "product not found"
+  instead of falling through to the database — contradicting
+  `resilience4j.md`'s own stated "Redis (cache) — Fall through to
+  database — do not throw" fallback table, which only ever protected
+  manually circuit-breaker-wrapped Redis usage, not the declarative
+  `@Cacheable` proxy path. Fixed via a new `GracefulCacheErrorHandler`
+  (`config/GracefulCacheErrorHandler.java`), wired through
+  `CacheConfig implements CachingConfigurer#errorHandler()` — confirmed via
+  Spring source inspection that `@EnableCaching` does **not** auto-detect a
+  plain `CacheErrorHandler` bean by type, only one supplied via
+  `CachingConfigurer`. Only exceptions caused by a
+  `RedisConnectionFailureException` are swallowed (logged at `DEBUG`,
+  matching the resilience4j.md convention); any other cache exception,
+  e.g. a serialization failure indicating real data corruption (see #651),
+  is still rethrown. Covered by a real-proxy integration test
+  (`CacheRedisUnavailableIntegrationTest`, a genuine `@EnableCaching` AOP
+  context pointed at an unreachable Redis) plus a unit test for the
+  handler's own connection-vs-corruption branching
+  (`GracefulCacheErrorHandlerTest`).
+- `OWASP Dependency-Check` false-positive finding `CVE-2026-56816` (CVSS 7.5)
+  against `netty-transport-4.1.136.Final.jar` (#636, discovered via #630/PR
+  #634, unrelated to that branch's own diff): verified directly against the
+  NVD detail page — the vulnerability is in `Http3FrameCodec.decodeFrame`
+  (`io.netty.handler.codec.http3`), a 4.2.x-only HTTP/3/QUIC module. This
+  project is pinned to netty `4.1.136.Final` (#332) and has zero `http3`/
+  `quic` artifacts anywhere in its resolved dependency tree (`mvnw
+  dependency:tree` confirms this) — the vulnerable component is structurally
+  absent, not merely unpatched. Same false-positive shape as the existing
+  `CVE-2026-42582` suppression. Added a matching `owasp-suppressions.xml`
+  entry with full NVD-verification notes.
 - `ProductApiTest`'s `GET /api/v2/products` genuine `500` (#639, discovered
   via #635's own CSRF fix uncovering it): `Product.seller` (`@ManyToOne`,
   lazy) and `Product.tags` (`@ManyToMany`, lazy) were never included in any
