@@ -5,7 +5,10 @@ import type { Page } from '@playwright/test';
 // timestamped username/email per test run avoids colliding with data left behind by a prior run
 // against the same shared backend/database.
 export function uniqueUser() {
-  const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  // crypto.randomUUID() over Math.random() — CodeQL flags Math.random() as insecure
+  // randomness even in a test-only uniqueness role; the uuid slice is just as collision-safe
+  // here and side-steps the finding entirely rather than triaging it as a false positive.
+  const suffix = `${Date.now()}${crypto.randomUUID().replace(/-/g, '').slice(0, 8)}`;
   return {
     firstName: 'Playwright',
     lastName: 'Tester',
