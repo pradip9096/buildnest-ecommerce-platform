@@ -65,6 +65,35 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   to do with Selenium or browsers.
 
 ### Fixed
+- 3 deferred Playwright E2E scenarios investigated (#652); 1 fully fixed
+  and un-deferred, 2 root-caused two layers deep and re-deferred behind a
+  newly-discovered, separately-tracked blocker (#662): (1) the out-of-
+  stock scenario's `page.route()` interception spread `stockQuantity: 0`
+  onto the `ApiResponse` envelope root instead of `body.data` (where
+  `Product.getStockQuantity()` actually serializes), so the real in-stock
+  value passed through unmodified — fixed the test's own interception to
+  mutate the correct nesting level; `test.fixme()` removed, now passing
+  in CI. (2) The "Continue to Payment" checkout gap (`happy-path.spec.ts`'s
+  2nd test, `error-paths.spec.ts`'s payment-failure test) was not a
+  district-matching bug as originally suspected — two independent causes,
+  both fixed: (a) the `playwright-e2e` CI job starts the backend with
+  `--spring.jpa.hibernate.ddl-auto=create-drop`, which regenerates every
+  entity-mapped table from JPA annotations after Liquibase runs, wiping
+  the Liquibase-seeded default shipping method (`20260704-013-seed-
+  default-shipping-method.xml`, #304) before `E2ESeedDataRunner`
+  executes — fixed by seeding a default `ShippingMethod` in
+  `E2ESeedDataRunner`; (b) `ShippingStep`'s `selected` state was
+  initialized from the `options` prop in a `useState` lazy initializer,
+  which only runs once at mount — since `options` populates
+  asynchronously after mount, `selected` stayed `null` forever even once
+  shipping options loaded, so clicking Continue silently no-opped instead
+  of calling the API — fixed via a `useEffect` that syncs the default
+  selection once options arrive. Fixing both exposed a third, previously
+  unreachable blocker: the CI job's Razorpay credentials are placeholder
+  strings, so `initiatePayment` now genuinely fails authentication before
+  the Pay button renders — re-deferred via `test.fixme()` as its own
+  issue (#662), since it needs a real architectural decision (mock vs.
+  real sandbox credentials), not a quick fix.
 - `@Cacheable` not gracefully degrading when Redis is down (#650,
   discovered via #117's CI investigation): `RedisConnectionFailureException`
   propagated through `ProductServiceImpl#getProductById` (and every other
