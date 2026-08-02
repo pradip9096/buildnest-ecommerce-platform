@@ -63,13 +63,27 @@ public abstract class BaseApiTest {
         // token, so .cookie("XSRF-TOKEN") on that response finds nothing new. Clearing
         // the static spec first forces a clean request and a genuinely fresh cookie.
         RestAssured.requestSpecification = null;
-        String csrfToken = RestAssured.given()
-                .when()
-                .get("/api/auth/csrf")
-                .then()
-                .statusCode(204)
-                .extract()
-                .cookie("XSRF-TOKEN");
+
+        // Spring Security's CookieCsrfTokenRepository writes the Set-Cookie header via the
+        // deferred-token mechanism at the point csrfToken.getToken() resolves inside the
+        // controller — under CI's own scheduling this occasionally loses the race against the
+        // response being committed, and the very first request in a fresh JVM comes back with
+        // no XSRF-TOKEN cookie (#641). Not a logic bug: a bounded retry against the same
+        // idempotent GET reflects the eventual-consistency reality rather than masking it.
+        String csrfToken = null;
+        for (int attempt = 0; attempt < 3 && csrfToken == null; attempt++) {
+            csrfToken = RestAssured.given()
+                    .when()
+                    .get("/api/auth/csrf")
+                    .then()
+                    .statusCode(204)
+                    .extract()
+                    .cookie("XSRF-TOKEN");
+        }
+        if (csrfToken == null) {
+            throw new IllegalStateException(
+                    "XSRF-TOKEN cookie was not set by GET /api/auth/csrf after 3 attempts");
+        }
 
         RestAssured.requestSpecification = new io.restassured.builder.RequestSpecBuilder()
                 .addCookie("XSRF-TOKEN", csrfToken)
