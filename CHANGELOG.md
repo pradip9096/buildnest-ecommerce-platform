@@ -12,7 +12,24 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Added
+- Checkout Flow scenario (`TC-LOAD-005`) to the Gatling load test
+  (`LoadTestSimulation.java`) and a `P95 < 500ms` global assertion matching
+  RTM `PR-01` (#118, M5). #118 originally requested a new k6 script with a
+  conflicting 200ms/100-VU target; investigation found neither of its cited
+  requirements (`NFR-PERF-01`, `SDP §10.3`) exist, the real requirement is
+  `PR-01` (Gatling/JMeter, 500ms/1,000 VU), and this repo already has three
+  CI-wired load-testing tools — decided with the user to extend the existing
+  Gatling simulation instead. Verified locally (H2, CI's exact boot args):
+  `BUILD SUCCESS`, P95 = 33ms at 10 VUs. Full results in
+  `docs/SDLC-docs/reports/load-test-results.md`. A real 1,000-VU staging run
+  (PR-01's actual scale) is tracked separately as #669.
+
 ### Fixed
+- `LoadTestSimulation.java`'s `addToCartChain` was POSTing to
+  `/api/user/cart/add` without the required `userId` query parameter
+  (`CartController#addToCart`), hitting Spring's parameter-binding 400
+  before `@PreAuthorize` ever ran (#118).
 - `BaseApiTest`'s CSRF bootstrap (`e2e` RestAssured suite) could throw
   `IllegalArgumentException: Header value cannot be null` when the
   `XSRF-TOKEN` cookie set by `GET /api/auth/csrf` lost a timing race against
