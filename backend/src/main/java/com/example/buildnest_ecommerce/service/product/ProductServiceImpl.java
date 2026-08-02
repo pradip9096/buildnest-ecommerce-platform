@@ -109,19 +109,34 @@ public class ProductServiceImpl implements ProductService {
      * "product not found" once cached. Copying to a plain collection avoids
      * this entirely.
      *
-     * Also initializes the lazy `inventory` one-to-one so
-     * {@link Product#getStockQuantity()} (derived from it, #485) is safe to
-     * call after this transaction/session has closed — e.g. from the
-     * {@code @Async} Elasticsearch index listener, or when this raw entity
-     * is later Jackson-serialized post-transaction.
+     * Also initializes and unproxies the lazy `category`/`inventory`
+     * references (#651): {@code Hibernate.initialize()} alone forces a
+     * proxy's target to load but does not change the reference's runtime
+     * type — it stays a Hibernate proxy subclass, which the Redis cache
+     * serializer embeds by class name on write and then fails to
+     * instantiate on a cache-hit read (the proxy class requires a live
+     * Hibernate session, not a no-arg constructor), the same asymmetry as
+     * the collection fields above. {@code Hibernate.unproxy()} replaces the
+     * reference with the plain entity instance. `category` was previously
+     * never touched at all here, relying on it happening to be initialized
+     * elsewhere in the request — the same "don't infer one field is safe
+     * from another's incidental behavior" trap this repo's own wiki lesson
+     * on this bug family warns against.
      */
     private static void detachCollections(Product product) {
         Hibernate.initialize(product.getTags());
         product.setTags(new HashSet<>(product.getTags()));
         Hibernate.initialize(product.getVariants());
         product.setVariants(new ArrayList<>(product.getVariants()));
+        if (product.getCategory() != null) {
+            Hibernate.initialize(product.getCategory());
+            product.setCategory((Category)
+                    Hibernate.unproxy(product.getCategory()));
+        }
         if (product.getInventory() != null) {
             Hibernate.initialize(product.getInventory());
+            product.setInventory((Inventory)
+                    Hibernate.unproxy(product.getInventory()));
         }
     }
 

@@ -16,7 +16,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+// ignoreUnknown=true only affects deserialization (Redis cache-hit reads);
+// getStockQuantity() (derived, no backing field, #485/#651) still
+// serializes on writes and on live HTTP responses that read it.
+@JsonIgnoreProperties(value = { "hibernateLazyInitializer", "handler" },
+        ignoreUnknown = true)
 @Entity
 @Table(name = "products")
 @Getter

@@ -89,6 +89,31 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   context pointed at an unreachable Redis) plus a unit test for the
   handler's own connection-vs-corruption branching
   (`GracefulCacheErrorHandlerTest`).
+- `ProductServiceImpl#getProductById`'s `@Cacheable` entry corrupting the
+  Redis cache on write, causing every request after the first for a given
+  product to fail with `SerializationException`/`UnrecognizedPropertyException`
+  (surfacing as a false 404 "Product not found") once the entry was
+  cache-hit (#651, discovered via #117's Playwright CI investigation with
+  #650's Redis-availability fix applied). Root cause: `detachCollections()`
+  never touched the lazy `category` (`@ManyToOne`) association at all, and
+  only `Hibernate.initialize()`d `inventory` (`@OneToOne`) without
+  unproxying it — both stayed real Hibernate proxy instances at
+  Redis-serialize time, which `GenericJackson2JsonRedisSerializer`'s
+  default-typing config embeds by proxy class name on write and then fails
+  to instantiate on a cache-hit read (the same asymmetry this repo's own
+  `raw-entity-with-lazy-collection-...` wiki lesson already documented for
+  collection fields). Fixed by also `Hibernate.unproxy()`-ing both
+  `category`/`inventory` after initializing. A second, related defect the
+  new regression test itself caught: `Product.getStockQuantity()` (a
+  derived getter, no backing field) serializes fine but can't deserialize
+  (`UnrecognizedPropertyException`) — fixed via
+  `@JsonIgnoreProperties(ignoreUnknown = true)` on `Product` (deserialize-only,
+  doesn't affect writes/HTTP responses). Covered by a new
+  `ProductServiceRedisCacheRoundTripIntegrationTest` (a real `@DataJpaTest`
+  + the actual Redis serializer config, simulating the cache-hit round trip
+  on a separate request). Re-enabled `spring.cache.type=redis` in the
+  `playwright-e2e` CI job (`ci-cd-pipeline.yml`), reversing #117's scoped
+  `spring.cache.type=none` workaround now that the underlying bug is fixed.
 - `OWASP Dependency-Check` false-positive finding `CVE-2026-56816` (CVSS 7.5)
   against `netty-transport-4.1.136.Final.jar` (#636, discovered via #630/PR
   #634, unrelated to that branch's own diff): verified directly against the
