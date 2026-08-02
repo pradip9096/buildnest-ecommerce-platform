@@ -1,0 +1,277 @@
+# BuildNest — Production Docker Compose (OPS-01, issue #119)
+#
+# All services are configured with resource limits, healthchecks, and env-var-injected
+# configuration only (no hardcoded values). MySQL data persists to the named `mysql_data`
+# volume. TLS termination is handled by nginx-proxy in front of frontend + backend — see
+# nginx-proxy/README.md for the self-signed-vs-Let's-Encrypt cert story.
+#
+# Usage:
+#   cp .env.prod.example .env.prod   # fill in all REQUIRED values
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+#
+# `deploy.resources` limits apply directly under Docker Compose v2 (no Swarm/stack-deploy
+# required) — confirmed against the Compose Specification's own deploy.resources semantics.
+
+services:
+
+  # ===============================
+  # MySQL — primary data store
+  # ===============================
+  mysql:
+    image: mysql:8.2
+    container_name: buildnest-prod-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - buildnest-prod-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "${MYSQL_CPU_LIMIT:-2}"
+          memory: ${MYSQL_MEMORY_LIMIT:-2G}
+        reservations:
+          cpus: "${MYSQL_CPU_RESERVATION:-0.5}"
+          memory: ${MYSQL_MEMORY_RESERVATION:-1G}
+
+  # ===============================
+  # Redis — cache & rate limiting
+  # ===============================
+  redis:
+    image: redis:7-alpine
+    container_name: buildnest-prod-redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - buildnest-prod-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "${REDIS_CPU_LIMIT:-1}"
+          memory: ${REDIS_MEMORY_LIMIT:-512M}
+        reservations:
+          cpus: "${REDIS_CPU_RESERVATION:-0.25}"
+          memory: ${REDIS_MEMORY_RESERVATION:-256M}
+
+  # ===============================
+  # Elasticsearch — audit logs, metrics, product search
+  # ===============================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.6
+    container_name: buildnest-prod-elasticsearch
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "true"
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ES_JAVA_OPTS: "${ES_JAVA_OPTS:--Xms1g -Xmx1g}"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - buildnest-prod-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://elastic:${ELASTIC_PASSWORD}@localhost:9200 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "${ES_CPU_LIMIT:-2}"
+          memory: ${ES_MEMORY_LIMIT:-2G}
+        reservations:
+          cpus: "${ES_CPU_RESERVATION:-0.5}"
+          memory: ${ES_MEMORY_RESERVATION:-1G}
+
+  # ===============================
+  # Backend — Spring Boot API
+  # ===============================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: buildnest-prod-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      ELASTICSEARCH_ENABLED: "true"
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
+      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
+      ELASTICSEARCH_SSL_ENABLED: ${ELASTICSEARCH_SSL_ENABLED:-false}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET}
+      MONITORING_USERNAME: ${MONITORING_USERNAME:-monitoring}
+      MONITORING_PASSWORD: ${MONITORING_PASSWORD}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      ENVIRONMENT: production
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - buildnest-prod-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/readiness"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${BACKEND_CPU_LIMIT:-2}"
+          memory: ${BACKEND_MEMORY_LIMIT:-1536M}
+        reservations:
+          cpus: "${BACKEND_CPU_RESERVATION:-0.5}"
+          memory: ${BACKEND_MEMORY_RESERVATION:-768M}
+
+  # ===============================
+  # Frontend — React/Vite static SPA (nginx-unprivileged, HTTP only — TLS is
+  # terminated upstream by nginx-proxy, not here)
+  # ===============================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: buildnest-prod-frontend
+    restart: unless-stopped
+    networks:
+      - buildnest-prod-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${FRONTEND_CPU_LIMIT:-1}"
+          memory: ${FRONTEND_MEMORY_LIMIT:-256M}
+        reservations:
+          cpus: "${FRONTEND_CPU_RESERVATION:-0.1}"
+          memory: ${FRONTEND_MEMORY_RESERVATION:-128M}
+
+  # ===============================
+  # cert-init — one-shot: generates a self-signed cert into ssl_certs if one doesn't
+  # already exist. Replace with certbot for a real cloud deployment — see
+  # nginx-proxy/README.md.
+  # ===============================
+  cert-init:
+    image: alpine:3.20
+    container_name: buildnest-prod-cert-init
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
+    volumes:
+      - ./nginx-proxy/generate-self-signed-cert.sh:/generate-self-signed-cert.sh:ro
+      - ssl_certs:/certs
+    command: ["sh", "-c", "apk add --no-cache openssl >/dev/null && sh /generate-self-signed-cert.sh"]
+    restart: "no"
+
+  # ===============================
+  # nginx-proxy-config-render — one-shot: substitutes __DOMAIN_NAME__ into
+  # nginx.conf.template, mirroring backend/docker-compose.yml's
+  # prometheus-config-render / alertmanager-config-render sidecar pattern.
+  # ===============================
+  nginx-proxy-config-render:
+    image: alpine:3.20
+    container_name: buildnest-prod-nginx-proxy-config-render
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
+    volumes:
+      - ./nginx-proxy/nginx.conf.template:/template/nginx.conf.template:ro
+      - nginx_proxy_config:/config
+    command:
+      - sh
+      - -c
+      - |
+        sed "s|__DOMAIN_NAME__|$$DOMAIN_NAME|g" /template/nginx.conf.template > /config/nginx.conf
+    restart: "no"
+
+  # ===============================
+  # nginx-proxy — TLS termination + reverse proxy in front of frontend + backend
+  # ===============================
+  nginx-proxy:
+    image: nginx:1.27-alpine
+    container_name: buildnest-prod-nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx_proxy_config:/etc/nginx/conf.d:ro
+      - ssl_certs:/etc/nginx/ssl:ro
+    depends_on:
+      cert-init:
+        condition: service_completed_successfully
+      nginx-proxy-config-render:
+        condition: service_completed_successfully
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    networks:
+      - buildnest-prod-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "--max-redirect=0", "http://localhost:80/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${NGINX_PROXY_CPU_LIMIT:-1}"
+          memory: ${NGINX_PROXY_MEMORY_LIMIT:-256M}
+        reservations:
+          cpus: "${NGINX_PROXY_CPU_RESERVATION:-0.1}"
+          memory: ${NGINX_PROXY_MEMORY_RESERVATION:-128M}
+
+# ===============================
+# Volumes
+# ===============================
+volumes:
+  mysql_data:
+  redis_data:
+  elasticsearch_data:
+  ssl_certs:
+  nginx_proxy_config:
+
+# ===============================
+# Network
+# ===============================
+networks:
+  buildnest-prod-network:
+    driver: bridge

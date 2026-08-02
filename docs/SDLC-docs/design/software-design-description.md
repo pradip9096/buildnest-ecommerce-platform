@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 4.15 |
+| **Version** | 4.16 |
 | **Date** | 2026-08-02 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -52,6 +52,7 @@
 | 4.14 | 2026-08-02 IST | Software Architect | #647: retired only the browser-driven Selenium E2E class (`E2ETest.java`) now that `playwright-e2e` demonstrated 3/3 real green runs on `master`. Mid-implementation correction: an initial pass wrongly deleted the whole `e2e/` package, including the separate RestAssured API E2E suite (`ProductApiTest`/`OrderApiTest`/`CartApiTest`, still real, still `@Tag("e2e")`-tagged) that TIR-01 actually governs — caught before commit, restored, and this table's row corrected to describe the current (not assumed-retired) state | Pending |
 | 4.7 | 2026-07-28 17:00 IST | Software Architect | FR-SEL-07 (#558): new `SellerReview` entity/table (`seller_review`), mirroring `ProductReview` but scoped by the seller's `User.id`. Added to §4.5.1's ER diagram and §4.5.2's entity table. Same DTO-exposure gap recurred as #581's `orderGroupId` fix — `OrderResponseDTO` needed a new `sellerId` field so the frontend's `SellerReviewPanel` (surfaced from a delivered order's detail view) could link an order to the seller being rated; populated in the same two mapping methods (`OrderServiceImpl.mapToResponseDTO`, `CheckoutServiceImpl`'s equivalent) | Pending |
 | 4.15 | 2026-08-02 IST | Software Architect | #650: corrected §5.3.1's `redis-circuit-breaker` row — it never actually protected declarative `@Cacheable`/`@CacheEvict` calls, only manually-wrapped `RedisTemplate` usage (rate limiting); the `@Cacheable` proxy path had zero resilience coverage until this issue added a `GracefulCacheErrorHandler` (registered via `CacheConfig implements CachingConfigurer#errorHandler()`, since `@EnableCaching` does not auto-detect a plain `CacheErrorHandler` bean by type). Added a clarifying paragraph documenting the fix and the scope correction | Pending |
+| 4.16 | 2026-08-02 | Software Architect | #119 (OPS-01): added a note after §4.10.1's Kubernetes deployment-topology diagram documenting the new `docker-compose.prod.yml` as a second, currently-implemented (simpler, single-host, non-replicated) production deployment target — TLS termination via nginx-proxy instead of a Kubernetes Ingress/Load-Balancer | Pending |
 | 4.5 | 2026-07-26 09:00 IST | Software Architect | Final sub-issue of #557/FR-SEL-06: added `SellerOrderController`/`OrderServiceImpl`'s new seller-scoped list/detail/status methods, using a new `OrderRepository.findBySellerId`/`findByIdAndSellerId` `EXISTS`-subquery (`Order` has no direct seller reference; ownership derived transitively via `OrderItem.product.seller`) — mirrors #555's `SellerProductController`/#556's `SellerInventoryController` ownership-scoping pattern. All three FR-SEL-06 sub-issues (#578/#579/#580) now closed. **Not addressed in this revision**: §4.7.3's API Endpoint Catalogue does not yet list any of the three sellers' controllers (`SellerProductController`/`SellerInventoryController`/`SellerOrderController`) — this gap was already surfaced and filed as its own follow-up (#576) during #556's closure; not duplicated here | Pending |
 
 ### Document Approval
@@ -1456,6 +1457,15 @@ Refresh Token:
                     │  └───────────────────────────────────┘      │
                     └──────────────────────────────────────────────┘
 ```
+
+**Docker Compose deployment target (#119, OPS-01):** the diagram above documents the Kubernetes
+topology (§4.10.2's `kubernetes/buildnest-deployment.yaml`). A second, currently-implemented
+production target exists as `docker-compose.prod.yml` at the repository root — the same backend
+(JVM 21 :8080), frontend, MySQL/Redis/Elasticsearch data tier, fronted by a dedicated nginx-proxy
+reverse proxy doing TLS termination (self-signed for local/on-prem compose, Let's Encrypt for a
+real cloud host — see `nginx-proxy/README.md`) in place of the Kubernetes Ingress/Load-Balancer
+shown above. Single-host, non-replicated (no HPA-equivalent) — the Compose target is the simpler
+of the two deployment paths this repo supports, not a replacement for the Kubernetes topology.
 
 #### 4.10.2 Kubernetes Resource Configuration (Verified)
 
