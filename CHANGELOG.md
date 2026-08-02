@@ -12,6 +12,19 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Fixed
+- `BaseApiTest`'s CSRF bootstrap (`e2e` RestAssured suite) could throw
+  `IllegalArgumentException: Header value cannot be null` when the
+  `XSRF-TOKEN` cookie set by `GET /api/auth/csrf` lost a timing race against
+  Spring Security's deferred-token cookie write (#641, surfaced by an
+  auto-filed CI-failure bot issue against PR #640's merge-preview run — not
+  reproducible locally across 2 full runs, and `master` was green on all 5
+  `Quality Gate Pipeline` runs since #640 merged, confirming a one-off
+  race rather than a deterministic regression). `setup()` now retries the
+  bootstrap GET up to 3 times before failing loudly, reflecting the real
+  eventual-consistency behavior instead of assuming the cookie is always
+  present on the first attempt.
+
 ### Added
 - Wired frontend unit tests and lint into CI (#649, M5): new `frontend-quality`
   job in `.github/workflows/ci.yml` runs `npm run lint` and
