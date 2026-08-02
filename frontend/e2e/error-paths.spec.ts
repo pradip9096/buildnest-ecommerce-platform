@@ -12,16 +12,16 @@ import { fillAddressStep } from './fixtures';
 // calling registerAndLogin — RateLimitHeaderInterceptor's hardcoded AUTH_LIMIT (5 requests per
 // window on any /api/auth/** path, not property-configurable) is exhausted by 3 independent
 // register+login pairs (6 requests) once Redis makes rate limiting actually enforceable (#117).
-// Both scenarios below are deferred via test.fixme() pending #652 — not yet reliably green in
-// CI: the out-of-stock scenario's "Out of Stock" text doesn't render even though the add-to-cart
-// button correctly disappears, and the payment-failure scenario depends on reaching the payment
-// step, which is blocked by the same checkout gap tracked in #652. Not root-caused yet; deferred
-// rather than blocking #117 further after this many CI round-trips already fixed 5 other real,
-// previously-hidden bugs (#647/#649/#650/#651) along the way.
+// Both scenarios were deferred via test.fixme() pending #652; root-caused and fixed:
+// the out-of-stock scenario's route interception mutated the ApiResponse envelope root instead
+// of body.data (where Product.getStockQuantity() actually serializes), so the real stock value
+// passed through untouched; the payment-failure scenario was blocked by the checkout gap, fixed
+// by seeding a default ShippingMethod in E2ESeedDataRunner (ddl-auto=create-drop was wiping the
+// Liquibase-seeded one after Liquibase ran but before this ApplicationRunner executed).
 test.use({ storageState: 'e2e/.auth/shared-user.json' });
 
 test.describe('Critical error paths', () => {
-  test.fixme('out-of-stock product cannot be added to cart', async ({ page }) => {
+  test('out-of-stock product cannot be added to cart', async ({ page }) => {
     await page.goto('/products');
     await expect(page.getByTestId('product-grid').locator('a').first()).toBeVisible({ timeout: 15_000 });
     const firstProductHref = await page.getByTestId('product-grid').locator('a').first().getAttribute('href');
@@ -31,9 +31,12 @@ test.describe('Critical error paths', () => {
     await page.route(`**/api/public/products/${productId}`, async route => {
       const response = await route.fetch();
       const body = await response.json();
+      // stockQuantity lives on the unwrapped product (body.data), not on the
+      // ApiResponse envelope itself — mutating the envelope root leaves the
+      // real value untouched once the frontend unwraps `data` (#652).
       await route.fulfill({
         response,
-        json: { ...body, stockQuantity: 0 },
+        json: { ...body, data: { ...body.data, stockQuantity: 0 } },
       });
     });
 
@@ -42,7 +45,7 @@ test.describe('Critical error paths', () => {
     await expect(page.getByText(/out of stock/i)).toBeVisible({ timeout: 15_000 });
   });
 
-  test.fixme('a failed order confirmation surfaces an error instead of navigating away', async ({ page }) => {
+  test('a failed order confirmation surfaces an error instead of navigating away', async ({ page }) => {
     await page.goto('/products');
     await expect(page.getByTestId('product-grid').locator('a').first()).toBeVisible({ timeout: 15_000 });
     await page.getByTestId('product-grid').locator('a').first().click();

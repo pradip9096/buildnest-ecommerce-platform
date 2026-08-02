@@ -65,6 +65,23 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   to do with Selenium or browsers.
 
 ### Fixed
+- 3 deferred Playwright E2E scenarios root-caused and un-deferred (#652,
+  removing #117's `test.fixme()` markers): (1) the "Continue to Payment"
+  checkout gap (`happy-path.spec.ts`'s 2nd test, `error-paths.spec.ts`'s
+  payment-failure test) was not a district-matching bug as originally
+  suspected — the `playwright-e2e` CI job starts the backend with
+  `--spring.jpa.hibernate.ddl-auto=create-drop`, which regenerates every
+  entity-mapped table from JPA annotations after Liquibase runs, wiping
+  the Liquibase-seeded default shipping method (`20260704-013-seed-
+  default-shipping-method.xml`, #304) before `E2ESeedDataRunner`
+  executes — leaving zero active shipping methods and a permanently
+  disabled Continue button. Fixed by seeding a default `ShippingMethod`
+  in `E2ESeedDataRunner` alongside the existing product/inventory seed.
+  (2) The out-of-stock scenario's `page.route()` interception spread
+  `stockQuantity: 0` onto the `ApiResponse` envelope root instead of
+  `body.data` (where `Product.getStockQuantity()` actually serializes),
+  so the real in-stock value passed through unmodified. Fixed the test's
+  own interception to mutate the correct nesting level.
 - `@Cacheable` not gracefully degrading when Redis is down (#650,
   discovered via #117's CI investigation): `RedisConnectionFailureException`
   propagated through `ProductServiceImpl#getProductById` (and every other

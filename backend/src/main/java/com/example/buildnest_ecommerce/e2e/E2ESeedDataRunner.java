@@ -4,9 +4,11 @@ import com.example.buildnest_ecommerce.model.entity.Category;
 import com.example.buildnest_ecommerce.model.entity.Inventory;
 import com.example.buildnest_ecommerce.model.entity.InventoryStatus;
 import com.example.buildnest_ecommerce.model.entity.Product;
+import com.example.buildnest_ecommerce.model.entity.ShippingMethod;
 import com.example.buildnest_ecommerce.repository.CategoryRepository;
 import com.example.buildnest_ecommerce.repository.InventoryRepository;
 import com.example.buildnest_ecommerce.repository.ProductRepository;
+import com.example.buildnest_ecommerce.repository.ShippingMethodRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -33,6 +35,18 @@ import java.time.LocalDateTime;
  * Spring profile or deployment ever sets {@code e2e.seed.enabled=true}.
  * Mirrors {@code BaseApiTest#seedProduct} (repository-based, not raw
  * SQL, to avoid guessing Hibernate's generated column names).
+ *
+ * <p>Also seeds a default active {@code ShippingMethod} (#652): the CI
+ * job that runs this runner starts the backend with
+ * {@code --spring.jpa.hibernate.ddl-auto=create-drop}, which regenerates
+ * every entity-mapped table from JPA annotations after Liquibase has
+ * already run — wiping the Liquibase-seeded default shipping method
+ * ({@code 20260704-013-seed-default-shipping-method.xml}, #304) before
+ * this {@code ApplicationRunner} executes (see the
+ * {@code liquibase-seed-verification-under-hibernate-create-drop.md}
+ * wiki lesson). Without it, {@code getShippingOptions} returns an empty
+ * list and the checkout {@code ShippingStep}'s Continue button stays
+ * permanently disabled in this CI job.
  */
 @Slf4j
 @Component
@@ -44,6 +58,7 @@ public class E2ESeedDataRunner implements ApplicationRunner {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
+    private final ShippingMethodRepository shippingMethodRepository;
 
     @Override
     @Transactional
@@ -77,5 +92,22 @@ public class E2ESeedDataRunner implements ApplicationRunner {
         inventoryRepository.save(inventory);
         log.info("E2ESeedDataRunner: seeded product id={} sku={}",
                 saved.getId(), saved.getSku());
+
+        if (shippingMethodRepository.findAllByIsActiveTrue().isEmpty()) {
+            ShippingMethod method = new ShippingMethod();
+            method.setName("Standard Delivery");
+            method.setDescription(
+                    "Flat-rate delivery to any serviceable postal code");
+            method.setBaseCost(new BigDecimal("50.00"));
+            method.setCostPerKg(new BigDecimal("10.00"));
+            method.setEstimatedDaysMin(3);
+            method.setEstimatedDaysMax(7);
+            method.setIsActive(true);
+            method.setCreatedAt(LocalDateTime.now());
+            method.setUpdatedAt(LocalDateTime.now());
+            ShippingMethod savedMethod = shippingMethodRepository.save(method);
+            log.info("E2ESeedDataRunner: seeded shipping method id={}",
+                    savedMethod.getId());
+        }
     }
 }

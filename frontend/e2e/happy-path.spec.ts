@@ -9,11 +9,12 @@ import { uniqueUser, registerAndLogin, fillAddressStep } from './fixtures';
 //
 // Split into two tests sharing one browser context (test.describe.serial + a describe-scoped
 // page) rather than one long test: register->browse->search->add-to-cart->cart passes reliably
-// in CI, but checkout->confirmation->order-history does not yet (the "Continue to Payment"
-// button stays disabled — likely a district/shipping-method matching gap for the test's
-// hardcoded address, not yet root-caused). Splitting preserves the reliable prefix as real,
-// asserted coverage instead of losing it to one flaky suffix. See #652 for the checkout-onward
-// gap, deferred rather than blocking this PR further.
+// in CI; checkout->confirmation->order-history was blocked by a checkout gap (#652, root-caused
+// and fixed: the CI job's ddl-auto=create-drop wiped the Liquibase-seeded default shipping
+// method after Liquibase ran but before E2ESeedDataRunner executed, leaving zero active shipping
+// methods and a permanently-disabled "Continue to Payment" button — not a district/shipping-
+// method matching issue). Kept as two tests since the split still preserves the reliable prefix
+// as independently asserted coverage.
 test.describe.serial('Full user journey', () => {
   let page: Page;
 
@@ -62,7 +63,7 @@ test.describe.serial('Full user journey', () => {
     });
   });
 
-  test.fixme('checkout, order confirmation, and order history', async () => {
+  test('checkout, order confirmation, and order history', async () => {
     await test.step('complete checkout: address, shipping, payment', async () => {
       await fillAddressStep(page);
 
