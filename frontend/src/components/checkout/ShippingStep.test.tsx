@@ -82,3 +82,50 @@ describe('ShippingStep coupon application', () => {
     expect(screen.queryByPlaceholderText('Enter coupon code')).not.toBeInTheDocument();
   });
 });
+
+describe('ShippingStep default selection (#652)', () => {
+  it('auto-selects the first option once it arrives asynchronously after mount', async () => {
+    const user = userEvent.setup();
+    const onApplyCoupon = vi.fn().mockResolvedValue(undefined);
+    const onNext = vi.fn();
+    const onBack = vi.fn();
+
+    // Mirrors CheckoutPage's real usage: ShippingStep first mounts with an
+    // empty options array (fetch not yet resolved), then the parent
+    // re-renders with the fetched options once the request completes.
+    const { rerender } = render(
+      <ShippingStep
+        options={[]}
+        loading={false}
+        error={null}
+        session={baseSession}
+        couponLoading={false}
+        onApplyCoupon={onApplyCoupon}
+        onNext={onNext}
+        onBack={onBack}
+      />
+    );
+
+    rerender(
+      <ShippingStep
+        options={options}
+        loading={false}
+        error={null}
+        session={baseSession}
+        couponLoading={false}
+        onApplyCoupon={onApplyCoupon}
+        onNext={onNext}
+        onBack={onBack}
+      />
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('radio')).toBeChecked()
+    );
+
+    await user.click(screen.getByRole('button', { name: /continue to payment/i }));
+
+    expect(onNext).toHaveBeenCalledWith(options[0].id);
+    expect(screen.queryByText('Please select a shipping method')).not.toBeInTheDocument();
+  });
+});

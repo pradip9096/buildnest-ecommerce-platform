@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CheckoutSession, ShippingOption } from '../../types';
 
 interface Props {
@@ -28,6 +28,16 @@ export function ShippingStep({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState('');
   const [couponError, setCouponError] = useState<string | null>(null);
+
+  // `options` arrives asynchronously from the parent (fetched after mount),
+  // so the useState initializer above — which only runs once — can't select
+  // a default once options actually populate. Auto-select the first option
+  // whenever the list changes and nothing is selected yet (#652).
+  useEffect(() => {
+    if (selected === null && options.length > 0) {
+      setSelected(options[0].id);
+    }
+  }, [options, selected]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
