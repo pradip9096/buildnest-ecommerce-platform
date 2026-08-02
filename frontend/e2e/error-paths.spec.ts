@@ -12,12 +12,18 @@ import { fillAddressStep } from './fixtures';
 // calling registerAndLogin — RateLimitHeaderInterceptor's hardcoded AUTH_LIMIT (5 requests per
 // window on any /api/auth/** path, not property-configurable) is exhausted by 3 independent
 // register+login pairs (6 requests) once Redis makes rate limiting actually enforceable (#117).
-// Both scenarios were deferred via test.fixme() pending #652; root-caused and fixed:
-// the out-of-stock scenario's route interception mutated the ApiResponse envelope root instead
+// Both scenarios were deferred via test.fixme() pending #652. The out-of-stock scenario is
+// root-caused and fixed: its route interception mutated the ApiResponse envelope root instead
 // of body.data (where Product.getStockQuantity() actually serializes), so the real stock value
-// passed through untouched; the payment-failure scenario was blocked by the checkout gap, fixed
-// by seeding a default ShippingMethod in E2ESeedDataRunner (ddl-auto=create-drop was wiping the
-// Liquibase-seeded one after Liquibase ran but before this ApplicationRunner executed).
+// passed through untouched. The payment-failure scenario's original checkout-gap blocker is also
+// fixed (a default ShippingMethod seeded in E2ESeedDataRunner, plus a ShippingStep useState-from-
+// async-prop bug) — but fixing those exposed a new, previously-unreachable blocker: this CI job's
+// Razorpay credentials (`--razorpay.key.id=test_key_id` etc.) are placeholder strings, not real
+// test-mode credentials, so `initiatePayment` now genuinely fails with
+// `RazorpayException: BAD_REQUEST_ERROR:Authentication failed` before the Pay button ever renders.
+// Re-deferred as its own tracked, separately-scoped issue (#662) rather than expanding #652
+// further — this needs a real architectural decision (mock vs. real sandbox credentials), not a
+// quick fix.
 test.use({ storageState: 'e2e/.auth/shared-user.json' });
 
 test.describe('Critical error paths', () => {
@@ -45,7 +51,7 @@ test.describe('Critical error paths', () => {
     await expect(page.getByText(/out of stock/i)).toBeVisible({ timeout: 15_000 });
   });
 
-  test('a failed order confirmation surfaces an error instead of navigating away', async ({ page }) => {
+  test.fixme('a failed order confirmation surfaces an error instead of navigating away', async ({ page }) => {
     await page.goto('/products');
     await expect(page.getByTestId('product-grid').locator('a').first()).toBeVisible({ timeout: 15_000 });
     await page.getByTestId('product-grid').locator('a').first().click();
