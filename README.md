@@ -184,6 +184,21 @@ npm run dev
 # Dev server at http://localhost:5173
 ```
 
+### 5. Production deployment (optional)
+
+A separate `docker-compose.prod.yml` at the repository root builds and orchestrates the full
+production stack (backend, frontend, MySQL, Redis, Elasticsearch, and an nginx-proxy reverse
+proxy with TLS termination) with resource limits and healthchecks on every service:
+
+```bash
+cp .env.prod.example .env.prod
+# Edit .env.prod and populate all required values
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+```
+
+See `nginx-proxy/README.md` for the self-signed-certificate (local/on-prem) vs. Let's Encrypt
+(real cloud deployment) TLS story.
+
 ---
 
 ## Running Tests
@@ -287,7 +302,7 @@ GitHub Actions workflows in `.github/workflows/` that actively trigger on `maste
 | M2 — Quality Foundation | Test coverage, OWASP, env docs | 2026-07-18 | **Complete** (v0.3.0) — 17/17 issues |
 | M3 — Technical Debt Reduction | ES upgrade, CSP hardening, circuit breaker fallbacks, coverage gate ratchet, CheckStyle debt reduction | 2026-08-01 | **In progress** — 15/41 issues closed |
 | M4 — Feature Development | Core commerce features + bug fixes | 2026-10-24 | **In progress** — 209/238 issues closed |
-| M5 — Production Readiness | Security hardening, deployment, observability, compliance | 2026-11-21 | **In progress** — 64/105 issues closed |
+| M5 — Production Readiness | Security hardening, deployment, observability, compliance | 2026-11-21 | **In progress** — 72/112 issues closed |
 
 ---
 

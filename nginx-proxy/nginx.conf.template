@@ -1,0 +1,70 @@
+# Production reverse proxy — TLS termination in front of the frontend (nginx-unprivileged,
+# static SPA) and backend (Spring Boot) containers. Rendered from this template by
+# nginx-proxy-config-render (substitutes __DOMAIN_NAME__), mirroring the
+# prometheus-config-render / alertmanager-config-render sidecar pattern already used in
+# backend/docker-compose.yml for env-var substitution into an image that doesn't natively
+# support it.
+#
+# Deliberately does NOT set add_header for security headers here — those are already
+# correctly handled at the origin (frontend's security-headers.conf per #125; backend's
+# Spring Security header config per spring-security.md). Only proxy_set_header is used below,
+# which is a distinct directive not subject to nginx's add_header non-inheritance gotcha
+# (see docs/wiki/learned-lessons/nginx-add-header-not-inherited-into-location-blocks-with-their-own-add-header.md).
+
+server {
+    listen 80;
+    server_name __DOMAIN_NAME__;
+
+    # ACME HTTP-01 challenge path for certbot/Let's Encrypt renewal on real cloud deploys.
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name __DOMAIN_NAME__;
+
+    ssl_certificate     /etc/nginx/ssl/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    client_max_body_size 10m;
+
+    # Docker's embedded DNS (127.0.0.11) + variable-based proxy_pass below: nginx resolves
+    # a bare hostname in proxy_pass once, at config load, and fails to start entirely if it
+    # isn't resolvable yet (confirmed live: `host not found in upstream "backend"` when
+    # nginx-proxy started outside the compose network with no backend container present).
+    # Routing through a variable forces per-request resolution against this resolver instead,
+    # avoiding both the startup-ordering failure and stale-IP caching if a container is
+    # ever recreated with a new address.
+    resolver 127.0.0.11 valid=10s;
+
+    # Backend API + actuator health endpoints
+    location ~ ^/(api|actuator)/ {
+        set $backend_upstream http://backend:8080;
+        proxy_pass $backend_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Frontend SPA (static assets + client-side routing fallback)
+    location / {
+        set $frontend_upstream http://frontend:8080;
+        proxy_pass $frontend_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

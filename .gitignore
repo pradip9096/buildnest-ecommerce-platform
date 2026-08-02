@@ -60,6 +60,7 @@ frontend/build/
 .env
 .env.local
 .env.*.local
+.env.prod
 
 # -------------------------------------------------------
 # Log and build output files
