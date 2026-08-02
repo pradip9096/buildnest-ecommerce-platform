@@ -407,13 +407,12 @@ jobs:
           # wildcarded one, which is why the Selenium e2e-tests job never hits this) rejects any
           # Origin outside its allowlist with a 403 "Invalid CORS request", discovered only by a
           # real browser request (curl/MockMvc don't send Origin -- same class of gap as #426).
-          # spring.cache.type=none: ProductServiceImpl#getProductById's @Cacheable entry is
-          # genuinely broken on cache-hit -- confirmed locally (repeatable: 1st call to
-          # /api/public/products/{id} succeeds, every call after that fails with
-          # SerializationException: Could not read JSON, surfacing as a false 404 "Product not
-          # found"). Filed as #651; caching itself isn't what this E2E suite exists to test, so
-          # disabling it here is the pragmatic scoped fix rather than blocking on the real bug.
-          ARGS="--server.port=8080 --spring.datasource.url=jdbc:h2:mem:e2edb --spring.datasource.username=sa --spring.datasource.password= --spring.datasource.driver-class-name=org.h2.Driver --spring.jpa.hibernate.ddl-auto=create-drop --spring.sql.init.mode=never --spring.liquibase.default-schema=PUBLIC --spring.jpa.properties.hibernate.default_schema=PUBLIC --elasticsearch.enabled=false --spring.cache.type=none --jwt.secret=${JWT_SECRET} --razorpay.key.id=test_key_id --razorpay.key.secret=test_key_secret --razorpay.webhook.secret=test_webhook_secret --app.cors.allowed-origins=http://localhost:4173 --e2e.seed.enabled=true"
+          # spring.cache.type=redis (#651): re-enabled now that ProductServiceImpl#getProductById's
+          # @Cacheable cache-hit corruption is fixed (detachCollections() now unproxies
+          # category/inventory, and Product carries @JsonIgnoreProperties(ignoreUnknown = true)
+          # for the derived getStockQuantity() getter). Was spring.cache.type=none as #117's
+          # scoped workaround while #651 was open.
+          ARGS="--server.port=8080 --spring.datasource.url=jdbc:h2:mem:e2edb --spring.datasource.username=sa --spring.datasource.password= --spring.datasource.driver-class-name=org.h2.Driver --spring.jpa.hibernate.ddl-auto=create-drop --spring.sql.init.mode=never --spring.liquibase.default-schema=PUBLIC --spring.jpa.properties.hibernate.default_schema=PUBLIC --elasticsearch.enabled=false --spring.cache.type=redis --jwt.secret=${JWT_SECRET} --razorpay.key.id=test_key_id --razorpay.key.secret=test_key_secret --razorpay.webhook.secret=test_webhook_secret --app.cors.allowed-origins=http://localhost:4173 --e2e.seed.enabled=true"
           nohup ./mvnw spring-boot:run \
             -Dspring-boot.run.useTestClasspath=true \
             -Dspring-boot.run.arguments="$ARGS" \

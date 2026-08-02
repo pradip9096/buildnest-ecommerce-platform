@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Test Plan |
 | **Document ID** | TP-BUILDNEST-001 |
-| **Version** | 4.10 |
+| **Version** | 4.11 |
 | **Date** | 2026-08-02 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -41,6 +41,7 @@
 | 4.8 | 2026-08-01 IST | Test Manager | §9.1 entry criteria row corrected: Playwright is now installed and configured (`frontend/e2e/`, `npm run test:e2e`, #117), no longer "still pending". §4.5 E2E section unchanged in structure — Playwright coexists with the pre-existing Selenium suite pending its retirement (#647) | Pending |
 | 4.9 | 2026-08-02 IST | Test Manager | #647: retired only the browser-driven Selenium E2E class (`E2ETest.java`) now that `playwright-e2e` demonstrated 3/3 real green runs on `master`. Mid-implementation correction: an initial pass wrongly deleted the entire `e2e/` package — including the separate, still-valid RestAssured API E2E suite (`BaseApiTest`, `AuthApiTest`/`CartApiTest`/`OrderApiTest`/`ProductApiTest`/`UserApiTest`) and `E2ESeedDataRunnerTest.java` (unit test for the Playwright job's own seed runner) — based on a false assumption that the whole directory was the Selenium suite; caught before commit, files restored, and the `e2e-tests` Maven profile/`e2e,` exclusion (needed by the RestAssured suite) restored in `pom.xml`. §4.5 rewritten to document both E2E suites separately (4.5.1 Playwright, 4.5.2 RestAssured) rather than treating them as one. TIR-01 (§15), §3.2 pipeline diagram, §8.2 Maven profile table, and Appendix C's pom.xml excerpt all corrected to reflect that the `e2e`/`@Tag("e2e")` mechanism still exists for the RestAssured suite | Pending |
 | 4.10 | 2026-08-02 IST | Test Manager | #649: §3.4's CI Pipeline Integration diagram never mentioned frontend lint/unit tests — `npm run test`/`npm run lint` had zero CI enforcement until this issue wired them into a new `frontend-quality` job (`ci.yml`). Added Stage 6 to the diagram documenting the new job, its Codecov `frontend` flag (uploaded, not yet threshold-gated), and its deliberately non-required branch-protection status | Pending |
+| 4.11 | 2026-08-02 IST | Test Manager | #651: §17.2's Product Catalog test-class list (FR-PROD-01 to FR-PROD-07) extended with `ProductServiceRedisCacheRoundTripIntegrationTest`, the new regression test for `ProductServiceImpl#getProductById`'s `@Cacheable` cache-hit corruption bug. §17.2's aggregate Total-test-files/Total-test-executions figures were left as-is (last periodic-sync snapshot 2026-07-30) — this issue adds one test class, not a full re-sync; genuinely re-measured at the next 15-issue periodic sync per this document's own established cadence | Pending |
 
 ### Document Approval
 
@@ -906,7 +907,7 @@ The table below maps SRS v4.0 requirement groups to the test classes that verify
 | :--- | :--- | :--- |
 | Authentication | FR-AUTH-01 to FR-AUTH-11 | `AuthControllerTest`, `AuthServiceImplTest`, `AuthApiTest`, `JwtTokenProviderTest`, `JwtAuthenticationFilterTest`, `RefreshTokenServiceTest`, `JwtKeyValidatorTest` |
 | Password Reset | FR-AUTH-08 | `PasswordResetControllerTest`, `PasswordResetServiceImplTest` |
-| Product Catalog | FR-PROD-01 to FR-PROD-07 | `ProductControllerV1Test`, `ProductControllerV2Test`, `ProductServiceImplTest`, `ProductRepositoryTest`, `ApiSunsetInterceptorTest`, `ProductApiTest` (E2E) |
+| Product Catalog | FR-PROD-01 to FR-PROD-07 | `ProductControllerV1Test`, `ProductControllerV2Test`, `ProductServiceImplTest`, `ProductRepositoryTest`, `ApiSunsetInterceptorTest`, `ProductApiTest` (E2E), `ProductServiceRedisCacheRoundTripIntegrationTest` (#651) |
 | Cart | FR-CART-01 to FR-CART-06 | `CartControllerTest`, `CartServiceImplTest`, `CartRepositoryTest`, `CartApiTest` (E2E) |
 | Checkout | FR-CHK-01 to FR-CHK-08 | `CheckoutControllerTest`, `CheckoutServiceImplTest`, `OrderApiTest` (E2E) |
 | Payment | FR-PAY-01 to FR-PAY-05 | `PaymentServiceImplTest`, `PaymentProcessingTest`, `PaymentSignatureValidationServiceTest`, `RazorpayClientAdapterTest` |
