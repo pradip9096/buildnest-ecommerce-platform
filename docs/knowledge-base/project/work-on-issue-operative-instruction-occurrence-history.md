@@ -268,7 +268,14 @@ sibling-precedent judgment *was* reasoned through correctly, just folded into th
 task's description instead of seeded as its own item — the hook fires on content shape, not on
 "was this issue #2 of N in one session and did issue #1 already do the ceremony." A
 `/critique-prompt` critique of `work-on-issue.md` (same session) added an explicit
-per-issue-even-within-one-session clause to the sibling-precedent paragraph.
+per-issue-even-within-one-session clause to the sibling-precedent paragraph. **#652** — a further
+variant: the seeding requirement's scope was read narrowly as "architectural/precedent decision,"
+which didn't obviously cover a Mid-Implementation Scope Discovery SAME-vs-SEPARATE classification
+(`development-workflow.md`'s `solution-options-adr` case 6) — two such calls were made inline
+(a `ShippingStep` bug judged same-concern, a Razorpay-CI-credentials gap judged separate-concern)
+with no `TaskCreate` seeded for either. A `/critique-prompt` critique of `work-on-issue.md` and
+`development-workflow.md` (same session) added an explicit clause to both: case 6 and this
+paragraph's seeding requirement both now name MISD's SAME/SEPARATE test as an in-scope instance.
 
 ## Update-docs enumeration (six-doc checklist)
 
@@ -378,6 +385,15 @@ grep whatever written artifact the issue did produce instead.
   one-line direction test: ask which issue's own closure is gated on the other's — for a follow-up
   spawned from an originating issue whose AC depends on it, the link is `<originating issue>
   blocked_by <follow-up>`, not the reverse.
+- **#652** — the direction test itself was silently skipped rather than answered: #652 was closed
+  in the same session #662 was filed (its own AC re-scoped down, the remainder handed to #662
+  entirely), so there was no live gating relationship for the test's framing ("whose AC can't be
+  satisfied until the follow-up lands") to apply to. Neither `blocked_by` link nor an explicit
+  "no blocking relationship" statement was made — only prose cross-references (CHANGELOG, PR body,
+  issue References). → A `/critique-prompt` critique of `work-on-issue.md` added an explicit
+  fallback: when the originating issue is closing concurrently rather than staying open pending
+  the follow-up, state that as the test's answer rather than treating "no live gating relationship"
+  as license to skip the test.
 
 ## Merge closure step (Monitor-call discipline)
 
