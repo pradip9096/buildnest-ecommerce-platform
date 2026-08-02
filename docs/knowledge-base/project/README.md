@@ -237,6 +237,21 @@ actually already brought up to the same standard — this exact gap surfaced twi
 pattern applied there too). When applying this pattern once, it's worth a quick scan of sibling
 docs (other rule files, other tables) for the same shape before considering the job done.
 
+**A completed extraction doesn't stop the source location from re-growing.** The pointer sentence
+left behind in step 2 above only replaces what existed *at extraction time* — nothing prevents a
+later session from appending new content to the same topic back at the source instead of adding
+it to the already-linked article, especially when each addition (a new edge case, a new "distinct
+from all previous" scenario) looks small in isolation. Confirmed empirically on
+`development-workflow.md` step 8's Notes cell (Amendment #49-51 extracted it once; by the time it
+was next measured, 8 more cases had been appended inline over ~8 issues, growing the cell to
+9,249 characters — larger than the 7,362-character KB article it still linked to the whole time).
+**When adding new content to a topic that already has a linked KB article, add it to the article,
+not back into the source location** — the existence of the link is itself the signal that this
+topic's home is the article now. When auditing a doc for bloat, specifically check whether any
+section linking to an external article has grown larger than the article it links to; that
+size inversion is a reliable sign of exactly this failure mode, cheaper to check than re-reading
+every section for duplicated content from scratch.
+
 See [Content Extraction: DRY/SSOT as the Decision Principle, Not Size](content-extraction-dry-ssot-as-the-decision-principle.md)
 for the underlying *why* behind the qualitative trigger above — DRY/SSOT and Separation of
 Concerns are the actual decision principles; abstraction, progressive disclosure, indirection,
