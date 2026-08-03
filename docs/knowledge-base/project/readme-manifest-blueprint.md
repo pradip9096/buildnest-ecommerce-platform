@@ -87,10 +87,19 @@ explanation of its own.
 
 The manifest — one row per file, no prose beyond this table.
 
-| File | Topic | Category | Last Updated |
-|---|---|---|---|
-| [example-file.md](example-file.md) | One-line description of what this file covers | <category> | YYYY-MM-DD |
+| Sr. No. | File | Topic | Category | Last Updated |
+|---|---|---|---|---|
+| 1 | [example-file.md](example-file.md) | One-line description of what this file covers | <category> | YYYY-MM-DD |
 ```
+
+**`Sr. No.` exists solely so the last row's number answers "how many files are in this manifest"
+without counting rows or running `grep -c` — it is not a reference key.** It is purely positional:
+renumber it whenever a row is inserted, deleted, or reordered, the same way you'd renumber a
+numbered list. Never cite a row by its `Sr. No.` from outside this table (that number shifts the
+next time the table changes) — the `File` column's filename is the stable, citable identifier, if
+one is ever needed. This is a deliberate difference from a real ID column: an ID is assigned once
+and never renumbered even as the table changes; `Sr. No.` has no such requirement precisely
+because its only job is a live count, not identity.
 
 ## How to Adapt It
 
@@ -101,10 +110,12 @@ The manifest — one row per file, no prose beyond this table.
 2. **Drop subsections that don't apply.** Taxonomy and a file-type template are both optional —
    a directory of genuinely free-form, uncategorized files doesn't need either. Don't leave an
    empty placeholder subsection; delete it.
-3. **Match the Index table's columns to what's actually useful to scan by.** File / Topic /
-   Category / Last Updated is a reasonable default (used in this KB and in
+3. **Match the Index table's columns to what's actually useful to scan by.** Sr. No. / File /
+   Topic / Category / Last Updated is a reasonable default (used in this KB and in
    `docs/wiki/learned-lessons/README.md`), but a directory with no category concept, or one
    where recency doesn't matter, should drop those columns rather than leaving them always `—`.
+   Keep `Sr. No.` even when dropping others — it's the cheapest column in the table and the only
+   one that answers "how many files does this manifest have" without counting.
 4. **Point Index consumers back at this pattern once, not per-directory.** A single line linking
    to [Manifest and Surrogate Pattern for Index Files](manifest-and-surrogate-pattern-for-index-files.md)
    is enough — don't re-explain the theory in every directory that uses this blueprint.

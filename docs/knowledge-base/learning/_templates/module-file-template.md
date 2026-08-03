@@ -73,6 +73,14 @@ it's this template's verification mechanism, not content.
    which Modules are actually written vs. still planned.
 
 Delete this whole comment block once the file is filled in.
+
+MAINTAINER NOTE (not part of the fill-in-the-blank content — this paragraph stays only in this
+annotated copy, never in `module-file-quick-template.md` or a filled-in Module file, and never
+copied along with the STANDALONE template below if this file is reused elsewhere): this file and
+`module-file-quick-template.md` (found alongside it, wherever this template is kept) are
+structural twins — the quick template is this one with guidance comments stripped, not an
+independently-evolving file. Any change to the Module-file *shape* (Header/Body/Footer sections,
+what's optional, See Also rules) must be mirrored in both in the same edit.
 -->
 
 Part of **Level [N] — [Level Name]** in the **[Subject] Learning Outline**.
