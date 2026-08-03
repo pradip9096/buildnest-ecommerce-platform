@@ -13,6 +13,17 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Automated MySQL backup and restore tooling: `backend/scripts/backup-db.sh` (mysqldump +
+  gzip + timestamp, 30-day retention sweep) and `backend/scripts/restore-db.sh`, with a daily
+  02:00 UTC cron schedule (`backend/scripts/backup-db.cron`) and a documented DR drill procedure
+  (`docs/operations/database-backup-and-restore.md`). Live-verified against the running
+  `buildnest-mysql` container: full restore in 30s, well under the 1h RTO target. Backup files
+  and directory are created `umask 077`-restricted (600/700) since dumps contain full customer
+  PII; `restore-db.sh` requires an interactive confirmation (or `RESTORE_YES=1`) before
+  overwriting a database. Corrected the issue's own stale "SRS NFR-AVL-01" citation — the real
+  requirement is REL-05 (RPO ≤5 min); daily backups only achieve ~24h RPO, so REL-05 is marked
+  partial rather than fully met, with the true fix (binlog-based point-in-time recovery) filed
+  separately as #675 (#121, OPS-03, M5).
 - Real `deploy.yml` CI/CD deployment workflow: builds and pushes backend/frontend Docker images
   to GHCR, then deploys via SSH + `docker compose pull`/`up -d` (rolling per-service restart)
   against the `docker-compose.prod.yml` stack from #119/#671 — staging on every green master
