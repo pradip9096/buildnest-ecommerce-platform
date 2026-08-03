@@ -1,94 +1,216 @@
 name: Deploy to Production
 
+# OPS-02 (issue #120): builds+pushes backend/frontend images to GHCR, then deploys via SSH +
+# docker compose against the production stack from #119/#671 (docker-compose.prod.yml).
+#
+# Two independent deploy paths:
+#   - staging: fires on every green master build (workflow_run), no approval gate.
+#   - production: fires only on a `v*` tag push, gated by the `production` GitHub Environment's
+#     required-reviewers protection rule (manual approval — configured in repo Settings >
+#     Environments, not in this YAML; GitHub Environments don't expose that as a workflow field).
+#
+# `workflows: ["Quality Gate Pipeline"]` matches by workflow *display name*, not filename — must
+# stay in sync with ci.yml's `name:` field (#407: this exact mismatch class silently broke PMD's
+# gate for #318). Grep for `workflow_run` across .github/workflows/ before renaming ci.yml.
+#
+# Deliberately does NOT push a `:latest` tag — every deploy pulls an explicit tag (short SHA for
+# staging, the release tag for production) so a manual redeploy/rollback is deterministic instead
+# of silently resolving to whichever pipeline happened to run most recently (code-reviewer finding
+# on #120's own review pass).
+
 on:
   workflow_run:
-    # Matches by workflow *display name*, not filename -- must stay in sync with ci.yml's
-    # `name:` field (#407: this exact mismatch class silently broke PMD's gate for #318,
-    # so the rename here was made in the same commit as ci.yml's own rename).
     workflows: ["Quality Gate Pipeline"]
     types:
       - completed
     branches:
       - master
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Target environment'
+        description: "Target environment"
         required: true
-        default: 'staging'
+        default: "staging"
         type: choice
         options:
           - staging
           - production
 
-defaults:
-  run:
-    working-directory: backend
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/buildnest-backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/buildnest-frontend
 
 jobs:
-  deploy:
-    name: Deploy Application
+  # ===========================================================================
+  # Build + push both images to GHCR. Runs for every trigger — staging deploys
+  # want a fresh image per master push, production deploys want the tagged release
+  # image built from that same tag's source, not whatever staging last built.
+  # ===========================================================================
+  build-and-push:
+    name: Build & Push Images
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
-    environment: ${{ github.event.inputs.environment || 'staging' }}
-
+    if: >
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch'
+    outputs:
+      image-tag: ${{ steps.tag.outputs.tag }}
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          ref: master
+          # workflow_run: pin to the exact commit "Quality Gate Pipeline" validated, not whatever
+          # is on master by the time this job's checkout runs (they can differ if another commit
+          # lands on master in between) — a green CI run must deploy the commit it actually tested.
+          ref: >-
+            ${{ github.event_name == 'push' && github.ref
+             || github.event_name == 'workflow_run' && github.event.workflow_run.head_sha
+             || github.ref }}
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - name: Determine image tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          distribution: "temurin"
-          java-version: "21"
-          cache: "maven"
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker Image
-        run: |
-          chmod +x mvnw
-          ./mvnw -B clean package -DskipTests
-          
-          # Build Docker image
-          docker build -t pradipghadge/buildnest-ecommerce:tagname .
-          docker tag pradipghadge/buildnest-ecommerce:tagname pradipghadge/buildnest-ecommerce:${{ github.sha }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Push to Container Registry
-        if: false  # Configure with your registry credentials
-        run: |
-          echo "Configure Docker registry push here"
-          # docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
-          # docker push pradipghadge/buildnest-ecommerce:tagname
-          # docker push pradipghadge/buildnest-ecommerce:${{ github.sha }}
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ env.BACKEND_IMAGE }}:${{ steps.tag.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Deploy to Kubernetes
-        if: false  # Configure with your K8s cluster
-        run: |
-          echo "Configure Kubernetes deployment here"
-          # kubectl set image deployment/buildnest-ecommerce \
-          #   buildnest-ecommerce=pradipghadge/buildnest-ecommerce:${{ github.sha }} \
-          #   --namespace=production
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ env.FRONTEND_IMAGE }}:${{ steps.tag.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Health Check
+  # ===========================================================================
+  # Staging — rolling deploy on every green master build. No approval gate;
+  # staging is meant to reflect master continuously.
+  # ===========================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: {}
+    if: >
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    environment: staging
+    steps:
+      - name: Deploy via SSH (GHCR login + docker compose pull + rolling restart + health check)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            set -e
+            # GHCR packages are private by default — the runner's own GITHUB_TOKEN login
+            # (build-and-push job) doesn't reach this separate host/session, so this host needs
+            # its own read:packages-scoped PAT to pull.
+            echo "${{ secrets.STAGING_GHCR_PAT }}" | docker login ghcr.io -u "${{ secrets.STAGING_SSH_USER }}" --password-stdin
+            cd /opt/buildnest
+            export IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}
+            docker compose -f docker-compose.prod.yml --env-file .env.prod pull backend frontend
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --no-deps backend frontend
+            docker image prune -f
+            for i in $(seq 1 10); do
+              curl -sf http://localhost/actuator/health/readiness && break
+              [ "$i" -eq 10 ] && { echo "Backend did not become healthy after deploy"; exit 1; }
+              sleep 3
+            done
+
+      - name: Notify deployment (Slack)
+        if: always()
+        uses: slackapi/slack-github-action@v2.0.0
+        continue-on-error: true
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {"text": "Staging deploy ${{ job.status }} — image ${{ needs.build-and-push.outputs.image-tag }} (${{ github.sha }})"}
+
+  # ===========================================================================
+  # Production — only on a `v*` tag push. `environment: production` is the
+  # manual-approval gate: GitHub blocks this job until a required reviewer
+  # approves it, per the `production` Environment's protection rules configured
+  # in repo Settings > Environments (a repo-owner-only action, not settable from
+  # this workflow file — see README's Deployment section for the one-time setup).
+  # ===========================================================================
+  deploy-production:
+    name: Deploy to Production
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: {}
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment: production
+    steps:
+      - name: Deploy via SSH (GHCR login + docker compose pull + rolling restart + health check)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            set -e
+            echo "${{ secrets.PROD_GHCR_PAT }}" | docker login ghcr.io -u "${{ secrets.PROD_SSH_USER }}" --password-stdin
+            cd /opt/buildnest
+            export IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}
+            docker compose -f docker-compose.prod.yml --env-file .env.prod pull backend frontend
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --no-deps backend frontend
+            docker image prune -f
+            for i in $(seq 1 10); do
+              curl -sf http://localhost/actuator/health/readiness && break
+              [ "$i" -eq 10 ] && { echo "Backend did not become healthy after deploy"; exit 1; }
+              sleep 3
+            done
+
+      - name: Deployment summary
         if: always()
         run: |
-          echo "## 🏥 Deployment Health Check" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ⏳ Ready for manual deployment" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image**: pradipghadge/buildnest-ecommerce:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployment Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Status**: ${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Image tag**: ${{ needs.build-and-push.outputs.image-tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Ref**: ${{ github.ref }}" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Notify Deployment
-        if: success()
-        uses: actions/github-script@v7
+      - name: Notify deployment (Slack)
+        if: always()
+        uses: slackapi/slack-github-action@v2.0.0
+        continue-on-error: true
         with:
-          script: |
-            github.rest.repos.createDeploymentStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              deployment_id: 1,
-              state: 'success',
-              environment_url: 'https://your-deployment-url',
-              description: 'Deployment successful'
-            }).catch(err => console.log('Deployment status update skipped'));
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {"text": "Production deploy ${{ job.status }} — image ${{ needs.build-and-push.outputs.image-tag }} (${{ github.ref_name }})"}

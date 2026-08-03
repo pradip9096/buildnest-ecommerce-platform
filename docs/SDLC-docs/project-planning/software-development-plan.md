@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Development Plan (SDP) |
 | **Document ID** | SDP-BUILDNEST-001 |
-| **Version** | 1.3 |
-| **Date** | 2026-07-30 IST |
+| **Version** | 1.4 |
+| **Date** | 2026-08-03 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 12207:2017 — Software Life Cycle Processes; ISO/IEC/IEEE 15288:2023 — System Life Cycle Processes; IEEE Std 1058:2016 — Software Project Management Plans |
@@ -33,6 +33,7 @@
 | 1.1 | 2026-07-17 14:41 IST | Project Manager | Corrected stale test/source-file counts (256→352 source files, 173→195 test files, 1,538→1,735 executions, 14 failures→0), the false "frontend stub only" claim (71 real source files, substantial working SPA), Jedis→Lettuce client, and Elasticsearch 8.10→8.17 throughout. Resolved the "Elasticsearch EOL" risk entry — the required 8.17+ upgrade already happened (`docker-compose.yml`'s active service runs 8.17.6) — and corrected the JaCoCo/PIT gate targets to reflect the actual enforced values (85% JaCoCo, 77% PIT, both already exceeding Ph-1/Ph-2 targets) (#461) | Pending |
 | 1.2 | 2026-07-17 21:15 IST | Project Manager | Found during a fresh RTM/SRS/SDD/Test-Plan verification sweep: both the header `Related SRS/SDD/TP/RTM` fields and Appendix D's "Document Suite Summary" table still cited every sibling document at its original 2026-06-19 baseline version (SRS v4.0, SDD v3.0, TP v4.0, RTM v1.0) despite each having since moved through several real content-driven version bumps — this document's own cross-references had never been updated even once since the initial release. Updated all to current (SRS v4.5, SDD v3.5, TP v4.2, RTM v1.7, SDP itself v1.2) | Pending |
 | 1.3 | 2026-07-30 IST | Project Manager | Periodic 15-issue SDLC documentation sync (overdue — last full sync at #452, 2026-07-17; 53 issues closed since). Same drift class as 1.2, recurred: header `Related SRS/SDD/TP/RTM` fields and Appendix D's Document Suite Summary table had again gone stale since the last sync (SRS v4.5→v5.8, SDD v3.5→v4.13, TP v4.2→v4.5, RTM v1.7→v1.43) — this document's cross-references are a pure mirror of the other four documents' own version numbers and drift every time any of them bumps without a dedicated sync pass. Updated both the header and Appendix D to current | Pending |
+| 1.4 | 2026-08-03 IST | Project Manager | §5.7.3's CI/CD Workflow Inventory table corrected `deploy.yml`'s row — it previously described a K8s deploy that never existed; now describes the real GHCR-push + SSH/`docker compose` mechanism built for #120 (OPS-02, ADR 0003). §5.7.2's ASCII pipeline diagram (Deploy Pipeline / Production stages, still describing K8s + Argo Rollouts blue-green) was found stale by the same read but left untouched — it's pre-existing aspirational content unrelated to this issue's own scope; filed as a separate follow-up rather than rewritten here | Pending |
 
 ### Document Approval
 
@@ -538,7 +539,7 @@ Production
 | `ci-cd-pipeline.yml` ("Full Test Matrix & Docker Publish", renamed #407) | Push / PR to `main`, `master`, `develop` | Full test matrix (unit/integration/PIT/reliability/load/stress/e2e) + real Docker build/push |
 | `security.yml` | Push / PR to `main`, `master`, `develop`; schedule (weekly Sun 00:00 UTC) | OWASP Dependency Check (CVSS 7 threshold), SARIF upload, code scanning |
 | `performance.yml` | Manual trigger / schedule | Gatling load simulation |
-| `deploy.yml` | After `ci.yml` ("Quality Gate Pipeline") success on `master`; manual (`workflow_dispatch`) | Docker image build + K8s deploy (staging / production) |
+| `deploy.yml` | After `ci.yml` ("Quality Gate Pipeline") success on `master` (staging); `v*` tag push (production); manual (`workflow_dispatch`) | Docker image build + push to GHCR, deploy via SSH + `docker compose` against `docker-compose.prod.yml` (#120, OPS-02, ADR 0003 — not K8s; no cluster exists) |
 
 ### 5.8 Maintenance Process
 

@@ -283,14 +283,43 @@ GitHub Actions workflows in `.github/workflows/` that actively trigger on `maste
 | `ci-cd-pipeline.yml` | Push / PR to master (+ weekly schedule) | Broader test orchestration: unit, integration, reliability, security, load, and stress test jobs, plus PIT mutation-score reporting on PRs |
 | `security.yml` | Push / PR to master (+ weekly schedule) | OWASP Dependency-Check (SARIF report surfaced via GitHub's code-scanning UI using the `codeql-action/upload-sarif` action), SonarCloud analysis (`SonarQube Code Analysis` PR check, [dashboard](https://sonarcloud.io/dashboard?id=buildnest-ecommerce)), CheckStyle (**blocking, baseline + ratchet** — fails only if violations exceed 8,305, the verified baseline as of #354; lower the ceiling as violations are triaged), SpotBugs (non-blocking by deliberate decision — 103 untriaged findings (#353), not yet triaged) |
 | `codeql.yml` | Push / PR to master (+ weekly schedule) | CodeQL's own semantic-analysis engine (`init`/`analyze`) — distinct from `security.yml`'s `upload-sarif` step above, which only displays OWASP's report and never ran CodeQL itself. Scans `java-kotlin` (backend, `build-mode: autobuild`) and `javascript-typescript` (frontend). Non-blocking (advisory findings in the Security tab), added in #358. |
-| `deploy.yml` | On `ci.yml` completing on master, or manual dispatch | Docker image build and push |
+| `deploy.yml` | On `ci.yml` completing on master (staging), `v*` tag push (production), or manual dispatch | Builds+pushes backend/frontend Docker images to GHCR, then deploys via SSH + `docker compose` against `docker-compose.prod.yml` (OPS-02, #120, ADR [0003](docs/SDLC-docs/design/adr/0003-ssh-docker-compose-plus-ghcr-as-the-deployment-mechanism.md)) |
 | `performance.yml` | Manual / weekly schedule | JMeter load test suite |
-
-`ci-cd.yml` also exists in this directory but only triggers on `main`/`develop` branches (a leftover from before the repo's default branch was `master`) — it does not currently run and is not listed above.
 
 `epic-auto-close.yml` is a separate, issue-tracker-only automation (not listed in the master-triggered table above, since it never runs against code): on `issues: closed`, it checks whether the closed issue has a native GitHub parent and, if every sibling sub-issue is now closed, auto-closes the parent epic with a summary comment (#600).
 
 **Known overlap:** `ci.yml` and `ci-cd-pipeline.yml` both run on every push/PR to master with genuinely overlapping build/test concerns — this is real, current duplication of CI compute, not just a naming quirk. Worth consolidating; not yet done.
+
+### Deployment (`deploy.yml`)
+
+`deploy.yml` builds and pushes backend/frontend images to GHCR (`ghcr.io`, using the workflow's
+built-in `GITHUB_TOKEN` — no external registry credential needed), then SSHes into a target host
+and runs `docker compose pull && up -d` for a rolling per-service restart against
+`docker-compose.prod.yml` (see ADR
+[0003](docs/SDLC-docs/design/adr/0003-ssh-docker-compose-plus-ghcr-as-the-deployment-mechanism.md)
+for why this mechanism was chosen over Kubernetes/a managed cloud API).
+
+**Required GitHub Actions secrets** (repo Settings > Secrets and variables > Actions) — these are
+placeholders in the workflow until a real target host exists; deploys will fail cleanly (SSH
+connection error) rather than silently until they're set:
+
+| Secret | Used by | Purpose |
+|---|---|---|
+| `STAGING_SSH_HOST`, `STAGING_SSH_USER`, `STAGING_SSH_KEY` | `deploy-staging` job | SSH access to the staging host running `docker-compose.prod.yml` |
+| `STAGING_GHCR_PAT` | `deploy-staging` job | A GHCR PAT (`read:packages` scope) so the staging host can `docker login ghcr.io` and pull the CI-built image — GHCR packages are private by default, and the Actions runner's own `GITHUB_TOKEN` login doesn't carry over to this separate SSH session |
+| `PROD_SSH_HOST`, `PROD_SSH_USER`, `PROD_SSH_KEY` | `deploy-production` job | Same, for the production host |
+| `PROD_GHCR_PAT` | `deploy-production` job | Same purpose as `STAGING_GHCR_PAT`, for the production host |
+| `SLACK_WEBHOOK_URL` | both jobs | Optional — deploy notification; the step is `continue-on-error`, so an unset webhook doesn't fail the deploy |
+
+**Required manual step (cannot be done via `git`/`gh` — repo-owner-only UI action):** create a
+`production` GitHub Environment (Settings > Environments) with a required-reviewers protection
+rule. This is the actual manual-approval gate for production deploys — `environment: production`
+in the workflow only takes effect once that reviewer list is configured; without it, a `v*` tag
+push deploys to production immediately, with no approval step.
+
+Both target hosts also need `/opt/buildnest/docker-compose.prod.yml` and `/opt/buildnest/.env.prod`
+present (see `.env.prod.example`'s new `BACKEND_IMAGE`/`FRONTEND_IMAGE`/`IMAGE_TAG` variables,
+added for this workflow) before the first deploy.
 
 ---
 
