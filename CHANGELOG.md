@@ -12,6 +12,14 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Fixed
+- Closed #130 (REG-01, M5 production gate audit) after a fresh re-audit against live master CI
+  evidence confirmed all acceptance criteria genuinely pass: coverage 96.31% (≥70%), PIT mutation
+  score 76.6% (≥75%), Playwright E2E green, Gatling load tests green (unmasked by this issue's own
+  earlier fix, PR #633), OWASP dependency-check and gitleaks secret scan both green. Filed #683 as
+  a non-blocking follow-up: the PIT score has regressed below `backend/pom.xml`'s own documented
+  77% baseline and hasn't yet been ratcheted to M5's stated 81% target.
+
 ### Added
 - GDPR compliance features (#128, COMP-01/02/03, M5): `GET /api/user/data-export` (right to
   access — profile, addresses, orders, product/seller reviews, wishlist, and cart, all

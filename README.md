@@ -331,7 +331,7 @@ added for this workflow) before the first deploy.
 | M2 — Quality Foundation | Test coverage, OWASP, env docs | 2026-07-18 | **Complete** (v0.3.0) — 17/17 issues |
 | M3 — Technical Debt Reduction | ES upgrade, CSP hardening, circuit breaker fallbacks, coverage gate ratchet, CheckStyle debt reduction | 2026-08-01 | **In progress** — 15/41 issues closed |
 | M4 — Feature Development | Core commerce features + bug fixes | 2026-10-24 | **In progress** — 209/238 issues closed |
-| M5 — Production Readiness | Security hardening, deployment, observability, compliance | 2026-11-21 | **In progress** — 77/116 issues closed |
+| M5 — Production Readiness | Security hardening, deployment, observability, compliance | 2026-11-21 | **In progress** — 78/118 issues closed |
 
 ---
 
