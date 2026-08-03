@@ -1,6 +1,7 @@
 package com.example.buildnest_ecommerce.service.user;
 
 import com.example.buildnest_ecommerce.model.dto.UpdateUserDTO;
+import com.example.buildnest_ecommerce.model.dto.UserDataExportDTO;
 import com.example.buildnest_ecommerce.model.dto.UserResponseDTO;
 import com.example.buildnest_ecommerce.model.entity.User;
 import java.util.List;
@@ -14,4 +15,7 @@ public interface UserService {
     User getUserByEmail(String email);
     UserResponseDTO getUserResponseById(Long userId);
     UserResponseDTO updateUserProfile(Long userId, UpdateUserDTO updateDTO);
+
+    /** GDPR right-to-access export (#128, COMP-01). */
+    UserDataExportDTO exportUserData(Long userId);
 }

@@ -25,7 +25,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(exclude = { "roles", "addresses", "district", "createdAt",
-        "updatedAt", "deletedAt", "lastLogin" })
+        "updatedAt", "deletedAt", "lastLogin", "consentAt", "anonymizedAt" })
 @ToString(exclude = { "roles", "addresses", "district" })
 public class User implements AggregateRoot {
     @Id
@@ -72,6 +72,18 @@ public class User implements AggregateRoot {
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
+
+    // GDPR consent (#128) — captured at registration, required true
+    @Column(name = "consent_given", nullable = false)
+    private Boolean consentGiven = false;
+
+    @Column(name = "consent_at")
+    private LocalDateTime consentAt;
+
+    // Set once anonymization scrubs this row's PII; also the
+    // idempotency guard so re-runs skip already-processed rows.
+    @Column(name = "anonymized_at")
+    private LocalDateTime anonymizedAt;
 
     // jpa-rule-exception: roles is jpa.md's own named EAGER exception —
     // a small, bounded collection always needed with the parent user

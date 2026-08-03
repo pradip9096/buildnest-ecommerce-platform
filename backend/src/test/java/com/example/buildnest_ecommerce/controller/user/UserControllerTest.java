@@ -1,6 +1,7 @@
 package com.example.buildnest_ecommerce.controller.user;
 
 import com.example.buildnest_ecommerce.model.dto.UpdateUserDTO;
+import com.example.buildnest_ecommerce.model.dto.UserDataExportDTO;
 import com.example.buildnest_ecommerce.model.dto.UserResponseDTO;
 import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import com.example.buildnest_ecommerce.service.user.UserService;
@@ -52,5 +53,50 @@ class UserControllerTest {
         UserController controller = new UserController(userService);
         assertEquals(HttpStatus.BAD_REQUEST,
                 controller.updateProfile(new UpdateUserDTO(), auth()).getStatusCode());
+    }
+
+    @Test
+    void exportMyData_returnsOwnDataOnly() {
+        UserService userService = mock(UserService.class);
+        UserDataExportDTO export = new UserDataExportDTO(
+                null, Collections.emptyList(), Collections.emptyList(),
+                Collections.emptyList(), Collections.emptyList(),
+                Collections.emptyList(), Collections.emptyList());
+        when(userService.exportUserData(1L)).thenReturn(export);
+
+        UserController controller = new UserController(userService);
+        var response = controller.exportMyData(auth());
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(userService).exportUserData(1L);
+    }
+
+    @Test
+    void exportMyData_handlesErrors() {
+        UserService userService = mock(UserService.class);
+        when(userService.exportUserData(1L)).thenThrow(new RuntimeException("not found"));
+
+        UserController controller = new UserController(userService);
+        assertEquals(HttpStatus.NOT_FOUND, controller.exportMyData(auth()).getStatusCode());
+    }
+
+    @Test
+    void deleteMyAccount_deletesOwnAccountOnly() {
+        UserService userService = mock(UserService.class);
+
+        UserController controller = new UserController(userService);
+        var response = controller.deleteMyAccount(auth());
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(userService).deleteUser(1L);
+    }
+
+    @Test
+    void deleteMyAccount_handlesErrors() {
+        UserService userService = mock(UserService.class);
+        doThrow(new RuntimeException("bad")).when(userService).deleteUser(1L);
+
+        UserController controller = new UserController(userService);
+        assertEquals(HttpStatus.BAD_REQUEST, controller.deleteMyAccount(auth()).getStatusCode());
     }
 }

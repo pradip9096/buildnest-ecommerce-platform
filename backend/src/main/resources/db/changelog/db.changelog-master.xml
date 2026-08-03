@@ -40,5 +40,6 @@
     <include file="db/changelog/changes/20260729-029-alter-sellers-drop-district-id.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260729-030-alter-users-add-district-id.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260729-031-seed-starter-districts.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260803-001-alter-users-add-gdpr-consent-columns.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

@@ -14,6 +14,7 @@ export async function apiRegister(payload: {
   password: string;
   firstName: string;
   lastName: string;
+  consentGiven: boolean;
 }): Promise<void> {
   await requestData<null>('/api/auth/register', { method: 'POST', body: payload }, 'Registration failed');
 }

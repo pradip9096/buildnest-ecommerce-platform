@@ -84,6 +84,7 @@ class AuthServiceImplTest {
         registerRequest.setPassword("Password@123");
         registerRequest.setFirstName("New");
         registerRequest.setLastName("User");
+        registerRequest.setConsentGiven(true);
     }
 
     @Test
@@ -156,6 +157,8 @@ class AuthServiceImplTest {
         assertNotNull(saved.getRoles());
         assertEquals(1, saved.getRoles().size());
         assertEquals("ROLE_USER", saved.getRoles().iterator().next().getName());
+        assertTrue(saved.getConsentGiven(), "consentGiven must be recorded (#128, COMP-01)");
+        assertNotNull(saved.getConsentAt(), "consentAt must be stamped at registration (#128, COMP-01)");
 
         verify(validationUtil).validatePassword("Password@123");
     }
@@ -333,6 +336,20 @@ class AuthServiceImplTest {
         when(userRepository.findAll()).thenReturn(java.util.List.of(existingUser));
 
         assertThrows(RuntimeException.class, () -> authService.register(registerRequest));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testRegisterRejectsReservedAnonymizationUsername() {
+        // #128 (COMP-02): "deleted-user-<id>" is reserved for
+        // AccountAnonymizationScheduler's own placeholder -- a real
+        // user squatting it could collide with that job's save.
+        registerRequest.setUsername("deleted-user-999");
+        when(userRepository.findAll()).thenReturn(new java.util.ArrayList<>());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> authService.register(registerRequest));
+        assertTrue(ex.getMessage().contains("reserved"));
         verify(userRepository, never()).save(any(User.class));
     }
 

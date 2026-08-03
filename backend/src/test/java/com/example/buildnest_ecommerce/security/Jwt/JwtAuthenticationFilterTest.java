@@ -135,6 +135,32 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    void skipsAuthenticationWhenAccountIsDisabled() throws Exception {
+        // #128 (COMP-02): a valid, already-issued JWT for a
+        // soft-deleted (isActive=false -> UserDetails#isEnabled()
+        // false) account must not authenticate the request.
+        JwtTokenProvider tokenProvider = mock(JwtTokenProvider.class);
+        UserDetailsService userDetailsService = mock(UserDetailsService.class);
+
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter();
+        ReflectionTestUtils.setField(filter, "tokenProvider", tokenProvider);
+        ReflectionTestUtils.setField(filter, "userDetailsService", userDetailsService);
+
+        when(tokenProvider.validateToken("token")).thenReturn(true);
+        when(tokenProvider.getUsernameFromToken("token")).thenReturn("deleted-user");
+        when(userDetailsService.loadUserByUsername("deleted-user"))
+                .thenReturn(new CustomUserDetails(1L, "deleted-user", "u@example.com", "pass",
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")), false, true, true, true));
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer token");
+
+        filter.doFilterInternal(request, new MockHttpServletResponse(), new MockFilterChain());
+
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
     void skipsAuthenticationWhenNeitherHeaderNorCookiePresent() throws Exception {
         JwtTokenProvider tokenProvider = mock(JwtTokenProvider.class);
         UserDetailsService userDetailsService = mock(UserDetailsService.class);

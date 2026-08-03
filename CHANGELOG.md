@@ -12,6 +12,19 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Added
+- GDPR compliance features (#128, COMP-01/02/03, M5): `GET /api/user/data-export` (right to
+  access — profile, addresses, orders, product/seller reviews, wishlist, and cart, all
+  flat-projected so no raw JPA entity is ever serialized) and `DELETE /api/user/account`
+  (right to erasure — immediate soft-delete + deactivation + refresh-token revocation, followed
+  by a nightly `AccountAnonymizationScheduler` job that irreversibly scrubs PII 30 days later,
+  processing each account in its own transaction so one collision can't block the rest of that
+  night's cohort). Consent (checkbox + timestamp) is now captured and required at registration.
+  A PII inventory documenting every field/table/retention period lives at
+  `docs/compliance/pii-inventory.md`. Fixed a related gap surfaced by this issue's own security
+  review: `JwtAuthenticationFilter` now rejects a still-valid, already-issued access token for a
+  deactivated account instead of letting it keep working until natural expiry.
+
 ### Fixed
 - `backend/Dockerfile` hardened to match OPS-06's production-Dockerfile acceptance criteria:
   runtime base switched to `eclipse-temurin:21-jre-alpine`, added a non-root `buildnest` user
