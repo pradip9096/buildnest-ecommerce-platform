@@ -1,0 +1,9 @@
+# BuildNest MySQL backup cron schedule (#121, OPS-03, SRS NFR-AVL-01)
+#
+# Runs backup-db.sh daily at 02:00 UTC. Install with:
+#   crontab -l | { cat; cat backup-db.cron; } | crontab -
+#
+# Adjust the absolute path below to match the deployment host's checkout location.
+# Output is appended to backup-db.log alongside the script for later inspection.
+
+0 2 * * * bash -c 'umask 077; /opt/buildnest/backend/scripts/backup-db.sh >> /opt/buildnest/backend/scripts/backup-db.log 2>&1'
