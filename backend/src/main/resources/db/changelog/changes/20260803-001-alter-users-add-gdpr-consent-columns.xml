@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #128 (COMP-01): GDPR consent tracking + erasure-anonymization support -->
+    <changeSet id="20260803-001-alter-users-add-gdpr-consent-columns" author="buildnest-team">
+        <comment>Add consent_given/consent_at (right-to-access consent record) and
+            anonymized_at (marks completion of the 30-day post-deletion anonymization job)
+            to users. Existing rows default consent_given=false/consent_at=null since no
+            consent was ever captured from them prior to this feature.</comment>
+
+        <addColumn tableName="users">
+            <column name="consent_given" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="consent_at" type="TIMESTAMP"/>
+            <column name="anonymized_at" type="TIMESTAMP"/>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="users" columnName="consent_given"/>
+            <dropColumn tableName="users" columnName="consent_at"/>
+            <dropColumn tableName="users" columnName="anonymized_at"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

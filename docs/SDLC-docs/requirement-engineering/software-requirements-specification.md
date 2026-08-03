@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 5.10 |
-| **Date** | 2026-08-01 IST |
+| **Version** | 5.11 |
+| **Date** | 2026-08-03 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -49,6 +49,7 @@
 | 5.8 | 2026-07-30 IST | Technical Lead | Periodic 15-issue SDLC documentation sync (overdue — last performed at #452, 2026-07-17; 53 issues closed since). Corrected a stale Spring Boot version claim (3.5.10 → 3.5.16, verified directly against `backend/pom.xml`'s `spring-boot-starter-parent`) in 3 places (REF-08, §4.2's Backend Framework row, CON-02) — this had drifted through several patch releases with no single issue's own scope covering a re-verification. MySQL 8.2 / Redis 7 / Elasticsearch 8.17 claims re-checked against `docker-compose.yml`'s active (non-commented) service definitions — still accurate, no change needed | Pending |
 | 5.9 | 2026-08-01 IST | Technical Lead | Added SEC-16 (#112): HTTP security headers (HSTS/X-Frame-Options/X-Content-Type-Options/Referrer-Policy/Permissions-Policy), correcting a filing-time traceability mismatch where the issue cited "SRS SEC-11, SEC-12" (unrelated: search rate limiting, JWT rotation). Verified against the Spring Security 6.5 reference docs (context7) that HSTS/X-Frame-Options/X-Content-Type-Options are already framework defaults; Referrer-Policy and Permissions-Policy were genuinely missing and implemented. Updated the Coverage Summary Security row from SEC-01–15 to SEC-01–16 (15→16 requirements, 10→11 High) | Pending |
 | 5.10 | 2026-08-01 IST | Technical Lead | Updated the Testing Frameworks table's E2E Testing row: added Playwright 1.62 (#117, `frontend/e2e/`) as the frontend-owned E2E tool per ADR 0002; the pre-existing Selenium WebDriver 4.16 row marked "being retired" pending #647 | Pending |
+| 5.11 | 2026-08-03 IST | Technical Lead | Added §3.8.4 Compliance (COMP-01–03: GDPR right-to-access data export, right-to-erasure with 30-day anonymization retention, registration consent capture) for #128 — the issue's own "SRS NFR-COMP-01 to NFR-COMP-03" citation referenced a range that did not exist at filing time, same filing-time traceability-mismatch shape as SEC-15/SEC-16 (#111/#112). Renumbered §3.8.4–3.8.7 (Maintainability/Portability/Scalability) to §3.8.5–3.8.8 to make room. Updated the Coverage Summary Totals row (Non-Functional 61→64, Grand Total 156→159) | Pending |
 
 ### Document Change Procedure
 
@@ -849,7 +850,17 @@ All of the following indexes shall be present in the production schema:
 
 > **Note on SEC-15** (#111): This requirement did not previously exist as its own SRS row — issue #111 was originally filed and titled "(SEC-02)", but SEC-02 is a narrower, already-satisfied requirement (JWT secret key length/externalisation) unrelated to a Top 10 assessment, and the issue's blanket "SRS SEC-01 to SEC-15" citation referenced a SEC-15 row that did not exist at filing time (SRS previously ended at SEC-14). Added here as the correct, dedicated FR this issue actually satisfies; see `docs/SDLC-docs/reports/security-assessment.md` for the full A01–A10 assessment this row traces to.
 
-#### 3.8.4 Maintainability
+#### 3.8.4 Compliance
+
+| ID | Requirement | Phase | Target | Verification |
+| :--- | :--- | :--- | :--- | :--- |
+| COMP-01 | Users shall be able to export all personal data associated with their account as JSON (GDPR right to access) | Ph-2 | 100% coverage of §3.5 PII fields | Test |
+| COMP-02 | Users shall be able to request account deletion; the account shall be deactivated immediately and personal data irreversibly anonymised no later than 30 days after deletion, while financial/order records are retained for statutory retention periods (GDPR right to erasure) | Ph-2 | ≤ 30 days | Test |
+| COMP-03 | Consent to the privacy policy shall be captured (with timestamp) at registration and shall be a precondition of account creation | Ph-2 | 100% of new registrations | Test |
+
+> **Note on COMP-01–03** (#128): This requirement did not previously exist as its own SRS row — issue #128 cited "SRS NFR-COMP-01 to NFR-COMP-03", a range that did not exist at filing time (this SRS had no COMP-prefixed IDs before this change), the same filing-time traceability-mismatch shape already seen on SEC-15/SEC-16 (#111/#112). Added here as the correct, dedicated NFRs this issue actually satisfies. See `docs/compliance/pii-inventory.md` for the full PII field/table/retention inventory these requirements trace to.
+
+#### 3.8.5 Maintainability
 
 | ID | Requirement | Phase | Target | Verification |
 | :--- | :--- | :--- | :--- | :--- |
@@ -864,7 +875,7 @@ All of the following indexes shall be present in the production schema:
 >
 > **Note on MNT-03**: As of 2026-06-19, 14 failures / errors are present (Baseline Assessment Section 5). Resolution of all failures is the primary acceptance criterion for Phase 1.
 
-#### 3.8.5 Portability
+#### 3.8.6 Portability
 
 | ID | Requirement | Phase | Target | Verification |
 | :--- | :--- | :--- | :--- | :--- |
@@ -873,7 +884,7 @@ All of the following indexes shall be present in the production schema:
 | PRT-03 | The system shall provide Terraform IaC for AWS deployment | Ph-2 | AWS | Inspection |
 | PRT-04 | All configuration shall be environment-variable-driven per 12-Factor App methodology | Ph-1 | 12-Factor | Inspection |
 
-#### 3.8.6 Scalability
+#### 3.8.7 Scalability
 
 | ID | Requirement | Phase | Target | Verification |
 | :--- | :--- | :--- | :--- | :--- |
@@ -882,7 +893,7 @@ All of the following indexes shall be present in the production schema:
 | SCL-03 | Redis-backed rate limiting shall be shared across all application instances in a multi-pod deployment | Ph-2 | Distributed | Test |
 | SCL-04 | The system shall sustain at least 1,000 concurrent users as validated by Gatling simulations | Ph-2 | 1,000 users | Analysis |
 
-#### 3.8.7 Safety
+#### 3.8.8 Safety
 
 This system does not control safety-critical hardware or processes. IEC 61508 safety requirements are not applicable.
 
@@ -959,13 +970,14 @@ Test integrity requirements define the properties that the test suite itself mus
 | Reliability (REL-01–05) | 5 | Ph-1 / Ph-2 | Mixed | Analysis, Inspection |
 | Availability (AVL-01–04) | 4 | Ph-2 | High | Test |
 | Security (SEC-01–16) | 16 | Ph-1 / Ph-2 | 11 High, 5 Medium | Inspection, Test |
+| Compliance (COMP-01–03) | 3 | Ph-2 | High | Test |
 | Maintainability (MNT-01–06) | 6 | Ph-1 / Ph-2 | Mixed | Build, Inspection |
 | Portability (PRT-01–04) | 4 | Ph-1 / Ph-2 | Mixed | Inspection |
 | Scalability (SCL-01–04) | 4 | Ph-1 / Ph-2 | Mixed | Analysis, Inspection |
 | Safety (SAF-01–03) | 3 | Ph-1 / Ph-2 | High | Test |
 | Test Integrity (TIR-01–05) | 5 | Ph-1 / Ph-2 | 2 High, 3 Medium | Build, Inspection |
-| **Total Non-Functional** | **61** | | | |
-| **Grand Total** | **156** | | | |
+| **Total Non-Functional** | **64** | | | |
+| **Grand Total** | **159** | | | |
 | Seller & Marketplace (FR-SEL-01–08) *(Ph-3, Planned — excluded from Grand Total above)* | 8 | Ph-3 | 6 High, 2 Medium | 1 Implemented (#553), 7 Not started |
 | Location-Based Matching (FR-LOC-01–04) *(Ph-3, complete — excluded from Grand Total above)* | 4 | Ph-3 | 4 High | 4 Implemented (#562, #563, #564) |
 

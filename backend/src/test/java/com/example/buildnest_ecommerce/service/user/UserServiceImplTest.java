@@ -1,9 +1,20 @@
 package com.example.buildnest_ecommerce.service.user;
 
 import com.example.buildnest_ecommerce.model.dto.UpdateUserDTO;
+import com.example.buildnest_ecommerce.model.dto.UserDataExportDTO;
 import com.example.buildnest_ecommerce.model.dto.UserResponseDTO;
+import com.example.buildnest_ecommerce.model.entity.Address;
+import com.example.buildnest_ecommerce.model.entity.Order;
+import com.example.buildnest_ecommerce.model.entity.Order.OrderStatus;
 import com.example.buildnest_ecommerce.model.entity.User;
+import com.example.buildnest_ecommerce.repository.AddressRepository;
+import com.example.buildnest_ecommerce.repository.CartRepository;
+import com.example.buildnest_ecommerce.repository.OrderRepository;
+import com.example.buildnest_ecommerce.repository.ProductReviewRepository;
+import com.example.buildnest_ecommerce.repository.SellerReviewRepository;
 import com.example.buildnest_ecommerce.repository.UserRepository;
+import com.example.buildnest_ecommerce.repository.WishlistRepository;
+import com.example.buildnest_ecommerce.service.token.RefreshTokenService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,12 +22,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,6 +41,20 @@ class UserServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private AddressRepository addressRepository;
+    @Mock
+    private OrderRepository orderRepository;
+    @Mock
+    private ProductReviewRepository productReviewRepository;
+    @Mock
+    private SellerReviewRepository sellerReviewRepository;
+    @Mock
+    private WishlistRepository wishlistRepository;
+    @Mock
+    private CartRepository cartRepository;
+    @Mock
+    private RefreshTokenService refreshTokenService;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -62,7 +92,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should delete user")
+    @DisplayName("Should soft-delete, deactivate, and revoke tokens for the user (#128, COMP-01)")
     void testDeleteUser() {
         User existing = new User();
         existing.setId(1L);
@@ -70,8 +100,11 @@ class UserServiceImplTest {
         when(userRepository.save(any(User.class))).thenReturn(existing);
 
         userService.deleteUser(1L);
+
         assertTrue(existing.getIsDeleted());
+        assertFalse(existing.getIsActive(), "isActive must be false so login is blocked immediately");
         assertNotNull(existing.getDeletedAt(), "deletedAt must be set on soft delete");
+        verify(refreshTokenService).revokeAllUserTokens(1L);
     }
 
     @Test
@@ -196,5 +229,52 @@ class UserServiceImplTest {
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
         assertNotNull(captor.getValue().getUpdatedAt(), "updatedAt must be set before save");
+    }
+
+    @Test
+    @DisplayName("exportUserData aggregates profile, addresses, and orders (#128, COMP-01)")
+    void testExportUserData() {
+        User user = new User();
+        user.setId(6L);
+        user.setUsername("exportme");
+        user.setEmail("exportme@b.com");
+        user.setConsentGiven(true);
+        user.setConsentAt(LocalDateTime.now());
+        when(userRepository.findById(6L)).thenReturn(Optional.of(user));
+
+        Address address = new Address();
+        address.setStreetAddress("123 Main St");
+        address.setCity("Metropolis");
+        address.setState("State");
+        address.setPostalCode("00000");
+        address.setCountry("Country");
+        address.setAddressType("SHIPPING");
+        when(addressRepository.findAllByUser_Id(6L)).thenReturn(List.of(address));
+
+        Order order = new Order();
+        order.setOrderNumber("ORD-1");
+        order.setStatus(OrderStatus.PENDING);
+        order.setTotalAmount(BigDecimal.TEN);
+        order.setCreatedAt(LocalDateTime.now());
+        when(orderRepository.findByUserId(6L)).thenReturn(List.of(order));
+
+        when(productReviewRepository.findByUserId(eq(6L), any(Pageable.class)))
+                .thenReturn(Page.empty());
+        when(sellerReviewRepository.findByUserId(eq(6L), any(Pageable.class)))
+                .thenReturn(Page.empty());
+        when(wishlistRepository.findByUserIdWithProducts(6L))
+                .thenReturn(Optional.empty());
+        when(cartRepository.findByUser(user)).thenReturn(Optional.empty());
+
+        UserDataExportDTO export = userService.exportUserData(6L);
+
+        assertEquals("exportme", export.profile().username());
+        assertTrue(export.profile().consentGiven());
+        assertEquals(1, export.addresses().size());
+        assertEquals("123 Main St", export.addresses().get(0).streetAddress());
+        assertEquals(1, export.orders().size());
+        assertEquals("ORD-1", export.orders().get(0).orderNumber());
+        assertTrue(export.wishlistProductNames().isEmpty());
+        assertTrue(export.cartItemProductNames().isEmpty());
     }
 }

@@ -19,23 +19,27 @@ class UserTest {
         Set<Role> roles = new HashSet<>();
         Set<Address> addresses = new HashSet<>();
 
-        User user = new User(
-                1L,
-                "john_doe",
-                "john@example.com",
-                "password123",
-                "John",
-                "Doe",
-                "1234567890",
-                true,
-                false,
-                null,
-                now,
-                now,
-                now,
-                roles,
-                addresses,
-                null);
+        // Setter-based construction, not the positional all-args
+        // constructor -- adding a field to User breaks every positional
+        // call site (see allargs-constructor-positional-test-fragility
+        // wiki lesson).
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("john_doe");
+        user.setEmail("john@example.com");
+        user.setPassword("password123");
+        user.setFirstName("John");
+        user.setLastName("Doe");
+        user.setPhoneNumber("1234567890");
+        user.setIsActive(true);
+        user.setIsDeleted(false);
+        user.setDeletedAt(null);
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
+        user.setLastLogin(now);
+        user.setRoles(roles);
+        user.setAddresses(addresses);
+        user.setDistrict(null);
 
         assertEquals(1L, user.getId());
         assertEquals("john_doe", user.getUsername());

@@ -5,8 +5,9 @@ import { OrdersTab } from '../components/account/OrdersTab';
 import { WishlistTab } from '../components/account/WishlistTab';
 import { AddressesTab } from '../components/account/AddressesTab';
 import { SecurityTab } from '../components/account/SecurityTab';
+import { PrivacyTab } from '../components/account/PrivacyTab';
 
-type Tab = 'profile' | 'orders' | 'addresses' | 'wishlist' | 'security';
+type Tab = 'profile' | 'orders' | 'addresses' | 'wishlist' | 'security' | 'privacy';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'profile',   label: 'Profile',    icon: '👤' },
@@ -14,6 +15,7 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'addresses', label: 'Addresses',  icon: '📍' },
   { id: 'wishlist',  label: 'Wishlist',   icon: '❤️' },
   { id: 'security',  label: 'Security',   icon: '🔒' },
+  { id: 'privacy',   label: 'Privacy',    icon: '🛡️' },
 ];
 
 export function AccountPage() {
@@ -63,6 +65,7 @@ export function AccountPage() {
             {activeTab === 'addresses' && <AddressesTab />}
             {activeTab === 'wishlist'  && user && <WishlistTab userId={user.id} />}
             {activeTab === 'security'  && <SecurityTab />}
+            {activeTab === 'privacy'   && <PrivacyTab />}
           </div>
         </div>
       </main>

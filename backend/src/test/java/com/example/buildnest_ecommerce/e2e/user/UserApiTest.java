@@ -25,6 +25,7 @@ public class UserApiTest extends BaseApiTest {
                 registerRequest.setPassword(password);
                 registerRequest.setFirstName("Test");
                 registerRequest.setLastName("User");
+                registerRequest.setConsentGiven(true);
 
                 given()
                                 .contentType(ContentType.JSON)

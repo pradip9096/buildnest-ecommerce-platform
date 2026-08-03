@@ -160,6 +160,7 @@ class AuthControllerTest {
         registerRequest.setPassword("Password@123");
         registerRequest.setFirstName("New");
         registerRequest.setLastName("User");
+        registerRequest.setConsentGiven(true);
 
         mockMvc.perform(post("/api/auth/register")
                 .with(csrf())

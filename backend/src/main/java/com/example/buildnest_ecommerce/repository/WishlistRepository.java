@@ -32,6 +32,16 @@ public interface WishlistRepository extends JpaRepository<Wishlist, Long> {
     /**
      * Count products in wishlist
      */
-    @Query("SELECT COUNT(p) FROM Wishlist w JOIN w.products p WHERE w.user.id = :userId")
+    @Query("SELECT COUNT(p) FROM Wishlist w JOIN w.products p "
+            + "WHERE w.user.id = :userId")
     long countProductsByUserId(@Param("userId") Long userId);
+
+    /**
+     * Fetch-joined variant of {@link #findByUserId} -- avoids N+1 when
+     * the caller needs every product's own fields (e.g. GDPR export,
+     * #128), not just the wishlist/product association itself.
+     */
+    @Query("SELECT w FROM Wishlist w LEFT JOIN FETCH w.products "
+            + "WHERE w.user.id = :userId")
+    Optional<Wishlist> findByUserIdWithProducts(@Param("userId") Long userId);
 }

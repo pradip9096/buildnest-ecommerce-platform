@@ -34,6 +34,8 @@ export function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
+  const [consentTouched, setConsentTouched] = useState(false);
   const errors = validate(form);
 
   const set = (field: Field) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -65,7 +67,8 @@ export function RegisterPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setTouched(Object.fromEntries(Object.keys(EMPTY).map(k => [k, true])));
-    if (Object.keys(errors).length > 0) return;
+    setConsentTouched(true);
+    if (Object.keys(errors).length > 0 || !consentGiven) return;
     setLoading(true);
     setError(null);
     try {
@@ -75,6 +78,7 @@ export function RegisterPage() {
         password: form.password,
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
+        consentGiven,
       });
       navigate('/login', { state: { registered: true } });
     } catch (err) {
@@ -128,6 +132,29 @@ export function RegisterPage() {
             </div>
 
             {field('confirmPassword', 'Confirm password', 'password', '••••••••••••')}
+
+            <div>
+              <label className="flex items-start gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={consentGiven}
+                  onChange={e => setConsentGiven(e.target.checked)}
+                  onBlur={() => setConsentTouched(true)}
+                  data-testid="register-consent"
+                  className="mt-0.5"
+                />
+                <span>
+                  I have read and accept the{' '}
+                  <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer"
+                    className="text-primary-600 hover:text-primary-700 font-medium">
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+              {consentTouched && !consentGiven && (
+                <p className="text-red-500 text-xs mt-1">You must accept the privacy policy to register</p>
+              )}
+            </div>
 
             {error && (
               <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">

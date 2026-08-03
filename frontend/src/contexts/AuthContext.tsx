@@ -16,6 +16,7 @@ interface AuthContextValue {
     password: string;
     firstName: string;
     lastName: string;
+    consentGiven: boolean;
   }) => Promise<void>;
 }
 

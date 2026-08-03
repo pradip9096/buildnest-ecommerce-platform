@@ -25,3 +25,21 @@ export async function changePassword(
     'Failed to change password'
   );
 }
+
+/** GDPR right-to-access export (#128, COMP-01). */
+export async function exportMyData(): Promise<unknown> {
+  return requestData<unknown>(
+    '/api/user/data-export',
+    {},
+    'Failed to export account data'
+  );
+}
+
+/** GDPR right-to-erasure (#128, COMP-01). */
+export async function deleteMyAccount(): Promise<void> {
+  await request(
+    '/api/user/account',
+    { method: 'DELETE' },
+    'Failed to delete account'
+  );
+}

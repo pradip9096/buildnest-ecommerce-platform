@@ -16,7 +16,8 @@ import com.example.buildnest_ecommerce.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication
+        .UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,10 +28,10 @@ import java.util.Set;
 /**
  * Authentication Service Implementation
  *
- * Provides core authentication and authorization operations for the BuildNest
- * e-commerce platform.
- * Handles user login, registration, token validation, and token refresh
- * operations.
+ * Provides core authentication and authorization operations for the
+ * BuildNest e-commerce platform.
+ * Handles user login, registration, token validation, and token
+ * refresh operations.
  *
  * @author BuildNest Team
  * @version 1.0
@@ -54,31 +55,36 @@ public class AuthServiceImpl implements AuthService {
     /**
      * Authenticates a user with username and password.
      *
-     * Validates credentials using Spring Security's AuthenticationManager,
-     * generates JWT access token and refresh token, and logs the authentication
-     * event.
+     * Validates credentials using Spring Security's
+     * AuthenticationManager, generates JWT access token and refresh
+     * token, and logs the authentication event.
      *
      * @param username the user's username (required)
      * @param password the user's password (required)
-     * @return AuthResponse containing access token, refresh token, and token type
-     * @throws RuntimeException if username not found or authentication fails
+     * @return AuthResponse containing access token, refresh token,
+     *         and token type
+     * @throws RuntimeException if username not found or
+     *         authentication fails
      */
     @Override
     public AuthResponse login(String username, String password) {
         log.info("User login attempt: {}", username);
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password));
+            Authentication authentication = authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(
+                            username, password));
 
             String jwt = jwtTokenProvider.generateToken(authentication);
 
             // Get user and create refresh token
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+            RefreshToken refreshToken = refreshTokenService
+                    .createRefreshToken(user.getId());
 
             // Log authentication event
-            auditLogService.logAuthenticationEvent(user.getId(), "LOGIN", null, null);
+            auditLogService.logAuthenticationEvent(
+                    user.getId(), "LOGIN", null, null);
 
             AuthResponse response = new AuthResponse();
             response.setAccessToken(jwt);
@@ -96,28 +102,43 @@ public class AuthServiceImpl implements AuthService {
     /**
      * Registers a new user account.
      *
-     * Validates username and email uniqueness, enforces password policy,
-     * creates user with default USER role, and publishes UserRegisteredEvent.
+     * Validates username and email uniqueness, enforces password
+     * policy, creates user with default USER role, and publishes
+     * UserRegisteredEvent.
      *
-     * @param registerRequest the registration request containing username, email,
-     *                        password, and names
+     * @param registerRequest the registration request containing
+     *                        username, email, password, and names
      * @throws RuntimeException if username or email already exists
-     * @throws RuntimeException if password does not meet policy requirements
-     * @see com.example.buildnest_ecommerce.util.ValidationUtil#validatePassword(String)
+     * @throws RuntimeException if password does not meet policy
+     *         requirements
+     * @see com.example.buildnest_ecommerce.util.ValidationUtil
+     *      #validatePassword(String)
      */
     @Override
     @org.springframework.transaction.annotation.Transactional
     public void register(RegisterRequest registerRequest) {
-        log.info("User registration attempt: {}", registerRequest.getUsername());
+        log.info("User registration attempt: {}",
+                registerRequest.getUsername());
 
         // Check if user already exists
         boolean userExists = userRepository.findAll().stream()
-                .anyMatch(u -> u.getUsername().equals(registerRequest.getUsername()) ||
+                .anyMatch(u -> u.getUsername()
+                        .equals(registerRequest.getUsername()) ||
                         u.getEmail().equals(registerRequest.getEmail()));
 
         if (userExists) {
-            log.warn("Registration failed: Username or email already exists - {}", registerRequest.getUsername());
+            log.warn("Registration failed: Username or email already "
+                    + "exists - {}", registerRequest.getUsername());
             throw new RuntimeException("Username or email already exists");
+        }
+
+        // #128 (COMP-02): reserved for AccountAnonymizationScheduler's
+        // own placeholder ("deleted-user-<id>") -- otherwise a real
+        // user could squat a future id's placeholder username and
+        // collide with that account's anonymization save.
+        if (registerRequest.getUsername().startsWith("deleted-user-")) {
+            throw new RuntimeException(
+                    "This username is reserved and cannot be used");
         }
 
         // Enforce password policy
@@ -127,12 +148,15 @@ public class AuthServiceImpl implements AuthService {
         User newUser = new User();
         newUser.setUsername(registerRequest.getUsername());
         newUser.setEmail(registerRequest.getEmail());
-        newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        newUser.setPassword(
+                passwordEncoder.encode(registerRequest.getPassword()));
         newUser.setFirstName(registerRequest.getFirstName());
         newUser.setLastName(registerRequest.getLastName());
         newUser.setIsActive(true);
         newUser.setIsDeleted(false);
         newUser.setCreatedAt(LocalDateTime.now());
+        newUser.setConsentGiven(registerRequest.isConsentGiven());
+        newUser.setConsentAt(LocalDateTime.now());
 
         // Assign default USER role
         Set<Role> roles = new HashSet<>();
@@ -148,11 +172,14 @@ public class AuthServiceImpl implements AuthService {
 
         // Save user
         User savedUser = userRepository.save(newUser);
-        log.info("User registered successfully: {}", registerRequest.getUsername());
+        log.info("User registered successfully: {}",
+                registerRequest.getUsername());
 
         // Log registration event
-        auditLogService.logAuthenticationEvent(savedUser.getId(), "REGISTER", null, null);
-        domainEventPublisher.publish(new UserRegisteredEvent(this, savedUser.getId(), savedUser.getEmail()));
+        auditLogService.logAuthenticationEvent(
+                savedUser.getId(), "REGISTER", null, null);
+        domainEventPublisher.publish(new UserRegisteredEvent(
+                this, savedUser.getId(), savedUser.getEmail()));
     }
 
     /**
@@ -176,8 +203,8 @@ public class AuthServiceImpl implements AuthService {
     /**
      * Logs out a user by revoking their refresh token.
      *
-     * Invalidates the provided refresh token and logs the logout event for audit
-     * purposes.
+     * Invalidates the provided refresh token and logs the logout
+     * event for audit purposes.
      *
      * @param refreshToken the refresh token to revoke (nullable)
      * @throws RuntimeException if refresh token is not found
@@ -186,11 +213,14 @@ public class AuthServiceImpl implements AuthService {
     public void logout(String refreshToken) {
         log.info("User logout");
         if (refreshToken != null) {
-            RefreshToken token = refreshTokenService.findByToken(refreshToken)
-                    .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+            RefreshToken token = refreshTokenService
+                    .findByToken(refreshToken)
+                    .orElseThrow(() -> new RuntimeException(
+                            "Refresh token not found"));
 
             // Log logout event
-            auditLogService.logAuthenticationEvent(token.getUserId(), "LOGOUT", null, null);
+            auditLogService.logAuthenticationEvent(
+                    token.getUserId(), "LOGOUT", null, null);
 
             // Revoke refresh token
             refreshTokenService.revokeRefreshToken(refreshToken);
@@ -201,12 +231,17 @@ public class AuthServiceImpl implements AuthService {
      * Refreshes an expired access token using a valid refresh token.
      *
      * Validates the refresh token, generates a new access token,
-     * rotates the refresh token for security, and logs the operation.
+     * rotates the refresh token for security, and logs the
+     * operation.
      *
-     * @param refreshToken the refresh token to use for obtaining a new access token
-     * @return AuthResponse containing new access token and rotated refresh token
-     * @throws RuntimeException if refresh token is invalid or expired
-     * @throws RuntimeException if user associated with token is not found
+     * @param refreshToken the refresh token to use for obtaining a
+     *                     new access token
+     * @return AuthResponse containing new access token and rotated
+     *         refresh token
+     * @throws RuntimeException if refresh token is invalid or
+     *         expired
+     * @throws RuntimeException if user associated with token is not
+     *         found
      */
     @Override
     public AuthResponse refreshAccessToken(String refreshToken) {
@@ -214,10 +249,12 @@ public class AuthServiceImpl implements AuthService {
 
         // Find and validate refresh token
         RefreshToken token = refreshTokenService.findByToken(refreshToken)
-                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+                .orElseThrow(() -> new RuntimeException(
+                        "Invalid refresh token"));
 
         if (!refreshTokenService.validateRefreshToken(token)) {
-            throw new RuntimeException("Refresh token is expired or revoked");
+            throw new RuntimeException(
+                    "Refresh token is expired or revoked");
         }
 
         // Get user
@@ -225,13 +262,16 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Generate new access token
-        String newAccessToken = jwtTokenProvider.generateTokenFromUsername(user.getUsername());
+        String newAccessToken = jwtTokenProvider
+                .generateTokenFromUsername(user.getUsername());
 
         // Rotate refresh token
-        RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(token);
+        RefreshToken newRefreshToken = refreshTokenService
+                .rotateRefreshToken(token);
 
         // Log token refresh event
-        auditLogService.logAuthenticationEvent(user.getId(), "TOKEN_REFRESH", null, null);
+        auditLogService.logAuthenticationEvent(
+                user.getId(), "TOKEN_REFRESH", null, null);
 
         AuthResponse response = new AuthResponse();
         response.setAccessToken(newAccessToken);

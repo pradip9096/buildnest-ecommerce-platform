@@ -24,6 +24,7 @@ public class AuthApiTest extends BaseApiTest {
         registerRequest.setPassword(password);
         registerRequest.setFirstName("Test");
         registerRequest.setLastName("User");
+        registerRequest.setConsentGiven(true);
 
         // Register
         given()

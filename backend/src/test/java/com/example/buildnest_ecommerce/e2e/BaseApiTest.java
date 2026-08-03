@@ -105,7 +105,9 @@ public abstract class BaseApiTest {
         String firstName = "Test";
         String lastName = "User";
         String registerBody = String.format(
-                "{\"username\":\"%s\",\"email\":\"%s\",\"password\":\"%s\",\"firstName\":\"%s\",\"lastName\":\"%s\"}",
+                "{\"username\":\"%s\",\"email\":\"%s\",\"password\":\"%s\","
+                        + "\"firstName\":\"%s\",\"lastName\":\"%s\","
+                        + "\"consentGiven\":true}",
                 username, email, password, firstName, lastName);
         RestAssured.given()
                 .contentType(io.restassured.http.ContentType.JSON)
