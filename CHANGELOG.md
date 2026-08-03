@@ -12,6 +12,23 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 
 ## [Unreleased] — M4: Feature Development
 
+### Fixed
+- `backend/Dockerfile` hardened to match OPS-06's production-Dockerfile acceptance criteria:
+  runtime base switched to `eclipse-temurin:21-jre-alpine`, added a non-root `buildnest` user
+  (Alpine `addgroup`/`adduser`, `chown`, `USER`), and replaced the fixed `-Xmx1g -Xms512m` heap
+  with container-aware `-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0`. Live-verified
+  end-to-end (real `docker build` + `docker run` against MySQL/Redis, SSL enabled, actuator
+  health check returning `UP`) — this surfaced and fixed three pre-existing bugs that had never
+  been exercised before: (1) the `COPY` glob `civil-ecommerce-*.jar` never matched the real jar
+  name (`buildnest-ecommerce-*.jar`), leaving `/app` empty on every prior build; (2)
+  `-XX:G1NewCollectionHeuristicPercent=30` is not a real JVM flag and crashed the JVM at
+  startup; (3) `application-production.properties`'s `spring.profiles.include=logstash` is
+  disallowed inside a profile-specific document since Spring Boot 2.4 — moved to
+  `-Dspring.profiles.active=production,logstash` on the Dockerfile's `ENTRYPOINT`. **Any
+  production launch of this image outside the Dockerfile's own `ENTRYPOINT` (a different deploy
+  mechanism, a manual `java -jar` invocation) must pass `production,logstash` explicitly, or the
+  Logstash appender silently fails to activate with no startup error** (#124, OPS-06, M5).
+
 ### Added
 - Automated MySQL backup and restore tooling: `backend/scripts/backup-db.sh` (mysqldump +
   gzip + timestamp, 30-day retention sweep) and `backend/scripts/restore-db.sh`, with a daily
