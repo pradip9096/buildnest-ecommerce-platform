@@ -11,6 +11,12 @@
 #
 # `deploy.resources` limits apply directly under Docker Compose v2 (no Swarm/stack-deploy
 # required) — confirmed against the Compose Specification's own deploy.resources semantics.
+#
+# backend/frontend declare both `image:` and `build:` (OPS-02, issue #120): a local/dev
+# invocation of `docker compose build` still builds from the Dockerfile as before; a CI-driven
+# production deploy instead runs `docker compose pull` to fetch the pre-built image `deploy.yml`
+# already pushed to GHCR, tagged via IMAGE_TAG — no on-host rebuild, no drift between the image
+# that passed CI and the image actually running in production.
 
 services:
 
@@ -102,6 +108,7 @@ services:
   # Backend — Spring Boot API
   # ===============================
   backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/pradip9096/buildnest-backend}:${IMAGE_TAG:-latest}
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -162,6 +169,7 @@ services:
   # terminated upstream by nginx-proxy, not here)
   # ===============================
   frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/pradip9096/buildnest-frontend}:${IMAGE_TAG:-latest}
     build:
       context: ./frontend
       dockerfile: Dockerfile

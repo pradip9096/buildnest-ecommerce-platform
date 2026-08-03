@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 4.16 |
-| **Date** | 2026-08-02 IST |
+| **Version** | 4.17 |
+| **Date** | 2026-08-03 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
@@ -53,6 +53,7 @@
 | 4.7 | 2026-07-28 17:00 IST | Software Architect | FR-SEL-07 (#558): new `SellerReview` entity/table (`seller_review`), mirroring `ProductReview` but scoped by the seller's `User.id`. Added to §4.5.1's ER diagram and §4.5.2's entity table. Same DTO-exposure gap recurred as #581's `orderGroupId` fix — `OrderResponseDTO` needed a new `sellerId` field so the frontend's `SellerReviewPanel` (surfaced from a delivered order's detail view) could link an order to the seller being rated; populated in the same two mapping methods (`OrderServiceImpl.mapToResponseDTO`, `CheckoutServiceImpl`'s equivalent) | Pending |
 | 4.15 | 2026-08-02 IST | Software Architect | #650: corrected §5.3.1's `redis-circuit-breaker` row — it never actually protected declarative `@Cacheable`/`@CacheEvict` calls, only manually-wrapped `RedisTemplate` usage (rate limiting); the `@Cacheable` proxy path had zero resilience coverage until this issue added a `GracefulCacheErrorHandler` (registered via `CacheConfig implements CachingConfigurer#errorHandler()`, since `@EnableCaching` does not auto-detect a plain `CacheErrorHandler` bean by type). Added a clarifying paragraph documenting the fix and the scope correction | Pending |
 | 4.16 | 2026-08-02 | Software Architect | #119 (OPS-01): added a note after §4.10.1's Kubernetes deployment-topology diagram documenting the new `docker-compose.prod.yml` as a second, currently-implemented (simpler, single-host, non-replicated) production deployment target — TLS termination via nginx-proxy instead of a Kubernetes Ingress/Load-Balancer | Pending |
+| 4.17 | 2026-08-03 IST | Software Architect | #120 (OPS-02): added a note after §4.10.1's Compose-target paragraph documenting `deploy.yml`'s real deployment automation (GHCR image build/push, SSH+`docker compose` rolling restart, staging-vs-production trigger split with a GitHub Environment approval gate for production) — the prior `deploy.yml` never had a real target, only `if: false` placeholders. Points to new ADR 0003 for the SSH+Compose-over-Kubernetes decision | Pending |
 | 4.5 | 2026-07-26 09:00 IST | Software Architect | Final sub-issue of #557/FR-SEL-06: added `SellerOrderController`/`OrderServiceImpl`'s new seller-scoped list/detail/status methods, using a new `OrderRepository.findBySellerId`/`findByIdAndSellerId` `EXISTS`-subquery (`Order` has no direct seller reference; ownership derived transitively via `OrderItem.product.seller`) — mirrors #555's `SellerProductController`/#556's `SellerInventoryController` ownership-scoping pattern. All three FR-SEL-06 sub-issues (#578/#579/#580) now closed. **Not addressed in this revision**: §4.7.3's API Endpoint Catalogue does not yet list any of the three sellers' controllers (`SellerProductController`/`SellerInventoryController`/`SellerOrderController`) — this gap was already surfaced and filed as its own follow-up (#576) during #556's closure; not duplicated here | Pending |
 
 ### Document Approval
@@ -1466,6 +1467,16 @@ reverse proxy doing TLS termination (self-signed for local/on-prem compose, Let'
 real cloud host — see `nginx-proxy/README.md`) in place of the Kubernetes Ingress/Load-Balancer
 shown above. Single-host, non-replicated (no HPA-equivalent) — the Compose target is the simpler
 of the two deployment paths this repo supports, not a replacement for the Kubernetes topology.
+
+**Deployment automation (#120, OPS-02):** `.github/workflows/deploy.yml` builds and pushes both
+`backend/Dockerfile`/`frontend/Dockerfile` images to GHCR, then drives the Compose target above
+via SSH — `docker compose pull && up -d --no-deps backend frontend` for a rolling per-service
+restart, leaving MySQL/Redis/Elasticsearch/nginx-proxy untouched during the swap. Staging deploys
+on every green master build; production deploys only on a `v*` tag push, gated by a GitHub
+`production` Environment's required-reviewer approval rule. See ADR
+[0003](adr/0003-ssh-docker-compose-plus-ghcr-as-the-deployment-mechanism.md) for why this
+mechanism was chosen over the Kubernetes topology above, given no cluster currently exists to
+deploy §4.10.2's manifests against.
 
 #### 4.10.2 Kubernetes Resource Configuration (Verified)
 

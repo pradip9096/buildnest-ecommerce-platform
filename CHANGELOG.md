@@ -13,6 +13,18 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
 ## [Unreleased] — M4: Feature Development
 
 ### Added
+- Real `deploy.yml` CI/CD deployment workflow: builds and pushes backend/frontend Docker images
+  to GHCR, then deploys via SSH + `docker compose pull`/`up -d` (rolling per-service restart)
+  against the `docker-compose.prod.yml` stack from #119/#671 — staging on every green master
+  build, production only on a `v*` tag push, gated behind a GitHub `production` Environment's
+  required-reviewers approval rule. `docker-compose.prod.yml`/`.env.prod.example` gained
+  `image:`/`BACKEND_IMAGE`/`FRONTEND_IMAGE`/`IMAGE_TAG` so a deploy host can `pull` a CI-built
+  image instead of rebuilding on-host. The prior `deploy.yml` (from the earlier duplicate #217)
+  had its registry-push and Kubernetes-deploy steps both hardcoded `if: false` placeholders — no
+  real target ever existed; see ADR
+  [0003](docs/SDLC-docs/design/adr/0003-ssh-docker-compose-plus-ghcr-as-the-deployment-mechanism.md)
+  for why SSH+Compose was chosen over Kubernetes/a managed cloud API given no cluster or cloud
+  account exists for this project (#120, OPS-02, M5).
 - Production Docker Compose stack (`docker-compose.prod.yml`, `nginx-proxy/`) for the backend,
   frontend, MySQL, Redis, and Elasticsearch services: resource limits and healthchecks on every
   service, MySQL data persisted to a named volume, all configuration injected from a new
