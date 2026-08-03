@@ -48,3 +48,7 @@ logs/
 .env
 .env.*
 !.env.example
+
+### Database backups (#121, OPS-03) — never commit dumps ###
+backups/
+scripts/backup-db.log
