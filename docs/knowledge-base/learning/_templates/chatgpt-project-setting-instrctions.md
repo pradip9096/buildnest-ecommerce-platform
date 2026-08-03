@@ -15,3 +15,14 @@ Run the template's SOP Step 0 Scope Check silently, as your own internal check, 
 9. Delete all unfilled bracketed placeholders in the final output — nothing bracketed should remain, including the literal text "N+1" in any heading (renumber it to the outline's actual final Level count).
 
 Do not ask me to re-paste the template or re-explain these rules in future messages in this project — treat this instruction as standing for the whole project.
+
+---
+
+MAINTAINER NOTE (not part of the ChatGPT instructions above — this is a fill-in note for whoever
+edits this repo's templates, ignore if you're pasting the section above into a ChatGPT Project):
+this file is a persistent-Project restatement of `learning-outline-template.md`'s own Reuse
+Prompt. Any rule change to that Reuse Prompt (output shape, Step 0 wording, heading conventions,
+exclusion list, etc.) must be propagated here in the same edit — `learning-outline-template.md`'s
+own Amendment Log already tracks each such propagation ("Propagated to the standalone ChatGPT
+Project instructions file"); check it before assuming a rule only lives in one place. See
+`README.md`'s "Amending These Templates" section in this same folder for the full convention.

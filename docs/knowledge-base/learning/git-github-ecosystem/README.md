@@ -94,25 +94,25 @@ question comes up again.
 
 The manifest — one row per topic file, no prose beyond this table.
 
-| File | Topic |
-|---|---|
-| [topic-1.md](topic-1.md) | Full PR workflow lifecycle using GitHub CLI (`gh`) — branch, commit, push, PR create/review/merge, cleanup — with a complete reusable command sequence |
-| [topic-2.md](topic-2.md) | Can you switch branches mid-work and come back later? Branch-switching mechanics and safety |
-| [topic-3.md](topic-3.md) | Git and GitHub FAQ, beginner → practical developer level |
-| [topic-4.md](topic-4.md) | Automated Testing → Quality Gate → CI → Pull Request as a closed-loop quality control system |
-| [topic-5.md](topic-5.md) | Can a Pull Request exist without CI? |
-| [topic-6.md](topic-6.md) | Issues, Projects, and Views as a work management system around a repository |
-| [topic-7.md](topic-7.md) | Milestone vs. Epic vs. Sprint — different ways to organize work and the questions each answers |
-| [topic-8.md](topic-8.md) | GitHub issue creation walkthrough using GitHub CLI |
-| [topic-9.md](topic-9.md) | GitHub issue creation with label, milestone, and project using GitHub CLI |
-| [topic-10.md](topic-10.md) | Two-layer mental model for a production-style GitHub software delivery workflow |
-| [topic-11.md](topic-11.md) | Worked example: BuildNest e-commerce "Add Product Review Feature" end-to-end |
-| [topic-12.md](topic-12.md) | CI with Pull Request using GitHub Actions — end-to-end walkthrough |
-| [topic-13.md](topic-13.md) | FAQ: GitHub professional workflow (Issue → Project → PR → CI → Merge) |
-| [topic-14.md](topic-14.md) | Common interview questions on Git, GitHub, and GitHub Actions, with answers |
-| [topic-15.md](topic-15.md) | Difference between Pull and Pull Request |
-| [topic-16.md](topic-16.md) | Can a Pull Request exist without GitHub? |
-| [topic-17.md](topic-17.md) | Difference between Git merge and GitHub merge |
-| [topic-18.md](topic-18.md) | Difference between Git Push and Pull Request |
-| [topic-19.md](topic-19.md) | Why Git/GitHub/GitHub Actions are hard for beginners — distributed collaboration model, state management, and automated delivery workflow as three distinct learning burdens |
-| [topic-20.md](topic-20.md) | Feature branching for parallel, independent issue development |
+| Sr. No. | File | Topic |
+| :--- | :--- | :--- |
+| 1 | [topic-1.md](topic-1.md) | Full PR workflow lifecycle using GitHub CLI (`gh`) — branch, commit, push, PR create/review/merge, cleanup — with a complete reusable command sequence |
+| 2 | [topic-2.md](topic-2.md) | Can you switch branches mid-work and come back later? Branch-switching mechanics and safety |
+| 3 | [topic-3.md](topic-3.md) | Git and GitHub FAQ, beginner → practical developer level |
+| 4 | [topic-4.md](topic-4.md) | Automated Testing → Quality Gate → CI → Pull Request as a closed-loop quality control system |
+| 5 | [topic-5.md](topic-5.md) | Can a Pull Request exist without CI? |
+| 6 | [topic-6.md](topic-6.md) | Issues, Projects, and Views as a work management system around a repository |
+| 7 | [topic-7.md](topic-7.md) | Milestone vs. Epic vs. Sprint — different ways to organize work and the questions each answers |
+| 8 | [topic-8.md](topic-8.md) | GitHub issue creation walkthrough using GitHub CLI |
+| 9 | [topic-9.md](topic-9.md) | GitHub issue creation with label, milestone, and project using GitHub CLI |
+| 10 | [topic-10.md](topic-10.md) | Two-layer mental model for a production-style GitHub software delivery workflow |
+| 11 | [topic-11.md](topic-11.md) | Worked example: BuildNest e-commerce "Add Product Review Feature" end-to-end |
+| 12 | [topic-12.md](topic-12.md) | CI with Pull Request using GitHub Actions — end-to-end walkthrough |
+| 13 | [topic-13.md](topic-13.md) | FAQ: GitHub professional workflow (Issue → Project → PR → CI → Merge) |
+| 14 | [topic-14.md](topic-14.md) | Common interview questions on Git, GitHub, and GitHub Actions, with answers |
+| 15 | [topic-15.md](topic-15.md) | Difference between Pull and Pull Request |
+| 16 | [topic-16.md](topic-16.md) | Can a Pull Request exist without GitHub? |
+| 17 | [topic-17.md](topic-17.md) | Difference between Git merge and GitHub merge |
+| 18 | [topic-18.md](topic-18.md) | Difference between Git Push and Pull Request |
+| 19 | [topic-19.md](topic-19.md) | Why Git/GitHub/GitHub Actions are hard for beginners — distributed collaboration model, state management, and automated delivery workflow as three distinct learning burdens |
+| 20 | [topic-20.md](topic-20.md) | Feature branching for parallel, independent issue development |
