@@ -26,6 +26,8 @@ export async function registerAndLogin(page: Page, user: ReturnType<typeof uniqu
   await page.getByTestId('register-email').fill(user.email);
   await page.getByTestId('register-password').fill(user.password);
   await page.getByTestId('register-confirmPassword').fill(user.password);
+  // #128 (COMP-03): consent checkbox is now mandatory before submit.
+  await page.getByTestId('register-consent').check();
   await page.getByTestId('register-submit').click();
   // Registration redirects to /login (or auto-signs in, depending on backend behavior) —
   // wait for navigation away from /register rather than a fixed URL.
