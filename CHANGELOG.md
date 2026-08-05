@@ -25,6 +25,17 @@ Pre-1.0 convention: MINOR increments represent completed milestones; PATCH incre
   review: `JwtAuthenticationFilter` now rejects a still-valid, already-issued access token for a
   deactivated account instead of letting it keep working until natural expiry.
 
+### Security
+- Removed a dead, fully-commented-out legacy block from `backend/docker-compose.yml` that
+  hardcoded a plaintext password for `MYSQL_ROOT_PASSWORD`/`SPRING_DATASOURCE_PASSWORD` —
+  inactive (superseded by the live env-var-driven config in the same file) but recoverable from
+  git history, treated as compromised (#132, CFG-01). Documented minimum secret-strength
+  requirements (`MYSQL_ROOT_PASSWORD`/`REDIS_PASSWORD`: 32 random chars) directly in
+  `backend/.env.example`, alongside the existing `JWT_SECRET` 512-bit requirement. Added
+  `docs/operations/secrets-rotation-procedure.md` documenting where every production secret
+  lives and the rotation procedure for each, including `JWT_SECRET`'s zero-downtime rollover via
+  `JWT_SECRET_PREVIOUS`.
+
 ### Fixed
 - `backend/Dockerfile` hardened to match OPS-06's production-Dockerfile acceptance criteria:
   runtime base switched to `eclipse-temurin:21-jre-alpine`, added a non-root `buildnest` user

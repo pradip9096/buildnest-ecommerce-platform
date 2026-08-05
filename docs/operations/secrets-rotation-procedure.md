@@ -31,6 +31,16 @@ at the point a real host is chosen — they are not needed before then.
 | `MYSQL_ROOT_PASSWORD` / `SPRING_DATASOURCE_PASSWORD` | 32 random characters | `openssl rand -base64 32` |
 | `REDIS_PASSWORD` | 32 random characters | `openssl rand -base64 32` |
 | `MONITORING_PASSWORD` | Non-default, no fixed length — `SecurityConfig` fails startup on the default value | `openssl rand -base64 24` |
+
+**`MONITORING_PASSWORD` deployment caveat**: `backend/docker-compose.yml` sets
+`MONITORING_PASSWORD: ${MONITORING_PASSWORD:-changeme-monitoring-password}` — a local-dev
+convenience default. If the env var isn't exported before `docker compose up` in production,
+Compose silently substitutes the weak default into the container's environment; `SecurityConfig`'s
+`@PostConstruct` check does catch this and fails the app at startup (it compares against the
+literal `changeme-monitoring-password` marker), but the container itself still starts with the
+weak value attempted first. **Before any production `docker compose up`, explicitly verify
+`MONITORING_PASSWORD` is exported in the shell/CI environment** — don't rely solely on the
+in-app fail-fast check as the only safety net.
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | Issued by Razorpay dashboard | N/A — copy from Razorpay dashboard |
 | `RAZORPAY_WEBHOOK_SECRET` | Issued by Razorpay dashboard | N/A — copy from Razorpay webhook config |
 
@@ -64,8 +74,11 @@ the repo). Use **test-mode keys** (`rzp_test_...`) in staging/non-production env
 
 ## Recommended Rotation Cadence
 
-No formal cadence is enforced today (no secrets manager with expiry policies is wired in — repo
-secrets are managed manually via `gh secret set`). As a baseline: rotate `JWT_SECRET` and database/
-cache passwords at least every 90 days, and immediately on suspected exposure (e.g. an
-accidentally committed value, a departed team member who had access, a third-party breach
-notification for Razorpay/OAuth providers).
+Per SRS SEC-12/SEC-13: `JWT_SECRET` every **90 days**, database password
+(`SPRING_DATASOURCE_PASSWORD`/`MYSQL_ROOT_PASSWORD`) every **180 days**. No formal
+schedule/expiry-policy enforcement is wired in today (no secrets manager — repo secrets are
+managed manually via `gh secret set`); this document is the operational runbook those two SRS
+rows require, tracked via manual calendar reminder until an automated policy exists. Rotate
+immediately, regardless of schedule, on suspected exposure (e.g. an accidentally committed value,
+a departed team member who had access, a third-party breach notification for Razorpay/OAuth
+providers).
