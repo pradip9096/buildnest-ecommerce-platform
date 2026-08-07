@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.example</groupId>
 	<artifactId>buildnest-ecommerce</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.4.0-SNAPSHOT</version>
 	<name>buildnest-ecommerce</name>
 	<description>BuildNest - E-Commerce Platform for Home Construction and Décor Products</description>
 	<url/>

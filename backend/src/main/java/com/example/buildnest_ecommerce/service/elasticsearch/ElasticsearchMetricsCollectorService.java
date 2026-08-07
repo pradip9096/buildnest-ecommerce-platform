@@ -11,19 +11,22 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 
 /**
- * Service for collecting application metrics and pushing to Elasticsearch (RQ-ES-MON-01, RQ-ES-MON-02, RQ-ES-MON-03).
- * Collects JVM, HTTP, and database metrics every minute for storage and analysis.
+ * Service for collecting application metrics and pushing to Elasticsearch
+ * (RQ-ES-MON-01, RQ-ES-MON-02, RQ-ES-MON-03).
+ * Collects JVM, HTTP, and database metrics every minute for storage and
+ * analysis.
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true",
+        matchIfMissing = true)
 @RequiredArgsConstructor
 public class ElasticsearchMetricsCollectorService {
 
     private final ElasticsearchIngestionService ingestionService;
     private final MeterRegistry meterRegistry;
 
-    @Value("${spring.application.name:civil-ecommerce}")
+    @Value("${spring.application.name:buildnest-ecommerce}")
     private String applicationName;
 
     @Value("${elasticsearch.metrics.enabled:true}")
@@ -42,7 +45,8 @@ public class ElasticsearchMetricsCollectorService {
             collectJVMMetrics();
             collectHTTPMetrics();
             collectDatabaseMetrics();
-            log.debug("Metrics successfully collected and pushed to Elasticsearch");
+            log.debug("Metrics successfully collected and pushed to "
+                    + "Elasticsearch");
         } catch (Exception e) {
             log.error("Error collecting metrics", e);
         }
@@ -67,7 +71,8 @@ public class ElasticsearchMetricsCollectorService {
                     "production"
             );
 
-            long heapCommitted = memoryMXBean.getHeapMemoryUsage().getCommitted();
+            long heapCommitted = memoryMXBean.getHeapMemoryUsage()
+                    .getCommitted();
             ingestionService.indexMetrics(
                     "jvmHeapCommittedBytes",
                     (double) heapCommitted,
@@ -101,7 +106,8 @@ public class ElasticsearchMetricsCollectorService {
     private void collectHTTPMetrics() {
         try {
             // HTTP request count
-            var httpCounter = meterRegistry.find("http.server.requests").counter();
+            var httpCounter = meterRegistry.find("http.server.requests")
+                    .counter();
             if (httpCounter != null) {
                 double httpRequests = httpCounter.count();
                 ingestionService.indexMetrics(
@@ -117,7 +123,8 @@ public class ElasticsearchMetricsCollectorService {
             // HTTP response time - find max response time from timers
             var httpTimer = meterRegistry.find("http.server.requests").timer();
             if (httpTimer != null) {
-                double maxResponseTime = httpTimer.max(java.util.concurrent.TimeUnit.MILLISECONDS);
+                double maxResponseTime = httpTimer.max(
+                        java.util.concurrent.TimeUnit.MILLISECONDS);
                 ingestionService.indexMetrics(
                         "httpResponseTimeMs",
                         maxResponseTime,
@@ -133,12 +140,14 @@ public class ElasticsearchMetricsCollectorService {
     }
 
     /**
-     * Collect database connection and query metrics (RQ-ES-MON-01, RQ-ES-MON-02).
+     * Collect database connection and query metrics
+     * (RQ-ES-MON-01, RQ-ES-MON-02).
      */
     private void collectDatabaseMetrics() {
         try {
             // Database connection pool size
-            var dbConnGauge = meterRegistry.find("db.connection.pool.size").gauge();
+            var dbConnGauge = meterRegistry.find("db.connection.pool.size")
+                    .gauge();
             if (dbConnGauge != null) {
                 double dbConnections = dbConnGauge.value();
                 ingestionService.indexMetrics(
@@ -152,7 +161,8 @@ public class ElasticsearchMetricsCollectorService {
             }
 
             // Database active connections
-            var activeConnGauge = meterRegistry.find("db.connection.active").gauge();
+            var activeConnGauge = meterRegistry.find("db.connection.active")
+                    .gauge();
             if (activeConnGauge != null) {
                 double activeConnections = activeConnGauge.value();
                 ingestionService.indexMetrics(
@@ -166,7 +176,8 @@ public class ElasticsearchMetricsCollectorService {
             }
 
             // Database idle connections
-            var idleConnGauge = meterRegistry.find("db.connection.idle").gauge();
+            var idleConnGauge = meterRegistry.find("db.connection.idle")
+                    .gauge();
             if (idleConnGauge != null) {
                 double idleConnections = idleConnGauge.value();
                 ingestionService.indexMetrics(

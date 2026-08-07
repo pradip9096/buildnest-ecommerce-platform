@@ -605,7 +605,7 @@ For detailed troubleshooting, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) Tro
 ./mvnw clean package -DskipTests
 
 # Run JAR
-java -jar target/civil-ecommerce-0.0.1-SNAPSHOT.jar
+java -jar target/buildnest-ecommerce-0.0.1-SNAPSHOT.jar
 ```
 
 ---

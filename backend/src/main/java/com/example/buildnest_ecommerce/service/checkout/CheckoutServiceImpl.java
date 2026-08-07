@@ -40,6 +40,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 @SuppressWarnings("null")
+@Transactional(readOnly = true)
 public class CheckoutServiceImpl implements CheckoutService {
 
     private final CartService cartService;
