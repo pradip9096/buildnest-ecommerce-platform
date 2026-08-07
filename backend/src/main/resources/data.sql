@@ -54,7 +54,7 @@ ON DUPLICATE KEY UPDATE role_id=VALUES(role_id);
 INSERT INTO users (username, email, password, first_name, last_name, phone, created_at, updated_at, deleted)
 VALUES (
     'admin',
-    'admin@civil-ecommerce.com',
+    'admin@buildnest-ecommerce.com',
     '$2a$10$XPTYZfFvNq/JEVB6d3v0Qe.QZJqkHZb4.YLkBLLJCQYCZ/vvQZGKG',
     'System',
     'Administrator',

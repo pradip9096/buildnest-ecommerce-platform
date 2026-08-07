@@ -52,7 +52,7 @@ jobs:
       - name: Run dependency check
         uses: dependency-check/Dependency-Check_Action@main
         with:
-          project: 'civil-ecommerce'
+          project: 'buildnest-ecommerce'
           path: '.'
           format: 'SARIF'
           # #405: npm retired its legacy audit endpoints (registry.npmjs.org

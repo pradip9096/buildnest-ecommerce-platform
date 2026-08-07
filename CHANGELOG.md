@@ -56,6 +56,17 @@ own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs 
   production launch of this image outside the Dockerfile's own `ENTRYPOINT` (a different deploy
   mechanism, a manual `java -jar` invocation) must pass `production,logstash` explicitly, or the
   Logstash appender silently fails to activate with no startup error** (#124, OPS-06, M5).
+- Swept the remaining `civil-ecommerce`/`civil` naming drift left over from #124's Dockerfile
+  fix, per #364's own AC3 ("confirm no other Dockerfile/CI reference still uses the old
+  naming"): `backend/README.md`'s example `java -jar` command, `kubernetes-deployment-optimized.yaml`'s
+  container image name, `ElasticsearchMetricsCollectorService`'s `spring.application.name`
+  fallback default, `data.sql`'s seed admin email domain, `application-test.properties`'s
+  `spring.application.name`, and `.github/workflows/security.yml`'s OWASP Dependency-Check
+  `project` label. Live-verified: `docker build` + `docker run` against real MySQL/Redis
+  confirmed `app.jar` starts, connects, and reaches Spring context initialization — the
+  `COPY` glob fix from #124 holds. `CivilEcommerceApplication`/`CivilEcommerceApplicationTests`
+  (the actual `@SpringBootApplication` main class) are deliberately **not** renamed here — a
+  separate, larger-blast-radius change filed as #690 (#364, M5).
 
 ### Added
 - Automated MySQL backup and restore tooling: `backend/scripts/backup-db.sh` (mysqldump +
