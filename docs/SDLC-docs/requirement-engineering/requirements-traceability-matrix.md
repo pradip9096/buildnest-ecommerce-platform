@@ -10,13 +10,13 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.52 |
-| **Date** | 2026-08-03 IST |
+| **Version** | 1.53 |
+| **Date** | 2026-08-07 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
-| **Related SRS** | SRS-BUILDNEST-001 v5.11 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
-| **Related SDD** | SDD-BUILDNEST-001 v4.16 — `docs/SDLC-docs/design/software-design-description.md` |
+| **Related SRS** | SRS-BUILDNEST-001 v5.12 — `docs/SDLC-docs/requirement-engineering/software-requirements-specification.md` |
+| **Related SDD** | SDD-BUILDNEST-001 v4.18 — `docs/SDLC-docs/design/software-design-description.md` |
 | **Related TP** | TP-BUILDNEST-001 v4.8 — `docs/SDLC-docs/software-testing/test-plan.md` |
 | **Baseline Assessment** | `docs/reports/baseline-assessment-2026-06-19.md` |
 
@@ -43,6 +43,7 @@
 | 1.50 | 2026-08-03 IST | QA Manager | REL-05 (RPO ≤5 min) updated from 🔵 Pending Ph-2 to 🟢 (partial): #121 (OPS-03) implemented `backend/scripts/backup-db.sh`/`restore-db.sh` (daily mysqldump+gzip, 30-day retention, cron-scheduled) and a live DR drill verified a 30s restore (well under the related REL-04's 15-min RTO target). Corrected the issue's own stale "SRS NFR-AVL-01" citation — no such ID exists; REL-05's Related Component already named "MySQL backup strategy" directly. Not marked fully ✅ Implemented: daily-only backup cadence gives an actual RPO of up to ~24h, not the required ≤5 min — that gap requires point-in-time recovery (binlog/replication), filed as follow-up #675 rather than folded into #121's scope. REL-04 (Kubernetes restart policies) is unrelated to this issue's scope and stays unchanged | Pending |
 | 1.51 | 2026-08-03 IST | QA Manager | PRT-01 updated from 🟡 Partial to ✅ Implemented: #124 (OPS-06) closed the last open gap on this row — `backend/Dockerfile` now runs as non-root user `buildnest` on `eclipse-temurin:21-jre-alpine` with container-aware `-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0` JVM flags, live-verified via a real `docker build`+`docker run` against MySQL/Redis with SSL enabled (actuator health check returned `UP`). That same live verification also surfaced and fixed three pre-existing bugs unrelated to PRT-01's own text but blocking the container from ever starting: a stale `COPY` jar-name glob, an invalid JVM flag, and a Spring-Boot-2.4-incompatible `spring.profiles.include` usage — see CHANGELOG's #124 entry for the full list. DC-06 stays 🟡 Partial (its own remaining gap, frontend build-time/layer-caching per PR-08, is unrelated to #124's scope) but its citation text is updated to note the backend hardening | Pending |
 | 1.52 | 2026-08-03 IST | QA Manager | Added COMP-01/02/03 (#128, GDPR data export/erasure/consent) — correcting the issue's own stale "SRS NFR-COMP-01 to NFR-COMP-03" citation (no such IDs existed at filing time), same filing-time traceability-mismatch shape as SEC-15/SEC-16. All three ✅ Implemented: `UserController`/`UserServiceImpl` (export + soft-delete), `AccountAnonymizationScheduler` (30-day PII anonymization, per-row transaction isolation so one collision can't block the cohort), `JwtAuthenticationFilter` (rejects a still-valid JWT for a deactivated account — closes a session-termination gap found during this issue's own security review), `RegisterRequest.consentGiven`. Added new Coverage Summary row "Compliance (COMP)" (3/3/0/0/0/0) and recomputed the Totals row (197→200 total, 138→141 Implemented). Updated `Related SRS` from v5.10 to v5.11 | Pending |
+| 1.53 | 2026-08-07 IST | QA Manager | Added FR-CHK-10 (#88, order return and refund request flow — RET-01/02/03) — correcting the issue's own stale "SRS RET-01 to RET-03" citation (no such IDs existed at filing time), same filing-time traceability-mismatch shape as SEC-15/COMP-01. ✅ Implemented: `UserOrderController.createReturnRequest()`, `AdminReturnController`, `ReturnServiceImpl` (ownership check, 30-day return-window enforcement from a new `Order.deliveredAt` column, pessimistic-locked duplicate-active-return guard, refund via `PaymentService.processRefund` + inventory restoration via `InventoryService.adjustStock`, inventory-then-refund ordering so a DB-only failure never leaves an un-recorded external refund), tested via `ReturnServiceImplTest` (unit) and `ReturnRequestIT` (real H2 round-trip). Recomputed the Checkout & Orders (FR-CHK) Coverage Summary row (9→10 total, 8→9 Implemented) and the Totals row (200→201 total, 141→142 Implemented). Updated `Related SRS` from v5.11 to v5.12 | Pending |
 | 1.10 | 2026-07-18 20:50 IST | QA Manager | FR-FE-25 (admin order management) already ✅ Implemented but only cited `OrdersTab.tsx` with a generic "Vitest" test reference, predating a dedicated test file. Added `RefundModal.tsx` and named `OrdersTab.test.tsx`/`RefundModal.test.tsx` now that the refund action genuinely exists (#438) — status stays ✅ Implemented (no count changes; closes a citation gap rather than changing status). Updated the `Related SRS` cross-reference from v4.5 to v4.6 following SRS's own FR-FE-25 requirement-text extension in the same fix | Pending |
 | 1.11 | 2026-07-18 23:20 IST | QA Manager | FR-ADM-03 (admin manages user accounts — view, update, deactivate) corrected from 🔵 Pending Ph-2 to ✅ Implemented: the backend (`AdminUserController` GET/PUT `/{id}`, `AdminServiceImpl.updateUserByAdmin`) was already fully implemented and tested (`AdminUserControllerTest`), but the frontend `UsersTab.tsx` only wired list + delete; added `UserDetailModal.tsx` (view + edit) and its wiring, with `UserDetailModal.test.tsx`/`UsersTab.test.tsx` coverage (#439). Recomputed the Admin Operations (FR-ADM) Coverage Summary row (3→4 Implemented, 4→3 Pending) and the Coverage Summary Totals row (114→115 Implemented, 50→49 Pending) | Pending |
 | 1.12 | 2026-07-19 02:00 IST | QA Manager | FR-PROD-08 and FR-FE-23 were both already ✅ Implemented, backend-only for FR-PROD-08 (variant CRUD had no admin UI) and citation-incomplete for FR-FE-23. Added `ProductVariantsModal.tsx`/`ProductVariantsModal.test.tsx` (the new admin variant-management UI) to both rows' citations, and `ProductVariantRepositoryTest` (new regression test for a live-verified `LazyInitializationException` bug found while building the UI — `ProductVariantRepository.findByProductId`'s `@EntityGraph` was missing `"product"`, plus a related missing-`updatedAt`-on-create NOT NULL bug and a `Product.tags` serialization leak, all fixed in the same change) to FR-PROD-08 (#427). Status stays ✅ Implemented on both rows — citation/evidence gap closure, no count changes | Pending |
@@ -135,7 +136,7 @@ The RTM serves to:
 | Authentication (FR-AUTH) | 11 | 9 | 0 | 2 | 0 | 0 |
 | Product Catalogue (FR-PROD) | 7 | 7 | 0 | 0 | 0 | 0 |
 | Shopping Cart (FR-CART) | 6 | 6 | 0 | 0 | 0 | 0 |
-| Checkout & Orders (FR-CHK) | 9 | 8 | 0 | 1 | 0 | 0 |
+| Checkout & Orders (FR-CHK) | 10 | 9 | 0 | 1 | 0 | 0 |
 | Payment (FR-PAY) | 5 | 1 | 3 | 1 | 0 | 0 |
 | Inventory (FR-INV) | 7 | 6 | 0 | 1 | 0 | 0 |
 | Reviews & Wishlists (FR-REV, FR-WISH) | 5 | 5 | 0 | 0 | 0 | 0 |
@@ -159,7 +160,7 @@ The RTM serves to:
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
 | Seller & Marketplace (FR-SEL) | 8 | 8 | 0 | 0 | 0 | 0 |
 | Location-Based Matching (FR-LOC) | 4 | 4 | 0 | 0 | 0 | 0 |
-| **Totals** | **200** | **141** | **15** | **44** | **0** | **0** |
+| **Totals** | **201** | **142** | **15** | **44** | **0** | **0** |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 >
@@ -273,6 +274,7 @@ The RTM serves to:
 | FR-CHK-07 | User views order history | Medium | Ph-1 | §4.7.3 | `UserOrderController.getUserOrders()`, `OrderServiceImpl.getUserOrders()` | `UserOrderControllerTest`, `OrderServiceImplTest` | Test | ✅ Implemented |
 | FR-CHK-08 | Admin views and manages all orders | Medium | Ph-1 | §4.7.3, §5.1.3 | `AdminOrderController`, `AdminServiceImpl.getAllOrders()` | `AdminOrderControllerTest` | Test | ✅ Implemented |
 | FR-CHK-09 | Apply coupon/discount code during checkout | Medium | Ph-1 | §4.7.3 | `MultiStepCheckoutController.applyCoupon()`, `CheckoutServiceImpl.applyCoupon()` (#77); frontend consumption via `ShippingStep.tsx`, `CheckoutPage.tsx` (#436) | `ShippingStep.test.tsx`, `PaymentStep.test.tsx` | Test | ✅ Implemented (#77 backend, #436 frontend) |
+| FR-CHK-10 | Order return and refund request flow (RET-01/02/03): user requests a return within 30 days of delivery; admin approves/rejects; approval triggers refund + inventory restoration | Medium | Ph-2 | §4.7.3 | `UserOrderController.createReturnRequest()`, `AdminReturnController`, `ReturnServiceImpl` (#88) | `ReturnServiceImplTest`, `ReturnRequestIT` | Test | ✅ Implemented (#88) |
 
 ### 6.5 Payment Processing (FG-05)
 

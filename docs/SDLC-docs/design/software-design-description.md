@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 4.17 |
-| **Date** | 2026-08-03 IST |
+| **Version** | 4.18 |
+| **Date** | 2026-08-07 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
@@ -54,6 +54,7 @@
 | 4.15 | 2026-08-02 IST | Software Architect | #650: corrected §5.3.1's `redis-circuit-breaker` row — it never actually protected declarative `@Cacheable`/`@CacheEvict` calls, only manually-wrapped `RedisTemplate` usage (rate limiting); the `@Cacheable` proxy path had zero resilience coverage until this issue added a `GracefulCacheErrorHandler` (registered via `CacheConfig implements CachingConfigurer#errorHandler()`, since `@EnableCaching` does not auto-detect a plain `CacheErrorHandler` bean by type). Added a clarifying paragraph documenting the fix and the scope correction | Pending |
 | 4.16 | 2026-08-02 | Software Architect | #119 (OPS-01): added a note after §4.10.1's Kubernetes deployment-topology diagram documenting the new `docker-compose.prod.yml` as a second, currently-implemented (simpler, single-host, non-replicated) production deployment target — TLS termination via nginx-proxy instead of a Kubernetes Ingress/Load-Balancer | Pending |
 | 4.17 | 2026-08-03 IST | Software Architect | #120 (OPS-02): added a note after §4.10.1's Compose-target paragraph documenting `deploy.yml`'s real deployment automation (GHCR image build/push, SSH+`docker compose` rolling restart, staging-vs-production trigger split with a GitHub Environment approval gate for production) — the prior `deploy.yml` never had a real target, only `if: false` placeholders. Points to new ADR 0003 for the SSH+Compose-over-Kubernetes decision | Pending |
+| 4.18 | 2026-08-07 IST | Software Architect | #88 (FR-CHK-10, RET-01/02/03): added two new §4.7.3 endpoint groups — `POST /api/user/orders/{id}/returns` (`UserOrderController`) and Admin Return Management (`AdminReturnController`, base `/api/v1/admin/returns`, `GET`/`PATCH .../{id}/status`). Deliberately used `/api/user/orders/{id}/returns` rather than the issue's own literally-cited `/api/v1/users/orders/{id}/returns` — no `/api/v1/users/**` pattern exists anywhere in `SecurityConfig` or any controller, so the existing `/api/user/**` convention was followed instead of introducing a fourth, one-off URL scheme | Pending |
 | 4.5 | 2026-07-26 09:00 IST | Software Architect | Final sub-issue of #557/FR-SEL-06: added `SellerOrderController`/`OrderServiceImpl`'s new seller-scoped list/detail/status methods, using a new `OrderRepository.findBySellerId`/`findByIdAndSellerId` `EXISTS`-subquery (`Order` has no direct seller reference; ownership derived transitively via `OrderItem.product.seller`) — mirrors #555's `SellerProductController`/#556's `SellerInventoryController` ownership-scoping pattern. All three FR-SEL-06 sub-issues (#578/#579/#580) now closed. **Not addressed in this revision**: §4.7.3's API Endpoint Catalogue does not yet list any of the three sellers' controllers (`SellerProductController`/`SellerInventoryController`/`SellerOrderController`) — this gap was already surfaced and filed as its own follow-up (#576) during #556's closure; not duplicated here | Pending |
 
 ### Document Approval
@@ -938,6 +939,7 @@ audit surfaced.
 | :--- | :--- | :--- | :--- | :--- |
 | GET | `/api/user/orders` | USER | 100 / min | FR-CHK-07 |
 | GET | `/api/user/orders/{id}` | USER | 100 / min | FR-CHK-07 |
+| POST | `/api/user/orders/{id}/returns` | USER | 100 / min | FR-CHK-10 |
 
 ##### Wishlist (`WishlistController`, base `/api/user/wishlist`)
 
@@ -1040,6 +1042,13 @@ audit surfaced.
 | GET | `/api/v1/admin/orders/{id}` | ADMIN | 100 / min | FR-CHK-08, FR-ADM-08 |
 | PATCH | `/api/v1/admin/orders/{id}/status` | ADMIN | 100 / min | FR-CHK-08, FR-ADM-08 |
 | POST | `/api/v1/admin/orders/{id}/refund` | ADMIN | 100 / min | FR-CHK-08, FR-ADM-08 |
+
+##### Admin Return Management (`AdminReturnController`, base `/api/v1/admin/returns`)
+
+| Method | Path | Auth | Rate Limit | SRS Req |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/api/v1/admin/returns` | ADMIN | 100 / min (no dedicated admin limit — same gap noted for `/api/v1/admin/**` above) | FR-CHK-10 |
+| PATCH | `/api/v1/admin/returns/{id}/status` | ADMIN | 100 / min | FR-CHK-10 |
 
 ##### Admin User Management (`AdminUserController`, base `/api/admin/users`)
 

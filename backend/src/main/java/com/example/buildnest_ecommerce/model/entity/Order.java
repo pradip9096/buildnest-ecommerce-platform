@@ -18,7 +18,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(exclude = { "user", "shippingAddress", "orderItems",
-        "orderGroup", "createdAt", "updatedAt", "deletedAt" })
+        "orderGroup", "createdAt", "updatedAt", "deletedAt", "deliveredAt" })
 @ToString(exclude = { "user", "shippingAddress", "orderItems", "orderGroup" })
 public class Order implements AggregateRoot {
     @Id
@@ -66,6 +66,9 @@ public class Order implements AggregateRoot {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL,
             fetch = FetchType.LAZY)
