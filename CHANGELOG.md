@@ -545,6 +545,14 @@ own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs 
 - 7 misleadingly named top-level `@DataJpaTest` classes — `RBACTest`, `AdminDashboardTest`, `AnalyticsReportingTest`, `ApiIntegrationTest`, `PaymentProcessingTest`, `InventoryManagementTest`, `CategoryManagementTest` — each tested only basic JPA persistence mechanics while its name implied coverage of RBAC enforcement, admin dashboards, analytics, API contracts, payment processing, inventory management, or category management respectively; `ApiIntegrationTest` asserted tautologies (e.g. `page >= 0`) and tested no actual API contract; every persistence scenario they covered is already tested more thoroughly by dedicated classes (`AuthenticationAuthorizationSecurityTest`, `AdminProductControllerIntegrationTest`, `SalesAnalyticsServiceImplTest`/`AdminAnalyticsServiceTest`, the payment test suite, `InventoryServiceImplTest`, `CategoryRepositoryTest`); no unique coverage lost (#255)
 
 ### Fixed
+- `CheckoutServiceImpl` was missing the class-level `@Transactional(readOnly = true)` default
+  documented in `jpa.md` (REVIEW-01, #133): every mutating method already carried its own explicit
+  non-readOnly `@Transactional` override, so this was a conformance gap rather than a functional
+  bug — the one previously-unannotated method, `calculateFinalTotal`, is a pure read/calculation
+  and now correctly inherits the readOnly default. Verified via the existing 84-test real-context
+  suite for this class (`CheckoutServiceImplTest`, `CheckoutFlowIntegrationTest`,
+  `CheckoutValidateNoAmbientTransactionIT`, `CheckoutControllerTest`,
+  `MultiStepCheckoutControllerTest`) — 0 failures.
 - `backend/pom.xml`'s own `<version>` had stayed at the Spring Initializr scaffold default
   (`0.0.1-SNAPSHOT`) despite this CHANGELOG documenting four real releases (`0.1.0`–`0.4.0`) and
   README's badge separately claiming `0.4.0-SNAPSHOT` — the actual build artifact never tracked
@@ -1049,6 +1057,14 @@ own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs 
   to Implemented (v1.44).
 
 ### Documentation
+- Pre-production architecture review (REVIEW-01, #133): six-dimension walkthrough (security
+  controls, data flows, error handling, observability, scalability, compliance) documented at
+  `docs/SDLC-docs/reports/architecture-review.md`. No Critical/High findings; one Medium finding
+  (`CheckoutServiceImpl` transaction-boundary default, see Fixed above) remediated in the same
+  change. Corrected the issue's own citation — "SDP §10.5" does not exist (§10 is the Risk
+  Management Plan); the actual governing section is §6.3 ("Auditing Process"). Filed #687 (SDP
+  citation defect) and #688 (unrelated `master`-branch rebase conflict discovered while branching)
+  as non-blocking follow-ups.
 - README Roadmap table was badly stale across multiple milestones (#489): M3 was marked
   **Complete — 13/13** even though 26 issues from a later CheckStyle debt-reduction initiative
   (epics #371/#376/#380/#387/#391 and their sub-issues, filed 2026-07-13) had been tagged into the
