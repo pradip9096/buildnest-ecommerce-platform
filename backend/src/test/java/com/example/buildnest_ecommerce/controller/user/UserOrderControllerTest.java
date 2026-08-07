@@ -1,6 +1,10 @@
 package com.example.buildnest_ecommerce.controller.user;
 
+import com.example.buildnest_ecommerce.exception.AccessDeniedException;
+import com.example.buildnest_ecommerce.exception.ValidationException;
 import com.example.buildnest_ecommerce.model.dto.OrderResponseDTO;
+import com.example.buildnest_ecommerce.model.dto.ReturnRequestDTO;
+import com.example.buildnest_ecommerce.model.payload.CreateReturnRequestPayload;
 import com.example.buildnest_ecommerce.security.CustomUserDetails;
 import com.example.buildnest_ecommerce.service.order.OrderService;
 import com.example.buildnest_ecommerce.service.returns.ReturnService;
@@ -64,5 +68,62 @@ class UserOrderControllerTest {
 
         UserOrderController controller = new UserOrderController(orderService, returnService);
         assertEquals(HttpStatus.NOT_FOUND, controller.getOrderDetails(3L, auth()).getStatusCode());
+    }
+
+    @Test
+    void createReturnRequest_valid_returns201() {
+        OrderService orderService = mock(OrderService.class);
+        ReturnService returnService = mock(ReturnService.class);
+        ReturnRequestDTO dto = new ReturnRequestDTO();
+        dto.setId(1L);
+        dto.setStatus("PENDING");
+        when(returnService.createReturnRequest(1L, 2L, "Wrong size"))
+                .thenReturn(dto);
+
+        UserOrderController controller =
+                new UserOrderController(orderService, returnService);
+        CreateReturnRequestPayload payload =
+                new CreateReturnRequestPayload("Wrong size");
+
+        var response = controller.createReturnRequest(2L, payload, auth());
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertTrue(response.getBody().isSuccess());
+    }
+
+    @Test
+    void createReturnRequest_accessDenied_returns403() {
+        OrderService orderService = mock(OrderService.class);
+        ReturnService returnService = mock(ReturnService.class);
+        when(returnService.createReturnRequest(1L, 2L, "Wrong size"))
+                .thenThrow(new AccessDeniedException("not yours"));
+
+        UserOrderController controller =
+                new UserOrderController(orderService, returnService);
+        CreateReturnRequestPayload payload =
+                new CreateReturnRequestPayload("Wrong size");
+
+        var response = controller.createReturnRequest(2L, payload, auth());
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertFalse(response.getBody().isSuccess());
+    }
+
+    @Test
+    void createReturnRequest_validationException_returns400() {
+        OrderService orderService = mock(OrderService.class);
+        ReturnService returnService = mock(ReturnService.class);
+        when(returnService.createReturnRequest(1L, 2L, "Wrong size"))
+                .thenThrow(new ValidationException("window expired"));
+
+        UserOrderController controller =
+                new UserOrderController(orderService, returnService);
+        CreateReturnRequestPayload payload =
+                new CreateReturnRequestPayload("Wrong size");
+
+        var response = controller.createReturnRequest(2L, payload, auth());
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertFalse(response.getBody().isSuccess());
     }
 }
