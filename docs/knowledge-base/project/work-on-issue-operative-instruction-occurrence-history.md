@@ -77,6 +77,24 @@ ESLint/any CI linter — not an exhaustive whitelist).
 - **#493** (this issue's own retrospective) — both legs were run correctly, with full untruncated
   output, distinct-slug extraction, and quoted matched lines — the first fully clean execution of
   this check observed. **Validated, not a finding.**
+- **#650** — the wiki-lessons leg's grep returned a directly on-topic hit, and the session cited
+  its one-line Index description three times as if that satisfied the check — but never opened the
+  full linked lesson file, whose actual body already stated the correct fix. Citing a grep hit is
+  not the same as reading what it points to. → Added: when a hit's topic directly matches the
+  current defect, citing the grep output alone doesn't satisfy the check — open and read the full
+  file, and state what its actual content says.
+- **#638/#639** — #638 correctly ran and seeded the sibling-precedent check via `TaskCreate`. #639,
+  the very next issue in the same session with the same reasoning shape, skipped its own dedicated
+  seeding because it "felt" already covered by #638's ceremony minutes earlier. Each issue's
+  precedent judgment is a separate check regardless of how similar the reasoning looks to one just
+  done. → Added: this applies per issue, even within one multi-issue session.
+- **#133** — the scan was run and dispositioned correctly in substance (each file's tags read,
+  matched lines cited or dismissed), but never seeded as its own "Proactive Recurrence Scan"-titled
+  task at all — only narrated in the chat response. The mechanical enforcement
+  (`recurrence-scan-quote-gate.sh`) only fires against a `TaskUpdate` close of a task marked this
+  way at creation, so a chat-only disposition is invisible to it no matter how thorough the scan
+  itself was. → Added: the scan's disposition must be written into a dedicated task's `description`
+  at close time, not narrated only in the chat response.
 - **#555** — the wiki-lessons leg was run once, correctly, at session start, but never re-triggered
   before writing a new controller file (`SellerProductController.java`) created mid-implementation
   — a 3rd occurrence in this shape, distinct from #442 (mechanism didn't exist yet) and #443 (the
@@ -124,6 +142,22 @@ ESLint/any CI linter — not an exhaustive whitelist).
   was cleaned up via a genuine re-run of the grep; the other two are open, tracked as a follow-up
   investigation) — → No prompt-text change made; this occurrence's real lesson is that the
   enforcement layer itself now needs auditing, not another prose reword of the rule it enforces.
+- **#364** — both legs were run and the full grep output was cited in the chat response (all 3
+  files), and the wiki-lessons leg correctly surfaced and fully read an on-topic lesson
+  (`docker-build-success-proves-nothing-about-container-startup.md`), directly informing a real
+  premise-verification finding (the issue's own AC1/AC2 were already fixed by a prior issue). But
+  the defect-class-tag leg's disposition summarized ~25 distinct slugs across `development-workflow.md`/
+  `work-on-issue.md`/`retro-issue.md` as "procedural tags apply" rather than a one-line-per-slug
+  quoted/dismissed bullet for each — the same aggregate-sentence shortcut #580/#114 already
+  documented, on a session that had every other part of the check right. The tier-4 hook
+  (`recurrence-scan-quote-gate.sh`) correctly rejected the closing `TaskUpdate` for it; the gap was
+  self-disclosed and the tracking task deleted per the sanctioned recovery path rather than
+  reformatting ~25 quotes after the fact. Distinct from #114's finding above: this was a genuine
+  content gap (the quoting itself was skipped), not a hook-dispatch bug — the hook behaved
+  correctly here. → No prompt-text change made this occurrence (the rule already states the
+  requirement correctly, per #580's fix); logged as a further data point that the aggregate-sentence
+  shortcut keeps recurring even when a session is otherwise doing the check carefully, worth
+  weighing if `recurrence-scan-quote-shortcut` needs something beyond the existing tier-4 hook.
 
 ## Tier statement / N/A discipline / Sequence-table enumeration
 
