@@ -29,6 +29,35 @@ own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs 
   review: `JwtAuthenticationFilter` now rejects a still-valid, already-issued access token for a
   deactivated account instead of letting it keep working until natural expiry.
 
+### Security
+- Removed a dead, fully-commented-out legacy block from `backend/docker-compose.yml` that
+  hardcoded a plaintext password for `MYSQL_ROOT_PASSWORD`/`SPRING_DATASOURCE_PASSWORD` —
+  inactive (superseded by the live env-var-driven config in the same file) but recoverable from
+  git history, treated as compromised (#132, CFG-01). Documented minimum secret-strength
+  requirements (`MYSQL_ROOT_PASSWORD`/`REDIS_PASSWORD`: 32 random chars) directly in
+  `backend/.env.example`, alongside the existing `JWT_SECRET` 512-bit requirement. Added
+  `docs/operations/secrets-rotation-procedure.md` documenting where every production secret
+  lives and the rotation procedure for each, including `JWT_SECRET`'s zero-downtime rollover via
+  `JWT_SECRET_PREVIOUS`.
+
+### Fixed
+- `backend/Dockerfile` hardened to match OPS-06's production-Dockerfile acceptance criteria:
+  runtime base switched to `eclipse-temurin:21-jre-alpine`, added a non-root `buildnest` user
+  (Alpine `addgroup`/`adduser`, `chown`, `USER`), and replaced the fixed `-Xmx1g -Xms512m` heap
+  with container-aware `-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0`. Live-verified
+  end-to-end (real `docker build` + `docker run` against MySQL/Redis, SSL enabled, actuator
+  health check returning `UP`) — this surfaced and fixed three pre-existing bugs that had never
+  been exercised before: (1) the `COPY` glob `civil-ecommerce-*.jar` never matched the real jar
+  name (`buildnest-ecommerce-*.jar`), leaving `/app` empty on every prior build; (2)
+  `-XX:G1NewCollectionHeuristicPercent=30` is not a real JVM flag and crashed the JVM at
+  startup; (3) `application-production.properties`'s `spring.profiles.include=logstash` is
+  disallowed inside a profile-specific document since Spring Boot 2.4 — moved to
+  `-Dspring.profiles.active=production,logstash` on the Dockerfile's `ENTRYPOINT`. **Any
+  production launch of this image outside the Dockerfile's own `ENTRYPOINT` (a different deploy
+  mechanism, a manual `java -jar` invocation) must pass `production,logstash` explicitly, or the
+  Logstash appender silently fails to activate with no startup error** (#124, OPS-06, M5).
+
+### Added
 - Automated MySQL backup and restore tooling: `backend/scripts/backup-db.sh` (mysqldump +
   gzip + timestamp, 30-day retention sweep) and `backend/scripts/restore-db.sh`, with a daily
   02:00 UTC cron schedule (`backend/scripts/backup-db.cron`) and a documented DR drill procedure

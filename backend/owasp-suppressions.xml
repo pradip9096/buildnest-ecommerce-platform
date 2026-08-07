@@ -154,4 +154,37 @@
         <packageUrl regex="true">^pkg:maven/io\.netty/.*@.*$</packageUrl>
         <cve>CVE-2026-56816</cve>
     </suppress>
+
+    <!-- PR #686 (extended #133 re-run, 2026-08-07): org.apache.tomcat.embed:* 10.1.57
+         (CVE-2026-66299, 7.5 HIGH) — CONFIRMED FALSE POSITIVE, verified directly against
+         Apache's own advisory (tomcat.apache.org/security-10.html) and NVD on 2026-08-06. The
+         vulnerability is an unbounded-buffer DoS in the bundled WebSocket **chat example**
+         application shipped with the full Tomcat binary distribution's webapps/examples
+         directory — Apache's own advisory states installs that removed the examples web
+         application (standard hardening guidance) are not affected. Spring Boot's embedded
+         Tomcat (spring-boot-starter-tomcat, which is what this project uses via
+         spring-boot-starter-web) never packages or deploys the examples web application at all —
+         it is not a Maven artifact and is not present anywhere in this project's resolved
+         dependency tree or runtime classpath. This applies equally to every org.apache.tomcat.embed
+         artifact this project resolves (tomcat-embed-core, tomcat-embed-websocket, etc.) — the
+         false-positive reasoning is about the absent examples webapp, not about which specific
+         embedded-Tomcat jar is on the classpath, so the rule below is scoped to the whole group
+         rather than one artifact at a time. Widened from tomcat-embed-core-only after a #133
+         CI re-run surfaced the identical CVE flagged against tomcat-embed-websocket, which the
+         original narrower regex didn't cover. No patched version is needed or exists as a fix
+         for this specific finding: 10.1.57 remains the latest release published to Maven Central
+         as of this writing (confirmed against Maven Central's maven-metadata.xml — no 10.1.58
+         artifact exists there yet despite third-party vulnerability-database pages citing one as
+         "the fix"). -->
+    <suppress>
+        <notes>Confirmed false positive, verified against Apache's own tomcat.apache.org
+        security-10.html advisory and NVD directly — CVE-2026-66299 is a DoS in the bundled
+        WebSocket chat example web application (webapps/examples in the full Tomcat
+        distribution), which Spring Boot's embedded Tomcat never packages or deploys. Not present
+        anywhere in this project's dependency tree or runtime classpath. Scoped to the whole
+        org.apache.tomcat.embed group (not just tomcat-embed-core) since the false-positive
+        reasoning applies to every artifact in it equally. See PR #686.</notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/.*$</packageUrl>
+        <cve>CVE-2026-66299</cve>
+    </suppress>
 </suppressions>
