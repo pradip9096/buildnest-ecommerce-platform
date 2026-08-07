@@ -62,7 +62,7 @@ spec:
 
       containers:
         - name: buildnest-app
-          image: buildnest/civil-ecommerce:latest
+          image: buildnest/buildnest-ecommerce:latest
           imagePullPolicy: Always
 
           ports:

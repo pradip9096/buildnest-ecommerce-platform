@@ -173,6 +173,18 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("updateOrderStatus – to DELIVERED – sets deliveredAt")
+    void testUpdateOrderStatusToDeliveredSetsDeliveredAt() {
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        Order updated = orderService.updateOrderStatus(100L, "DELIVERED");
+
+        assertEquals(Order.OrderStatus.DELIVERED, updated.getStatus());
+        assertNotNull(updated.getDeliveredAt());
+    }
+
+    @Test
     @DisplayName("Should publish OrderStatusChangedEvent carrying the order owner's userId (NOTIF-02, #63)")
     void testUpdateOrderStatusEventCarriesUserId() {
         when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
@@ -339,6 +351,7 @@ class OrderServiceImplTest {
         orderService.adminUpdateOrderStatus(100L, "DELIVERED", null);
 
         assertEquals(Order.OrderStatus.DELIVERED, order.getStatus());
+        assertNotNull(order.getDeliveredAt());
         verify(notificationService).sendDeliveryNotification(100L);
     }
 
@@ -490,6 +503,20 @@ class OrderServiceImplTest {
 
         assertEquals("SHIPPED", dto.getStatus());
         verify(orderRepository).save(order);
+    }
+
+    @Test
+    @DisplayName("updateSellerOrderStatus – to DELIVERED – sets "
+            + "deliveredAt")
+    void updateSellerOrderStatus_toDelivered_setsDeliveredAt() {
+        order.setStatus(Order.OrderStatus.SHIPPED);
+        when(orderRepository.findByIdAndSellerId(100L, 42L))
+                .thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        orderService.updateSellerOrderStatus(42L, 100L, "DELIVERED");
+
+        assertNotNull(order.getDeliveredAt());
     }
 
     @Test
