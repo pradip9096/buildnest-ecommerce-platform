@@ -190,7 +190,13 @@ public class OrderServiceImpl implements OrderService {
         Order order = getOrderById(orderId);
         try {
             String previousStatus = order.getStatus().toString();
-            order.setStatus(Order.OrderStatus.valueOf(status.toUpperCase()));
+            OrderStatus parsedStatus =
+                    OrderStatus.valueOf(status.toUpperCase());
+            order.setStatus(parsedStatus);
+            if (parsedStatus == OrderStatus.DELIVERED
+                    && order.getDeliveredAt() == null) {
+                order.setDeliveredAt(LocalDateTime.now());
+            }
             order.setUpdatedAt(LocalDateTime.now());
             Order saved = orderRepository.save(order);
             domainEventPublisher.publish(
@@ -286,6 +292,10 @@ public class OrderServiceImpl implements OrderService {
 
         String previousStatus = order.getStatus().name();
         order.setStatus(targetStatus);
+        if (targetStatus == OrderStatus.DELIVERED
+                && order.getDeliveredAt() == null) {
+            order.setDeliveredAt(LocalDateTime.now());
+        }
         order.setUpdatedAt(LocalDateTime.now());
         Order saved = orderRepository.save(order);
 
@@ -379,6 +389,10 @@ public class OrderServiceImpl implements OrderService {
 
         String previousStatus = order.getStatus().name();
         order.setStatus(targetStatus);
+        if (targetStatus == OrderStatus.DELIVERED
+                && order.getDeliveredAt() == null) {
+            order.setDeliveredAt(LocalDateTime.now());
+        }
         order.setUpdatedAt(LocalDateTime.now());
         Order saved = orderRepository.save(order);
 

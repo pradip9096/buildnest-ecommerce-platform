@@ -17,6 +17,20 @@ counts); entries below are not yet split into per-milestone sub-sections — che
 own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs to.
 
 ### Added
+- Order return and refund request flow (#88, FR-CHK-10, RET-01/02/03): `POST
+  /api/user/orders/{id}/returns` (customer requests a return within 30 days of delivery — the
+  window is enforced from a new `orders.delivered_at` column, set whenever an order transitions
+  to `DELIVERED`), `GET /api/v1/admin/returns` (admin list with status filter), `PATCH
+  /api/v1/admin/returns/{id}/status` (admin approve/reject). Approval restores inventory
+  (`InventoryService.adjustStock`) before triggering a refund via the existing
+  `PaymentService.processRefund`, so a DB-only inventory failure never leaves an irreversible
+  external refund issued with no corresponding record; a pessimistic write lock on the order row
+  during return creation closes a race that could otherwise let two concurrent requests both pass
+  the duplicate-active-return check. Reused a pre-existing, previously-unwired
+  `return_requests` Liquibase changeset for the schema. Used `/api/user/orders/{id}/returns`
+  rather than the issue's own literally-cited `/api/v1/users/orders/{id}/returns` — no
+  `/api/v1/users/**` pattern exists anywhere in this codebase, so the established `/api/user/**`
+  convention was followed instead.
 - GDPR compliance features (#128, COMP-01/02/03, M5): `GET /api/user/data-export` (right to
   access — profile, addresses, orders, product/seller reviews, wishlist, and cart, all
   flat-projected so no raw JPA entity is ever serialized) and `DELETE /api/user/account`
