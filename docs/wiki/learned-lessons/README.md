@@ -107,7 +107,7 @@ The manifest — one row per lesson file, no prose beyond this table.
 
 | Sr. No. | File | Topic | Category | Last Updated |
 |---|---|---|---|---|
-| 1 | [pit-mutation-testing-patterns.md](pit-mutation-testing-patterns.md) | Four common PIT mutation survival patterns and their fixes: lambda null-return, setter-removal hidden by DTO, `targetTests` naming exclusion, and a ternary assertion that's a tautology when the untaken branch's control value is null | testing | 2026-07-22 |
+| 1 | [pit-mutation-testing-patterns.md](pit-mutation-testing-patterns.md) | Five common PIT mutation survival patterns and their fixes: lambda null-return, setter-removal hidden by DTO, `targetTests` naming exclusion, a ternary assertion that's a tautology when the untaken branch's control value is null, and the project-wide gate failing on code a PR merely *modified* (not just added) — reproduce locally, read the per-class survived-mutant list directly from `target/pit-reports/` | testing | 2026-08-07 |
 | 2 | [shell-pipeline-exit-code-masking.md](shell-pipeline-exit-code-masking.md) | Pipelines ending in `tail`/`grep` always exit 0 — masks build failures; use `$PIPESTATUS` or `set -o pipefail` | tooling | 2026-07-01 |
 | 3 | [github-issue-hygiene.md](github-issue-hygiene.md) | Root causes of stale issue accumulation and a repeatable closure protocol | process | 2026-07-01 |
 | 4 | [dotenv-not-auto-loaded-by-local-processes.md](dotenv-not-auto-loaded-by-local-processes.md) | Docker Compose auto-loads `.env`; locally-run processes (`mvnw`, `npm run dev`) do not — must be sourced explicitly | tooling | 2026-07-02 |
