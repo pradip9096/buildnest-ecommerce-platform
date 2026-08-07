@@ -36,6 +36,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -112,6 +113,8 @@ class ReturnServiceImplTest {
 
         assertEquals(ReturnStatus.PENDING.name(), result.getStatus());
         assertEquals(100L, result.getOrderId());
+        assertEquals("Wrong size", result.getReason());
+        assertEquals(7L, result.getUserId());
     }
 
     @Test
@@ -192,6 +195,10 @@ class ReturnServiceImplTest {
                 .updateReturnStatus(1L, "APPROVED", "Approved by admin");
 
         assertEquals(ReturnStatus.REFUNDED.name(), result.getStatus());
+        assertEquals(0, new BigDecimal("199.99")
+                .compareTo(result.getRefundAmount()));
+        assertEquals("Approved by admin", result.getAdminNotes());
+        assertNotNull(result.getResolvedAt());
         verify(paymentService, times(1)).processRefund(
                 eq(100L), any(Double.class), any(String.class));
         verify(inventoryService, times(1))
@@ -218,10 +225,49 @@ class ReturnServiceImplTest {
                 .updateReturnStatus(1L, "REJECTED", "Item damaged");
 
         assertEquals(ReturnStatus.REJECTED.name(), result.getStatus());
+        assertEquals("Item damaged", result.getAdminNotes());
+        assertNotNull(result.getResolvedAt());
         verify(paymentService, never())
                 .processRefund(anyLong(), any(Double.class), any());
         verify(inventoryService, never())
                 .adjustStock(anyLong(), any(Integer.class), any(), any());
+    }
+
+    @Test
+    @DisplayName(
+            "updateReturnStatus throws when newStatus is a valid enum "
+                    + "value but neither APPROVED nor REJECTED")
+    void updateReturnStatus_validButUnsupportedStatus_throwsValidation() {
+        ReturnRequest returnRequest = new ReturnRequest();
+        returnRequest.setId(1L);
+        returnRequest.setOrder(order);
+        returnRequest.setUser(user);
+        returnRequest.setStatus(ReturnStatus.PENDING);
+
+        when(returnRequestRepository.findById(1L))
+                .thenReturn(Optional.of(returnRequest));
+
+        assertThrows(ValidationException.class,
+                () -> returnService.updateReturnStatus(
+                        1L, "PENDING", "no-op"));
+        verify(paymentService, never())
+                .processRefund(anyLong(), any(Double.class), any());
+    }
+
+    @Test
+    @DisplayName("updateReturnStatus throws when newStatus is null")
+    void updateReturnStatus_nullStatus_throwsValidation() {
+        ReturnRequest returnRequest = new ReturnRequest();
+        returnRequest.setId(1L);
+        returnRequest.setOrder(order);
+        returnRequest.setUser(user);
+        returnRequest.setStatus(ReturnStatus.PENDING);
+
+        when(returnRequestRepository.findById(1L))
+                .thenReturn(Optional.of(returnRequest));
+
+        assertThrows(ValidationException.class,
+                () -> returnService.updateReturnStatus(1L, null, "notes"));
     }
 
     @Test
