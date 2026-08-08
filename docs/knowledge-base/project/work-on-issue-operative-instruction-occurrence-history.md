@@ -359,6 +359,13 @@ independently-scoped follow-up).
   23 conditionally requires it whenever step 8 produces a new ADR — #561 did produce one, and the
   ADR index was only updated by judgment call, not instruction. → Added the `TaskCreate`-seeding
   requirement for the backfill check, and a 7th checklist line (`ADR index: <updated|N/A>`).
+- **#108** — 2nd occurrence of `[defect-class: requirement-traceability-backfill-not-seeded]`, a
+  literal-format sub-failure rather than a substance failure: OBS-02 was correctly added to SRS
+  §3.8.9/RTM §7.10, cited throughout the update-docs narrative, but the standalone "Step-7
+  traceability: cites `<FR-ID>`" line itself was never produced as its own independently-checkable
+  artifact. Confirmed the existing literal-format requirement already covers this shape; no
+  further wording change needed, logged here as the 2nd occurrence for future tier-escalation
+  reference.
 
 ## Follow-ups closure step
 
