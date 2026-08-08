@@ -10,13 +10,13 @@
 | :--- | :--- |
 | **Document Title** | Test Plan |
 | **Document ID** | TP-BUILDNEST-001 |
-| **Version** | 4.11 |
+| **Version** | 4.12 |
 | **Date** | 2026-08-02 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29119-3:2021 |
-| **Related SRS** | SRS-BUILDNEST-001 v5.8 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
-| **Related SDD** | SDD-BUILDNEST-001 v4.13 (docs/SDLC-docs/design/software-design-description.md) |
+| **Related SRS** | SRS-BUILDNEST-001 v5.14 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
+| **Related SDD** | SDD-BUILDNEST-001 v4.19 (docs/SDLC-docs/design/software-design-description.md) |
 | **Supersedes** | TP v3.0 (archive/docs/ISO-IEC-IEEE/Test_Plan_IEEE_29119.md, 2026-02-11) |
 
 ---
@@ -42,6 +42,7 @@
 | 4.9 | 2026-08-02 IST | Test Manager | #647: retired only the browser-driven Selenium E2E class (`E2ETest.java`) now that `playwright-e2e` demonstrated 3/3 real green runs on `master`. Mid-implementation correction: an initial pass wrongly deleted the entire `e2e/` package — including the separate, still-valid RestAssured API E2E suite (`BaseApiTest`, `AuthApiTest`/`CartApiTest`/`OrderApiTest`/`ProductApiTest`/`UserApiTest`) and `E2ESeedDataRunnerTest.java` (unit test for the Playwright job's own seed runner) — based on a false assumption that the whole directory was the Selenium suite; caught before commit, files restored, and the `e2e-tests` Maven profile/`e2e,` exclusion (needed by the RestAssured suite) restored in `pom.xml`. §4.5 rewritten to document both E2E suites separately (4.5.1 Playwright, 4.5.2 RestAssured) rather than treating them as one. TIR-01 (§15), §3.2 pipeline diagram, §8.2 Maven profile table, and Appendix C's pom.xml excerpt all corrected to reflect that the `e2e`/`@Tag("e2e")` mechanism still exists for the RestAssured suite | Pending |
 | 4.10 | 2026-08-02 IST | Test Manager | #649: §3.4's CI Pipeline Integration diagram never mentioned frontend lint/unit tests — `npm run test`/`npm run lint` had zero CI enforcement until this issue wired them into a new `frontend-quality` job (`ci.yml`). Added Stage 6 to the diagram documenting the new job, its Codecov `frontend` flag (uploaded, not yet threshold-gated), and its deliberately non-required branch-protection status | Pending |
 | 4.11 | 2026-08-02 IST | Test Manager | #651: §17.2's Product Catalog test-class list (FR-PROD-01 to FR-PROD-07) extended with `ProductServiceRedisCacheRoundTripIntegrationTest`, the new regression test for `ProductServiceImpl#getProductById`'s `@Cacheable` cache-hit corruption bug. §17.2's aggregate Total-test-files/Total-test-executions figures were left as-is (last periodic-sync snapshot 2026-07-30) — this issue adds one test class, not a full re-sync; genuinely re-measured at the next 15-issue periodic sync per this document's own established cadence | Pending |
+| 4.12 | 2026-08-08 IST | Test Manager | #108 (OBS-02): added `TracingWiringIntegrationTest`, a real-context `@SpringBootTest` asserting a genuine `OtelTracer` bean (not a mocked no-op fallback) — a framework-autoconfiguration risk per this document's testing-type tier guidance — tracing to the new OBS-02 requirement (SRS §3.8.9 / RTM §7.10). §17.2's aggregate Total-test-files/Total-test-executions figures left as-is per this document's own established one-class-doesn't-trigger-a-full-resync cadence (4.11). Updated `Related SRS`/`Related SDD` (v5.8/v4.13 → v5.14/v4.19, both had drifted several versions behind) | Pending |
 
 ### Document Approval
 

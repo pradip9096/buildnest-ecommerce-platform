@@ -187,4 +187,35 @@
         <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/.*$</packageUrl>
         <cve>CVE-2026-66299</cve>
     </suppress>
+
+    <!-- PR #699 (#108): io.opentelemetry.semconv:opentelemetry-semconv 1.32.0 (CVE-2026-24051,
+         CVE-2026-39883, both 7.0 HIGH) — CONFIRMED FALSE POSITIVE, verified directly against the
+         NVD detail pages on 2026-08-08. Both CVEs are Path Hijacking (Untrusted Search Path)
+         vulnerabilities in **OpenTelemetry-Go** (opentelemetry-go, the Go SDK) — the Go SDK's
+         resource-detection code executing `ioreg`/`kenv` system commands via a bare (non-
+         absolute) search path on macOS/BSD/Solaris, allowing PATH-hijack code execution.
+         CVE-2026-24051 affects opentelemetry-go v1.20.0-1.39.0 (fixed 1.40.0); CVE-2026-39883 is
+         the BSD/Solaris follow-up affecting 1.15.0-1.42.0 (fixed 1.43.0). This project is a Java
+         project — it does not depend on, ship, or execute the Go SDK at all;
+         `io.opentelemetry.semconv:opentelemetry-semconv` is an unrelated Java artifact (pulled
+         in transitively by `micrometer-tracing-bridge-otel`/`opentelemetry-exporter-otlp`, #108)
+         containing only semantic-convention constant strings, with no resource-detection or
+         subprocess-execution code whatsoever. dependency-check's CPE match
+         (cpe:2.3:a:opentelemetry:opentelemetry:*, no version bound) collapses the entire
+         OpenTelemetry project across every language SDK into one CPE, the same coarse-grained
+         cross-product false-positive class already documented above for Kotlin/Prometheus/Netty.
+         1.32.0 is the latest opentelemetry-semconv release published to Maven Central as of this
+         writing — there is no newer version to bump to even if the CVEs were real. -->
+    <suppress>
+        <notes>Confirmed false positive, verified against NVD directly — CVE-2026-24051 and
+        CVE-2026-39883 are PATH-hijacking vulnerabilities in OpenTelemetry-Go's resource
+        detection code (a Go SDK, fixed in opentelemetry-go 1.40.0/1.43.0 respectively); this
+        project is Java-only and does not depend on or execute the Go SDK. opentelemetry-semconv
+        is an unrelated Java artifact (semantic-convention constants only), cross-mapped via a
+        coarse-grained cpe:2.3:a:opentelemetry:opentelemetry:* CPE that spans every language SDK.
+        See issue #108.</notes>
+        <packageUrl regex="true">^pkg:maven/io\.opentelemetry\.semconv/opentelemetry-semconv@.*$</packageUrl>
+        <cve>CVE-2026-24051</cve>
+        <cve>CVE-2026-39883</cve>
+    </suppress>
 </suppressions>

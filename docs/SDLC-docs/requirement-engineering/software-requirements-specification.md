@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 5.13 |
+| **Version** | 5.14 |
 | **Date** | 2026-08-08 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -52,6 +52,7 @@
 | 5.11 | 2026-08-03 IST | Technical Lead | Added §3.8.4 Compliance (COMP-01–03: GDPR right-to-access data export, right-to-erasure with 30-day anonymization retention, registration consent capture) for #128 — the issue's own "SRS NFR-COMP-01 to NFR-COMP-03" citation referenced a range that did not exist at filing time, same filing-time traceability-mismatch shape as SEC-15/SEC-16 (#111/#112). Renumbered §3.8.4–3.8.7 (Maintainability/Portability/Scalability) to §3.8.5–3.8.8 to make room. Updated the Coverage Summary Totals row (Non-Functional 61→64, Grand Total 156→159) | Pending |
 | 5.12 | 2026-08-07 IST | Technical Lead | Added FR-CHK-10 (§3.2.4) — order return and refund request flow (RET-01/02/03, #88): user-initiated return within 30 days of delivery, admin approve/reject, approval triggers refund + inventory restoration. The issue's own "SRS RET-01 to RET-03" citation referenced a range that did not exist at filing time (same filing-time traceability-mismatch shape as SEC-15/COMP-01, #111/#128). Updated §4.2's Checkout aggregate row (9→10 requirements, 3→4 Medium) and the Coverage Summary Totals row (Total Functional 99→100, Grand Total 159→160) | Pending |
 | 5.13 | 2026-08-08 IST | Technical Lead | Added FR-AUTH-12 (§3.2.1) — optional TOTP-based 2FA (RFC 6238): QR provisioning, TOTP login verification, 8 one-time recovery codes, TOTP-verified disable (#91, AUTH-02). The issue's own "SRS AUTH-10" citation referenced an existing, unrelated requirement (BCrypt password hashing) rather than a stale/nonexistent range — same filing-time traceability-mismatch shape as SEC-15/COMP-01/RET-01, but a wrong-target citation rather than a wrong-range one. Updated §4.2's Authentication aggregate row (FR-AUTH-01–11→01–12, 11→12 requirements, 9→10 High) and the Coverage Summary Totals row (Total Functional 100→101, Grand Total 160→161) | Pending |
+| 5.14 | 2026-08-08 IST | Technical Lead | Added §3.8.9 Observability (OBS-02) for #108 (distributed tracing, Micrometer + OTLP export to Grafana Tempo, see ADR-0004) — the issue's own "SRS NFR-OPS-04" citation referenced an ID that did not exist at filing time; also, "OPS-01"/"OPS-02" were already informally claimed by SDD's own #119/#120 revision notes for unrelated deployment-topology work, so reusing the issue's literal "OPS-" prefix would have created a real ID collision on top of the usual stale-citation gap. Adopted "OBS-02" instead, matching the domain code already carried by #108's own GitHub issue title and its siblings #107 (OBS-01, structured logging) and #109 (OBS-03, custom business metrics) — same filing-time traceability-mismatch shape as SEC-15/COMP-01/RET-01/FR-AUTH-12, but caught and corrected before the ID was actually used, not just the range. Updated the Coverage Summary Totals row (Total Non-Functional 64→65, Grand Total 161→162) | Pending |
 
 ### Document Change Procedure
 
@@ -907,6 +908,25 @@ This system does not control safety-critical hardware or processes. IEC 61508 sa
 | SAF-02 | Payment processing shall fail-safe: no charge shall be recorded without an associated order confirmation | Ph-2 | Fail-safe | Test |
 | SAF-03 | Inventory data integrity shall be maintained via ACID database transactions under concurrent order placement | Ph-1 | ACID | Test |
 
+#### 3.8.9 Observability
+
+| ID | Requirement | Phase | Target | Verification |
+| :--- | :--- | :--- | :--- | :--- |
+| OBS-02 | The system shall propagate distributed trace context across HTTP requests and asynchronous tasks and export traces via OTLP for visualization | Ph-2 | Traces visible end-to-end for a sample request flow | Test |
+
+> **Note on OBS-02** (#108): This subsection did not previously exist as its own SRS row — #108's
+> own body cited "SRS NFR-OPS-04", an ID that did not exist at filing time (this SRS had no
+> OPS-prefixed IDs before this change, and "OPS-01"/"OPS-02" were already informally claimed by
+> SDD's own #119/#120 revision notes for unrelated deployment-topology work — reusing them here
+> would have created a real ID collision). #108's own GitHub issue title carries the domain code
+> "OBS-02", consistent with sibling issues #107 (OBS-01, structured logging) and #109 (OBS-03,
+> custom business metrics) — this SRS row adopts that established `OBS-*` numbering instead of the
+> issue body's stale `OPS-*` citation, the same filing-time traceability-mismatch shape already
+> seen on SEC-15/SEC-16 (#111/#112) and COMP-01–03 (#128, §3.8.4). OBS-01/OBS-03/OBS-04 (logging,
+> metrics, alerting) are #107/#109's own scope, not added here — this subsection intentionally
+> starts at OBS-02 alone rather than fabricating cross-reference rows for requirements this issue
+> did not touch.
+
 ---
 
 ### 3.9 Test Integrity Requirements
@@ -980,8 +1000,8 @@ Test integrity requirements define the properties that the test suite itself mus
 | Scalability (SCL-01–04) | 4 | Ph-1 / Ph-2 | Mixed | Analysis, Inspection |
 | Safety (SAF-01–03) | 3 | Ph-1 / Ph-2 | High | Test |
 | Test Integrity (TIR-01–05) | 5 | Ph-1 / Ph-2 | 2 High, 3 Medium | Build, Inspection |
-| **Total Non-Functional** | **64** | | | |
-| **Grand Total** | **161** | | | |
+| **Total Non-Functional** | **65** | | | |
+| **Grand Total** | **162** | | | |
 | Seller & Marketplace (FR-SEL-01–08) *(Ph-3, Planned — excluded from Grand Total above)* | 8 | Ph-3 | 6 High, 2 Medium | 1 Implemented (#553), 7 Not started |
 | Location-Based Matching (FR-LOC-01–04) *(Ph-3, complete — excluded from Grand Total above)* | 4 | Ph-3 | 4 High | 4 Implemented (#562, #563, #564) |
 

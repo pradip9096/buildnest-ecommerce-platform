@@ -257,6 +257,19 @@
 			<artifactId>micrometer-registry-prometheus</artifactId>
 		</dependency>
 
+		<!-- #108 (OBS-02): distributed tracing - Micrometer's OpenTelemetry bridge propagates
+		     trace/span context across HTTP requests and @Async tasks -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-otel</artifactId>
+		</dependency>
+
+		<!-- #108 (OBS-02): OTLP exporter - ships completed spans to Grafana Tempo -->
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-exporter-otlp</artifactId>
+		</dependency>
+
 		<!-- AspectJ for audit logging -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
