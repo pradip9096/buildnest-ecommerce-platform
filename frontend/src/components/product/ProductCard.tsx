@@ -94,7 +94,7 @@ export function ProductCard({ product, linkable = true }: Props) {
             ₹{displayPrice.toLocaleString('en-IN')}
           </span>
           {hasDiscount && (
-            <span className="text-xs text-gray-400 line-through">
+            <span className="text-xs text-gray-600 line-through">
               ₹{product.price.toLocaleString('en-IN')}
             </span>
           )}

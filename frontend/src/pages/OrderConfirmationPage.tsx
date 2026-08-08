@@ -94,7 +94,7 @@ export function OrderConfirmationPage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Order Number</p>
+              <p className="text-xs text-gray-600 uppercase tracking-wide">Order Number</p>
               <p className="text-xl font-bold text-gray-900">#{order.id}</p>
             </div>
             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${

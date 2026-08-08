@@ -10,7 +10,7 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 5.16 |
+| **Version** | 5.17 |
 | **Date** | 2026-08-09 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
@@ -55,6 +55,7 @@
 | 5.14 | 2026-08-08 IST | Technical Lead | Added §3.8.9 Observability (OBS-02) for #108 (distributed tracing, Micrometer + OTLP export to Grafana Tempo, see ADR-0004) — the issue's own "SRS NFR-OPS-04" citation referenced an ID that did not exist at filing time; also, "OPS-01"/"OPS-02" were already informally claimed by SDD's own #119/#120 revision notes for unrelated deployment-topology work, so reusing the issue's literal "OPS-" prefix would have created a real ID collision on top of the usual stale-citation gap. Adopted "OBS-02" instead, matching the domain code already carried by #108's own GitHub issue title and its siblings #107 (OBS-01, structured logging) and #109 (OBS-03, custom business metrics) — same filing-time traceability-mismatch shape as SEC-15/COMP-01/RET-01/FR-AUTH-12, but caught and corrected before the ID was actually used, not just the range. Updated the Coverage Summary Totals row (Total Non-Functional 64→65, Grand Total 161→162) | Pending |
 | 5.15 | 2026-08-08 IST | Technical Lead | Added §3.8.9 Observability (OBS-05) for #123 (Kubernetes readiness/liveness health probes, custom Elasticsearch health indicator, real dependency-reachability wiring via `management.endpoint.health.group.readiness.include`) — the issue's own "SRS NFR-OPS-06" citation referenced an ID that both did not exist at filing time and collides with #124's already-used "OPS-06" (RTM revision 1.51). Adopted "OBS-05" instead, matching this subsection's established `OBS-*` observability domain numbering (OBS-01 logging, OBS-02 tracing, OBS-03 metrics, OBS-04 alerting — all #107/#109's scope, unclaimed here) rather than the `OPS-*` deployment-topology domain the issue's citation implied — same filing-time traceability-mismatch shape as OBS-02/COMP-01/RET-01/FR-AUTH-12, caught before either document used the wrong ID. Updated the Coverage Summary Totals row (Total Non-Functional 65→66, Grand Total 162→163) | Pending |
 | 5.16 | 2026-08-09 IST | Technical Lead | Added §3.8.5 Maintainability (MNT-07) for #127 (publish the generated OpenAPI 3.1 spec to GitHub Pages via Swagger UI, automated on each release tag) — the issue's own "SRS NFR-MAINT-01" citation referenced an ID that did not exist at filing time (this subsection uses the `MNT-*` prefix, not `NFR-MAINT-*`) — same filing-time traceability-mismatch shape as OBS-05/OBS-02/COMP-01/RET-01/FR-AUTH-12. Adopted `MNT-07`, the next free ID in the existing `MNT-*` sequence, distinct from UI-02/UI-03/UR-03 which already cover the live in-app Swagger endpoints, not external GitHub Pages publication. Updated the Coverage Summary Totals row (Total Non-Functional 66→67, Grand Total 163→164) | Pending |
+| 5.17 | 2026-08-09 IST | Technical Lead | Added §3.8.4 Compliance (COMP-04) for #129 (WCAG 2.1 AA frontend accessibility audit + remediation) — the issue was titled "(COMP-02)" and its body cited "SRS NFR-COMP-04", but COMP-02 is the unrelated GDPR account-deletion requirement and no COMP-04/NFR-COMP-* row existed at filing time — same filing-time traceability-mismatch shape as MNT-07/OBS-05/OBS-02/COMP-01/RET-01/FR-AUTH-12. See `docs/SDLC-docs/reports/accessibility-audit.md` for the full audit. Updated the Coverage Summary Totals row (Total Non-Functional 67→68, Grand Total 164→165) | Pending |
 
 ### Document Change Procedure
 
@@ -864,8 +865,11 @@ All of the following indexes shall be present in the production schema:
 | COMP-01 | Users shall be able to export all personal data associated with their account as JSON (GDPR right to access) | Ph-2 | 100% coverage of §3.5 PII fields | Test |
 | COMP-02 | Users shall be able to request account deletion; the account shall be deactivated immediately and personal data irreversibly anonymised no later than 30 days after deletion, while financial/order records are retained for statutory retention periods (GDPR right to erasure) | Ph-2 | ≤ 30 days | Test |
 | COMP-03 | Consent to the privacy policy shall be captured (with timestamp) at registration and shall be a precondition of account creation | Ph-2 | 100% of new registrations | Test |
+| COMP-04 | The frontend shall conform to WCAG 2.1 Level AA — automated scan zero critical/serious violations, ≥4.5:1 text contrast, keyboard-operable checkout, labeled/landmarked forms and pages | Ph-2 | Zero critical/serious axe-core violations across all customer-facing pages | Test |
 
 > **Note on COMP-01–03** (#128): This requirement did not previously exist as its own SRS row — issue #128 cited "SRS NFR-COMP-01 to NFR-COMP-03", a range that did not exist at filing time (this SRS had no COMP-prefixed IDs before this change), the same filing-time traceability-mismatch shape already seen on SEC-15/SEC-16 (#111/#112). Added here as the correct, dedicated NFRs this issue actually satisfies. See `docs/compliance/pii-inventory.md` for the full PII field/table/retention inventory these requirements trace to.
+
+> **Note on COMP-04** (#129): This requirement did not previously exist as its own SRS row — issue #129 was titled "(COMP-02)" and its body cited "SRS NFR-COMP-04", but COMP-02 is the unrelated GDPR account-deletion requirement above, and no COMP-04 (nor any "NFR-COMP-*") row existed at filing time — the identical filing-time traceability-mismatch shape already seen on SEC-15/SEC-16 (#111/#112) and COMP-01–03 (#128). Added here as the correct, dedicated NFR this issue actually satisfies. See `docs/SDLC-docs/reports/accessibility-audit.md` for the full WCAG 2.1 AA audit this row traces to.
 
 #### 3.8.5 Maintainability
 
@@ -1015,8 +1019,8 @@ Test integrity requirements define the properties that the test suite itself mus
 | Scalability (SCL-01–04) | 4 | Ph-1 / Ph-2 | Mixed | Analysis, Inspection |
 | Safety (SAF-01–03) | 3 | Ph-1 / Ph-2 | High | Test |
 | Test Integrity (TIR-01–05) | 5 | Ph-1 / Ph-2 | 2 High, 3 Medium | Build, Inspection |
-| **Total Non-Functional** | **67** | | | |
-| **Grand Total** | **164** | | | |
+| **Total Non-Functional** | **68** | | | |
+| **Grand Total** | **165** | | | |
 | Seller & Marketplace (FR-SEL-01–08) *(Ph-3, Planned — excluded from Grand Total above)* | 8 | Ph-3 | 6 High, 2 Medium | 1 Implemented (#553), 7 Not started |
 | Location-Based Matching (FR-LOC-01–04) *(Ph-3, complete — excluded from Grand Total above)* | 4 | Ph-3 | 4 High | 4 Implemented (#562, #563, #564) |
 

@@ -43,16 +43,30 @@ export function RegisterPage() {
   const blur = (field: Field) => () =>
     setTouched(t => ({ ...t, [field]: true }));
 
+  // WHATWG autocomplete tokens (WCAG 2.1 SC 1.3.5) — a raw field name like "firstName" is not a
+  // valid token; axe-core's autocomplete-valid rule flags it. Every Field key has an explicit
+  // entry (not Partial) so adding a new field without a valid token fails the type check instead
+  // of silently falling back to the raw (possibly invalid) name.
+  const AUTOCOMPLETE_TOKENS: Record<Field, string> = {
+    firstName: 'given-name',
+    lastName: 'family-name',
+    username: 'username',
+    email: 'email',
+    password: 'new-password',
+    confirmPassword: 'new-password',
+  };
+
   const field = (name: Field, label: string, type = 'text', placeholder = '') => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label htmlFor={`register-${name}`} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <input
+        id={`register-${name}`}
         type={type}
         value={form[name]}
         onChange={set(name)}
         onBlur={blur(name)}
         placeholder={placeholder}
-        autoComplete={name === 'confirmPassword' ? 'new-password' : name}
+        autoComplete={AUTOCOMPLETE_TOKENS[name]}
         data-testid={`register-${name}`}
         className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 ${
           touched[name] && errors[name] ? 'border-red-400' : 'border-gray-300'
@@ -107,22 +121,24 @@ export function RegisterPage() {
             {field('email', 'Email', 'email', 'aarav@example.com')}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <div className="relative">
                 <input
+                  id="register-password"
                   type={showPassword ? 'text' : 'password'}
                   value={form.password}
                   onChange={set('password')}
                   onBlur={blur('password')}
                   placeholder="Min. 12 characters"
-                  autoComplete="new-password"
+                  autoComplete={AUTOCOMPLETE_TOKENS.password}
                   data-testid="register-password"
                   className={`w-full border rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 ${
                     touched.password && errors.password ? 'border-red-400' : 'border-gray-300'
                   }`}
                 />
                 <button type="button" onClick={() => setShowPassword(s => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 text-xs">
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>

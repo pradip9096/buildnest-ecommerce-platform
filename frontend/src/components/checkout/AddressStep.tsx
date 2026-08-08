@@ -51,8 +51,9 @@ export function AddressStep({ onNext, loading, error }: Props) {
 
   const field = (name: Field, label: string, placeholder = '', type = 'text') => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label htmlFor={`address-${name}`} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <input
+        id={`address-${name}`}
         type={type}
         value={form[name]}
         onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}

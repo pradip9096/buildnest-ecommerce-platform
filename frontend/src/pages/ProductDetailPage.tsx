@@ -168,10 +168,10 @@ export function ProductDetailPage() {
                 <span
                   className={`text-sm font-medium ${
                     inventoryStatus.status === 'OUT_OF_STOCK'
-                      ? 'text-red-500'
+                      ? 'text-red-600'
                       : inventoryStatus.status === 'LOW_STOCK'
-                        ? 'text-amber-600'
-                        : 'text-green-600'
+                        ? 'text-amber-700'
+                        : 'text-green-700'
                   }`}
                   title={inventoryStatus.description}
                 >
@@ -179,11 +179,11 @@ export function ProductDetailPage() {
                   {inStock && ` (${product.stockQuantity} available)`}
                 </span>
               ) : inStock ? (
-                <span className="text-sm font-medium text-green-600">
+                <span className="text-sm font-medium text-green-700">
                   ✓ In Stock ({product.stockQuantity} available)
                 </span>
               ) : (
-                <span className="text-sm font-medium text-red-500">✗ Out of Stock</span>
+                <span className="text-sm font-medium text-red-600">✗ Out of Stock</span>
               )}
             </div>
 
@@ -191,7 +191,7 @@ export function ProductDetailPage() {
               <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
             )}
 
-            <p className="text-xs text-gray-400">SKU: {product.sku}</p>
+            <p className="text-xs text-gray-600">SKU: {product.sku}</p>
 
             {inStock && (
               <div className="flex flex-col gap-4 mt-4 pt-4 border-t border-gray-100">

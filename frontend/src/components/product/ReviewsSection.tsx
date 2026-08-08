@@ -78,13 +78,13 @@ export function ReviewsSection({ reviews, summary, totalPages, page, loading, on
               <div className="flex items-center gap-3 mb-2">
                 <StarRating rating={review.rating} size="sm" />
                 <span className="text-sm font-medium text-gray-900">{ReviewerName(review.user)}</span>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-gray-600">
                   {new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
               </div>
               <p className="text-sm text-gray-700 leading-relaxed">{review.comment}</p>
               {review.helpfulCount > 0 && (
-                <p className="text-xs text-gray-400 mt-2">{review.helpfulCount} person{review.helpfulCount !== 1 ? 's' : ''} found this helpful</p>
+                <p className="text-xs text-gray-600 mt-2">{review.helpfulCount} person{review.helpfulCount !== 1 ? 's' : ''} found this helpful</p>
               )}
             </div>
           ))}

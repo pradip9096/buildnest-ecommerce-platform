@@ -146,7 +146,7 @@ export function CartPage() {
                     <span>Subtotal</span>
                     <span>₹{cart.totalAmount.toFixed(2)}</span>
                   </div>
-                  <p className="text-gray-400 text-xs">Shipping calculated at checkout</p>
+                  <p className="text-gray-600 text-xs">Shipping calculated at checkout</p>
                 </div>
 
                 <button

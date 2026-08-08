@@ -17,6 +17,27 @@ counts); entries below are not yet split into per-milestone sub-sections — che
 own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs to.
 
 ### Added
+- WCAG 2.1 AA accessibility audit and remediation (#129, COMP-04, M5). The issue was titled
+  "(COMP-02)" and cited "SRS NFR-COMP-04" — COMP-02 is the unrelated GDPR account-deletion
+  requirement and no COMP-04/NFR-COMP-* row existed at filing time; adopted COMP-04 instead
+  (see SRS/RTM revision history for the full reasoning). New `frontend/e2e/accessibility.spec.ts`
+  (`@axe-core/playwright`, WCAG 2.1 A/AA tag set) scans all 12 customer-facing pages against a
+  real production build + real backend — zero critical/serious violations after fixing 6
+  color-contrast defects (`text-gray-400`/`text-green-600`/`text-red-500`/`text-amber-600` below
+  the 4.5:1 threshold, swept across Login/Register/ProductDetail/Account/CheckoutStepper/Cart/
+  Listing/Reviews/OrderConfirmation), 2 invalid `autocomplete` tokens on `RegisterPage.tsx`
+  (raw field names like `"firstName"` are not valid WHATWG tokens — mapped to `given-name`/
+  `family-name`), and a missing `id`/`htmlFor` label association on `AddressStep.tsx` and
+  `RegisterPage.tsx` (the same defect class #286 already fixed on Login/Account — found via
+  this issue's own screen-reader structural check and, for `RegisterPage.tsx`, an agent-based
+  review pass; axe reported zero violations on both despite the missing association).
+  Keyboard-navigation and screen-reader acceptance
+  criteria are satisfied via disclosed automated proxies (a real keyboard-only Playwright
+  traversal; an accessibility-tree landmark/accessible-name check) since a literal human manual
+  QA pass and a real NVDA/VoiceOver session aren't available in this environment — see
+  `docs/SDLC-docs/reports/accessibility-audit.md` for the full audit and explicit limitations.
+  Admin/Seller dashboard surfaces are explicitly out of scope (never in the issue's own
+  acceptance criteria); filed as a follow-up.
 - Publish generated OpenAPI 3.1 spec to GitHub Pages (#127, MNT-07, M5): new
   `.github/workflows/publish-api-docs.yml`, triggered on every `v*` release tag (plus manual
   dispatch) — boots the backend against H2 (real security config, no `test` profile; same
