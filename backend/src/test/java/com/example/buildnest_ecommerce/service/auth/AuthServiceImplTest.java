@@ -60,6 +60,9 @@ class AuthServiceImplTest {
     @Mock
     private ValidationUtil validationUtil;
 
+    @Mock
+    private TwoFactorService twoFactorService;
+
     @InjectMocks
     private AuthServiceImpl authService;
 
@@ -118,6 +121,76 @@ class AuthServiceImplTest {
         verify(userRepository).findByUsername(username);
         verify(refreshTokenService).createRefreshToken(1L);
         verify(auditLogService).logAuthenticationEvent(eq(1L), eq("LOGIN"), any(), any());
+    }
+
+    @Test
+    void testLoginTwoFactorEnabledNoCodeReturnsTwoFactorRequired() {
+        Authentication authentication = mock(Authentication.class);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authentication);
+        testUser.setTotpEnabled(true);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+
+        AuthResponse response = authService.login("testuser", "password123", null);
+
+        assertTrue(response.isTwoFactorRequired());
+        assertNull(response.getAccessToken());
+        assertNull(response.getRefreshToken());
+        assertEquals(1L, response.getUserId());
+        verify(twoFactorService, never()).validateLoginCode(any(), any());
+        verify(refreshTokenService, never()).createRefreshToken(any());
+    }
+
+    @Test
+    void testLoginTwoFactorEnabledBlankCodeReturnsTwoFactorRequired() {
+        Authentication authentication = mock(Authentication.class);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authentication);
+        testUser.setTotpEnabled(true);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+
+        AuthResponse response = authService.login("testuser", "password123", "  ");
+
+        assertTrue(response.isTwoFactorRequired());
+        verify(twoFactorService, never()).validateLoginCode(any(), any());
+    }
+
+    @Test
+    void testLoginTwoFactorEnabledValidCodeIssuesTokens() {
+        Authentication authentication = mock(Authentication.class);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authentication);
+        testUser.setTotpEnabled(true);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(twoFactorService.validateLoginCode(testUser, "123456")).thenReturn(true);
+        when(jwtTokenProvider.generateToken(authentication)).thenReturn("jwt-token");
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setToken("refresh-token");
+        refreshToken.setUserId(1L);
+        when(refreshTokenService.createRefreshToken(1L)).thenReturn(refreshToken);
+
+        AuthResponse response = authService.login("testuser", "password123", "123456");
+
+        assertFalse(response.isTwoFactorRequired());
+        assertEquals("jwt-token", response.getAccessToken());
+        assertEquals("refresh-token", response.getRefreshToken());
+        verify(twoFactorService).validateLoginCode(testUser, "123456");
+    }
+
+    @Test
+    void testLoginTwoFactorEnabledInvalidCodeThrows() {
+        Authentication authentication = mock(Authentication.class);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authentication);
+        testUser.setTotpEnabled(true);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(twoFactorService.validateLoginCode(testUser, "000000")).thenReturn(false);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> authService.login("testuser", "password123", "000000"));
+
+        assertTrue(ex.getMessage().contains("Login failed"));
+        verify(refreshTokenService, never()).createRefreshToken(any());
     }
 
     @Test
