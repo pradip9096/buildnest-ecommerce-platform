@@ -71,6 +71,7 @@ jobs:
           done
 
       - name: Fetch OpenAPI spec
+        working-directory: backend
         run: |
           mkdir -p site
           curl -sf http://localhost:8080/v3/api-docs.yaml -o site/openapi.yaml
@@ -89,13 +90,21 @@ jobs:
       # version at publish time, so each tagged release picks up upstream security fixes
       # (e.g. #611's CVE-2026-65898 DOMPurify issue in springdoc's own vendored swagger-ui
       # assets) automatically rather than shipping a version pinned at authoring time that can
-      # go stale between releases.
+      # go stale between releases. The tradeoff (an unpinned "latest" install is itself a
+      # supply-chain vector) is mitigated by the npm audit gate below, which fails the build
+      # on any high-severity advisory in the resolved version rather than deploying it blind.
       - name: Fetch swagger-ui-dist and assemble site
+        working-directory: backend
         run: |
+          npm install --package-lock-only swagger-ui-dist@latest
+          npm audit --audit-level=high
           npm install --no-save swagger-ui-dist@latest
           cp node_modules/swagger-ui-dist/swagger-ui.css site/
           cp node_modules/swagger-ui-dist/swagger-ui-bundle.js site/
           cp node_modules/swagger-ui-dist/swagger-ui-standalone-preset.js site/
+          test -f site/swagger-ui.css
+          test -f site/swagger-ui-bundle.js
+          test -f site/swagger-ui-standalone-preset.js
           cat > site/index.html <<'HTML'
           <!DOCTYPE html>
           <html lang="en">
