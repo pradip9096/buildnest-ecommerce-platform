@@ -70,12 +70,19 @@ jobs:
             sleep 2
           done
 
+      # Uses the JSON endpoint (/v3/api-docs), not the .yaml variant. SecurityConfig.java's
+      # public-path allowlist matches "/v3/api-docs/**" -- an Ant pattern that covers
+      # /v3/api-docs (no suffix) but NOT /v3/api-docs.yaml (a suffix, not a sub-path) -- so a
+      # request for the .yaml variant falls through to the catch-all anyRequest().authenticated()
+      # and is rejected unauthenticated. Confirmed empirically: a live workflow_dispatch run
+      # against the .yaml path failed with curl exit 22 (HTTP error) despite the app being fully
+      # up (liveness passed). The JSON endpoint works identically as a Swagger UI spec source.
       - name: Fetch OpenAPI spec
         working-directory: backend
         run: |
           mkdir -p site
-          curl -sf http://localhost:8080/v3/api-docs.yaml -o site/openapi.yaml
-          test -s site/openapi.yaml
+          curl -sf http://localhost:8080/v3/api-docs -o site/openapi.json
+          test -s site/openapi.json
 
       - name: Stop backend
         if: always()
@@ -120,7 +127,7 @@ jobs:
             <script>
               window.onload = () => {
                 window.ui = SwaggerUIBundle({
-                  url: "openapi.yaml",
+                  url: "openapi.json",
                   dom_id: "#swagger-ui",
                   presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
                 });
