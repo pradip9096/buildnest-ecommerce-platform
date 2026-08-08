@@ -17,6 +17,16 @@ counts); entries below are not yet split into per-milestone sub-sections — che
 own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs to.
 
 ### Added
+- TOTP-based two-factor authentication (#91, FR-AUTH-12, AUTH-02, M4): `POST
+  /api/user/2fa/enable` generates a TOTP secret and QR code (RFC 6238, via
+  `dev.samstevens.totp`); `POST /api/user/2fa/verify` confirms the code and activates 2FA,
+  returning 8 one-time recovery codes (BCrypt-hashed at rest, shown once); `POST
+  /api/user/2fa/disable` requires a valid TOTP code. Login (`POST /api/auth/login`) now
+  accepts an optional `totpCode` — a 2FA-enabled account with no code returns
+  `twoFactorRequired: true` and issues no tokens/cookies, rather than treating the omission
+  as invalid credentials; a recovery code is also accepted in place of a TOTP code at login.
+  Used `/api/user/2fa/**` (existing `/api/user/**` role convention) over the issue's own
+  unmatched `/api/v1/users/2fa/...` path, per #88's precedent.
 - Order return and refund request flow (#88, FR-CHK-10, RET-01/02/03): `POST
   /api/user/orders/{id}/returns` (customer requests a return within 30 days of delivery — the
   window is enforced from a new `orders.delivered_at` column, set whenever an order transitions

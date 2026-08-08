@@ -42,5 +42,7 @@
     <include file="db/changelog/changes/20260729-031-seed-starter-districts.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260803-001-alter-users-add-gdpr-consent-columns.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/20260807-001-add-delivered-at-to-orders.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260808-001-alter-users-add-totp-columns.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/20260808-002-create-recovery-codes.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

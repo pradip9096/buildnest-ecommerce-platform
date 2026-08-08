@@ -85,8 +85,8 @@ class AuthControllerTest {
         loginRequest.setUsername("testuser");
         loginRequest.setPassword("password123");
 
-        when(authService.login("testuser", "password123"))
-                .thenReturn(new AuthResponse("access-jwt", "refresh-uuid", "Bearer", 1L, "testuser"));
+        when(authService.login(eq("testuser"), eq("password123"), any()))
+                .thenReturn(new AuthResponse("access-jwt", "refresh-uuid", "Bearer", 1L, "testuser", false));
 
         mockMvc.perform(post("/api/auth/login")
                 .with(csrf())
@@ -112,8 +112,8 @@ class AuthControllerTest {
         loginRequest.setUsername("testuser");
         loginRequest.setPassword("password123");
 
-        when(authService.login("testuser", "password123"))
-                .thenReturn(new AuthResponse("access-jwt", "refresh-uuid", "Bearer", 1L, "testuser"));
+        when(authService.login(eq("testuser"), eq("password123"), any()))
+                .thenReturn(new AuthResponse("access-jwt", "refresh-uuid", "Bearer", 1L, "testuser", false));
 
         // /api/auth/login is CSRF-exempt (pre-auth, no session cookie exists yet to forge)
         mockMvc.perform(post("/api/auth/login")
@@ -206,7 +206,7 @@ class AuthControllerTest {
         refreshToken.setUserId(1L);
         when(refreshTokenService.findByToken("refresh-123")).thenReturn(Optional.of(refreshToken));
         when(authService.refreshAccessToken("refresh-123"))
-                .thenReturn(new AuthResponse("new-access", "new-refresh", "Bearer", 1L, "user"));
+                .thenReturn(new AuthResponse("new-access", "new-refresh", "Bearer", 1L, "user", false));
 
         mockMvc.perform(post("/api/auth/refresh")
                 .with(user("test").roles("USER"))

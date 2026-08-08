@@ -279,6 +279,12 @@
 			<artifactId>resilience4j-timelimiter</artifactId>
 			<version>2.1.0</version>
 		</dependency>
+		<!-- Issue #91 (AUTH-02): TOTP-based 2FA — RFC 6238 secret generation/verification + QR provisioning -->
+		<dependency>
+			<groupId>dev.samstevens.totp</groupId>
+			<artifactId>totp</artifactId>
+			<version>1.7.1</version>
+		</dependency>
 
 		<!-- Spring Boot Cache support -->
 		<dependency>

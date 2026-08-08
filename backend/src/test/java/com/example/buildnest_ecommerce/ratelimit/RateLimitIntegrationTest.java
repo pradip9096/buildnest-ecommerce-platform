@@ -79,8 +79,8 @@ class RateLimitIntegrationTest {
     @Test
     @DisplayName("TC-RL-001: Login within rate limit returns 200")
     void loginWithinRateLimitReturns200() throws Exception {
-        when(authService.login(anyString(), anyString()))
-                .thenReturn(new AuthResponse("token", "refresh", "Bearer", 1L, "testuser"));
+        when(authService.login(anyString(), anyString(), any()))
+                .thenReturn(new AuthResponse("token", "refresh", "Bearer", 1L, "testuser", false));
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

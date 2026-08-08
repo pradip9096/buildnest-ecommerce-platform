@@ -13,7 +13,8 @@ public class AuthResponse {
     private String tokenType;
     private Long userId;
     private String username;
-    
+    private boolean twoFactorRequired;
+
     public AuthResponse(String accessToken) {
         this.accessToken = accessToken;
         this.tokenType = "Bearer";

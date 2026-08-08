@@ -25,7 +25,8 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(exclude = { "roles", "addresses", "district", "createdAt",
-        "updatedAt", "deletedAt", "lastLogin", "consentAt", "anonymizedAt" })
+        "updatedAt", "deletedAt", "lastLogin", "consentAt", "anonymizedAt",
+        "totpSecret", "totpEnabledAt" })
 @ToString(exclude = { "roles", "addresses", "district" })
 public class User implements AggregateRoot {
     @Id
@@ -84,6 +85,19 @@ public class User implements AggregateRoot {
     // idempotency guard so re-runs skip already-processed rows.
     @Column(name = "anonymized_at")
     private LocalDateTime anonymizedAt;
+
+    // TOTP 2FA (#91, AUTH-02). Base32 secret — never exposed via Jackson;
+    // an identity claim only, mirroring the JWT-payload rule in
+    // spring-security.md (never carry secrets/roles further than needed).
+    @JsonIgnore
+    @Column(name = "totp_secret")
+    private String totpSecret;
+
+    @Column(name = "totp_enabled", nullable = false)
+    private Boolean totpEnabled = false;
+
+    @Column(name = "totp_enabled_at")
+    private LocalDateTime totpEnabledAt;
 
     // jpa-rule-exception: roles is jpa.md's own named EAGER exception —
     // a small, bounded collection always needed with the parent user
