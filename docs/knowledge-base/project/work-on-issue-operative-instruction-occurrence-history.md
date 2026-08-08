@@ -142,6 +142,24 @@ ESLint/any CI linter — not an exhaustive whitelist).
   was cleaned up via a genuine re-run of the grep; the other two are open, tracked as a follow-up
   investigation) — → No prompt-text change made; this occurrence's real lesson is that the
   enforcement layer itself now needs auditing, not another prose reword of the rule it enforces.
+- **#113** — the mechanical gate (`recurrence-scan-quote-gate.sh`) requires each distinct slug's real
+  matched-line substring to appear somewhere in the closing description, with no per-line/no-
+  aggregation requirement at all — but the prose instruction's stricter one-bullet-per-slug rule was
+  pure ceremony layered on top of that, disproportionate once a file accumulates 20+ tagged slugs.
+  → Added a batching exception: slugs that are **all** clearly, topically irrelevant to the current
+  issue may be grouped into one combined dismissal sentence, provided each one's real matched-line
+  substring is still quoted verbatim somewhere in that sentence — never for a slug that's even
+  plausibly relevant, give that its own line.
+- **#126** — even with the batching exception available, the scan needed 3 attempts to satisfy the
+  gate: attempt 1 quoted slug names only, without matched-line substrings; attempt 2 quoted
+  substrings but the gate reported `work-on-issue.md`/`retro-issue.md` legs "not confirmed run this
+  session" (no session marker despite the grep having actually been run) until the exact commands
+  were re-run as their own dedicated Bash calls; attempt 3 (with markers fresh and substrings quoted
+  exactly per the gate's own error-message snippets) finally passed. The underlying scan work was
+  correct from attempt 1 — only the artifact format took 3 tries. **Not a new finding** (matches the
+  already-documented "artifact-shaped requirements are hard to satisfy blind" pattern this section's
+  many prior entries already establish); logged as continuing evidence for future proportionality
+  review of this tag's escalation tier, not a new gap.
 - **#364** — both legs were run and the full grep output was cited in the chat response (all 3
   files), and the wiki-lessons leg correctly surfaced and fully read an on-topic lesson
   (`docker-build-success-proves-nothing-about-container-startup.md`), directly informing a real
