@@ -17,6 +17,17 @@ counts); entries below are not yet split into per-milestone sub-sections — che
 own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs to.
 
 ### Added
+- Publish generated OpenAPI 3.1 spec to GitHub Pages (#127, MNT-07, M5): new
+  `.github/workflows/publish-api-docs.yml`, triggered on every `v*` release tag (plus manual
+  dispatch) — boots the backend against H2 (real security config, no `test` profile; same
+  proven pattern as `ci-cd-pipeline.yml`'s load-test job, #123/#631), fetches the live
+  `/v3/api-docs.yaml` spec, assembles a static Swagger UI site via `swagger-ui-dist` (gated by
+  `npm audit --audit-level=high` before publishing), and deploys it to GitHub Pages via
+  `actions/deploy-pages`. GitHub Pages enabled for the repo (`build_type: workflow`) via the REST
+  API, publishing at `https://pradip9096.github.io/buildnest-ecommerce-platform/`. The issue's own
+  "SRS NFR-MAINT-01" citation referenced an ID that did not exist at filing time (this SRS section
+  uses the `MNT-*` prefix) — adopted `MNT-07` instead; see SRS/RTM revision history for the full
+  reasoning.
 - Production operations runbook (#126, OPS-08, M5): `docs/SDLC-docs/operations/runbook.md`
   covers startup/shutdown, health check validation, database backup/restore, log retrieval,
   common alert responses, and rollback, each with prerequisites/commands/expected-output/

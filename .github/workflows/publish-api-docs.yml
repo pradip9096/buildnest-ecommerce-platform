@@ -1,0 +1,151 @@
+name: Publish API Docs
+
+# #127 (API-DOC-01): publishes the generated OpenAPI 3.1 spec to GitHub Pages via Swagger UI,
+# automated on every release tag push. Separate workflow file rather than a job inside
+# deploy.yml (see .github/workflows/*.yml's Workflow File Responsibilities table in
+# development-workflow.md) — this is a docs-publish concern, not an app-deploy concern, and
+# keeping it isolated means a Pages publish failure never blocks or gets blocked by the real
+# production deploy path.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: '21'
+  JAVA_DISTRIBUTION: 'temurin'
+
+jobs:
+  generate-spec:
+    name: Generate OpenAPI Spec
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+
+      - name: Grant execute permissions to mvnw
+        working-directory: backend
+        run: chmod +x ./mvnw
+
+      # Same proven pattern as ci-cd-pipeline.yml's "Start application (in-memory H2, real
+      # security config)" step (#123/#631): does NOT activate Spring's `test` profile (that
+      # strips SecurityConfig via @Profile("!test") with no substitute AuthenticationManager
+      # outside a real @SpringBootTest context) -- H2 + property overrides + useTestClasspath
+      # instead, no external MySQL/Redis/ES dependency needed just to serve /v3/api-docs.
+      - name: Start backend (H2, real security config)
+        working-directory: backend
+        run: |
+          JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n')
+          ARGS="--server.port=8080 --spring.datasource.url=jdbc:h2:mem:apidocsdb --spring.datasource.username=sa --spring.datasource.password= --spring.datasource.driver-class-name=org.h2.Driver --spring.jpa.hibernate.ddl-auto=create-drop --spring.sql.init.mode=never --spring.liquibase.default-schema=PUBLIC --spring.jpa.properties.hibernate.default_schema=PUBLIC --elasticsearch.enabled=false --jwt.secret=${JWT_SECRET} --razorpay.key.id=test_key_id --razorpay.key.secret=test_key_secret --razorpay.webhook.secret=test_webhook_secret"
+          nohup ./mvnw spring-boot:run \
+            -Dspring-boot.run.useTestClasspath=true \
+            -Dspring-boot.run.arguments="$ARGS" \
+            > app.log 2>&1 &
+          echo "Waiting for application to become ready..."
+          # Same rationale as #123's ci-cd-pipeline.yml fix: /actuator/health/liveness, not
+          # /readiness -- Redis is deliberately unreachable in this stripped-down runner, so
+          # the readiness group would stay DOWN forever even though the app is fully serving.
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8080/actuator/health/liveness > /dev/null; then
+              echo "Application is up."
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "Application did not become ready in time:"
+              cat app.log
+              exit 1
+            fi
+            sleep 2
+          done
+
+      - name: Fetch OpenAPI spec
+        working-directory: backend
+        run: |
+          mkdir -p site
+          curl -sf http://localhost:8080/v3/api-docs.yaml -o site/openapi.yaml
+          test -s site/openapi.yaml
+
+      - name: Stop backend
+        if: always()
+        run: pkill -f spring-boot:run || true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # swagger-ui-dist is intentionally unpinned -- always resolves the latest published
+      # version at publish time, so each tagged release picks up upstream security fixes
+      # (e.g. #611's CVE-2026-65898 DOMPurify issue in springdoc's own vendored swagger-ui
+      # assets) automatically rather than shipping a version pinned at authoring time that can
+      # go stale between releases. The tradeoff (an unpinned "latest" install is itself a
+      # supply-chain vector) is mitigated by the npm audit gate below, which fails the build
+      # on any high-severity advisory in the resolved version rather than deploying it blind.
+      - name: Fetch swagger-ui-dist and assemble site
+        working-directory: backend
+        run: |
+          npm install --package-lock-only swagger-ui-dist@latest
+          npm audit --audit-level=high
+          npm install --no-save swagger-ui-dist@latest
+          cp node_modules/swagger-ui-dist/swagger-ui.css site/
+          cp node_modules/swagger-ui-dist/swagger-ui-bundle.js site/
+          cp node_modules/swagger-ui-dist/swagger-ui-standalone-preset.js site/
+          test -f site/swagger-ui.css
+          test -f site/swagger-ui-bundle.js
+          test -f site/swagger-ui-standalone-preset.js
+          cat > site/index.html <<'HTML'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <title>BuildNest API Documentation</title>
+            <link rel="stylesheet" href="swagger-ui.css">
+          </head>
+          <body>
+            <div id="swagger-ui"></div>
+            <script src="swagger-ui-bundle.js"></script>
+            <script src="swagger-ui-standalone-preset.js"></script>
+            <script>
+              window.onload = () => {
+                window.ui = SwaggerUIBundle({
+                  url: "openapi.yaml",
+                  dom_id: "#swagger-ui",
+                  presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+                });
+              };
+            </script>
+          </body>
+          </html>
+          HTML
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: backend/site
+
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    needs: generate-spec
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
