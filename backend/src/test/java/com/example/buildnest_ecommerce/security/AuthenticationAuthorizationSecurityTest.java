@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -31,6 +32,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.servlet.http.HttpServletRequest;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -69,6 +76,9 @@ class AuthenticationAuthorizationSecurityTest {
 
         @Autowired
         private JwtTokenProvider jwtTokenProvider;
+
+        @Value("${jwt.secret}")
+        private String jwtSecret;
 
         @MockitoBean
         private RateLimitUtil rateLimitUtil;
@@ -201,11 +211,36 @@ class AuthenticationAuthorizationSecurityTest {
         @Test
         @DisplayName("TC-SEC-003: Expired JWT tokens are rejected")
         void testJWTTokenExpiration() throws Exception {
-                // Create an expired token (simulate by using invalid token)
+                // Malformed/invalid-signature token — proves the parser rejects a
+                // structurally invalid token, distinct from a genuinely expired one below.
                 String expiredToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsImlhdCI6MTYwMDAwMDAwMCwiZXhwIjoxNjAwMDAwOTAwfQ.invalid";
 
                 mockMvc.perform(get("/api/user/profile")
                                 .header("Authorization", "Bearer " + expiredToken))
+                                .andExpect(status().isUnauthorized());
+        }
+
+        // #113 (SEC-04, AC3): a token that is validly signed with the real test
+        // secret but whose expiry has already passed must still be rejected with
+        // 401 through the real JwtAuthenticationFilter -> validateToken path
+        // (ExpiredJwtException), not just a token with a broken signature.
+        @Test
+        @DisplayName("TC-SEC-003b: Genuinely expired (validly-signed) JWT is rejected with 401")
+        void testGenuinelyExpiredValidlySignedJwtIsRejected() throws Exception {
+                SecretKey signingKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+
+                Date issuedAt = new Date(System.currentTimeMillis() - 120_000);
+                Date expiredAt = new Date(System.currentTimeMillis() - 60_000);
+
+                String expiredButValidlySignedToken = Jwts.builder()
+                                .subject(testUser.getUsername())
+                                .issuedAt(issuedAt)
+                                .expiration(expiredAt)
+                                .signWith(signingKey)
+                                .compact();
+
+                mockMvc.perform(get("/api/user/profile")
+                                .header("Authorization", "Bearer " + expiredButValidlySignedToken))
                                 .andExpect(status().isUnauthorized());
         }
 
