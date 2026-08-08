@@ -10,13 +10,13 @@
 | :--- | :--- |
 | **Document Title** | Test Plan |
 | **Document ID** | TP-BUILDNEST-001 |
-| **Version** | 4.13 |
+| **Version** | 4.14 |
 | **Date** | 2026-08-02 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29119-3:2021 |
-| **Related SRS** | SRS-BUILDNEST-001 v5.14 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
-| **Related SDD** | SDD-BUILDNEST-001 v4.20 (docs/SDLC-docs/design/software-design-description.md) |
+| **Related SRS** | SRS-BUILDNEST-001 v5.15 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
+| **Related SDD** | SDD-BUILDNEST-001 v4.21 (docs/SDLC-docs/design/software-design-description.md) |
 | **Supersedes** | TP v3.0 (archive/docs/ISO-IEC-IEEE/Test_Plan_IEEE_29119.md, 2026-02-11) |
 
 ---
@@ -44,6 +44,7 @@
 | 4.11 | 2026-08-02 IST | Test Manager | #651: §17.2's Product Catalog test-class list (FR-PROD-01 to FR-PROD-07) extended with `ProductServiceRedisCacheRoundTripIntegrationTest`, the new regression test for `ProductServiceImpl#getProductById`'s `@Cacheable` cache-hit corruption bug. §17.2's aggregate Total-test-files/Total-test-executions figures were left as-is (last periodic-sync snapshot 2026-07-30) — this issue adds one test class, not a full re-sync; genuinely re-measured at the next 15-issue periodic sync per this document's own established cadence | Pending |
 | 4.12 | 2026-08-08 IST | Test Manager | #108 (OBS-02): added `TracingWiringIntegrationTest`, a real-context `@SpringBootTest` asserting a genuine `OtelTracer` bean (not a mocked no-op fallback) — a framework-autoconfiguration risk per this document's testing-type tier guidance — tracing to the new OBS-02 requirement (SRS §3.8.9 / RTM §7.10). §17.2's aggregate Total-test-files/Total-test-executions figures left as-is per this document's own established one-class-doesn't-trigger-a-full-resync cadence (4.11). Updated `Related SRS`/`Related SDD` (v5.8/v4.13 → v5.14/v4.19, both had drifted several versions behind) | Pending |
 | 4.13 | 2026-08-08 IST | Test Manager | #113 (mis-cited as SEC-04 at filing — actually maps to FR-AUTH-03/FR-AUTH-06, see RTM v1.58): extended §17's Security test-class table row "Token rotation" with `AuthApiTest` (new `testRefreshTokenRotationRevokesOldToken`, real e2e rotate-then-reuse-rejected flow). Also noted, but not fixed here (filed as a separate follow-up): §17's own "Sensitive data exposure" row cites "SEC-04" for password/PII-log-masking, which is a third, different meaning for that ID — SRS/RTM's actual SEC-04 is CSRF configuration. Updated `Related SDD` (v4.19 → v4.20) | Pending |
+| 4.14 | 2026-08-08 IST | Test Manager | #123 (OBS-05): added `ElasticsearchHealthIndicatorTest` (unit, mocked `ElasticsearchClient`) and `HealthEndpointIntegrationTest` (real-context `@SpringBootTest`, framework/auto-configuration risk per this document's testing-type tier guidance — proves Spring Boot actually assembled the `readiness` health group per `management.endpoint.health.group.readiness.include`, which a mocked test can't observe) tracing to the new OBS-05 requirement (SRS §3.8.9 / RTM §7.10). §17.2's aggregate figures left as-is per the established one-class-doesn't-trigger-a-full-resync cadence (4.11). Updated `Related SRS`/`Related SDD` (v5.14/v4.20 → v5.15/v4.21) | Pending |
 
 ### Document Approval
 

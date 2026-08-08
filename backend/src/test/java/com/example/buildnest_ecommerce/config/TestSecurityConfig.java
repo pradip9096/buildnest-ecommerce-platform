@@ -176,7 +176,8 @@ public class TestSecurityConfig {
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         // Actuator endpoints - health is public, others require ADMIN
-                        .requestMatchers("/actuator/health").permitAll()
+                        // #123: /** so readiness/liveness sub-paths match SecurityConfig
+                        .requestMatchers("/actuator/health/**").permitAll()
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
                         // Admin endpoints (legacy /api/admin/** and versioned /api/v1/admin/**)
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

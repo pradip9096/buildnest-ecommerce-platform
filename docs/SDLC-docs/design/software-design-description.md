@@ -10,12 +10,12 @@
 | :--- | :--- |
 | **Document Title** | Software Design Description (SDD) |
 | **Document ID** | SDD-BUILDNEST-001 |
-| **Version** | 4.20 |
+| **Version** | 4.21 |
 | **Date** | 2026-08-08 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 1016:2017 |
-| **Related SRS** | SRS-BUILDNEST-001 v5.8 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
+| **Related SRS** | SRS-BUILDNEST-001 v5.15 (docs/SDLC-docs/requirement-engineering/software-requirements-specification.md) |
 | **Supersedes** | SDD v2.0 (archive/docs/ISO-IEC-IEEE/SDD_IEEE_1016_2017.md, 2026-02-11) |
 
 ---
@@ -57,6 +57,7 @@
 | 4.18 | 2026-08-07 IST | Software Architect | #88 (FR-CHK-10, RET-01/02/03): added two new §4.7.3 endpoint groups — `POST /api/user/orders/{id}/returns` (`UserOrderController`) and Admin Return Management (`AdminReturnController`, base `/api/v1/admin/returns`, `GET`/`PATCH .../{id}/status`). Deliberately used `/api/user/orders/{id}/returns` rather than the issue's own literally-cited `/api/v1/users/orders/{id}/returns` — no `/api/v1/users/**` pattern exists anywhere in `SecurityConfig` or any controller, so the existing `/api/user/**` convention was followed instead of introducing a fourth, one-off URL scheme | Pending |
 | 4.19 | 2026-08-08 IST | Software Architect | #108 (OBS-02): added a "Tracing" row to §4.4's Dependency View table (`micrometer-tracing-bridge-otel` + `opentelemetry-exporter-otlp`, exported to Grafana Tempo, see ADR-0004). Adopted "OBS-02" rather than the issue body's stale "SRS NFR-OPS-04" citation — "OPS-01"/"OPS-02" were already informally claimed by this document's own #119/#120 revision notes for unrelated deployment-topology work, so reusing them here would have created a real ID collision on top of the usual stale-citation gap; "OBS-02" instead matches the domain code #108's own GitHub issue title carries, consistent with sibling issues #107 (OBS-01) and #109 (OBS-03) — see SRS §3.8.9 for the full reasoning. Updated `Related SRS` from v5.8 to v5.14 (had drifted several versions behind; corrected to current in this same pass) | Pending |
 | 4.20 | 2026-08-08 IST | Software Architect | #113 (SEC-04): §4.9's Refresh Token state diagram was accurate but silent on access-token behavior at logout, which the issue's own AC4 (mis)assumed was backed by a blacklist. Added a clarifying paragraph after the diagram: logout revokes only the refresh token; the access token in circulation stays valid until its own 15-min natural expiry — no access-token denylist exists in the codebase, confirmed by direct grep of `security/`/`service/token/`. Documented as the standard stateless-JWT tradeoff rather than a gap, per user decision during #113 | Pending |
+| 4.21 | 2026-08-08 IST | Software Architect | #123 (OBS-05): added `/actuator/health/readiness` and `/actuator/health/liveness` rows to §4.7.3's Actuator and Monitoring Endpoints table (both public, 100/min, tracing to the new OBS-05 requirement) — these sub-paths already existed structurally (`management.endpoint.health.probes.enabled=true`) but were never documented as their own endpoint rows, only the bare `/actuator/health` parent. Also found and fixed a stale `Related SRS` header field (line 18): 4.19's own entry claimed it was updated v5.8→v5.14, but the header itself still read v5.8 — a self-contradiction within this document's own revision history, the same cross-reference-mesh drift class already documented elsewhere in this log. Corrected directly to real current v5.15 | Pending |
 | 4.5 | 2026-07-26 09:00 IST | Software Architect | Final sub-issue of #557/FR-SEL-06: added `SellerOrderController`/`OrderServiceImpl`'s new seller-scoped list/detail/status methods, using a new `OrderRepository.findBySellerId`/`findByIdAndSellerId` `EXISTS`-subquery (`Order` has no direct seller reference; ownership derived transitively via `OrderItem.product.seller`) — mirrors #555's `SellerProductController`/#556's `SellerInventoryController` ownership-scoping pattern. All three FR-SEL-06 sub-issues (#578/#579/#580) now closed. **Not addressed in this revision**: §4.7.3's API Endpoint Catalogue does not yet list any of the three sellers' controllers (`SellerProductController`/`SellerInventoryController`/`SellerOrderController`) — this gap was already surfaced and filed as its own follow-up (#576) during #556's closure; not duplicated here | Pending |
 
 ### Document Approval
@@ -1190,6 +1191,8 @@ other `/actuator/**` path requires `ROLE_ADMIN` via the main filter chain.
 | Method | Path | Auth | Rate Limit | SRS Req |
 | :--- | :--- | :--- | :--- | :--- |
 | GET | `/actuator/health` | Public | 100 / min | FR-MON-01 |
+| GET | `/actuator/health/readiness` | Public | 100 / min | OBS-05 |
+| GET | `/actuator/health/liveness` | Public | 100 / min | OBS-05 |
 | GET | `/actuator/prometheus` | Basic Auth (dedicated monitoring credential) | 100 / min | FR-MON-05 |
 | GET | `/actuator/info` | Public | 100 / min | FR-MON-01 |
 | GET | `/actuator/metrics` | ADMIN | 100 / min | FR-MON-05 |
