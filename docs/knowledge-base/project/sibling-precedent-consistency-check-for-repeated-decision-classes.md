@@ -78,9 +78,9 @@ currently mandatory for every `solution-options-adr` step.
 ## Documented Edge Cases
 
 The base check ("search for a prior instance of the same decision class, match its process
-unless there's a stated reason not to") has accumulated eight documented edge cases, each
+unless there's a stated reason not to") has accumulated nine documented edge cases, each
 surfaced by a real issue where the base check's plain wording didn't obviously cover the
-situation encountered. Numbered first-through-eighth in discovery order; `development-workflow.md`
+situation encountered. Numbered first-through-ninth in discovery order; `development-workflow.md`
 step 8 (`solution-options-adr`)'s own Notes cell keeps only a one-line pointer to this section —
 this is the operative content when applying the check.
 
@@ -148,6 +148,24 @@ applied, not just cited as "found." On #650, the matched lesson's body stated th
 verbatim across 3 separate re-greps, but only the index description was ever read — the wrong
 assumption was caught only by a live test failure, not by this check. See `work-on-issue.md`'s
 `[defect-class: wiki-second-leg-not-regrepped]` paragraph for the matching seeding-side fix.
+
+**Ninth case, distinct from all eight** (confirmed on #108): the decision isn't architectural at
+all — it's *which SRS/RTM requirement ID and documentation pattern to adopt* when a new requirement
+ID is picked from an informal sibling series (e.g. issue titles carrying a shared domain code like
+`OBS-01`/`OBS-02`/`OBS-03`). The base check's other eight cases all frame "precedent" as a design
+or process decision; this case is about whether prior siblings in the same informal series already
+established *how that series gets documented* (which SRS section, which RTM table, what row
+format) — a distinct question from whether they made the same architectural choice. On #108, the
+ID-naming precedent was checked (matching sibling issue titles), but whether #107/#109 had already
+established an SRS/RTM documentation pattern for the `OBS-*` series was never explicitly checked at
+the time — verified after the fact (neither #107 nor #109 added any `OBS-01`/`OBS-03` row to
+SRS/RTM, and neither has a traceable merged PR), so no real precedent existed either way; the
+outcome was the same as if the check had been run, but only by luck, not by having actually run it.
+When adopting a new requirement ID from an informal sibling series, explicitly check (and state the
+result) whether any sibling in that series already established a documentation pattern to match —
+same rigor as the other eight cases: state which of "matched an existing pattern," "diverged with a
+stated reason," or "no evaluable precedent existed" applies, don't let it go unstated just because
+the ID-naming precedent was already checked separately.
 
 **A related but distinct risk — SonarCloud duplication** (confirmed on #558): mirroring a sibling
 closely (per the first or fifth case above) can itself trip SonarCloud's new-code duplication
