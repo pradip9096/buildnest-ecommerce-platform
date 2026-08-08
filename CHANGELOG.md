@@ -72,6 +72,15 @@ own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs 
   `docs/operations/secrets-rotation-procedure.md` documenting where every production secret
   lives and the rotation procedure for each, including `JWT_SECRET`'s zero-downtime rollover via
   `JWT_SECRET_PREVIOUS`.
+- JWT access-token lifetime and refresh-token rotation verified with real end-to-end coverage
+  (#113, FR-AUTH-03/FR-AUTH-06, M5): `jwt.expiration` was already configurable/documented
+  (`.env.example`, 15-min default) — the real gap was test coverage. Added a genuine
+  validly-signed-but-expired-JWT rejection test through the real Spring Security filter chain
+  (the pre-existing test only used a malformed-signature token) and a real e2e refresh-token
+  rotation test (register → login → rotate → old token rejected on reuse → new token works, no
+  mocks). Documented in the SDD that logout only revokes the refresh token by design — there is
+  no access-token blacklist/denylist; an already-issued access token stays valid until its own
+  15-minute natural expiry, a deliberate stateless-JWT tradeoff, not a gap.
 
 ### Fixed
 - `backend/Dockerfile` hardened to match OPS-06's production-Dockerfile acceptance criteria:
