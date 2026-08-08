@@ -338,9 +338,9 @@ class AuthenticationAuthorizationSecurityTest {
                                 }
                                 """;
 
-                when(authService.login("testuser", "TestPassword123!"))
+                when(authService.login(eq("testuser"), eq("TestPassword123!"), any()))
                                 .thenReturn(new AuthResponse("access-token", "refresh-token", "Bearer",
-                                                testUser.getId(), testUser.getUsername()));
+                                                testUser.getId(), testUser.getUsername(), false));
 
                 // Tokens travel as httpOnly cookies (SEC-15), never in the JSON body —
                 // verify they're set as cookies and absent from the response body.

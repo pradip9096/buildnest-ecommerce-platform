@@ -297,7 +297,6 @@ class AuthServiceImplTest {
         Authentication authentication = mock(Authentication.class);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
-        when(jwtTokenProvider.generateToken(authentication)).thenReturn("jwt-token");
         when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.login(username, "pass"));

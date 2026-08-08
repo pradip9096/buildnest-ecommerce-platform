@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 5.12 |
-| **Date** | 2026-08-07 IST |
+| **Version** | 5.13 |
+| **Date** | 2026-08-08 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -51,6 +51,7 @@
 | 5.10 | 2026-08-01 IST | Technical Lead | Updated the Testing Frameworks table's E2E Testing row: added Playwright 1.62 (#117, `frontend/e2e/`) as the frontend-owned E2E tool per ADR 0002; the pre-existing Selenium WebDriver 4.16 row marked "being retired" pending #647 | Pending |
 | 5.11 | 2026-08-03 IST | Technical Lead | Added §3.8.4 Compliance (COMP-01–03: GDPR right-to-access data export, right-to-erasure with 30-day anonymization retention, registration consent capture) for #128 — the issue's own "SRS NFR-COMP-01 to NFR-COMP-03" citation referenced a range that did not exist at filing time, same filing-time traceability-mismatch shape as SEC-15/SEC-16 (#111/#112). Renumbered §3.8.4–3.8.7 (Maintainability/Portability/Scalability) to §3.8.5–3.8.8 to make room. Updated the Coverage Summary Totals row (Non-Functional 61→64, Grand Total 156→159) | Pending |
 | 5.12 | 2026-08-07 IST | Technical Lead | Added FR-CHK-10 (§3.2.4) — order return and refund request flow (RET-01/02/03, #88): user-initiated return within 30 days of delivery, admin approve/reject, approval triggers refund + inventory restoration. The issue's own "SRS RET-01 to RET-03" citation referenced a range that did not exist at filing time (same filing-time traceability-mismatch shape as SEC-15/COMP-01, #111/#128). Updated §4.2's Checkout aggregate row (9→10 requirements, 3→4 Medium) and the Coverage Summary Totals row (Total Functional 99→100, Grand Total 159→160) | Pending |
+| 5.13 | 2026-08-08 IST | Technical Lead | Added FR-AUTH-12 (§3.2.1) — optional TOTP-based 2FA (RFC 6238): QR provisioning, TOTP login verification, 8 one-time recovery codes, TOTP-verified disable (#91, AUTH-02). The issue's own "SRS AUTH-10" citation referenced an existing, unrelated requirement (BCrypt password hashing) rather than a stale/nonexistent range — same filing-time traceability-mismatch shape as SEC-15/COMP-01/RET-01, but a wrong-target citation rather than a wrong-range one. Updated §4.2's Authentication aggregate row (FR-AUTH-01–11→01–12, 11→12 requirements, 9→10 High) and the Coverage Summary Totals row (Total Functional 100→101, Grand Total 160→161) | Pending |
 
 ### Document Change Procedure
 
@@ -504,6 +505,7 @@ This system has no direct hardware interfaces. It runs as a containerised applic
 | FR-AUTH-09 | The system shall enforce role-based access control (RBAC) with roles: `USER` and `ADMIN` | High | Ph-1 | Test |
 | FR-AUTH-10 | The system shall hash passwords using BCrypt with a minimum of 10 rounds | High | Ph-1 | Inspection |
 | FR-AUTH-11 | The system shall support OAuth2 client integration (Google, GitHub) | Medium | Ph-2 | Test |
+| FR-AUTH-12 | The system shall support optional TOTP-based two-factor authentication (RFC 6238): QR-code provisioning, TOTP verification at login, 8 one-time recovery codes, and TOTP-verified disable | High | Ph-2 | Test |
 
 #### 3.2.2 Product Catalogue Management (FG-02)
 
@@ -956,7 +958,7 @@ Test integrity requirements define the properties that the test suite itself mus
 
 | Requirement Group | Count | Phase | Priority Distribution | Verification |
 | :--- | :--- | :--- | :--- | :--- |
-| Authentication (FR-AUTH-01–11) | 11 | Ph-1 / Ph-2 | 9 High, 2 Medium | Test, Inspection |
+| Authentication (FR-AUTH-01–12) | 12 | Ph-1 / Ph-2 | 10 High, 2 Medium | Test, Inspection |
 | Product Catalogue (FR-PROD-01–09) | 9 | Ph-1 | 3 High, 4 Medium, 2 Low | Test, Inspection |
 | Shopping Cart (FR-CART-01–06) | 6 | Ph-1 | 5 High, 1 Medium | Test, Inspection |
 | Checkout (FR-CHK-01–10) | 10 | Ph-1 / Ph-2 | 6 High, 4 Medium | Test |
@@ -966,7 +968,7 @@ Test integrity requirements define the properties that the test suite itself mus
 | Admin Operations (FR-ADM-01–11) | 11 | Ph-1 / Ph-2 | 2 High, 8 Medium, 1 Low | Test |
 | Monitoring (FR-MON-01–08) | 8 | Ph-1 / Ph-2 | 3 High, 3 Medium, 2 Low | Test, Inspection |
 | Frontend (FR-FE-01–31) | 31 | Ph-2 | 16 High, 12 Medium, 3 Low | Test, Inspection, Demonstration |
-| **Total Functional** | **100** | | | |
+| **Total Functional** | **101** | | | |
 | Usability (UR-01–05, UR-FE-01–03) | 8 | Ph-1 / Ph-2 | Mixed | Test, Inspection |
 | Performance (PR-01–08) | 8 | Ph-1 / Ph-2 | 4 High, 3 Medium, 1 Low | Analysis, Inspection |
 | Reliability (REL-01–05) | 5 | Ph-1 / Ph-2 | Mixed | Analysis, Inspection |
@@ -979,7 +981,7 @@ Test integrity requirements define the properties that the test suite itself mus
 | Safety (SAF-01–03) | 3 | Ph-1 / Ph-2 | High | Test |
 | Test Integrity (TIR-01–05) | 5 | Ph-1 / Ph-2 | 2 High, 3 Medium | Build, Inspection |
 | **Total Non-Functional** | **64** | | | |
-| **Grand Total** | **160** | | | |
+| **Grand Total** | **161** | | | |
 | Seller & Marketplace (FR-SEL-01–08) *(Ph-3, Planned — excluded from Grand Total above)* | 8 | Ph-3 | 6 High, 2 Medium | 1 Implemented (#553), 7 Not started |
 | Location-Based Matching (FR-LOC-01–04) *(Ph-3, complete — excluded from Grand Total above)* | 4 | Ph-3 | 4 High | 4 Implemented (#562, #563, #564) |
 

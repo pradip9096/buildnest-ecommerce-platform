@@ -17,4 +17,9 @@ public class LoginRequest {
     @NotBlank(message = "Password is required")
     @Schema(example = "Str0ngP@ssw0rd!123")
     private String password;
+
+    // Only required when the account has TOTP 2FA enabled (#91, AUTH-02);
+    // omitted/blank on a 2FA-enabled account yields twoFactorRequired=true.
+    @Schema(example = "123456")
+    private String totpCode;
 }

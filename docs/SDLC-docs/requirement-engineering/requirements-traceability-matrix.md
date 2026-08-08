@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Requirements Traceability Matrix (RTM) |
 | **Document ID** | RTM-BUILDNEST-001 |
-| **Version** | 1.55 |
-| **Date** | 2026-08-07 IST |
+| **Version** | 1.56 |
+| **Date** | 2026-08-08 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 §6.2.5 (Traceability) |
@@ -46,6 +46,7 @@
 | 1.53 | 2026-08-05 IST | QA Manager | SEC-12 (JWT rotation) corrected from 🟡 Partial to ✅ Implemented, SEC-13 (DB password rotation) corrected from 🔵 Pending Ph-2 to ✅ Implemented (#132, CFG-01): added `docs/operations/secrets-rotation-procedure.md` as the "Operational runbook" both rows' Test Method column previously cited but never linked to a real file — documents where every secret lives, minimum-strength requirements, and rotation steps at the exact 90-day/180-day cadence SEC-12/SEC-13 specify. Also removed a dead, fully-commented-out `backend/docker-compose.yml` block with a hardcoded plaintext password (recoverable from git history, treated as compromised) and documented a real gap an agent-based review pass caught: `docker-compose.yml`'s `MONITORING_PASSWORD` Compose-level fallback default is only caught by `SecurityConfig`'s in-app fail-fast, not prevented at the Compose layer itself. The issue's own acceptance criteria cited "Stripe keys" — this repo has no Stripe integration (Razorpay only); treated as a stale/typo reference to Razorpay per user confirmation. Recomputed the Security (SEC) Coverage Summary row (12→14 Implemented, 1→0 Partial, 3→2 Pending) and the Coverage Summary Totals row (141→143 Implemented, 15→14 Partial, 44→43 Pending). Also recomputed §12 Phase 2 Security row (Started 2→4, Not Started 3→1) and Phase 2 total (Started 40→42, Not Started 41→39) | Pending |
 | 1.54 | 2026-08-07 IST | QA Manager | PRT-01's citation text extended (status stays ✅ Implemented, no count change): #364's own AC1/AC2 (fix the stale `COPY` glob, confirm the container starts) were already satisfied by #124's fix cited in row 1.51 — #364 was filed 2026-07-12, before that fix landed, so its premise was partially stale by the time it was picked up. Its remaining, genuinely open AC3 ("confirm no other Dockerfile/CI reference still uses the old `civil-ecommerce` naming") was completed: `backend/README.md`, `kubernetes-deployment-optimized.yaml`, `ElasticsearchMetricsCollectorService`'s `spring.application.name` default, `data.sql`'s seed admin email, `application-test.properties`, and `.github/workflows/security.yml`'s OWASP project label all corrected; live-verified via a fresh `docker build`+`docker run` against real MySQL/Redis that `app.jar` starts and reaches Spring context init (the #124 `COPY` fix holds). A separate, out-of-scope finding — the `@SpringBootApplication` main class `CivilEcommerceApplication`/`CivilEcommerceApplicationTests` is also still stale-named, cited by this RTM's own `FR-SEL-07` row (1.34) — was filed as follow-up #690 rather than folded in here, since renaming the main class is a materially larger/riskier change | Pending |
 | 1.55 | 2026-08-07 IST | QA Manager | Added FR-CHK-10 (#88, order return and refund request flow — RET-01/02/03) — correcting the issue's own stale "SRS RET-01 to RET-03" citation (no such IDs existed at filing time), same filing-time traceability-mismatch shape as SEC-15/COMP-01. ✅ Implemented: `UserOrderController.createReturnRequest()`, `AdminReturnController`, `ReturnServiceImpl` (ownership check, 30-day return-window enforcement from a new `Order.deliveredAt` column, pessimistic-locked duplicate-active-return guard, refund via `PaymentService.processRefund` + inventory restoration via `InventoryService.adjustStock`, inventory-then-refund ordering so a DB-only failure never leaves an un-recorded external refund), tested via `ReturnServiceImplTest` (unit) and `ReturnRequestIT` (real H2 round-trip). Recomputed the Checkout & Orders (FR-CHK) Coverage Summary row (9→10 total, 8→9 Implemented). Merged on top of the concurrent v1.53/v1.54 (#132/#364) — recomputed Totals row to reflect both branches' changes together (200→201 total, 141→144 Implemented [+1 mine, +2 theirs], 15→14 Partial, 44→43 Pending, all from #132's own row). Updated `Related SRS` from v5.11 to v5.12 | Pending |
+| 1.56 | 2026-08-08 IST | QA Manager | Added FR-AUTH-12 (#91, TOTP-based 2FA — AUTH-02): QR provisioning, TOTP login verification, 8 one-time recovery codes, TOTP-verified disable. The issue's own "SRS AUTH-10" citation pointed at an existing, unrelated requirement (BCrypt hashing) rather than a stale/nonexistent range — a wrong-target citation, distinct from SEC-15/COMP-01/RET-01's wrong-range shape but the same underlying filing-time traceability-mismatch pattern. ✅ Implemented: `TwoFactorController` (`/api/user/2fa/enable|verify|disable`, following the established `/api/user/**` convention over the issue's own unmatched `/api/v1/users/2fa/...` path — same sibling precedent as #88), `TwoFactorServiceImpl` (RFC 6238 via `dev.samstevens.totp`, BCrypt-hashed one-time recovery codes), `AuthServiceImpl.login()` 3-arg overload (returns `twoFactorRequired=true` with no tokens when a 2FA-enabled account omits the code). Tested via `TwoFactorServiceImplTest` (unit, real TOTP code generation/verification against the library, not mocked). Recomputed the Authentication (FR-AUTH) Coverage Summary row (11→12 total, 9→10 Implemented) and the Totals row (201→202 total, 144→145 Implemented). Updated `Related SRS` from v5.12 to v5.13 | Pending |
 | 1.10 | 2026-07-18 20:50 IST | QA Manager | FR-FE-25 (admin order management) already ✅ Implemented but only cited `OrdersTab.tsx` with a generic "Vitest" test reference, predating a dedicated test file. Added `RefundModal.tsx` and named `OrdersTab.test.tsx`/`RefundModal.test.tsx` now that the refund action genuinely exists (#438) — status stays ✅ Implemented (no count changes; closes a citation gap rather than changing status). Updated the `Related SRS` cross-reference from v4.5 to v4.6 following SRS's own FR-FE-25 requirement-text extension in the same fix | Pending |
 | 1.11 | 2026-07-18 23:20 IST | QA Manager | FR-ADM-03 (admin manages user accounts — view, update, deactivate) corrected from 🔵 Pending Ph-2 to ✅ Implemented: the backend (`AdminUserController` GET/PUT `/{id}`, `AdminServiceImpl.updateUserByAdmin`) was already fully implemented and tested (`AdminUserControllerTest`), but the frontend `UsersTab.tsx` only wired list + delete; added `UserDetailModal.tsx` (view + edit) and its wiring, with `UserDetailModal.test.tsx`/`UsersTab.test.tsx` coverage (#439). Recomputed the Admin Operations (FR-ADM) Coverage Summary row (3→4 Implemented, 4→3 Pending) and the Coverage Summary Totals row (114→115 Implemented, 50→49 Pending) | Pending |
 | 1.12 | 2026-07-19 02:00 IST | QA Manager | FR-PROD-08 and FR-FE-23 were both already ✅ Implemented, backend-only for FR-PROD-08 (variant CRUD had no admin UI) and citation-incomplete for FR-FE-23. Added `ProductVariantsModal.tsx`/`ProductVariantsModal.test.tsx` (the new admin variant-management UI) to both rows' citations, and `ProductVariantRepositoryTest` (new regression test for a live-verified `LazyInitializationException` bug found while building the UI — `ProductVariantRepository.findByProductId`'s `@EntityGraph` was missing `"product"`, plus a related missing-`updatedAt`-on-create NOT NULL bug and a `Product.tags` serialization leak, all fixed in the same change) to FR-PROD-08 (#427). Status stays ✅ Implemented on both rows — citation/evidence gap closure, no count changes | Pending |
@@ -135,7 +136,7 @@ The RTM serves to:
 
 | Requirement Category | Total | ✅ Implemented | 🟡 Partial | 🔵 Pending Ph-2 | 🔴 Open Defect | ⬜ Not Started |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Authentication (FR-AUTH) | 11 | 9 | 0 | 2 | 0 | 0 |
+| Authentication (FR-AUTH) | 12 | 10 | 0 | 2 | 0 | 0 |
 | Product Catalogue (FR-PROD) | 7 | 7 | 0 | 0 | 0 | 0 |
 | Shopping Cart (FR-CART) | 6 | 6 | 0 | 0 | 0 | 0 |
 | Checkout & Orders (FR-CHK) | 10 | 9 | 0 | 1 | 0 | 0 |
@@ -162,7 +163,7 @@ The RTM serves to:
 | Test Integrity (TIR) | 5 | 4 | 1 | 0 | 0 | 0 |
 | Seller & Marketplace (FR-SEL) | 8 | 8 | 0 | 0 | 0 | 0 |
 | Location-Based Matching (FR-LOC) | 4 | 4 | 0 | 0 | 0 | 0 |
-| **Totals** | **201** | **144** | **14** | **43** | **0** | **0** |
+| **Totals** | **202** | **145** | **14** | **43** | **0** | **0** |
 
 > **Phase 1 gate posture**: 93 requirements fully implemented, 0 open defects. TIR-01 through TIR-04 and MNT-03 (previously blocking Phase 1 exit) were verified fixed on 2026-07-17 (#452) — `ProductApiTest`/`OrderApiTest` are `@Tag("e2e")`, `AuthServiceImplTest` mocks `RoleRepository`, both security-test assertions match their actual (correct) HTTP status codes, and MNT-02/TIR-05's coverage-gate values were corrected to their real, higher configured thresholds (85% JaCoCo, 77% PIT). Phase 1 is no longer blocked by test-integrity defects. (Totals recomputed directly from the 24 category rows above — the previous release's Totals row did not actually sum to its own category rows, independent of this fix.)
 >
@@ -237,6 +238,7 @@ The RTM serves to:
 | FR-AUTH-09 | RBAC with `USER` and `ADMIN` roles | High | Ph-1 | §5.1.3, §4.3.2 | `SecurityConfig`, `RolePermissionEvaluator`, `@PreAuthorize`, `@Secured` | `RBACTest`, `RolePermissionEvaluatorTest`, `AuthenticationAuthorizationSecurityTest` | Test | ✅ Implemented |
 | FR-AUTH-10 | BCrypt password hashing (minimum 10 rounds) | High | Ph-1 | §5.1.1 | `AuthServiceImpl` — `BCryptPasswordEncoder(10)` | `AuthServiceImplTest` | Inspection | ✅ Implemented |
 | FR-AUTH-11 | OAuth2 client integration (Google, GitHub) | Medium | Ph-2 | §4.3.2 | Not yet implemented | — | Test | 🔵 Pending Ph-2 |
+| FR-AUTH-12 | Optional TOTP-based 2FA: QR provisioning, TOTP login verification, 8 one-time recovery codes, TOTP-verified disable | High | Ph-2 | §3.2.1 | `TwoFactorController`, `TwoFactorServiceImpl`, `AuthServiceImpl.login()` (3-arg overload) | `TwoFactorServiceImplTest` | Test | ✅ Implemented |
 
 ### 6.2 Product Catalogue Management (FG-02)
 
@@ -553,8 +555,9 @@ The RTM serves to:
 
 | Implementation Class | Requirements Satisfied |
 | :--- | :--- |
-| `AuthController` | FR-AUTH-01, FR-AUTH-02, FR-AUTH-06, FR-AUTH-07 |
-| `AuthServiceImpl` | FR-AUTH-01, FR-AUTH-02, FR-AUTH-09, FR-AUTH-10, SEC-01 |
+| `AuthController` | FR-AUTH-01, FR-AUTH-02, FR-AUTH-06, FR-AUTH-07, FR-AUTH-12 |
+| `AuthServiceImpl` | FR-AUTH-01, FR-AUTH-02, FR-AUTH-09, FR-AUTH-10, FR-AUTH-12, SEC-01 |
+| `TwoFactorController`, `TwoFactorServiceImpl` | FR-AUTH-12 |
 | `JwtTokenProvider` | FR-AUTH-02, FR-AUTH-03, FR-AUTH-04, FR-AUTH-05, SEC-02, SCL-01, DC-04 |
 | `JwtAuthenticationFilter` | FR-AUTH-09, SEC-01, DC-04 |
 | `JwtKeyValidator` | FR-AUTH-05, SEC-02 |

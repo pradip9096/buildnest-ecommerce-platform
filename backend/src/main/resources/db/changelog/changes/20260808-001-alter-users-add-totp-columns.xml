@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Issue #91 (AUTH-02): TOTP-based 2FA -->
+    <changeSet id="20260808-001-alter-users-add-totp-columns" author="buildnest-team">
+        <comment>Add totp_secret (base32 secret, never exposed via Jackson), totp_enabled,
+            and totp_enabled_at to users. Existing rows default totp_enabled=false since no
+            2FA was ever configured prior to this feature.</comment>
+
+        <addColumn tableName="users">
+            <column name="totp_secret" type="VARCHAR(255)"/>
+            <column name="totp_enabled" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="totp_enabled_at" type="TIMESTAMP"/>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="users" columnName="totp_secret"/>
+            <dropColumn tableName="users" columnName="totp_enabled"/>
+            <dropColumn tableName="users" columnName="totp_enabled_at"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -51,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuditLogService auditLogService;
     private final DomainEventPublisher domainEventPublisher;
     private final ValidationUtil validationUtil;
+    private final TwoFactorService twoFactorService;
 
     /**
      * Authenticates a user with username and password.
@@ -68,17 +69,55 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     public AuthResponse login(String username, String password) {
+        return login(username, password, null);
+    }
+
+    /**
+     * Authenticates a user with username, password, and (when the
+     * account has TOTP 2FA enabled) a TOTP or recovery code.
+     *
+     * When 2FA is enabled and {@code totpCode} is blank, returns an
+     * {@link AuthResponse} with {@code twoFactorRequired=true} and no
+     * tokens — the caller must resubmit with a code. An incorrect code
+     * is treated as a generic auth failure to avoid account
+     * enumeration.
+     *
+     * @param username the user's username (required)
+     * @param password the user's password (required)
+     * @param totpCode TOTP/recovery code, required only when the
+     *                 account has 2FA enabled
+     * @return AuthResponse containing tokens, or twoFactorRequired=true
+     *         if a code is still needed
+     * @throws RuntimeException if credentials or the 2FA code are
+     *         invalid
+     */
+    @Override
+    public AuthResponse login(
+            String username, String password, String totpCode) {
         log.info("User login attempt: {}", username);
         try {
             Authentication authentication = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(
                             username, password));
 
-            String jwt = jwtTokenProvider.generateToken(authentication);
-
             // Get user and create refresh token
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
+
+            if (Boolean.TRUE.equals(user.getTotpEnabled())) {
+                if (totpCode == null || totpCode.isBlank()) {
+                    AuthResponse pending = new AuthResponse();
+                    pending.setUsername(username);
+                    pending.setUserId(user.getId());
+                    pending.setTwoFactorRequired(true);
+                    return pending;
+                }
+                if (!twoFactorService.validateLoginCode(user, totpCode)) {
+                    throw new RuntimeException("Invalid TOTP code");
+                }
+            }
+
+            String jwt = jwtTokenProvider.generateToken(authentication);
             RefreshToken refreshToken = refreshTokenService
                     .createRefreshToken(user.getId());
 
