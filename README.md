@@ -236,6 +236,10 @@ Integration tests use an H2 in-memory database and mock all Elasticsearch beans 
 
 Swagger UI is served at `/swagger-ui/index.html` when the application is running.
 
+The generated OpenAPI 3.1 spec is also published statically at
+[https://pradip9096.github.io/buildnest-ecommerce-platform/](https://pradip9096.github.io/buildnest-ecommerce-platform/),
+kept current automatically on every release tag (`.github/workflows/publish-api-docs.yml`, #127).
+
 ### Auth flow
 
 ```
