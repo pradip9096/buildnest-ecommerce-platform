@@ -17,6 +17,21 @@ counts); entries below are not yet split into per-milestone sub-sections — che
 own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs to.
 
 ### Added
+- Production operations runbook (#126, OPS-08, M5): `docs/SDLC-docs/operations/runbook.md`
+  covers startup/shutdown, health check validation, database backup/restore, log retrieval,
+  common alert responses, and rollback, each with prerequisites/commands/expected-output/
+  troubleshooting. No dedicated RTM row (documents existing OBS-05/REL-05 behavior, not new
+  specified behavior — same no-dedicated-OPS-row pattern as RTM revisions 1.48/1.49). Correctly
+  documents the real deployment mechanism (SSH + Docker Compose + GHCR, ADR-0003) rather than the
+  `backend/kubernetes/` manifests, which predate that ADR and are not wired into any real
+  deployment path. Also surfaced and filed #708 as a separate follow-up: those Kubernetes
+  manifests' liveness/readiness/startup probes target container port 8081, but neither
+  `application.properties` nor `application-production.properties` ever configures
+  `management.server.port=8081` — actuator actually serves on 8080, so the probes would fail with
+  connection-refused if the manifest were ever applied. Acceptance criterion "validated by dry-run
+  on staging environment" is explicitly **not yet met** (no SSH access to a real staging host this
+  session) — documented as an open item in the runbook's own Validation Status section rather than
+  claimed complete.
 - Kubernetes readiness/liveness health probes (#123, OBS-05, NFR SRS §3.8.9, M5). The issue's own
   "SRS NFR-OPS-06" citation both did not exist at filing time and collided with #124's already-used
   "OPS-06" — adopted "OBS-05" instead, matching this subsection's established `OBS-*` observability
