@@ -391,6 +391,34 @@ services:
       - buildnest-network
 
   # ===============================
+  # Tempo — distributed trace storage (#108, OBS-02). Receives spans over OTLP from the app
+  # (micrometer-tracing-bridge-otel) and is queried by Grafana's Tempo datasource for
+  # trace visualization / trace-to-metrics correlation with the existing Prometheus stack.
+  # ===============================
+  tempo:
+    image: grafana/tempo:2.6.0
+    container_name: tempo
+    # Runs as the image's own non-root default user (10001:10001) — no `user: root` override.
+    command:
+      - "-config.file=/etc/tempo/tempo.yaml"
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    # Host-published for local dev/debugging convenience only — Tempo has no built-in auth in
+    # single-binary mode, same accepted trust model this stack already applies to Prometheus
+    # (9090, unauthenticated) and Alertmanager (9093, unauthenticated) below. The app and
+    # Grafana themselves reach Tempo over the internal buildnest-network, not through these
+    # host ports. Do not publish these ports on any host reachable from an untrusted network —
+    # a production deployment needs a reverse proxy/auth layer in front, same as the rest of
+    # this observability stack would.
+    ports:
+      - "3200:3200"   # Tempo query API (used by Grafana datasource)
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+    networks:
+      - buildnest-network
+
+  # ===============================
   # Spring Boot Application
   # ===============================
   buildnest-ecommerce:
@@ -411,6 +439,8 @@ services:
       ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
       ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
       ELASTICSEARCH_SSL_ENABLED: ${ELASTICSEARCH_SSL_ENABLED}
+
+      TEMPO_OTLP_ENDPOINT: http://tempo:4318/v1/traces
     ports:
       - "8080:8080"
     depends_on:
@@ -420,6 +450,8 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
+      tempo:
+        condition: service_started
     networks:
       - buildnest-network
 
@@ -436,6 +468,7 @@ volumes:
   alertmanager_config:
   grafana_data:
   mysqld_exporter_config:
+  tempo_data:
 
 # ===============================
 # Network

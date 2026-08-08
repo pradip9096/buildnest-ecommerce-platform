@@ -17,6 +17,15 @@ counts); entries below are not yet split into per-milestone sub-sections — che
 own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs to.
 
 ### Added
+- Distributed tracing (#108, OBS-02, NFR SRS §3.8.9, M4): `micrometer-tracing-bridge-otel` +
+  `opentelemetry-exporter-otlp` propagate trace context across HTTP requests and `@Async` tasks
+  and export spans via OTLP to a new Grafana Tempo service (`backend/docker-compose.yml`,
+  `backend/tempo/tempo.yaml`), provisioned as a Grafana datasource alongside the existing
+  Prometheus metrics datasource for trace-to-metrics correlation (see ADR-0004 for the
+  Tempo-over-Zipkin decision). Sampling rate is configurable via
+  `management.tracing.sampling.probability` (env `TRACING_SAMPLING_PROBABILITY`, default 1.0 dev
+  / 0.1 production). Live-verified end-to-end against a running Tempo instance — HTTP requests
+  and a scheduled `@Async` job both produced real, queryable traces.
 - TOTP-based two-factor authentication (#91, FR-AUTH-12, AUTH-02, M4): `POST
   /api/user/2fa/enable` generates a TOTP secret and QR code (RFC 6238, via
   `dev.samstevens.totp`); `POST /api/user/2fa/verify` confirms the code and activates 2FA,

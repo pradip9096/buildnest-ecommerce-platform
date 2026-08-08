@@ -1,0 +1,16 @@
+# Auto-provisions the Tempo datasource on Grafana startup (#108, OBS-02) so traces are
+# queryable from Grafana Explore out of the box, alongside the existing Prometheus datasource.
+apiVersion: 1
+
+datasources:
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    isDefault: false
+    editable: false
+    jsonData:
+      tracesToMetrics:
+        datasourceUid: prometheus
+      serviceMap:
+        datasourceUid: prometheus
