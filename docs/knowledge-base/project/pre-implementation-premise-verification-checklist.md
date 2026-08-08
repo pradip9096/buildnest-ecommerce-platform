@@ -1,13 +1,13 @@
 ---
-title: Pre-Implementation Premise Verification — Facts, Tool Execution Model, Live Infrastructure, and Test Identity
+title: Pre-Implementation Premise Verification — Facts, Tool Execution Model, Live Infrastructure, Test Identity, and Artifact Currency
 category: quality-engineering
-tags: [premise-verification, infrastructure-readiness, test-identity, tool-execution-model, github-issues]
-keywords: [verify issue premise before implementing, runtime behavior vs config, third-party tool execution model, live infrastructure reachability, dev server vs container, test identity setup, fully current fully stale partial]
+tags: [premise-verification, infrastructure-readiness, test-identity, tool-execution-model, github-issues, artifact-currency]
+keywords: [verify issue premise before implementing, runtime behavior vs config, third-party tool execution model, live infrastructure reachability, dev server vs container, test identity setup, fully current fully stale partial, superseded artifact, stale architectural artifact, ADR supersession]
 objective: What has to be independently confirmed, and how, before implementation starts on a GitHub issue — beyond just re-reading the issue text?
-audience: Anyone starting work on a filed issue in this repo, especially one touching infrastructure, a third-party tool's config semantics, or a role the seed data doesn't provide.
+audience: Anyone starting work on a filed issue in this repo, especially one touching infrastructure, a third-party tool's config semantics, a role the seed data doesn't provide, or a deployment/architecture-adjacent artifact.
 scope: general, with BuildNest-specific worked examples
-source_conversations: [Session 2026-07-05 (#428), Session 2026-07-17 (#425), Session 2026-07-18 (#309 /critique-prompt extraction)]
-last_updated: 2026-07-18
+source_conversations: [Session 2026-07-05 (#428), Session 2026-07-17 (#425), Session 2026-07-18 (#309 /critique-prompt extraction), Session 2026-08-09 (#126 /critique-prompt extraction)]
+last_updated: 2026-08-09
 confidence: high
 evidence_strength: strong
 related_articles:
@@ -19,20 +19,23 @@ status: published
 
 ## What Is It?
 
-A four-part check run once, before implementation begins on a filed issue, that goes beyond
+A five-part check run once, before implementation begins on a filed issue, that goes beyond
 re-reading the issue text: (1) verify claims about *runtime/execution behavior* against actual
 recent output, not just config; (2) verify your own understanding of any third-party tool's
 *execution model* via its documentation, treating it as provisional until an empirical check
 confirms it; (3) confirm *live infrastructure* — including the application's own dev-server
 processes, not just their container dependencies — is actually reachable now; (4) establish any
 *test identity* the verification will need (an admin role the seed data doesn't provide) as part
-of this same pass, not as a mid-task surprise. The output is a single stated verdict: the issue's
-premise is **fully current** (implement as written), **fully stale** (confirm before closing), or
-**partial** (name which specific criteria are already met vs. not).
+of this same pass, not as a mid-task surprise; (5) confirm the most-obvious infrastructure/
+architecture *artifact* touching this issue's domain is actually the one in current use, not one
+an ADR or requirement-doc revision has quietly superseded without removing it from the repo. The
+output is a single stated verdict: the issue's premise is **fully current** (implement as
+written), **fully stale** (confirm before closing), or **partial** (name which specific criteria
+are already met vs. not).
 
 ## Why It Matters
 
-Each of these four failure modes has independently cost real debugging time in this repo:
+Each of these five failure modes has independently cost real debugging time in this repo:
 
 - **Runtime claims treated as config claims**: a workflow file being "active" or a job being
   "wired in" doesn't mean it actually executes or blocks anything — `gh workflow list` reporting
@@ -53,8 +56,17 @@ Each of these four failure modes has independently cost real debugging time in t
 - **Test identity discovered as a mid-task blocker**: this repo's seed data provides no admin
   account by default. Discovering that fact mid-verification (after cart/category/product setup
   is already underway) costs a round trip that establishing the identity up front avoids entirely.
+- **A real, correctly-authored artifact that isn't the one actually in use**: this repo's
+  `backend/kubernetes/` manifests are internally consistent and well-formed, but ADR-0003
+  explicitly rejected Kubernetes as the deployment mechanism (no cluster/cloud account exists) in
+  favor of SSH + Docker Compose + GHCR — the manifests predate that decision and were never wired
+  into any real deployment path. This is a distinct failure mode from the first four: nothing about
+  the artifact's own content is wrong, a false runtime claim, a misunderstood tool, unreachable
+  infrastructure, or a missing test identity — it simply isn't current, and its presence in the repo
+  gives no signal of that on its own (#126, writing a production runbook against the manifests
+  before catching the ADR by chance while checking unrelated RTM revision history).
 
-Bundling these four into one premise-check pass, rather than letting each surface separately mid-task,
+Bundling these five into one premise-check pass, rather than letting each surface separately mid-task,
 is what actually prevents "discover unavailability mid-task" — the single most expensive shape of
 premise failure, since it invalidates work already done in between.
 
@@ -94,6 +106,15 @@ same premise-check pass — check `project_state.md`/domain lesson files first f
 already-documented shortcut (e.g. registering a scratch account and granting the role directly in
 the dev database) before improvising one from scratch mid-verification.
 
+### 5. Artifact currency
+
+When the issue touches deployment/infrastructure/architecture and more than one plausible artifact
+exists for it (multiple manifest formats, multiple config generations, multiple documented
+mechanisms), check the ADR index (`docs/SDLC-docs/design/adr/README.md`) and the relevant SDLC
+doc's own revision history for a decision that superseded one of them, before assuming the
+most-obvious or most-complete-looking one is current. A superseded artifact is not deleted just
+because it was superseded — its continued presence in the repo is not evidence it's still in use.
+
 ### Stating the result
 
 Conclude with one of three explicit verdicts, never a silent default to "implement as filed":
@@ -109,7 +130,8 @@ Conclude with one of three explicit verdicts, never a silent default to "impleme
 Run this once, as its own premise-check pass, before `TaskCreate`/branching — not folded silently
 into general "understanding the issue." It applies to every issue that makes a runtime/execution
 claim, references a third-party tool's config behavior, depends on live infrastructure for its own
-verification, or will need an authenticated role the seed data doesn't provide. It is distinct from
+verification, will need an authenticated role the seed data doesn't provide, or touches a
+deployment/architecture domain where more than one plausible artifact exists. It is distinct from
 verifying an issue's stated *severity* (a separate axis — see
 [Trace Every Consumer of Shared Data Before Trusting a Bug Report's Severity](../../wiki/learned-lessons/trace-every-consumer-of-shared-data-before-trusting-a-bug-reports-severity.md)),
 which checks blast-radius rather than facts.
@@ -127,15 +149,19 @@ which checks blast-radius rather than facts.
   branches (`main`/`develop`) didn't exist in this repo — the gate had zero run history despite
   looking wired in from the config alone; only `gh run list` against the actual workflow surfaced
   this.
+- **#126** (production runbook): `backend/kubernetes/` manifests looked like the obvious source for
+  startup/rollback/log-access procedures, but ADR-0003 had already established SSH + Docker
+  Compose + GHCR as the real mechanism — caught only by chance while cross-checking RTM revision
+  history for an unrelated reason, not by a dedicated check for this failure mode.
 
 ## Synthesis
 
-None of these four checks is expensive on its own — a `gh run list` query, a `curl`, a `docker ps`,
-a scratch-account registration. What makes skipping any of them costly is timing: each one, if
-skipped, tends to surface *mid-task* instead of *before* it, at a point where reversing course
-costs more than the check itself would have. Bundling all four into one explicit premise-check
-pass, concluded with a stated fully-current/fully-stale/partial verdict, is what converts four
-independently-cheap checks into one reliably-run gate.
+None of these five checks is expensive on its own — a `gh run list` query, a `curl`, a `docker ps`,
+a scratch-account registration, a grep of the ADR index. What makes skipping any of them costly is
+timing: each one, if skipped, tends to surface *mid-task* instead of *before* it, at a point where
+reversing course costs more than the check itself would have. Bundling all five into one explicit
+premise-check pass, concluded with a stated fully-current/fully-stale/partial verdict, is what
+converts five independently-cheap checks into one reliably-run gate.
 
 ## Related Articles
 
