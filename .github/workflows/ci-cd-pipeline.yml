@@ -561,12 +561,15 @@ jobs:
             -Dspring-boot.run.arguments="$ARGS" \
             > app.log 2>&1 &
           echo "Waiting for application to become ready..."
-          # /actuator/health/readiness (not /actuator/health) — overall health aggregates
-          # Redis/Elasticsearch/mail indicators, which are deliberately unreachable in this
-          # stripped-down environment and would keep the aggregate status DOWN forever even
-          # though the app itself is fully serving requests (verified locally).
+          # #123: /actuator/health/liveness (not /readiness) — as of #123, the readiness
+          # group genuinely reflects db/redis/elasticsearch reachability
+          # (management.endpoint.health.group.readiness.include), and Redis is deliberately
+          # unreachable in this stripped-down environment, so readiness would stay DOWN
+          # forever even though the app itself is fully serving requests. liveness only
+          # reflects JVM/app-context health (management.endpoint.health.group.liveness.include
+          # = livenessState only), which is what this wait loop actually needs.
           for i in $(seq 1 60); do
-            if curl -sf http://localhost:8080/actuator/health/readiness > /dev/null; then
+            if curl -sf http://localhost:8080/actuator/health/liveness > /dev/null; then
               echo "Application is up."
               exit 0
             fi
