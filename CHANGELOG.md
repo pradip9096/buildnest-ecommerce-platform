@@ -17,6 +17,21 @@ counts); entries below are not yet split into per-milestone sub-sections — che
 own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs to.
 
 ### Added
+- Kubernetes readiness/liveness health probes (#123, OBS-05, NFR SRS §3.8.9, M5). The issue's own
+  "SRS NFR-OPS-06" citation both did not exist at filing time and collided with #124's already-used
+  "OPS-06" — adopted "OBS-05" instead, matching this subsection's established `OBS-*` observability
+  numbering (see SRS/RTM revision history for the full reasoning).
+  `/actuator/health/readiness` now genuinely reflects MySQL/Redis (and Elasticsearch, when
+  `ELASTICSEARCH_ENABLED=true`) reachability via `management.endpoint.health.group.readiness.include`
+  — previously the readiness group only wrapped Spring Boot's built-in `readinessState`
+  contributor, so custom `DatabaseHealthIndicator`/`RedisHealthIndicator` beans (already present)
+  never actually gated the readiness probe's aggregate status. Added `ElasticsearchHealthIndicator`
+  (gated by `elasticsearch.enabled`, matching `ElasticsearchConfig`'s own convention) to complete
+  per-dependency coverage. The `elasticsearch` group member is env-driven via `HEALTH_READINESS_GROUP`
+  (see `.env.example`) since Spring Boot fails startup if a health group references a non-existent
+  indicator. `/actuator/health/**` was already excluded from authentication in `SecurityConfig`;
+  fixed a drift in `TestSecurityConfig` (only exempted the exact `/actuator/health` path, not its
+  sub-paths) that would have masked this in tests.
 - Distributed tracing (#108, OBS-02, NFR SRS §3.8.9, M4): `micrometer-tracing-bridge-otel` +
   `opentelemetry-exporter-otlp` propagate trace context across HTTP requests and `@Async` tasks
   and export spans via OTLP to a new Grafana Tempo service (`backend/docker-compose.yml`,
