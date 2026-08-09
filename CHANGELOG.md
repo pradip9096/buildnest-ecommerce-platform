@@ -37,7 +37,7 @@ own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs 
   QA pass and a real NVDA/VoiceOver session aren't available in this environment — see
   `docs/SDLC-docs/reports/accessibility-audit.md` for the full audit and explicit limitations.
   Admin/Seller dashboard surfaces are explicitly out of scope (never in the issue's own
-  acceptance criteria); filed as a follow-up.
+  acceptance criteria); filed as a follow-up (#716).
 - Publish generated OpenAPI 3.1 spec to GitHub Pages (#127, MNT-07, M5): new
   `.github/workflows/publish-api-docs.yml`, triggered on every `v*` release tag (plus manual
   dispatch) — boots the backend against H2 (real security config, no `test` profile; same
