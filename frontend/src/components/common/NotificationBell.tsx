@@ -48,7 +48,7 @@ export function NotificationBell() {
       {open && (
         <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-lg py-1 text-sm max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="px-4 py-3 text-gray-500">No notifications yet</p>
+            <p className="px-4 py-3 text-gray-600">No notifications yet</p>
           ) : (
             notifications.map(n => (
               <Link
@@ -58,7 +58,7 @@ export function NotificationBell() {
                 className="block px-4 py-2 text-gray-700 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
               >
                 <span className="font-medium">Order #{n.orderId}</span>
-                <span className="block text-gray-500 text-xs">
+                <span className="block text-gray-600 text-xs">
                   {formatStatus(n.previousStatus)} → {formatStatus(n.newStatus)}
                 </span>
               </Link>

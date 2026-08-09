@@ -69,7 +69,7 @@ export function OrderConfirmationPage() {
         <div className="text-center max-w-sm">
           <div className="text-5xl mb-4">⚠️</div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Order not found</h1>
-          <p className="text-gray-500 mb-6">{error ?? 'We could not find this order.'}</p>
+          <p className="text-gray-600 mb-6">{error ?? 'We could not find this order.'}</p>
           <Link to="/" className="inline-block bg-primary-500 hover:bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors">
             Back to Home
           </Link>
@@ -88,13 +88,13 @@ export function OrderConfirmationPage() {
             ✅
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Order Placed Successfully!</h1>
-          <p className="text-gray-500 mt-1">Thank you for shopping with BuildNest.</p>
+          <p className="text-gray-600 mt-1">Thank you for shopping with BuildNest.</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Order Number</p>
+              <p className="text-xs text-gray-600 uppercase tracking-wide">Order Number</p>
               <p className="text-xl font-bold text-gray-900">#{order.id}</p>
             </div>
             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -108,7 +108,7 @@ export function OrderConfirmationPage() {
             </span>
           </div>
 
-          <div className="border-t border-gray-100 pt-4 text-sm text-gray-500">
+          <div className="border-t border-gray-100 pt-4 text-sm text-gray-600">
             <p>Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
         </div>

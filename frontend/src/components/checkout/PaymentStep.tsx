@@ -41,7 +41,7 @@ export function PaymentStep({ session, totalAmount, loading, error, onPay, onBac
 
       {session?.razorpayOrderId && (
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-5 text-sm">
-          <p className="text-gray-500 mb-1">Razorpay Order ID</p>
+          <p className="text-gray-600 mb-1">Razorpay Order ID</p>
           <p className="font-mono text-gray-800 break-all">{session.razorpayOrderId}</p>
         </div>
       )}

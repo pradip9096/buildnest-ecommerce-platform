@@ -20,7 +20,7 @@ export function CartPage() {
         <div className="text-center max-w-sm">
           <div className="text-5xl mb-4">🛒</div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Your cart is waiting</h1>
-          <p className="text-gray-500 mb-6">Sign in to view your cart and continue shopping.</p>
+          <p className="text-gray-600 mb-6">Sign in to view your cart and continue shopping.</p>
           <Link
             to="/login"
             className="inline-block bg-primary-500 hover:bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
@@ -59,7 +59,7 @@ export function CartPage() {
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
           Shopping Cart
           {cart && cart.items.length > 0 && (
-            <span className="ml-2 text-base font-normal text-gray-500">
+            <span className="ml-2 text-base font-normal text-gray-600">
               ({cart.items.length} {cart.items.length === 1 ? 'item' : 'items'})
             </span>
           )}
@@ -85,7 +85,7 @@ export function CartPage() {
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🛒</div>
             <h2 className="text-xl font-semibold text-gray-700 mb-2">Your cart is empty</h2>
-            <p className="text-gray-500 mb-6">Discover our range of home construction and décor products.</p>
+            <p className="text-gray-600 mb-6">Discover our range of home construction and décor products.</p>
             <Link
               to="/products"
               className="inline-block bg-primary-500 hover:bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
@@ -146,7 +146,7 @@ export function CartPage() {
                     <span>Subtotal</span>
                     <span>₹{cart.totalAmount.toFixed(2)}</span>
                   </div>
-                  <p className="text-gray-400 text-xs">Shipping calculated at checkout</p>
+                  <p className="text-gray-600 text-xs">Shipping calculated at checkout</p>
                 </div>
 
                 <button
@@ -159,7 +159,7 @@ export function CartPage() {
                 </button>
                 <Link
                   to="/products"
-                  className="mt-3 block text-center text-sm text-gray-500 hover:text-gray-700"
+                  className="mt-3 block text-center text-sm text-gray-600 hover:text-gray-700"
                 >
                   ← Continue Shopping
                 </Link>

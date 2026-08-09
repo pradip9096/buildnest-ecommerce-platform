@@ -115,7 +115,7 @@ export function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-white">
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5 flex-wrap">
+        <nav className="text-sm text-gray-600 mb-6 flex items-center gap-1.5 flex-wrap">
           <Link to="/" className="hover:text-primary-600">Home</Link>
           <span>/</span>
           {product.category && (
@@ -147,7 +147,7 @@ export function ProductDetailPage() {
             {summary && summary.totalReviews > 0 && (
               <a href="#reviews" className="flex items-center gap-2 w-fit">
                 <StarRating rating={summary.averageRating} size="sm" />
-                <span className="text-sm text-gray-500">{summary.totalReviews} review{summary.totalReviews !== 1 ? 's' : ''}</span>
+                <span className="text-sm text-gray-600">{summary.totalReviews} review{summary.totalReviews !== 1 ? 's' : ''}</span>
               </a>
             )}
 
@@ -155,8 +155,8 @@ export function ProductDetailPage() {
               <span className="text-3xl font-bold text-gray-900">₹{displayPrice.toLocaleString('en-IN')}</span>
               {hasDiscount && (
                 <>
-                  <span className="text-lg text-gray-400 line-through">₹{product.price.toLocaleString('en-IN')}</span>
-                  <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                  <span className="text-lg text-gray-600 line-through">₹{product.price.toLocaleString('en-IN')}</span>
+                  <span className="text-sm font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
                     {discountPct}% off
                   </span>
                 </>
@@ -168,10 +168,10 @@ export function ProductDetailPage() {
                 <span
                   className={`text-sm font-medium ${
                     inventoryStatus.status === 'OUT_OF_STOCK'
-                      ? 'text-red-500'
+                      ? 'text-red-600'
                       : inventoryStatus.status === 'LOW_STOCK'
-                        ? 'text-amber-600'
-                        : 'text-green-600'
+                        ? 'text-amber-700'
+                        : 'text-green-700'
                   }`}
                   title={inventoryStatus.description}
                 >
@@ -179,11 +179,11 @@ export function ProductDetailPage() {
                   {inStock && ` (${product.stockQuantity} available)`}
                 </span>
               ) : inStock ? (
-                <span className="text-sm font-medium text-green-600">
+                <span className="text-sm font-medium text-green-700">
                   ✓ In Stock ({product.stockQuantity} available)
                 </span>
               ) : (
-                <span className="text-sm font-medium text-red-500">✗ Out of Stock</span>
+                <span className="text-sm font-medium text-red-600">✗ Out of Stock</span>
               )}
             </div>
 
@@ -191,7 +191,7 @@ export function ProductDetailPage() {
               <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
             )}
 
-            <p className="text-xs text-gray-400">SKU: {product.sku}</p>
+            <p className="text-xs text-gray-600">SKU: {product.sku}</p>
 
             {inStock && (
               <div className="flex flex-col gap-4 mt-4 pt-4 border-t border-gray-100">

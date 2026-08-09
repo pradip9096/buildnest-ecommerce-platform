@@ -40,7 +40,7 @@ export function LoginPage() {
         <div className="text-center mb-8">
           <Link to="/" className="text-3xl font-bold text-primary-600">🏗️ BuildNest</Link>
           <h1 className="mt-4 text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="mt-1 text-sm text-gray-500">Sign in to your account</p>
+          <p className="mt-1 text-sm text-gray-600">Sign in to your account</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
@@ -81,7 +81,8 @@ export function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(s => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 text-xs"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -105,7 +106,7 @@ export function LoginPage() {
           </form>
         </div>
 
-        <p className="mt-5 text-center text-sm text-gray-500">
+        <p className="mt-5 text-center text-sm text-gray-600">
           Don&apos;t have an account?{' '}
           <Link to="/register" className="text-primary-600 hover:text-primary-700 font-medium">
             Create one

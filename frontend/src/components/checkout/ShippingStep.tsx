@@ -78,7 +78,7 @@ export function ShippingStep({
       )}
 
       {options.length === 0 ? (
-        <p className="text-gray-500 text-sm">No shipping options available for your area.</p>
+        <p className="text-gray-600 text-sm">No shipping options available for your area.</p>
       ) : (
         <div className="space-y-3">
           {options.map(opt => (
@@ -102,9 +102,9 @@ export function ShippingStep({
                   <span className="font-semibold text-gray-900">₹{Number(opt.calculatedCost).toFixed(2)}</span>
                 </div>
                 {opt.description && (
-                  <p className="text-xs text-gray-500 mt-0.5">{opt.description}</p>
+                  <p className="text-xs text-gray-600 mt-0.5">{opt.description}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-gray-600 mt-0.5">
                   Estimated {opt.estimatedDaysMin}–{opt.estimatedDaysMax} business days
                 </p>
               </div>

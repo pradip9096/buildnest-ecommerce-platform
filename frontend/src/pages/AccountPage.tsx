@@ -31,7 +31,7 @@ export function AccountPage() {
           </div>
           <div>
             <p className="font-semibold text-gray-900">@{user?.username}</p>
-            <p className="text-sm text-gray-400">Member account</p>
+            <p className="text-sm text-gray-600">Member account</p>
           </div>
         </div>
 

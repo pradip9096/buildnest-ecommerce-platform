@@ -64,7 +64,7 @@ export function HomePage() {
           {featuredLoading ? (
             <LoadingSkeleton count={4} />
           ) : featuredProducts.length === 0 ? (
-            <p className="text-sm text-gray-500 py-8 text-center">
+            <p className="text-sm text-gray-600 py-8 text-center">
               No featured products yet — check back soon.
             </p>
           ) : (

@@ -44,7 +44,7 @@ export function CategorySidebar({ categories, selected, onChange, loading }: Pro
             </li>
           ))}
           {categories.length === 0 && (
-            <li className="text-sm text-gray-400">No categories</li>
+            <li className="text-sm text-gray-600">No categories</li>
           )}
         </ul>
       )}

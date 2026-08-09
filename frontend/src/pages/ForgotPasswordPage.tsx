@@ -40,7 +40,7 @@ export function ForgotPasswordPage() {
         <div className="text-center mb-8">
           <Link to="/" className="text-3xl font-bold text-primary-600">🏗️ BuildNest</Link>
           <h1 className="mt-4 text-2xl font-bold text-gray-900">Reset your password</h1>
-          <p className="mt-1 text-sm text-gray-500">We'll email you a link to reset it</p>
+          <p className="mt-1 text-sm text-gray-600">We'll email you a link to reset it</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
@@ -91,7 +91,7 @@ export function ForgotPasswordPage() {
           )}
         </div>
 
-        <p className="mt-5 text-center text-sm text-gray-500">
+        <p className="mt-5 text-center text-sm text-gray-600">
           Remembered your password?{' '}
           <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
             Sign in

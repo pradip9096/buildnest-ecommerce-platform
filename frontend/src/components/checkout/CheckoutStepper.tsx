@@ -19,14 +19,14 @@ export function CheckoutStepper({ currentStep }: Props) {
                     ? 'bg-green-500 border-green-500 text-white'
                     : active
                     ? 'bg-primary-500 border-primary-500 text-white'
-                    : 'bg-white border-gray-300 text-gray-400'
+                    : 'bg-white border-gray-300 text-gray-600'
                 }`}
               >
                 {done ? '✓' : idx + 1}
               </div>
               <span
                 className={`mt-1 text-xs font-medium ${
-                  active ? 'text-primary-600' : done ? 'text-green-600' : 'text-gray-400'
+                  active ? 'text-primary-600' : done ? 'text-green-700' : 'text-gray-600'
                 }`}
               >
                 {label}
