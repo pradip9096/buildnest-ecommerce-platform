@@ -150,6 +150,30 @@ own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs 
   no access-token blacklist/denylist; an already-issued access token stays valid until its own
   15-minute natural expiry, a deliberate stateless-JWT tradeoff, not a gap.
 
+### Changed
+- Dependency currency sweep (#131, DEP-01, M5): bumped all Maven and npm dependencies to their
+  latest stable version **within their current major version** (backend:
+  `bucket4j-core`/`bucket4j-redis` 8.1.0→8.10.1, `mysql-connector-j` 8.2.0→8.4.0, `jjwt-*`
+  0.12.3→0.13.0, `springdoc-openapi-starter-webmvc-ui` 2.8.17→2.9.0, `razorpay-java` 1.4.5→1.4.10,
+  `archunit-junit5` 1.3.0→1.5.0, `gatling-charts-highcharts` 3.10.3→3.15.1,
+  `pitest-junit5-plugin` 1.2.2→1.2.3; frontend: all `npm outdated` entries within their current
+  major via `npm update --legacy-peer-deps` — the `--legacy-peer-deps` flag is required by a
+  pre-existing, unrelated peer conflict between `eslint@10.x` and `eslint-plugin-react@7.37.5`'s
+  peer ceiling of `^9.7`, not something this issue introduced). `resilience4j-spring-boot3`/
+  `resilience4j-circuitbreaker`/`resilience4j-timelimiter` were bumped to 2.4.0 and then reverted
+  back to 2.1.0 after the bump broke Spring context startup (`IllegalStateException: Error
+  processing condition on ...FallbackConfigurationOnMissingBean.fallbackDecorators`, cascading
+  into 258 test errors across every `@SpringBootTest` class) — root-caused via a single-test
+  re-run isolating the failing bean condition, not a blanket revert of all changes. Major-version
+  jumps (Spring Boot 3.5.16→4.1.0 and its Spring Framework 7/Security 7 family, JUnit 5→6,
+  Liquibase 4→5, springdoc 2→3, `mysql-connector-j`'s CalVer 8.x→26.x line, `rest-assured` 5→6,
+  `logstash-logback-encoder` 7→9, npm `@testing-library/jest-dom` 6→7, `typescript` 6→7) are
+  explicitly out of scope — they conflict with this issue's own "no breaking changes" acceptance
+  criterion and 3h estimate, and are filed as a dedicated follow-up (#720), mirroring how #56/#155
+  (Elasticsearch 8.10→8.17 EOL upgrade) was scoped as its own issue rather than bundled into
+  general maintenance. Full backend suite (1968 tests) and frontend suite (286 tests) pass; OWASP
+  Dependency-Check passes; frontend `vite build` verified clean.
+
 ### Fixed
 - `backend/Dockerfile` hardened to match OPS-06's production-Dockerfile acceptance criteria:
   runtime base switched to `eclipse-temurin:21-jre-alpine`, added a non-root `buildnest` user
