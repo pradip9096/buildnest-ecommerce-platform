@@ -8,7 +8,7 @@ export function ErrorMessage({ message, onRetry }: Props) {
     <div className="flex flex-col items-center justify-center py-24 text-center">
       <span className="text-5xl mb-4">⚠️</span>
       <p className="text-lg font-semibold text-gray-800">Something went wrong</p>
-      <p className="text-sm text-gray-500 mt-1 max-w-sm">{message}</p>
+      <p className="text-sm text-gray-600 mt-1 max-w-sm">{message}</p>
       {onRetry && (
         <button
           type="button"

@@ -45,7 +45,7 @@ export function CheckoutPage() {
         <div className="text-center max-w-sm">
           <div className="text-5xl mb-4">🔒</div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Sign in to checkout</h1>
-          <p className="text-gray-500 mb-6">You need to be signed in to complete your purchase.</p>
+          <p className="text-gray-600 mb-6">You need to be signed in to complete your purchase.</p>
           <Link
             to="/login"
             className="inline-block bg-primary-500 hover:bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
@@ -115,7 +115,7 @@ export function CheckoutPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="text-sm text-gray-500 mb-4">
+        <div className="text-sm text-gray-600 mb-4">
           <Link to="/cart" className="hover:text-gray-700">← Back to Cart</Link>
         </div>
         <CheckoutStepper currentStep={step} />

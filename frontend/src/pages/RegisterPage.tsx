@@ -108,7 +108,7 @@ export function RegisterPage() {
         <div className="text-center mb-8">
           <Link to="/" className="text-3xl font-bold text-primary-600">🏗️ BuildNest</Link>
           <h1 className="mt-4 text-2xl font-bold text-gray-900">Create an account</h1>
-          <p className="mt-1 text-sm text-gray-500">Start building your dream home today</p>
+          <p className="mt-1 text-sm text-gray-600">Start building your dream home today</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
@@ -189,7 +189,7 @@ export function RegisterPage() {
           </form>
         </div>
 
-        <p className="mt-5 text-center text-sm text-gray-500">
+        <p className="mt-5 text-center text-sm text-gray-600">
           Already have an account?{' '}
           <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
             Sign in

@@ -23,7 +23,7 @@ export function Pagination({ page, totalPages, onPageChange }: Props) {
 
       {pages.map((p, i) =>
         p === -1 ? (
-          <span key={`ellipsis-${i}`} className="px-2 text-gray-400">…</span>
+          <span key={`ellipsis-${i}`} className="px-2 text-gray-600">…</span>
         ) : (
           <button
             type="button"

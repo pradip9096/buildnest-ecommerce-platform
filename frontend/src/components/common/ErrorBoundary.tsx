@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="text-center max-w-sm">
             <div className="text-5xl mb-4">⚠️</div>
             <h1 className="text-xl font-bold text-gray-900 mb-2">Something went wrong</h1>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-600 mb-6">
               An unexpected error occurred. Try reloading the page.
             </p>
             <button

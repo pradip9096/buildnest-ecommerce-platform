@@ -100,7 +100,25 @@ it will catch regressions on future changes to these pages.
 | 5 | `color-contrast` | Checkout (address step) | serious | `CheckoutStepper.tsx` inactive step labels/circles `text-gray-400` on `#f9fafb` — 2.48:1 | Changed to `text-gray-600`/`text-green-700` |
 | 6 | `color-contrast` | Account | serious | "Member account" subtitle `text-gray-400` on `#f9fafb` — 2.48:1 | Changed to `text-gray-600` |
 
-### 3.2 Same-pattern sweep (Definition of Done — search beyond the cited instance)
+### 3.2 A 7th defect caught only by real CI, not local runs
+
+CI's `Playwright E2E Tests` job (which runs this same suite against a freshly-seeded backend)
+failed on `checkout page — shipping step` with 2 `color-contrast` violations
+(`text-gray-500` on white, `ShippingStep.tsx`'s shipping-option description/estimated-days text)
+that never reproduced locally — the local seed data path exercised only the "no shipping options"
+empty state, which uses different text, while CI's seed produced real shipping options with the
+`text-gray-500` lines. Fixed the same way as the other color-contrast defects (`text-gray-600`),
+and swept `text-gray-500` across the rest of the customer-facing page/component tree (`HomePage`,
+`OrderConfirmationPage`, `NotFoundPage`, `ProductDetailPage`, `ProductListingPage`,
+`CheckoutPage`, `RegisterPage`, `ForgotPasswordPage`, `ResetPasswordPage`, `CartPage`,
+`LoginPage`, `ReviewsSection`, `PaymentStep`, `NotificationBell`, `ErrorBoundary`,
+`CartItemRow`, `ErrorMessage`, `RequireAuth`) rather than waiting for CI to catch each instance
+individually — `text-gray-500` sits close enough to the 4.5:1 threshold (Tailwind's default hex
+value computes right around it) that its actual pass/fail is dependent on exact font-weight/size
+context, making it an unreliable choice project-wide. Re-verified: 15/15 specs pass locally with
+a real (non-empty) shipping-options seed.
+
+### 3.3 Same-pattern sweep (Definition of Done — search beyond the cited instance)
 
 Per this repo's own process rule (search for the defect pattern everywhere it recurs, not
 just the cited location), all customer-facing components using `text-gray-400` on a
@@ -120,7 +138,7 @@ icon-only elements (SVG fill colors, decorative emoji) where axe's `color-contra
 did not flag a violation — bumping those without a positive finding would be a
 speculative change outside this audit's evidence base.
 
-### 3.3 A defect axe did not catch, found via the screen-reader structural check
+### 3.4 A defect axe did not catch, found via the screen-reader structural check
 
 `AddressStep.tsx`'s form fields used a `<label>` sibling to each `<input>` with **no**
 `htmlFor`/`id` pairing — the same defect class #286 already fixed on `LoginPage.tsx` and
@@ -211,5 +229,5 @@ provisioning exists in the E2E test infrastructure.
 | axe-core automated scan passes on all pages (zero critical violations) | ✅ Met — 0 critical/serious across 12 pages |
 | Manual keyboard navigation verified for checkout flow | ✅ Met via automated proxy (disclosed) |
 | Screen reader test for product listing and checkout | ✅ Met via automated structural proxy (disclosed) |
-| Colour contrast ratio ≥4.5:1 for all text | ✅ Met — 6 defects found and fixed, zero remaining per axe |
+| Colour contrast ratio ≥4.5:1 for all text | ✅ Met — 7 defects found and fixed (6 local, 1 caught only by real CI seed data), zero remaining per axe |
 | Report stored in `docs/SDLC-docs/reports/accessibility-audit.md` | ✅ This document |

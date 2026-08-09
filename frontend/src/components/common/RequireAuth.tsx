@@ -31,7 +31,7 @@ export function RequireAuth({ children, role }: Props) {
         <div className="text-center max-w-sm">
           <div className="text-5xl mb-4">🚫</div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Access denied</h1>
-          <p className="text-gray-500 text-sm mb-4">{role} role required.</p>
+          <p className="text-gray-600 text-sm mb-4">{role} role required.</p>
           <Link to="/" className="text-primary-600 hover:text-primary-800 text-sm font-medium">← Back to store</Link>
         </div>
       </div>

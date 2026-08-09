@@ -37,7 +37,10 @@ own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs 
   QA pass and a real NVDA/VoiceOver session aren't available in this environment — see
   `docs/SDLC-docs/reports/accessibility-audit.md` for the full audit and explicit limitations.
   Admin/Seller dashboard surfaces are explicitly out of scope (never in the issue's own
-  acceptance criteria); filed as a follow-up (#716).
+  acceptance criteria); filed as a follow-up (#716). A 7th color-contrast defect
+  (`text-gray-500`, `ShippingStep.tsx`) was caught only by CI's real seed-data path, never
+  reproduced locally — swept the same shade across the rest of the customer-facing tree rather
+  than wait for CI to catch each instance individually.
 - Publish generated OpenAPI 3.1 spec to GitHub Pages (#127, MNT-07, M5): new
   `.github/workflows/publish-api-docs.yml`, triggered on every `v*` release tag (plus manual
   dispatch) — boots the backend against H2 (real security config, no `test` profile; same

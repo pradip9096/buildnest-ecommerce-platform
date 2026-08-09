@@ -115,7 +115,7 @@ export function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-white">
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5 flex-wrap">
+        <nav className="text-sm text-gray-600 mb-6 flex items-center gap-1.5 flex-wrap">
           <Link to="/" className="hover:text-primary-600">Home</Link>
           <span>/</span>
           {product.category && (
@@ -147,7 +147,7 @@ export function ProductDetailPage() {
             {summary && summary.totalReviews > 0 && (
               <a href="#reviews" className="flex items-center gap-2 w-fit">
                 <StarRating rating={summary.averageRating} size="sm" />
-                <span className="text-sm text-gray-500">{summary.totalReviews} review{summary.totalReviews !== 1 ? 's' : ''}</span>
+                <span className="text-sm text-gray-600">{summary.totalReviews} review{summary.totalReviews !== 1 ? 's' : ''}</span>
               </a>
             )}
 
@@ -155,8 +155,8 @@ export function ProductDetailPage() {
               <span className="text-3xl font-bold text-gray-900">₹{displayPrice.toLocaleString('en-IN')}</span>
               {hasDiscount && (
                 <>
-                  <span className="text-lg text-gray-400 line-through">₹{product.price.toLocaleString('en-IN')}</span>
-                  <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                  <span className="text-lg text-gray-600 line-through">₹{product.price.toLocaleString('en-IN')}</span>
+                  <span className="text-sm font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
                     {discountPct}% off
                   </span>
                 </>

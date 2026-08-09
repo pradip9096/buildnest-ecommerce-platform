@@ -25,7 +25,7 @@ function RatingBar({ label, count, total }: { label: string; count: number; tota
       <div className="flex-1 bg-gray-200 rounded-full h-2">
         <div className="bg-amber-400 h-2 rounded-full" style={{ width: `${pct}%` }} />
       </div>
-      <span className="w-6 text-gray-500 text-xs">{count}</span>
+      <span className="w-6 text-gray-600 text-xs">{count}</span>
     </div>
   );
 }
@@ -40,7 +40,7 @@ export function ReviewsSection({ reviews, summary, totalPages, page, loading, on
           <div className="flex flex-col items-center justify-center gap-1 min-w-[120px]">
             <span className="text-5xl font-bold text-gray-900">{summary.averageRating.toFixed(1)}</span>
             <StarRating rating={summary.averageRating} size="lg" />
-            <span className="text-sm text-gray-500">{summary.totalReviews} review{summary.totalReviews !== 1 ? 's' : ''}</span>
+            <span className="text-sm text-gray-600">{summary.totalReviews} review{summary.totalReviews !== 1 ? 's' : ''}</span>
           </div>
           <div className="flex-1 flex flex-col justify-center gap-2">
             {[5, 4, 3, 2, 1].map(star => (
@@ -68,7 +68,7 @@ export function ReviewsSection({ reviews, summary, totalPages, page, loading, on
       )}
 
       {!loading && reviews.length === 0 && (
-        <p className="text-gray-500 text-sm">No reviews yet. Be the first to review this product.</p>
+        <p className="text-gray-600 text-sm">No reviews yet. Be the first to review this product.</p>
       )}
 
       {!loading && reviews.length > 0 && (
