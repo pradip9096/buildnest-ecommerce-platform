@@ -8,6 +8,7 @@ import { CategorySidebar } from '../components/filters/CategorySidebar';
 import { SortDropdown } from '../components/filters/SortDropdown';
 import { Pagination } from '../components/common/Pagination';
 import { ErrorMessage } from '../components/common/ErrorMessage';
+import { SeoMeta } from '../components/common/SeoMeta';
 import type { ProductFilters, SortOption } from '../types';
 
 const PAGE_SIZE = 12;
@@ -72,6 +73,10 @@ export function ProductListingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SeoMeta
+        title={filters.keyword ? `Search results for "${filters.keyword}"` : 'Shop All Products'}
+        description="Browse construction materials, tools, and home décor products at BuildNest — filter by category and find exactly what you need."
+      />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">

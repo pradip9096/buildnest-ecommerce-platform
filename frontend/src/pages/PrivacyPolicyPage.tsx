@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { SeoMeta } from '../components/common/SeoMeta';
 
 /**
  * GDPR compliance (#128, COMP-01) — linked from RegisterPage's mandatory
@@ -7,6 +8,7 @@ import { Link } from 'react-router-dom';
 export function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-10">
+      <SeoMeta title="Privacy Policy" description="Read BuildNest's privacy policy to learn how we collect, use, and protect your personal information." />
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Privacy Policy</h1>
 

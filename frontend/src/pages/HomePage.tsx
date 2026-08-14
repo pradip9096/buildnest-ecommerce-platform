@@ -3,6 +3,7 @@ import { useCategories } from '../hooks/useCategories';
 import { useFeaturedProducts } from '../hooks/useFeaturedProducts';
 import { ProductGrid } from '../components/product/ProductGrid';
 import { LoadingSkeleton } from '../components/product/LoadingSkeleton';
+import { SeoMeta } from '../components/common/SeoMeta';
 
 // Static placeholder pending #290 (backend-driven promotional content) — deliberately
 // temporary, see issue #290 for the deferred backend/admin-UI version.
@@ -17,6 +18,10 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SeoMeta
+        title="Home"
+        description="Everything you need for your next construction project, delivered to your door — building materials, tools, and décor from BuildNest."
+      />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
         <section className="bg-primary-600 rounded-2xl px-8 py-12 sm:py-16 text-center text-white">
           <h1 className="text-2xl sm:text-4xl font-bold mb-3">{PROMO_BANNER.headline}</h1>

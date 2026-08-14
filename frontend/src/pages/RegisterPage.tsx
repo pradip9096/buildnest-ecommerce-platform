@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { SeoMeta } from '../components/common/SeoMeta';
 
 interface Form {
   firstName: string;
@@ -104,6 +105,7 @@ export function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-10">
+      <SeoMeta title="Create Account" description="Create a free BuildNest account to shop construction materials, tools, and home décor products." />
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link to="/" className="text-3xl font-bold text-primary-600">🏗️ BuildNest</Link>
