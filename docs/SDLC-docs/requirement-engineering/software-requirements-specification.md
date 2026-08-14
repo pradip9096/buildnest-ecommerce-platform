@@ -10,8 +10,8 @@
 | :--- | :--- |
 | **Document Title** | Software Requirements Specification (SRS) |
 | **Document ID** | SRS-BUILDNEST-001 |
-| **Version** | 5.17 |
-| **Date** | 2026-08-09 IST |
+| **Version** | 5.18 |
+| **Date** | 2026-08-14 IST |
 | **Status** | Controlled — Under Review |
 | **Classification** | Internal Use |
 | **Conformance Standard** | ISO/IEC/IEEE 29148:2018 |
@@ -56,6 +56,7 @@
 | 5.15 | 2026-08-08 IST | Technical Lead | Added §3.8.9 Observability (OBS-05) for #123 (Kubernetes readiness/liveness health probes, custom Elasticsearch health indicator, real dependency-reachability wiring via `management.endpoint.health.group.readiness.include`) — the issue's own "SRS NFR-OPS-06" citation referenced an ID that both did not exist at filing time and collides with #124's already-used "OPS-06" (RTM revision 1.51). Adopted "OBS-05" instead, matching this subsection's established `OBS-*` observability domain numbering (OBS-01 logging, OBS-02 tracing, OBS-03 metrics, OBS-04 alerting — all #107/#109's scope, unclaimed here) rather than the `OPS-*` deployment-topology domain the issue's citation implied — same filing-time traceability-mismatch shape as OBS-02/COMP-01/RET-01/FR-AUTH-12, caught before either document used the wrong ID. Updated the Coverage Summary Totals row (Total Non-Functional 65→66, Grand Total 162→163) | Pending |
 | 5.16 | 2026-08-09 IST | Technical Lead | Added §3.8.5 Maintainability (MNT-07) for #127 (publish the generated OpenAPI 3.1 spec to GitHub Pages via Swagger UI, automated on each release tag) — the issue's own "SRS NFR-MAINT-01" citation referenced an ID that did not exist at filing time (this subsection uses the `MNT-*` prefix, not `NFR-MAINT-*`) — same filing-time traceability-mismatch shape as OBS-05/OBS-02/COMP-01/RET-01/FR-AUTH-12. Adopted `MNT-07`, the next free ID in the existing `MNT-*` sequence, distinct from UI-02/UI-03/UR-03 which already cover the live in-app Swagger endpoints, not external GitHub Pages publication. Updated the Coverage Summary Totals row (Total Non-Functional 66→67, Grand Total 163→164) | Pending |
 | 5.17 | 2026-08-09 IST | Technical Lead | Added §3.8.4 Compliance (COMP-04) for #129 (WCAG 2.1 AA frontend accessibility audit + remediation) — the issue was titled "(COMP-02)" and its body cited "SRS NFR-COMP-04", but COMP-02 is the unrelated GDPR account-deletion requirement and no COMP-04/NFR-COMP-* row existed at filing time — same filing-time traceability-mismatch shape as MNT-07/OBS-05/OBS-02/COMP-01/RET-01/FR-AUTH-12. See `docs/SDLC-docs/reports/accessibility-audit.md` for the full audit. Updated the Coverage Summary Totals row (Total Non-Functional 67→68, Grand Total 164→165) | Pending |
+| 5.18 | 2026-08-14 IST | Technical Lead | Added §3.8.5 Maintainability (MNT-08) for #134 (frontend SEO metadata + sitemap generation) — the issue's own "SRS NFR-MAINT-05" citation referenced an ID that did not exist at filing time (this subsection uses the `MNT-*` prefix, not `NFR-MAINT-*`, and MNT-05 already covers an unrelated requirement — structured logging) — same filing-time traceability-mismatch shape as MNT-07/COMP-04/OBS-05/OBS-02/COMP-01/RET-01/FR-AUTH-12. Adopted `MNT-08`, the next free ID in the existing `MNT-*` sequence. Updated the Coverage Summary Totals row (Total Non-Functional 68→69, Grand Total 165→166) | Pending |
 
 ### Document Change Procedure
 
@@ -882,12 +883,15 @@ All of the following indexes shall be present in the production schema:
 | MNT-05 | All production logging shall use structured JSON format via SLF4J / Logback with the Logstash encoder | Ph-1 | Always | Inspection |
 | MNT-06 | No `System.out` or `printStackTrace` calls shall exist in production source code | Ph-1 | Zero | Inspection |
 | MNT-07 | The generated OpenAPI 3.1 specification shall be published as browsable API documentation (Swagger UI) via GitHub Pages, kept current on every tagged release | Ph-5 | Always | Inspection |
+| MNT-08 | All public-facing frontend pages shall carry correct SEO metadata (title, meta description, Open Graph, Twitter Card) and a build-time-generated `sitemap.xml`/`robots.txt`, achieving a Lighthouse SEO score ≥ 90 | Ph-5 | ≥ 90 | Inspection (Lighthouse audit) |
 
 > **Note on MNT-02**: The current JaCoCo gate is set at 40% (Baseline Assessment F-08). The target of 70% reflects the industry standard per ISO/IEC 25010 testability attribute. The gate shall be raised incrementally: 50% at Ph-1 completion, 70% at Ph-2 sign-off.
 >
 > **Note on MNT-03**: As of 2026-06-19, 14 failures / errors are present (Baseline Assessment Section 5). Resolution of all failures is the primary acceptance criterion for Phase 1.
 >
 > **Note on MNT-07** (#127): this requirement did not previously exist — issue #127 cited "SRS NFR-MAINT-01", an ID that did not exist at filing time (this SRS's Maintainability subsection uses the `MNT-*` prefix, not `NFR-MAINT-*`) — same filing-time traceability-mismatch shape as COMP-01 (#128), OBS-02 (#108), OBS-05 (#123). Adopted `MNT-07` instead, the next free ID in this subsection's own existing sequence. Distinct from UI-02/UI-03/UR-03 (§3.4.7/§4.6), which cover the live in-app `/swagger-ui.html` and `/v3/api-docs` endpoints — MNT-07 covers the separate, externally-hosted GitHub Pages publication this issue actually adds.
+>
+> **Note on MNT-08** (#134): this requirement did not previously exist — issue #134 cited "SRS NFR-MAINT-05", an ID that did not exist at filing time (this SRS's Maintainability subsection uses the `MNT-*` prefix, not `NFR-MAINT-*`, and MNT-05 already covers structured logging — an unrelated requirement) — same filing-time traceability-mismatch shape as MNT-07 (#127), COMP-04 (#129), COMP-01 (#128), OBS-02 (#108), OBS-05 (#123). Adopted `MNT-08` instead, the next free ID in this subsection's own existing sequence.
 
 #### 3.8.6 Portability
 
@@ -1014,13 +1018,13 @@ Test integrity requirements define the properties that the test suite itself mus
 | Availability (AVL-01–04) | 4 | Ph-2 | High | Test |
 | Security (SEC-01–16) | 16 | Ph-1 / Ph-2 | 11 High, 5 Medium | Inspection, Test |
 | Compliance (COMP-01–03) | 3 | Ph-2 | High | Test |
-| Maintainability (MNT-01–07) | 7 | Ph-1 / Ph-2 / Ph-5 | Mixed | Build, Inspection |
+| Maintainability (MNT-01–08) | 8 | Ph-1 / Ph-2 / Ph-5 | Mixed | Build, Inspection |
 | Portability (PRT-01–04) | 4 | Ph-1 / Ph-2 | Mixed | Inspection |
 | Scalability (SCL-01–04) | 4 | Ph-1 / Ph-2 | Mixed | Analysis, Inspection |
 | Safety (SAF-01–03) | 3 | Ph-1 / Ph-2 | High | Test |
 | Test Integrity (TIR-01–05) | 5 | Ph-1 / Ph-2 | 2 High, 3 Medium | Build, Inspection |
-| **Total Non-Functional** | **68** | | | |
-| **Grand Total** | **165** | | | |
+| **Total Non-Functional** | **69** | | | |
+| **Grand Total** | **166** | | | |
 | Seller & Marketplace (FR-SEL-01–08) *(Ph-3, Planned — excluded from Grand Total above)* | 8 | Ph-3 | 6 High, 2 Medium | 1 Implemented (#553), 7 Not started |
 | Location-Based Matching (FR-LOC-01–04) *(Ph-3, complete — excluded from Grand Total above)* | 4 | Ph-3 | 4 High | 4 Implemented (#562, #563, #564) |
 
