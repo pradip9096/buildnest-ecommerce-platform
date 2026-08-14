@@ -17,6 +17,16 @@ counts); entries below are not yet split into per-milestone sub-sections — che
 own parenthetical milestone tag (e.g. `M4`/`M5`) for which milestone it belongs to.
 
 ### Added
+- Frontend SEO metadata and sitemap generation (#134, FE-SEO-01, M5). `react-helmet-async`
+  drives `<title>`/meta description/Open Graph/Twitter Card tags via a new `SeoMeta` component,
+  wired into Home, Product Listing, Product Detail (OG tags per acceptance criteria, replacing
+  a prior ad-hoc `document.head` manipulation in `ProductDetailPage`), Login, Register, and
+  Privacy Policy pages; `NotFoundPage` sets `<meta name="robots" content="noindex">`. New
+  `frontend/scripts/generate-sitemap.mjs` runs as a `postbuild` step, fetching product/category
+  lists from `/api/public/products` and `/api/public/categories` to build `dist/sitemap.xml` —
+  degrades gracefully to a static-routes-only sitemap when the backend isn't reachable at build
+  time (e.g. CI), rather than failing the build. New `frontend/public/robots.txt` allows crawl
+  of public pages and disallows `/admin`, `/seller`, `/account`, `/cart`, `/checkout`, `/orders`.
 - WCAG 2.1 AA accessibility audit and remediation (#129, COMP-04, M5). The issue was titled
   "(COMP-02)" and cited "SRS NFR-COMP-04" — COMP-02 is the unrelated GDPR account-deletion
   requirement and no COMP-04/NFR-COMP-* row existed at filing time; adopted COMP-04 instead

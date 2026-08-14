@@ -15,6 +15,7 @@ import { ReviewsSection } from '../components/product/ReviewsSection';
 import { WriteReviewForm } from '../components/product/WriteReviewForm';
 import { RelatedProducts } from '../components/product/RelatedProducts';
 import { ErrorMessage } from '../components/common/ErrorMessage';
+import { SeoMeta } from '../components/common/SeoMeta';
 
 function ProductDetailSkeleton() {
   return (
@@ -56,25 +57,6 @@ export function ProductDetailPage() {
   const [cartMessage, setCartMessage] = useState<string | null>(null);
   const [cartAdding, setCartAdding] = useState(false);
 
-  useEffect(() => {
-    if (product) {
-      document.title = `${product.name} | BuildNest`;
-      const setMeta = (property: string, content: string) => {
-        let el = document.querySelector<HTMLMetaElement>(`meta[property="${property}"]`);
-        if (!el) {
-          el = document.createElement('meta');
-          el.setAttribute('property', property);
-          document.head.appendChild(el);
-        }
-        el.setAttribute('content', content);
-      };
-      setMeta('og:title', `${product.name} | BuildNest`);
-      setMeta('og:description', product.description ?? `Buy ${product.name} at BuildNest`);
-      if (product.imageUrl) setMeta('og:image', product.imageUrl);
-    }
-    return () => { document.title = 'BuildNest'; };
-  }, [product]);
-
   async function handleAddToCart() {
     if (!isAuthenticated || !user) {
       setCartMessage('Please sign in to add items to your cart.');
@@ -114,6 +96,12 @@ export function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SeoMeta
+        title={product.name}
+        description={product.description ?? `Buy ${product.name} at BuildNest`}
+        image={product.imageUrl}
+        type="product"
+      />
       <main className="max-w-6xl mx-auto px-4 py-8">
         <nav className="text-sm text-gray-600 mb-6 flex items-center gap-1.5 flex-wrap">
           <Link to="/" className="hover:text-primary-600">Home</Link>

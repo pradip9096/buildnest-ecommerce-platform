@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { SeoMeta } from '../components/common/SeoMeta';
 
 export function LoginPage() {
   const { login, isAuthenticated } = useAuth();
@@ -36,6 +37,7 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+      <SeoMeta title="Sign In" description="Sign in to your BuildNest account to track orders, manage your wishlist, and check out faster." />
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link to="/" className="text-3xl font-bold text-primary-600">🏗️ BuildNest</Link>
