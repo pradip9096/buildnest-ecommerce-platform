@@ -384,6 +384,23 @@ independently-scoped follow-up).
   artifact. Confirmed the existing literal-format requirement already covers this shape; no
   further wording change needed, logged here as the 2nd occurrence for future tier-escalation
   reference.
+- **#123** — the sibling-precedent-scope trigger fired (OBS-05 matched against #108's OBS-02) and
+  was correctly reasoned inside the SRS/RTM revision-history notes themselves, but no standalone
+  line certified it in the closing message — the same literal-format sub-failure
+  `requirement-traceability-backfill-not-seeded` already names for the Step-7 line, applied to the
+  sibling-precedent line instead. → Added the 8th checklist line, `Sibling-precedent check: ...`.
+- **#129** (`/critique-prompt` retrospective) — this paragraph itself had grown to 4,881 bytes
+  (~12.2% of the file), the accretive-citation-growth shape this file exists to extract. Also
+  surfaced two new, previously-unnamed gaps: (1) the checklist had no line for a brand-new
+  document the same issue creates (an accessibility-audit report) — ambiguous whether it counted
+  as a 7th doc or was implicitly exempt as "not pre-existing"; (2) that same new document's own
+  internal summary (a defect-count tally) needed correcting twice as later commits in the same
+  issue surfaced more CI-caught findings, with nothing requiring its self-consistency be
+  re-verified before the closing message, the same staleness standard already applied to every
+  other doc. → Extracted this section's citation-heavy prose into the entries above (already
+  present), leaving `work-on-issue.md`'s own paragraph as rule + tags + pointer only; added an
+  explicit line to that paragraph naming a new document as its own checklist line and requiring
+  its internal consistency be re-verified across the issue's own later commits.
 
 ## Follow-ups closure step
 
